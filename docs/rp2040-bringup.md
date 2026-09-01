@@ -155,6 +155,11 @@ for the monitor to attach; if you miss it, send `r`.
 
 ### What Each Section Means When It Fails
 
+**`[2] reset`** — after a `picotool` upload this reports `software` with
+`watchdog caused reboot: yes`. That is correct, not a fault: `picotool` reboots
+the chip through the watchdog to start the application. A genuine cold start
+reads `power-on`.
+
 **`[3] clocks`** — a `clk_sys` reading far from 133000 kHz means a PLL
 misconfiguration, which would be a firmware or core problem rather than a board
 one. The measurement is taken *against* the crystal, so it cannot see an error in

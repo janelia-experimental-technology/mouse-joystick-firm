@@ -186,7 +186,7 @@ void SelfTest::reportClocks(Print &out, uint16_t &checks, uint16_t &failures) {
 }
 
 void SelfTest::reportFlash(Print &out, uint16_t &checks, uint16_t &failures) {
-  out.println(F("[4] qspi flash (W25Q128JVPIQ, 16 MiB expected)"));
+  out.println(F("[4] qspi flash (U502 W25Q128JVZPIQ, 16 MiB expected)"));
 
   pico_unique_board_id_t raw;
   pico_get_unique_board_id(&raw);
@@ -370,7 +370,7 @@ void SelfTest::reportAdc(Print &out, uint16_t &checks, uint16_t &failures) {
   out.print(hv_counts);
   out.print(F(" counts = "));
   out.print(hv_volts, 4);
-  out.println(F(" V across R1907 249R"));
+  out.println(F(" V across R207 249R"));
   report(out, "no 36 V load current (HV_SNS below 0.10 V)",
          hv_volts <= kHvSenseOffMaxVolts, checks, failures);
   out.println(

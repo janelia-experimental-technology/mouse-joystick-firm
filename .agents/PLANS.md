@@ -7,9 +7,11 @@ rev 0 board, received 2026-09-01. USB only; 36 V stays unplugged.
 
 ## Status
 
-2026-09-01. Repository scaffolded, pin map verified against PCB tag `v0.1`, all
-three firmware envs and the host tests build clean. **Not yet run on hardware.**
-Waiting on a USB cable being connected to the board.
+**Stage 1 passed on hardware, 2026-09-01.** Board serial `E4654C159F2C2534`.
+27 checks, 0 failed. Flash written and verified by `picotool`. Not yet recorded
+in the PCB repository's bring-up log, and the LA5032 taps are still unconfirmed.
+
+Stage 2 is unblocked, and needs 36 V.
 
 ## Milestones
 
@@ -23,9 +25,10 @@ Waiting on a USB cable being connected to the board.
 - [x] `MJ_BOARD_REV` so the spare-pad test matches the revision being built
 - [x] Compile clean on `mouse_joystick`, `mouse_joystick_fastflash`,
       `mouse_joystick_rev1`; 7/7 host tests pass
-- [ ] BOOTSEL enumerates (`RPI-RP2` mass storage) — hardware check, no firmware
-- [ ] Firmware flashes and the self test reports
+- [x] BOOTSEL enumerates (`RPI-RP2` mass storage) — passed 2026-09-01
+- [x] Firmware flashes, verifies, and runs — **27 checks, 0 failed**, 2026-09-01
 - [ ] Results recorded in `../mouse-joystick-pcb/docs/bringup-log.md`
+- [ ] LA5032 channel map confirmed against the boot signature
 - [ ] Stage 2: `examples/TMC5130Communication` — 36 V on, `HV_EN` raised, bus
       switch enabled, driver still disabled, register read proves SPI
 - [ ] Stage 3: motion, with `vsense = 1` set and read back first
@@ -56,19 +59,37 @@ Read from `git show <tag>:kicad/mouse-joystick-pcb.kicad_pcb`, footprint `U501`:
 - **The TMC5130A's clock is an external 16 MHz oscillator `X1201`, powered from
   `+3.3V_SW`.** It is dead until `HV_EN` is raised — a stage 2 consideration.
 
-## Assumptions To Confirm On Hardware
+## Confirmed On Hardware 2026-09-01
 
-- The `generic` PlatformIO board definition boots this board. The safe
-  `boot2_generic_03h` stage 2 is chosen precisely so this is very likely; if it
-  fails, the flash or its QSPI routing is the suspect, not the board definition.
-- Flash is really 16 MiB. The self test probes for address aliasing at +2, +4 and
-  +8 MiB rather than trusting the BOM.
-- The 12 MHz crystal `Y501` is within USB tolerance. Enumeration proves this; the
-  `k` command measures it against the host clock for a number.
-- `~{INSTR_BUF_OE}` idles high from `R1601`/`R1701`/`R1801`. Confirmed in the
-  netlist, unconfirmed on copper.
-- **The LA5032 channel mapping is documented but not bench-verified.** The boot
-  signature is a known pattern on known pins, so it doubles as the confirmation.
+Board serial `E4654C159F2C2534`, 36 V absent, USB only.
+
+- **The `generic` board definition boots this board** with
+  `boot2_generic_03h_4`. `mouse_joystick_fastflash` is untried on hardware.
+- **Flash is really 16 MiB.** No aliasing at +2, +4 or +8 MiB, and `picotool`
+  verified the whole image byte for byte.
+- **Clocks are nominal:** `clk_ref` 12000 kHz, `clk_sys` 133000 kHz measured,
+  `clk_peri`/`clk_usb`/`clk_adc` 48000 kHz.
+- **Crystal `Y501` absolute error is below this method's noise floor** — −18.7 ppm
+  apparent over 9 s against host `time.monotonic()`, where USB CDC jitter alone
+  is order 110 ppm. Consistent with a healthy +/-30 ppm part.
+- **All four resistor-defined levels are correct:** `R601` 7.87k holds the GPIO
+  bus isolated at reset, the buffer OE pull-ups hold the instrument port silent,
+  `R403` holds pyControl RX idle high, `R205` is present with no latched fault.
+- **All 12 spare pads move both ways.** No solder defects on any unrouted GPIO.
+- **`+3.3V_SW` reads 0.034 V with `HV_EN` low** — the switched domain is genuinely
+  off and `R401`/`R402` hold it there. `HV_SNS` 0.016 V. Die 26.2 C.
+- **The 1200-baud touch works**, so reflashing needs no button and no physical
+  access to the board.
+
+## Still Unconfirmed
+
+- **The LA5032 channel mapping.** Documented but not bench-verified. The boot
+  signature is a known pattern on known pins, so it doubles as the confirmation
+  once the adapter is connected. Nothing in stage 1 needed it, because USB came
+  up on the first try.
+- `env:mouse_joystick_fastflash` on hardware.
+- Everything on the far side of `HV_EN`: the switched rails, the TMC5130A, the
+  16 MHz oscillator `X1201`, the motor, encoder, and limit switch.
 
 ## Known Documentation Conflict
 
