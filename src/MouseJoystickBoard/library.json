@@ -1,0 +1,17 @@
+{
+  "name": "MouseJoystickBoard",
+  "version": "0.1.0",
+  "description": "Board support for mouse-joystick-pcb: GPIO allocation, safe idle state, and the RP2040 self test. Public headers live one level up in src/ and are reached through the project-wide -Isrc flag.",
+  "keywords": "rp2040, tmc5130, mouse-joystick",
+  "authors": [
+    {
+      "name": "Peter Polidoro",
+      "email": "peter@polidoro.io"
+    }
+  ],
+  "frameworks": "arduino",
+  "platforms": "raspberrypi",
+  "build": {
+    "srcDir": "."
+  }
+}

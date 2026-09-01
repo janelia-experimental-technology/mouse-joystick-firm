@@ -62,6 +62,17 @@ oversight to be helpfully fixed.
   design is `../mouse-joysticks-pcb`.
 - **`src/BoardPins.hpp` is the only place a GPIO number appears.** No literal pin
   numbers in examples or in driver setup.
+- **Derive board facts from the `.kicad_pcb` pad-to-net map, at the tag that was
+  manufactured, not from prose docs and not from HEAD.** The pin map came from
+  footprint `U501` at PCB tag `v0.1`. Prose goes stale — `docs/power.md` still
+  claims `HV_SNS` and `~{HV_FAULT}` sit behind the bus switch when the netlist
+  says they bypass it. KiCad 10 writes nets as `(net "name")` with no net number,
+  so patterns matching a number find nothing.
+- **Reference designators are not stable across PCB revisions.** Automatic
+  annotation orders by sheet position. `R1901`/`R1902` mean 100 ohm pyControl
+  series resistors at v0.1 and 1 kohm `HV_EN`/`HV_DIAG_EN` series resistors at
+  HEAD. Quote designators only with the revision attached, and prefer value plus
+  net, which are stable.
 - **Nothing but `SafeState` touches `HV_EN`.** Grep for it before adding a
   caller.
 - **`HV_DIAG_EN` must never idle high.** Held high it leaks ~240 uA into
@@ -85,6 +96,11 @@ oversight to be helpfully fixed.
 - **There are no LEDs, no test points, and on rev 0 no SWD header.** USB CDC and
   the two `FW_TRIG` pins on InstrumentPort-40 are the entire observable surface.
   Do not write a diagnostic that assumes an LED or a debugger.
+- **Keep a proof of life that does not depend on USB.** `FW_TRIG0` carries a 1 Hz
+  heartbeat and `FW_TRIG1` a boot signature, both reaching InstrumentPort-40
+  through `U1801` on the always-on rail. On a board with no LED and no debugger
+  that is the only way to distinguish "firmware is not running" from "USB is not
+  working". Do not remove it to tidy up.
 - **pyControl owns experiment sequencing.** This board owns local motion timing
   and safety. Never expose unbounded trajectories or raw motor power as the
   normal API.
@@ -107,6 +123,14 @@ repository's to renegotiate:
 Pixi provides PlatformIO; PlatformIO provides the RP2040 toolchain. The Makefile
 is a thin wrapper over the Pixi tasks.
 
+**Never change `lib_deps` back to a bare local path.** `symlink://src/MouseJoystickBoard`
+is deliberate: a bare path makes PlatformIO copy the directory into
+`.pio/libdeps/` and never refresh it, so edits to `src/MouseJoystickBoard/*.cpp`
+silently do not get compiled and the build reports success while testing old
+code. `symlink://` needs the manifest at `src/MouseJoystickBoard/library.json`;
+both go together. Verify with a canary: append `#error` to a library `.cpp` and
+confirm the build fails without cleaning first.
+
 - `make install` — resolve the environment
 - `make build` / `make rebuild` — compile
 - `make upload PORT=/dev/ttyACM0` — flash
@@ -120,8 +144,11 @@ Select a different program with `EXAMPLE=`, a different board config with `ENV=`
 
 - Host tests: `make test`. Covers `src/Conversions.hpp` only; everything else
   needs the board.
-- Compile check: `make build`, and `make build ENV=mouse_joystick_fastflash` when
-  the change could touch the flash configuration.
+- Compile check: `make build`, plus `ENV=mouse_joystick_fastflash` when the
+  change could touch the flash configuration and `ENV=mouse_joystick_rev1` when
+  it touches anything revision-dependent.
+- Note `make test` prunes the per-example firmware build directories. Build after
+  testing, not before, if you want the artifacts.
 - Real hardware: run `examples/RP2040SelfTest` and record the numbers in
   `../mouse-joystick-pcb/docs/bringup-log.md` under the board's serial. Numbers
   with units, not pass marks.

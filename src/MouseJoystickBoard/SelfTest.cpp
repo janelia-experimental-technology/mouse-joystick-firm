@@ -32,6 +32,18 @@ constexpr float kSysClockTolerance = 0.01f;
 constexpr float kSwRailOffMaxVolts = 0.30f;
 constexpr float kHvSenseOffMaxVolts = 0.10f;
 
+// Boot signature. The 10 ms cadence on TRIG1 appears nowhere else in this
+// firmware, so it is unambiguous in a capture; the faster TRIG0 burst marks the
+// end so a capture can be triggered on either edge density.
+constexpr uint32_t kSignatureSlowPulses = 3;
+constexpr uint32_t kSignatureSlowHalfMs = 10;
+constexpr uint32_t kSignatureFastPulses = 8;
+constexpr uint32_t kSignatureFastHalfMs = 1;
+
+// Heartbeat half period. 500 ms gives a 1 Hz square wave: slow enough to spot
+// by eye in a long capture, fast enough not to wait for.
+constexpr uint32_t kHeartbeatHalfPeriodMs = 500;
+
 // A plausible junction temperature for a board sitting on a bench. Mostly this
 // proves the ADC and ADC_AVDD work at all.
 constexpr float kTempMinCelsius = 5.0f;
@@ -80,6 +92,9 @@ bool sameBytes(const uint8_t *a, const uint8_t *b, size_t length) {
   return true;
 }
 
+bool heartbeat_level = false;
+uint32_t heartbeat_due_ms = 0;
+
 const char *resetReasonName(int reason) {
   // Order taken from the core's RP2040 class enum resetReason_t.
   static const char *const kNames[] = {"unknown",  "power-on", "run pin",
@@ -113,6 +128,18 @@ void SelfTest::reportIdentity(Print &out) {
   printKeyValue(out, "usb product", USB_PRODUCT);
 #endif
   printKeyValue(out, "built", __DATE__ " " __TIME__);
+
+  out.print(F("    targets board revision: rev "));
+  out.print(MJ_BOARD_REV);
+#if MJ_BOARD_REV == 0
+  out.println(F("  (pcb tags v0.1 and v0.2)"));
+  out.println(
+      F("    GP10, GP11 and GP13 are unrouted on this revision, so they"));
+  out.println(
+      F("      are tested as spare pads. On rev 1 they carry the DAC."));
+#else
+  out.println(F("  (pcb HEAD, angle output DAC fitted)"));
+#endif
 }
 
 void SelfTest::reportResetReason(Print &out) {
@@ -246,15 +273,19 @@ void SelfTest::reportRam(Print &out, uint16_t &checks, uint16_t &failures) {
   report(out, "pattern walk over 16 KiB", ok, checks, failures);
 }
 
-void SelfTest::reportStraps(Print &out, uint16_t &checks, uint16_t &failures) {
+void SelfTest::reportStraps(Print &out, const ResetStateReads &reads,
+                            uint16_t &checks, uint16_t &failures) {
   out.println(F("[6] resistor-defined levels"));
   out.println(
-      F("    Read with internal pulls off, so each level comes from a"));
+      F("    Captured at boot, internal pulls off, before anything drove"));
   out.println(
-      F("      board resistor. A failure here is a missing or misplaced"));
-  out.println(F("      part, not firmware."));
+      F("      a pin, so each level comes from a board resistor. A failure"));
+  out.println(F("      here is a missing part, not firmware. v0.1 refdes."));
 
-  const ResetStateReads reads = SafeState::readResetState();
+  if (!reads.valid) {
+    report(out, "reset state was captured at boot", false, checks, failures);
+    return;
+  }
 
   out.print(F("    GP9  ~{BUS_SW_EN}    = "));
   out.println(reads.bus_sw_en_n ? F("high") : F("low"));
@@ -273,13 +304,11 @@ void SelfTest::reportStraps(Print &out, uint16_t &checks, uint16_t &failures) {
 
   out.print(F("    GP29 ~{HV_FAULT}     = "));
   out.println(reads.hv_fault_n ? F("high") : F("low"));
-  report(out, "R1905 10k present and no latched 36 V fault", reads.hv_fault_n,
+  report(out, "R205 10k present and no latched 36 V fault", reads.hv_fault_n,
          checks, failures);
 
-  // Re-establish the safe state: readResetState() left these four pins as
-  // inputs. That window is safe because it is exactly the reset condition --
-  // R601 alone holds the bus isolated, which is how the board comes up.
-  SafeState::apply();
+  // Nothing to restore: these levels were captured at boot and this section
+  // reads no pin.
 }
 
 void SelfTest::reportSparePads(Print &out, uint16_t &checks,
@@ -365,7 +394,7 @@ void SelfTest::reportAdcOnce(Print &out) {
   reportAdc(out, checks, failures);
 }
 
-uint16_t SelfTest::run(Print &out) {
+uint16_t SelfTest::run(Print &out, const ResetStateReads &reads) {
   uint16_t checks = 0;
   uint16_t failures = 0;
 
@@ -389,7 +418,7 @@ uint16_t SelfTest::run(Print &out) {
   out.println();
   reportRam(out, checks, failures);
   out.println();
-  reportStraps(out, checks, failures);
+  reportStraps(out, reads, checks, failures);
   out.println();
   reportSparePads(out, checks, failures);
   out.println();
@@ -412,6 +441,43 @@ uint16_t SelfTest::run(Print &out) {
   out.println();
 
   return failures;
+}
+
+void SelfTest::emitBootSignature() {
+  // Enable the port first: with the buffers off these edges reach nothing, and
+  // the whole point of the signature is to be visible without USB.
+  SafeState::setInstrumentationEnabled(true);
+
+  for (uint32_t i = 0; i < kSignatureSlowPulses; ++i) {
+    SafeState::setTrigger1(true);
+    delay(kSignatureSlowHalfMs);
+    SafeState::setTrigger1(false);
+    delay(kSignatureSlowHalfMs);
+  }
+  for (uint32_t i = 0; i < kSignatureFastPulses; ++i) {
+    SafeState::setTrigger0(true);
+    delay(kSignatureFastHalfMs);
+    SafeState::setTrigger0(false);
+    delay(kSignatureFastHalfMs);
+  }
+
+  // Leave the port enabled. Nothing on this board can observe firmware
+  // otherwise, and the port is passive and unidirectional by design, so leaving
+  // it on cannot affect board behaviour. The `i` command turns it off.
+  heartbeat_level = false;
+  heartbeat_due_ms = millis() + kHeartbeatHalfPeriodMs;
+}
+
+void SelfTest::serviceHeartbeat() {
+  if (!SafeState::instrumentationEnabled()) {
+    return;
+  }
+  if (static_cast<int32_t>(millis() - heartbeat_due_ms) < 0) {
+    return;
+  }
+  heartbeat_level = !heartbeat_level;
+  SafeState::setTrigger0(heartbeat_level);
+  heartbeat_due_ms = millis() + kHeartbeatHalfPeriodMs;
 }
 
 void SelfTest::pulseTriggers(Print &out, uint32_t half_period_us,

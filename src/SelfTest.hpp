@@ -22,7 +22,11 @@ namespace mouse_joystick {
 class SelfTest {
 public:
   // Run every section and print a summary. Returns the number of failed checks.
-  static uint16_t run(Print &out);
+  //
+  // `reads` must have been captured by SafeState::readResetState() before
+  // anything drove a pin. The boot signature drives ~{INSTR_BUF_OE}, so by the
+  // time this runs the reset state is no longer observable.
+  static uint16_t run(Print &out, const ResetStateReads &reads);
 
   // Sections, individually useful from the interactive menu.
   static void reportIdentity(Print &out);
@@ -30,9 +34,29 @@ public:
   static void reportClocks(Print &out, uint16_t &checks, uint16_t &failures);
   static void reportFlash(Print &out, uint16_t &checks, uint16_t &failures);
   static void reportRam(Print &out, uint16_t &checks, uint16_t &failures);
-  static void reportStraps(Print &out, uint16_t &checks, uint16_t &failures);
+  static void reportStraps(Print &out, const ResetStateReads &reads,
+                           uint16_t &checks, uint16_t &failures);
   static void reportSparePads(Print &out, uint16_t &checks, uint16_t &failures);
   static void reportAdc(Print &out, uint16_t &checks, uint16_t &failures);
+
+  // Distinctive pattern on the InstrumentPort triggers, emitted at boot before
+  // Serial is up. This is the only proof of life on this board that does not
+  // depend on USB: no LEDs, no test points, and no SWD header on rev 0. If USB
+  // never enumerates, a logic analyser on TRIG0/TRIG1 still says whether the
+  // RP2040 got as far as running this firmware.
+  //
+  //   TRIG1: three 10 ms pulses, a cadence nothing else in this firmware emits
+  //   TRIG0: eight 1 ms pulses, marking the end of the signature
+  //
+  // Leaves the instrumentation buffers enabled so the heartbeat that follows is
+  // visible too.
+  static void emitBootSignature();
+
+  // Square wave on FW_TRIG0, called from loop(). Slow, so a capture triggered
+  // long after boot still shows the firmware is alive and its timebase is sane.
+  // Does nothing until emitBootSignature() or setInstrumentationEnabled() has
+  // enabled the port.
+  static void serviceHeartbeat();
 
   // On-demand tests that need either an instrument or a fixture.
 

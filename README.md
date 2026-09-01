@@ -12,6 +12,9 @@ this firmware depends on. The driver library is
 **Status:** stage 1 only. `examples/RP2040SelfTest` compiles and its host tests
 pass; it has not yet been run on hardware.
 
+The pin map is verified against PCB git tag **v0.1**, the revision manufactured
+as rev 0. Tags v0.1 and v0.2 have byte-identical RP2040 pad-to-net maps.
+
 ## Quick Start
 
 ```sh
@@ -50,6 +53,10 @@ dead rail through its ESD clamps.
 Run `examples/RP2040SelfTest`, read the USB serial monitor. Roughly twenty
 checks, each reporting a number or a level:
 
+- **Boot signature and heartbeat** — a distinctive pattern on the InstrumentPort
+  triggers before Serial comes up, then a 1 Hz square wave forever after. This is
+  the only proof that the RP2040 is running your code that does not depend on
+  USB. Watch LA5032 channels 16 and 17.
 - **Identity** — the flash unique id, which *is* this board's serial. Calibration
   belongs to the serial, not to a joystick position.
 - **Clocks** — every derived clock, plus `clk_sys` measured against the crystal.
@@ -117,7 +124,7 @@ Summary:
 | 7 | `TMC_SPI_COPI` | SPI0 TX | yes |
 | 8 | `TMC_DIAG1` | driver diagnostic 1 | yes |
 | 9 | `~{BUS_SW_EN}` | GPIO isolation enable, active low | — |
-| 10, 11, 13 | `DAC_SPI_*`, `~{DAC_CS}` | rev 1 angle DAC, SPI1 | yes |
+| 10, 11, 13 | `DAC_SPI_*`, `~{DAC_CS}` | rev 1 angle DAC, SPI1. **Unrouted on rev 0** | yes |
 | 14 | `HV_DIAG_EN` | 36 V switch diagnostics enable | no |
 | 19 | `HV_EN` | 36 V input switch enable | no |
 | 21, 25 | `FW_TRIG1`, `FW_TRIG0` | firmware timing markers | no |
@@ -127,7 +134,15 @@ Summary:
 | 29 | `~{HV_FAULT}` | 36 V switch fault, 10 kΩ pull-up | no |
 | 12, 15, 16, 17, 18, 20, 22, 23, 27 | — | spare, routed nowhere | — |
 
-Rev 0 and rev 1 share this allocation by design. No rev 0 pin moved.
+Rev 0 and rev 1 share this allocation by design. No rev 0 pin moved. The only
+firmware-visible difference is GP10/GP11/GP13, unrouted on rev 0 and therefore
+folded into the spare-pad test — see `MJ_BOARD_REV`.
+
+**Reference designators are not stable across revisions.** Automatic annotation
+orders by sheet position, so inserting a part rotates everything after it.
+`R1901`/`R1902` are 100 Ω pyControl series resistors at v0.1 and 1 kΩ
+`HV_EN`/`HV_DIAG_EN` series resistors at HEAD. Designators quoted in this
+repository are **v0.1** designators; identify parts by value and net.
 
 ## Layout
 
@@ -152,9 +167,24 @@ between them does not invalidate a cache. Same arrangement as `TMC51X0`.
 
 | Env | Purpose |
 |-----|---------|
-| `mouse_joystick` | the board. Universal `boot2_generic_03h` stage 2 — slower XIP, but boots regardless of the flash's quad-enable bit, which is what a first-article board wants. |
+| `mouse_joystick` | **the board in hand.** `MJ_BOARD_REV=0`. Universal `boot2_generic_03h` stage 2 — slower XIP, but boots regardless of the flash's quad-enable bit, which is what a first-article board wants. |
 | `mouse_joystick_fastflash` | same board, quad-lane stage 2 matched to the W25Q128JV. Use once stage 1 has passed. |
+| `mouse_joystick_rev1` | `MJ_BOARD_REV=1`, for PCB HEAD where GP10/GP11/GP13 carry the angle DAC. |
 | `native` | host tests. |
+
+### Two Build-System Traps
+
+- **The board support library is declared as `symlink://src/MouseJoystickBoard`,
+  not as a bare path.** A bare local path makes PlatformIO *copy* the directory
+  into `.pio/libdeps/` and it never refreshes the copy — not on a rebuild, and
+  not on `-t clean`. Edits to `src/MouseJoystickBoard/*.cpp` then silently do not
+  get compiled and the build succeeds while testing old code. `symlink://`
+  requires the library to carry a manifest, which is why
+  `src/MouseJoystickBoard/library.json` exists. **`TMC51X0` has the same bare-path
+  arrangement and therefore the same trap.**
+- **`make test` wipes the firmware build directories.** The native test run uses
+  the default build dir and prunes the per-example ones. Harmless, but do not
+  read it as a failed build.
 
 ## Recording Results
 

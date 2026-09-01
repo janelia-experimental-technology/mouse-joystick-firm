@@ -1,21 +1,44 @@
 // RP2040 GPIO allocation for mouse-joystick-pcb.
 //
 // Single source of truth for this firmware. Every number below was read back
-// from the board's own pad-to-net map (`kicad/mouse-joystick-pcb.kicad_pcb`,
-// footprint `U501`) and cross-checked against
-// `mouse-joystick-pcb/docs/interface-map.md`. Rev 0 and rev 1 share this
-// allocation by design -- no rev 0 pin moved -- so one table serves both.
+// from the board's own pad-to-net map -- footprint `U501` in
+// `kicad/mouse-joystick-pcb.kicad_pcb` -- at git tag v0.1, the revision that
+// was manufactured as rev 0. Cross-checked against
+// `mouse-joystick-pcb/docs/interface-map.md`.
+//
+// Tags v0.1 and v0.2 have byte-identical RP2040 pad-to-net maps. Current HEAD
+// differs on exactly three pins, GP10/GP11/GP13, which HEAD routes to the rev 1
+// angle-output DAC and v0.1 leaves unrouted. See MJ_BOARD_REV below.
 //
 // Names here are the board's net names, not Pico conventions. Trailing `_N`
 // marks an active-low signal, which the schematic spells `~{NAME}`.
 //
+// ---------------------------------------------------------------------------
+// REFERENCE DESIGNATORS IN THESE COMMENTS ARE v0.1 DESIGNATORS.
+// ---------------------------------------------------------------------------
+// The project uses KiCad automatic annotation, which orders by sheet position,
+// so inserting a part rotates every designator after it. Between v0.1 and HEAD
+// the 36 V input block moved from the `U201`/`R20x` range to `U1901`/`R190x`,
+// and `R1901`/`R1902` came to mean something completely different: 100 ohm
+// pyControl series resistors at v0.1, 1 kohm HV_EN/HV_DIAG_EN series resistors
+// at HEAD. **A designator alone is not enough to identify a part across
+// revisions.** Where it matters, this file gives the value and the net too;
+// those are stable and the designator is not.
+//
 // Do not hand-edit a number here without changing `docs/interface-map.md` in
-// the PCB repository in the same breath. The two must agree or bring-up
-// results mean nothing.
+// the PCB repository in the same breath. The two must agree or bring-up results
+// mean nothing.
 
 #pragma once
 
 #include <stdint.h>
+
+// Which manufactured revision this build targets. 0 = tags v0.1 and v0.2, the
+// boards sent for assembly as rev 0. 1 = HEAD, with the angle-output DAC
+// fitted. Only the spare-pad set differs; no connected pin moves.
+#ifndef MJ_BOARD_REV
+#define MJ_BOARD_REV 0
+#endif
 
 namespace mouse_joystick {
 namespace pins {
@@ -25,8 +48,8 @@ namespace pins {
 // -----------------------------------------------------------------------------
 // The alphabetical order reverses at the sheet boundary: connector DIO-A is
 // this board's RX, DIO-B is this board's TX. Both lines carry a 100 ohm series
-// resistor (R301/R302); PYC_UART_RX also has a 10k pull-up to +3.3V_MCU (R403),
-// so RX idles high with nothing plugged in.
+// resistor (`R1901`/`R1902` at v0.1); PYC_UART_RX also has a 10 kohm pull-up to
+// +3.3V_MCU (`R403`), so RX idles high with nothing plugged in.
 constexpr uint8_t kPycUartTx = 0; // PYC_UART_TX,  UART0 TX
 constexpr uint8_t kPycUartRx = 1; // PYC_UART_RX,  UART0 RX
 
@@ -54,11 +77,11 @@ constexpr uint8_t kTmcDiag1 = 8;   // TMC_DIAG1_
 // -----------------------------------------------------------------------------
 // GPIO isolation.
 // -----------------------------------------------------------------------------
-// Four SN74CB3Q3245 packages, one shared active-low OE, all four VCC pins on
-// the always-on +3.3V_MCU rail. R601 7.87k pulls this high, so the bus is
-// isolated from reset and firmware must lower it deliberately. That pull-up is
-// the *only* isolation mechanism -- the packages are never unpowered, so Ioff
-// never engages.
+// Four SN74CB3Q3245 packages (`U601`-`U604`), one shared active-low OE, all
+// four VCC pins on the always-on +3.3V_MCU rail. `R601` 7.87 kohm pulls this
+// high, so the bus is isolated from reset and firmware must lower it
+// deliberately. That pull-up is the *only* isolation mechanism -- the packages
+// are never unpowered, so Ioff never engages.
 //
 // "MCU running, switched rails at 0 V" is this board's normal idle state, and
 // an MCU pin driving into an unpowered TMC5130A forward-biases its ESD clamps
@@ -66,72 +89,110 @@ constexpr uint8_t kTmcDiag1 = 8;   // TMC_DIAG1_
 constexpr uint8_t kBusSwEnN = 9; // ~{BUS_SW_EN}, bypasses the switch itself
 
 // -----------------------------------------------------------------------------
-// Analog angle output DAC80501. Rev 1. SPI1, behind the bus switch.
+// Analog angle output DAC80501. Rev 1 only. SPI1, behind the bus switch.
 // -----------------------------------------------------------------------------
 // Reserved at fixed numbers so rev 1 populates them without moving anything.
-// Not fitted on rev 0.
-constexpr uint8_t kDacSpiSck = 10;  // DAC_SPI_SCK_   SPI1 SCK
-constexpr uint8_t kDacSpiCopi = 11; // DAC_SPI_COPI_  SPI1 TX
-constexpr uint8_t kDacCsN = 13;     // ~{DAC_CS_}     DAC ~SYNC
+// On v0.1 and v0.2 these three pads are routed nowhere at all, which is why
+// MJ_BOARD_REV 0 folds them into the spare-pad test below.
+constexpr uint8_t kDacSpiSck = 10;  // DAC_SPI_SCK_, SPI1 SCK  (rev 1)
+constexpr uint8_t kDacSpiCopi = 11; // DAC_SPI_COPI_, SPI1 TX  (rev 1)
+constexpr uint8_t kDacCsN = 13;     // ~{DAC_CS_}, DAC ~SYNC   (rev 1)
 
 // -----------------------------------------------------------------------------
-// 36 V input switch, TPS1HTC100-Q1. All four bypass the bus switch.
+// 36 V input switch, TPS1HTC100-Q1 (`U201` at v0.1). All four bypass the bus
+// switch -- the switch itself sits upstream of the switched domain, not on it.
 // -----------------------------------------------------------------------------
 // HV_EN is the board's reset button: it power-cycles every chip on the switched
-// domain while the MCU stays alive on USB or pyControl. R1901 1k in series,
-// with a 10k pull-down at the switch's EN pin, so the rail is off at reset.
+// domain while the MCU stays alive on USB or pyControl. `R201` 1 kohm in
+// series, with a 10 kohm pull-down at the switch's EN pin, so the rail is off
+// at reset.
 //
 // HV_DIAG_EN must never idle high. Held high, the switch's OFF-state open-load
-// detection keeps an internal ~150k pull-up from VS to VOUT enabled, trickling
-// ~240 uA into +36V_SW's ~208 uF. The rail creeps past the buck's 3.6 V minimum
-// in about three seconds and the switched domain hiccups instead of staying
-// off, which silently destroys the power-cycle-as-reset property and corrupts
-// the rail sense. Protection is unaffected by DIAG_EN -- only reporting is
-// gated -- so raise it *only* while reading kHvSns or kHvFaultN.
-constexpr uint8_t kHvDiagEn = 14; // HV_DIAG_EN, via R1902 1k
-constexpr uint8_t kHvEn = 19;     // HV_EN,      via R1901 1k
-constexpr uint8_t kHvSns = 28;    // HV_SNS,     ADC2, R1907 249 ohm to GND
-constexpr uint8_t kHvFaultN = 29; // ~{HV_FAULT}, open drain, 10k pull-up
+// detection keeps an internal ~150 kohm pull-up from VS to VOUT enabled,
+// trickling ~240 uA into +36V_SW's ~208 uF. The rail creeps past the buck's
+// 3.6 V minimum in about three seconds and the switched domain hiccups instead
+// of staying off, which silently destroys the power-cycle-as-reset property and
+// corrupts the rail sense. Protection is unaffected by DIAG_EN -- only
+// reporting is gated -- so raise it *only* while reading kHvSns or kHvFaultN.
+constexpr uint8_t kHvDiagEn = 14; // HV_DIAG_EN, via `R202` 1k
+constexpr uint8_t kHvEn = 19;     // HV_EN,      via `R201` 1k
+constexpr uint8_t kHvSns = 28;    // HV_SNS,     ADC2, `R207` 249 ohm to GND
+constexpr uint8_t kHvFaultN = 29; // ~{HV_FAULT}, open drain, `R205` 10k pull-up
 
 // -----------------------------------------------------------------------------
-// Instrumentation.
+// Instrumentation. InstrumentPort-40, `J1501`.
 // -----------------------------------------------------------------------------
-// The three (rev 0) SN74LVC125A buffer packages all run from +3.3V_MCU, so they
-// work with the switched domain off. Their shared active-low OE has a 10k
-// pull-up per package (R1601/R1701/R1801, plus R2101 on rev 1), so the port is
-// silent from reset.
+// The three rev 0 SN74LVC125A buffer packages `U1601`, `U1701` and `U1801` all
+// run from +3.3V_MCU, so they work with the switched domain off. Their shared
+// active-low OE has a 10 kohm pull-up per package (`R1601`/`R1701`/`R1801`), so
+// the port is silent from reset. Every buffer input is either driven or held by
+// a resistor, so enabling the port never floats an LVC input.
 //
-// FW_TRIG0/FW_TRIG1 land on InstrumentPort-40's TRIG0/TRIG1 through U1801.
-// There are no LEDs and no test points anywhere on this board, so these two
-// pins plus USB CDC are the entire observable surface.
+// FW_TRIG0 and FW_TRIG1 land on InstrumentPort-40 through `U1801`:
+//
+//   FW_TRIG0 -> J1501 pin 26 -> Strand TRIG0 -> LA5032 channel 16
+//   FW_TRIG1 -> J1501 pin 28 -> Strand TRIG1 -> LA5032 channel 17
+//
+// There are no LEDs and no test points anywhere on this board, and rev 0 has no
+// SWD header, so these two pins plus USB CDC are the entire observable surface.
+// A logic analyser on TRIG0/TRIG1 is the only proof of life that does not
+// depend on USB working.
 constexpr uint8_t kInstrBufOeN = 24; // ~{INSTR_BUF_OE}
-constexpr uint8_t kFwTrig1 = 21;     // FW_TRIG1
-constexpr uint8_t kFwTrig0 = 25;     // FW_TRIG0
+constexpr uint8_t kFwTrig1 = 21;     // FW_TRIG1 -> pin 28, TRIG1, LA ch 17
+constexpr uint8_t kFwTrig0 = 25;     // FW_TRIG0 -> pin 26, TRIG0, LA ch 16
+
+// Other stage 2 taps, for reference when setting up a capture. All buffered,
+// all on the driver side of the bus switch.
+//
+//   TMC_SPI_SCK  -> J1501 pin  5 -> DIG2  -> LA5032 channel  2
+//   TMC_SPI_COPI -> J1501 pin  7 -> DIG3  -> LA5032 channel  3
+//   TMC_SPI_CIPO -> J1501 pin  8 -> DIG4  -> LA5032 channel  4
+//   ~{TMC_CS}    -> J1501 pin 10 -> DIG5  -> LA5032 channel  5
+//   PYC_UART_RX  -> J1501 pin 13 -> DIG7  -> LA5032 channel  7
+//   PYC_UART_TX  -> J1501 pin 14 -> DIG8  -> LA5032 channel  8
+//   ENC_A        -> J1501 pin  2 -> DIG0  -> LA5032 channel  0
+//   ENC_B        -> J1501 pin  3 -> DIG1  -> LA5032 channel  1
+//   LIMIT_SW     -> J1501 pin 19 -> DIG11 -> LA5032 channel 11
+//
+// Odd-numbered pins from 1 to 31 that are not listed are GND. Connect at least
+// one, and more for a fast or many-channel capture.
 
 // -----------------------------------------------------------------------------
 // Switched-rail sense.
 // -----------------------------------------------------------------------------
-// R401/R402, 1k/1k inside the mcu sheet, divide raw +3.3V_SW by two. The
-// divider is also what holds +3.3V_SW at a true 0 V when the domain is off,
-// which is what makes a cross-domain pull-up to that rail a valid LOW.
+// `R401`/`R402`, 1 kohm/1 kohm inside the mcu sheet, divide raw +3.3V_SW by
+// two. The divider is also what holds +3.3V_SW at a true 0 V when the domain is
+// off, which is what makes a cross-domain pull-up to that rail a valid LOW.
 constexpr uint8_t kSwRailSenseDiv2 = 26; // SW_RAIL_SENSE_DIV_2, ADC0
 
 // -----------------------------------------------------------------------------
-// Spare pads. Routed nowhere on any revision so far.
+// Spare pads. Routed nowhere on this revision.
 // -----------------------------------------------------------------------------
 // Safe to exercise with internal pulls, which is exactly what the self test
 // does with them: a pad that cannot be pulled both ways has a solder defect.
+//
+// On rev 0 the three rev 1 DAC pads are unrouted too, so they get tested as
+// spares. On rev 1 they carry the DAC bus and are left alone.
+#if MJ_BOARD_REV == 0
+constexpr uint8_t kSpares[] = {10, 11, 12, 13, 15, 16, 17, 18, 20, 22, 23, 27};
+#else
 constexpr uint8_t kSpares[] = {12, 15, 16, 17, 18, 20, 22, 23, 27};
+#endif
 constexpr uint8_t kSpareCount = sizeof(kSpares) / sizeof(kSpares[0]);
 
 // -----------------------------------------------------------------------------
 // Pins that are NOT on this board.
 // -----------------------------------------------------------------------------
 // Rev 0 has no SWD header and no RUN connection: SWCLK, SWD and RUN are all
-// no-connect. There is no debugger during bring-up, and BOOTSEL recovery needs
-// USB *and* pyControl unplugged, because the MCU domain is ORed from both.
+// no-connect. There is no debugger during bring-up, and no reset button -- only
+// a power cycle. BOOTSEL recovery needs USB *and* pyControl unplugged, because
+// the MCU domain is ORed from both through `D301` and `D1901`.
 //
-// Two traps come from the PlatformIO `generic` variant's default pin mapping,
+// BOOTSEL itself is the standard circuit: `SW501` shorts ~{USB_BOOT} to GND,
+// `R505` 1 kohm ties that to QSPI_SS, and `R504` 10 kohm pulls QSPI_SS up to
+// +3.3V_MCU. Holding the button at power-on brings up the RPI-RP2 drive.
+//
+// Three traps come from the PlatformIO `generic` variant's default pin mapping,
 // which was written for a Pico and does not describe this board:
 //
 //   * LED_BUILTIN / PIN_LED resolves to GPIO 25, which here is FW_TRIG0. There
