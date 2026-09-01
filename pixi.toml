@@ -1,0 +1,127 @@
+[workspace]
+name = "mouse-joystick-firm"
+version = "0.1.0"
+description = "Firmware for mouse-joystick-pcb: RP2040 plus TMC5130A, single joystick axis, pyControl peripheral."
+authors = ["Peter Polidoro <peter@polidoro.io>"]
+channels = ["conda-forge"]
+platforms = ["linux-64", "osx-64", "osx-arm64", "win-64"]
+
+[dependencies]
+# PlatformIO CLI (conda-forge, noarch). Provides the `pio` command.
+platformio = ">=6.1.19,<7"
+# Explicit Python for the repo helper scripts.
+python = ">=3.12,<=3.14"
+clang-format = ">=18,<21"
+git = "*"
+
+# --------------------------------------------------------------------------------------
+# PlatformIO helpers
+#
+# The example to build is selected by setting PLATFORMIO_SRC_DIR rather than by
+# editing platformio.ini. A Python wrapper keeps that portable across shells.
+# --------------------------------------------------------------------------------------
+
+[tasks]
+# List connected devices/ports (/dev/ttyACM0, /dev/cu.usbmodem*, COM3, ...).
+ports = "pio device list"
+
+[tasks.pio-version]
+cmd = "pio --version"
+
+[tasks.build]
+description = "Compile an example without uploading."
+args = [
+  { arg = "example", default = "examples/RP2040SelfTest" },
+  { arg = "env", default = "mouse_joystick" },
+]
+cmd = "python tools/pio_task.py build --example {{ example }} --env {{ env }}"
+
+[tasks.clean]
+args = [
+  { arg = "example", default = "examples/RP2040SelfTest" },
+  { arg = "env", default = "mouse_joystick" },
+]
+cmd = "python tools/pio_task.py clean --example {{ example }} --env {{ env }}"
+
+[tasks.upload]
+description = "Build and upload. Needs the board in BOOTSEL, or already running firmware that honours the 1200 baud touch."
+args = [
+  { arg = "example", default = "examples/RP2040SelfTest" },
+  { arg = "env", default = "mouse_joystick" },
+  { arg = "port", default = "/dev/ttyACM0" },
+]
+cmd = "python tools/pio_task.py upload --example {{ example }} --env {{ env }} --port {{ port }}"
+
+[tasks.flash]
+description = "Clean, then build and upload."
+args = [
+  { arg = "example", default = "examples/RP2040SelfTest" },
+  { arg = "env", default = "mouse_joystick" },
+  { arg = "port", default = "/dev/ttyACM0" },
+]
+cmd = "python tools/pio_task.py flash --example {{ example }} --env {{ env }} --port {{ port }}"
+
+[tasks.rebuild]
+description = "Clean, then compile."
+args = [
+  { arg = "example", default = "examples/RP2040SelfTest" },
+  { arg = "env", default = "mouse_joystick" },
+]
+cmd = "python tools/pio_task.py rebuild --example {{ example }} --env {{ env }}"
+
+[tasks.deepclean]
+description = "Delete the isolated build directory for one example."
+args = [{ arg = "example", default = "examples/RP2040SelfTest" }]
+cmd = "python tools/pio_task.py deepclean --example {{ example }}"
+
+[tasks.monitor]
+description = "Open the USB CDC serial monitor. This board's only feedback channel."
+args = [
+  { arg = "port", default = "/dev/ttyACM0" },
+  { arg = "baud", default = "115200" },
+]
+cmd = "python tools/pio_task.py monitor --port {{ port }} --baud {{ baud }}"
+
+[tasks.test]
+description = "Run host-native Unity tests. Covers only the Arduino-free arithmetic."
+args = [{ arg = "env", default = "native" }]
+cmd = "python tools/pio_task.py test --env {{ env }}"
+
+# --------------------------------------------------------------------------------------
+# clang-format
+# --------------------------------------------------------------------------------------
+
+[tasks.format]
+description = "Format staged changes only, for C/C++/Arduino (.ino)."
+cmd = "git clang-format --staged --style=file --binary clang-format --extensions c,cc,cpp,cxx,h,hh,hpp,hxx,ino"
+
+[tasks.format-wip]
+description = "Format working tree changes, including unstaged files."
+cmd = "git clang-format --style=file --binary clang-format --extensions c,cc,cpp,cxx,h,hh,hpp,hxx,ino --force"
+
+# --------------------------------------------------------------------------------------
+# git archive
+# --------------------------------------------------------------------------------------
+
+[tasks.archive]
+description = "Export the repository at the tip of the current branch."
+cmd = "git archive --format=zip --output=../mouse-joystick-firm.zip HEAD"
+
+# --------------------------------------------------------------------------------------
+# Build tooling for PlatformIO native tests on POSIX.
+# --------------------------------------------------------------------------------------
+
+[target.linux-64.dependencies]
+make = "*"
+c-compiler = "*"
+cxx-compiler = "*"
+
+[target.osx-64.dependencies]
+make = "*"
+c-compiler = "*"
+cxx-compiler = "*"
+
+[target.osx-arm64.dependencies]
+make = "*"
+c-compiler = "*"
+cxx-compiler = "*"
