@@ -22,11 +22,20 @@ non-UART port fails loudly rather than silently not receiving.
 | `devices/` | pyControl board (MicroPython) | symlinked into pyControl's own `devices/` |
 | `hardware_definitions/` | pyControl board (MicroPython) | `config/settings.json` folder redirect |
 | `tasks/` | pyControl board (MicroPython) | `config/settings.json` folder redirect |
+| `sim/` | host (CPython) | not delivered; test infrastructure |
 | `tests/` | host (CPython) | not delivered; this is Gate C |
 
-Only `tests/` runs under the `pycontrol` pixi environment. Everything else is
-MicroPython that pixi never executes — pixi supplies the host GUI that *uploads*
-it.
+`devices/` and below is MicroPython that pixi never executes — pixi supplies the
+host GUI that *uploads* it. `mouse_joystick_protocol.py` is the exception: it
+runs in both places, which is why it has no pyControl imports.
+
+**Sibling imports inside `devices/` must be package-qualified** —
+`from devices.mouse_joystick_protocol import ...`, matching pyControl's own
+`from devices.poke import _Poke`. On the pyboard the uploaded files live inside
+the `devices` package and `/flash/devices` is not on `sys.path`, so a bare import
+raises ImportError there while passing every host test.
+`tests/test_device_class.py` asserts this against the source text, because no
+runtime test on a host can reproduce the board's import environment.
 
 ## Two Delivery Mechanisms, Not One
 
@@ -70,14 +79,80 @@ from the pyboard.** After reloading the framework you must reload the hardware
 definition, or task upload fails with `ImportError: no module named
 'hardware_definition'`.
 
-## Gate C Comes First
+## Gate C
 
 `../../mouse-joystick-pcb/docs/uart-protocol.md` asks for "a host-side simulator
 or protocol fixture so both this firmware and the pyControl device class can be
 tested before real hardware and a real pyControl installation are both
-available." That suite runs in `tests/` with `make pycontrol-test` and needs no
-board, no breakout, and no pyControl checkout.
+available." `make pycontrol-test` runs it: no board, no breakout, no pyControl
+checkout.
 
-Currently `tests/` contains only `test_environment.py`, which verifies the pixi
-environment can actually run pyControl. The protocol conformance tests are the
-next piece of work.
+| File | What it is |
+|------|-----------|
+| `devices/mouse_joystick_protocol.py` | The framing codec. Runs on the board *and* under pytest, which is why it has no pyControl imports. |
+| `devices/mouse_joystick.py` | The device class. |
+| `sim/board_sim.py` | Host simulator: state machine, faults, retransmission, watchdog. Injected clock, so every timestamp is deterministic. |
+| `tests/fixtures/protocol_cases.txt` | The shared corpus. |
+
+**Gate C is not passed yet, and the missing half is the firmware.** The corpus is
+line-oriented rather than JSON specifically so a PlatformIO native C++ test can
+parse it with `getline` and a prefix compare. Until that test exists, the
+simulator agreeing with a corpus that only the simulator has ever been checked
+against proves nothing about the RP2040 — two independent readings of a draft
+agree right up until they do not, and the corpus is only worth something once
+both are held to it.
+
+The simulator is **not** a model of the board. No TMC5130A, no encoder, no
+current control, no real motion profile. Position moves linearly at a configured
+velocity because the protocol is what is under test.
+
+## What Implementing The Draft Surfaced
+
+`uart-protocol.md` is marked "Draft v0.1. Not implemented, not frozen." Writing
+two ends of it turned up the following. Everything below is marked `SPEC:` at the
+point in the code where it was decided.
+
+### Two that are real problems, not just gaps
+
+**1. The retransmission rule breaks the heartbeat.** The draft says "a repeated
+`seq` with identical content is treated as a retransmission and re-acknowledged
+without re-executing." That rule exists so a retried `MOVETO` does not move the
+joystick twice — it assumes re-execution is the harm. For `PING` the side effect
+*is* the command: it has no result other than resetting the host-loss watchdog.
+Serving a repeated `PING` purely from cache means the safety timeout expires
+while the host believes it is being answered, and the board faults mid-experiment
+for no reason the host can see. A host that increments `seq` never hits this,
+which is exactly why it would survive review and then fire after a 65536 wrap.
+The simulator refreshes the watchdog on a cache hit; the cleaner fix is probably
+to exempt `PING` from the cache entirely. **Needs a decision before freeze.**
+
+**2. The host timeout is shorter than a long move.** The cited host timeout is
+100 ms (`pycontrol-port-pinout.md`). At the simulator's default 180 °/s, an 18°
+move takes exactly that long — and the travel range is 40° wide. A task that
+issues a long move and then waits for `TARGET` gets faulted for heartbeat loss
+every time. This may be fine (the host simply must ping during motion, which
+`tasks/mouse_joystick_check.py` does at 40 ms) but it should be stated in the
+draft rather than discovered. **Confirm the real velocity and the real timeout
+together, not separately.**
+
+### Gaps that were filled to make the thing run
+
+| Item | Draft says | Decided here |
+|------|-----------|--------------|
+| Verb case | Table is `MOVETO`, examples are `moveto;417;-12.5` | Decode either, emit lowercase |
+| `outofrange` example state | `moveto;421;-999 → nak;421;outofrange`, state unstated | ARMED is checked **before** range, so a fresh board answers `notarmed`. Safety rule should not be reachable past an argument check |
+| Ack data format | One example, `ack;419;enc_offset=1024;angle_zero=0.0` | All data-carrying acks are `key=value` |
+| `ID`/`STATUS`/`LIMITS` fields | Prose lists | Named keys, pinned byte-exact in the corpus |
+| Max line length | Only "rxbuf=130" as a hint | `MAX_LINE = 120`, leaving room to answer `badframe` inside a 130-byte buffer |
+| `nak` reasons | Names 4: `badverb`, `outofrange`, `badframe`, `latched` | Added `badargs`, `notarmed`, `nothomed`, `faulted`, `busy`, `nohv` |
+| Retransmit cache size | Unbounded | 16. Unbounded is a slow leak on a device with no way to report one |
+| When the watchdog is armed | Unstated | At `ARM`, released at `DISARM`. Faulting an idle unarmed board before the host has connected would be absurd |
+| `HV` as a motion precondition | Unstated | `HOME` and motion require it; new reason `nohv` |
+| `\r` handling | "A leading `\r` is tolerated" | Stripped from both ends — a CRLF peer produces a *trailing* one, so the literal reading leaves the common case broken |
+| Checksum | Explicitly open | Not implemented. Decide with a measured error rate on the real cable, as the draft says |
+
+## Not Covered By Any Host Test
+
+Interrupt timing, `UART.IRQ_RXIDLE` actually firing, rxbuf overrun, MicroPython's
+own UART driver, and every electrical property of the link. Those need the
+Breakout 1.2 and a board. A green `make pycontrol-test` is not a bring-up.

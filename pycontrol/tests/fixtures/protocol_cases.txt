@@ -1,0 +1,198 @@
+# Shared protocol conformance corpus.
+#
+# Gate C requires that "a host simulator or protocol fixture and the firmware
+# agree on framing and versions". This file is that agreement, written down.
+# Two independent implementations of the same draft agree right up until they do
+# not; a corpus both must reproduce is what turns that into a test failure
+# instead of a bring-up surprise.
+#
+# Consumed by:
+#   - pycontrol/tests/test_fixture_corpus.py   (the Python simulator)
+#   - the RP2040 firmware's own host-native test               [NOT YET WRITTEN]
+#
+# Format is line-oriented, not JSON, so the C++ side can parse it with getline
+# and a prefix compare rather than pulling in a JSON library. It is also
+# diffable and greppable, which is the same rule the protocol itself follows.
+#
+#   CASE <name>       begin a case; the board is freshly booted, READY drained,
+#                     clock at 0, serial 0000000000000000, defaults otherwise
+#   SEND <line>       feed one command line (the \n is implied)
+#   ADVANCE <us>      advance simulated time by <us> microseconds
+#   EXPECT <line>     the next output line, in order
+#   END               end of case; no further output may be pending
+#
+# Every EXPECT is exact bytes. Blank lines and # lines are ignored.
+#
+# Board defaults these cases assume, from BoardSim's constructor:
+#   serial 0000000000000000   fw 0.0.0   hw rev0   proto 1   axes 1
+#   travel -20.0..20.0 deg    v_max 180.0 deg/s    home takes 50000 us
+#   host timeout 100000 us
+
+
+# --------------------------------------------------------------- versions
+
+# The one case that must never be allowed to drift silently: a peer reads the
+# protocol version and axis count from here and refuses a mismatch rather than
+# guessing. The axis count is also what distinguishes this board from the
+# twin-axis board on the same link.
+CASE id-reports-version-serial-and-axis-count
+  SEND id;1
+  EXPECT ack;1;hw=rev0;serial=0000000000000000;fw=0.0.0;proto=1;axes=1;caps=motion+home+angout+instr+hv;rxbuf=120
+END
+
+# "Must work before ARM and must never fail" - including before HV is on.
+CASE id-answers-before-arm
+  SEND id;7
+  EXPECT ack;7;hw=rev0;serial=0000000000000000;fw=0.0.0;proto=1;axes=1;caps=motion+home+angout+instr+hv;rxbuf=120
+END
+
+
+# ------------------------------------------------ the draft's own examples
+
+# `cal;419;get -> ack;419;enc_offset=1024;angle_zero=0.0`
+CASE draft-example-cal-get
+  SEND cal;419;get
+  EXPECT ack;419;enc_offset=1024;angle_zero=0.0
+END
+
+# `movetoo;420;-12.5 -> nak;420;badverb`
+CASE draft-example-unknown-verb
+  SEND movetoo;420;-12.5
+  EXPECT nak;420;badverb
+END
+
+# `moveto;421;-999 -> nak;421;outofrange`
+#
+# The draft shows this reply without saying which state the board was in, and
+# ordering matters: this implementation checks ARMED *before* range, so from a
+# fresh board the same line answers `notarmed`. Reproducing the draft's example
+# therefore requires an armed board, which is what this case sets up. The
+# ordering choice is deliberate - refusing motion outside ARMED is the
+# safety-relevant rule and should not be reachable past an argument check.
+CASE draft-example-out-of-range-when-armed
+  SEND hv;1;on
+  EXPECT ack;1
+  SEND home;2
+  EXPECT ack;2
+  ADVANCE 50000
+  EXPECT ev;HOMED;50000;angle=0.0
+  SEND arm;3
+  EXPECT ack;3
+  SEND moveto;421;-999
+  EXPECT nak;421;outofrange
+END
+
+
+# ------------------------------------------------------ framing robustness
+
+CASE bad-frame-without-a-sequence-number
+  SEND ping
+  EXPECT nak;?;badframe
+END
+
+CASE bad-frame-with-an-unreadable-sequence-number
+  SEND ping;notanumber
+  EXPECT nak;?;badframe
+END
+
+CASE empty-field-is-a-bad-frame
+  SEND ;
+  EXPECT nak;?;badframe
+END
+
+# Verbs decode case-insensitively; the draft's table is uppercase and its
+# examples are lowercase.
+CASE verbs-are-case-insensitive
+  SEND PING;3
+  EXPECT ack;3
+END
+
+# A CRLF peer leaves a carriage return before the newline.
+CASE carriage-return-is-tolerated
+  SEND ping;4\r
+  EXPECT ack;4
+END
+
+# A repeated seq with identical content is re-acknowledged, byte for byte.
+CASE retransmission-is-reacknowledged-identically
+  SEND cal;9;set;enc_offset;2048
+  EXPECT ack;9;enc_offset=2048
+  SEND cal;9;set;enc_offset;2048
+  EXPECT ack;9;enc_offset=2048
+END
+
+
+# ------------------------------------------------------- state machine gates
+
+CASE motion-is-refused-outside-armed
+  SEND moveto;1;5.0
+  EXPECT nak;1;notarmed
+END
+
+CASE homing-requires-the-motor-rail
+  SEND home;1
+  EXPECT nak;1;nohv
+END
+
+CASE arm-is-refused-before-homing
+  SEND hv;1;on
+  EXPECT ack;1
+  SEND arm;2
+  EXPECT nak;2;nothomed
+END
+
+# The full path from boot to a completed move, which is the sequence a task
+# actually performs.
+CASE arm-then-move-to-completion
+  SEND hv;1;on
+  EXPECT ack;1
+  SEND home;2
+  EXPECT ack;2
+  ADVANCE 50000
+  EXPECT ev;HOMED;50000;angle=0.0
+  SEND arm;3
+  EXPECT ack;3
+  SEND moveto;4;9.0
+  EXPECT ack;4
+  ADVANCE 50000
+  EXPECT ev;TARGET;100000;angle=9.0
+END
+
+# Heartbeat loss faults the board without host cooperation, drops HV_EN, and is
+# reported as fault bit 0.
+CASE heartbeat-loss-faults-the-board
+  SEND hv;1;on
+  EXPECT ack;1
+  SEND home;2
+  EXPECT ack;2
+  ADVANCE 50000
+  EXPECT ev;HOMED;50000;angle=0.0
+  SEND arm;3
+  EXPECT ack;3
+  ADVANCE 100000
+  EXPECT ev;FAULT;150000;code=0;detail=host_timeout
+  SEND status;4
+  EXPECT ack;4;state=FAULTED;angle=0.0;pos=0;homed=1;limit=0;faults=1;hv=0;angout=invalid
+END
+
+
+# ------------------------------------------------------------- observability
+
+CASE status-is-safe-before-anything-is-configured
+  SEND status;1
+  EXPECT ack;1;state=IDLE;angle=0.0;pos=0;homed=0;limit=0;faults=0;hv=0;angout=invalid
+END
+
+CASE limits-reports-what-the-board-will-enforce
+  SEND limits;1
+  EXPECT ack;1;travel_lo=-20.0;travel_hi=20.0;v_max=180.0;a_max=3600.0;i_max=0.421
+END
+
+CASE hv-state-is-observable-not-inferred
+  SEND hv;1;state
+  EXPECT ack;1;hv=0
+  SEND hv;2;on
+  EXPECT ack;2
+  SEND hv;3;state
+  EXPECT ack;3;hv=1
+END

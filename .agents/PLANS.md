@@ -70,12 +70,39 @@ Read `.agents/handoff.local.md` for bench state and the immediate next actions.
       pyserial 3.5 against pyControl v2.1.1; 6 environment tests pass; firmware
       env unchanged at 33/33
 - [ ] Stage 4: pyControl UART protocol
-  - [ ] Protocol framer/parser in `src/`, host-testable
-  - [ ] Board simulator, so the device class and the firmware can be tested
-        against each other without hardware
-  - [ ] Gate C conformance suite in `pycontrol/tests/`
-  - [ ] `pycontrol/devices/mouse_joystick.py`, asserting on `port.UART`
+  - [x] **Host half written and green, 2026-09-02.** 115 tests.
+        `pycontrol/devices/mouse_joystick_protocol.py` (codec, runs on the board
+        and under pytest), `pycontrol/sim/board_sim.py` (simulator with an
+        injected clock), `pycontrol/devices/mouse_joystick.py` (device class,
+        asserts on `port.UART` and on duplicate `event_name`),
+        `pycontrol/tests/fixtures/protocol_cases.txt` (19-case shared corpus),
+        plus a bring-up hardware definition and task
+  - [ ] **Protocol framer/parser in `src/`, and a host-native test that
+        reproduces `protocol_cases.txt`.** Until this exists Gate C is NOT
+        passed: a simulator agreeing with a corpus only it has been checked
+        against says nothing about the RP2040. The corpus is line-oriented so
+        the C++ side is `getline` plus a prefix compare, no JSON library
+  - [ ] Resolve the two protocol findings below before freezing the draft
   - [ ] Gate E on the Breakout 1.2, then deliver to `joystick-rig`
+
+## Protocol Findings, 2026-09-02
+
+Raised by implementing `../mouse-joystick-pcb/docs/uart-protocol.md` (Draft
+v0.1). Full list in `pycontrol/README.md`; these two are defects rather than
+gaps and belong to the PCB repo's draft, not to this one.
+
+1. **The retransmission rule breaks the heartbeat.** "A repeated `seq` with
+   identical content is re-acknowledged without re-executing" assumes
+   re-execution is the harm. For `PING` the side effect *is* the command — it
+   only resets the host-loss watchdog. Served from cache, the safety timeout
+   expires while the host believes it is being answered. A host that increments
+   `seq` never hits it, so it would survive review and fire after a 65536 wrap.
+   Likely fix: exempt `PING` from the cache.
+2. **The 100 ms host timeout is shorter than a long move.** At 180 deg/s an 18
+   degree move consumes the whole timeout, and travel is 40 degrees wide. The
+   host must ping *during* motion. Possibly fine, but it should be written down
+   rather than discovered. Confirm the real velocity and the real timeout
+   together.
 
 ## Controller Decided 2026-09-02
 

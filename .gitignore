@@ -17,3 +17,8 @@ GRTAGS
 GTAGS
 /.agents/handoff.local.md
 /.agents/workspace.dirs
+
+# Python, added with pycontrol/ (Stage 4 host side)
+__pycache__/
+*.py[cod]
+.pytest_cache/
