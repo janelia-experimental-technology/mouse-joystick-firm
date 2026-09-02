@@ -9,8 +9,10 @@ The board lives in
 this firmware depends on. The driver library is
 [`TMC51X0`](https://github.com/janelia-arduino/TMC51X0).
 
-**Status:** stage 1 only. `examples/RP2040SelfTest` compiles and its host tests
-pass; it has not yet been run on hardware.
+**Status:** stage 1 **passed on hardware** 2026-09-01 — board serial
+`E4654C159F2C2534`, 27 checks, 0 failed. Stage 2 is written and builds but has
+not been run; it needs 36 V. Results are recorded in
+`../mouse-joystick-pcb/docs/bringup-log.md`.
 
 The pin map is verified against PCB git tag **v0.1**, the revision manufactured
 as rev 0. Tags v0.1 and v0.2 have byte-identical RP2040 pad-to-net maps.
@@ -36,17 +38,25 @@ awkward than usual, and the self test gives you a way to avoid repeating it.
 The board has two power domains with a bus switch between the MCU and everything
 else. The stages follow that boundary:
 
-| Stage | What runs | 36 V | Bus switch | Status |
-|-------|-----------|------|-----------|--------|
-| 1 | RP2040 alone | absent | isolated | `examples/RP2040SelfTest` |
-| 2 | TMC5130A register reads | applied | enabled | not written |
-| 3 | Motion | applied | enabled | not written |
-| 4 | pyControl UART protocol | applied | enabled | not written |
+| Stage | What runs | 36 V | Bus switch | Driver | Status |
+|-------|-----------|------|-----------|--------|--------|
+| 1 | RP2040 alone | absent | isolated | disabled | `examples/RP2040SelfTest` — **passed** |
+| 2 | TMC5130A register reads | applied | closed | disabled | `examples/TMC5130Communication` — **written, not run** |
+| 3 | Motion | applied | closed | enabled | not written |
+| 4 | pyControl UART protocol | applied | closed | as needed | not written |
 
 **Stage 1 has no way to raise `HV_EN` and no way to enable the bus switch.** That
 is deliberate, not an omission: until the MCU is proven there is no reason to put
 36 V near it, and an MCU pin driving into an unpowered TMC5130A back-powers a
 dead rail through its ESD clamps.
+
+**Stage 2 has no way to enable the driver.** It reads registers with
+`~{TMC_DRV_EN}` held high throughout and writes nothing, so no current can reach
+the motor. Enabling the driver depends on the current-sense decision — `vsense = 1`
+with the 0.15 Ω shunts — which belongs to stage 3.
+
+`src/PowerSequence.hpp` is the only file that raises `HV_EN`, and it enforces the
+one safe ordering: rail up before the bus closes, bus open before the rail drops.
 
 ## What Stage 1 Actually Checks
 
@@ -106,6 +116,47 @@ Collected here because none of them are guessable from the code:
   before enabling the driver.
 - **The encoder and limit switch never reach a GPIO,** on any revision. Position
   comes from the driver's `X_ENC`/`XACTUAL` over SPI.
+
+## Stage 2: What It Checks
+
+Run `examples/TMC5130Communication` with 36 V on `J201`. It is interactive and
+starts powered down — send `s` to begin, `x` to power down.
+
+1. Confirms `+3.3V_SW` is genuinely dead before raising anything, and refuses to
+   continue if it is not.
+2. Raises `HV_EN` and measures how long `+3.3V_SW` takes to come up.
+3. Reads the 36 V switch's own diagnostics, raising `HV_DIAG_EN` only for the
+   duration of the read and lowering it again.
+4. **Then** closes the GPIO isolation bus switch.
+5. Reads `IOIN`, `GSTAT`, `GCONF`, `CHOPCONF`, `DRV_STATUS`, `XACTUAL` and
+   `X_ENC`, printing every datagram byte so the serial log can be compared
+   against a logic analyser capture.
+
+The check that matters most is `IOIN` bit 4, `DRV_ENN`: it reads back the level
+firmware drives on `GP3` *through the bus switch*, and nothing else in the test
+proves that path. Expected `IOIN` on this board is `0x11000010`, with bit 7 free
+because `SWCOMP_IN` is a comparator output.
+
+Two failure signatures are called out explicitly rather than left as "SPI
+failed": all bytes `0x00` means CIPO is undriven, which on this board points at
+the bus switch enable, then `+3.3V_SW` at the driver's `VCC_IO`, then CS. All
+bytes `0xFF` means CIPO is stuck high, which the board's 10 kΩ pull-down should
+prevent.
+
+### Watching it with the LA5032
+
+`FW_TRIG1` goes high for the whole register-read burst, so:
+
+```sh
+cd ../instrument-control
+guix shell -m manifest.scm -- sigrok-cli --driver kingst-la2016 \
+  --channels CH2,CH3,CH4,CH5,CH17 --config samplerate=10m \
+  --triggers CH17=r --samples 2000000 \
+  -P spi:clk=CH2:mosi=CH3:miso=CH4:cs=CH5:cpol=1:cpha=1 -A spi
+```
+
+`CH2`–`CH5` are `SCK`, `COPI`, `CIPO`, `~CS`. The TMC5130A is SPI mode 3, hence
+`cpol=1:cpha=1`.
 
 ## Pin Map
 

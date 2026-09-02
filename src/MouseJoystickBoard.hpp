@@ -11,5 +11,8 @@
 
 #include "BoardPins.hpp"
 #include "Conversions.hpp"
+#include "PowerSequence.hpp"
 #include "SafeState.hpp"
 #include "SelfTest.hpp"
+#include "TmcRegisters.hpp"
+#include "TmcSpi.hpp"

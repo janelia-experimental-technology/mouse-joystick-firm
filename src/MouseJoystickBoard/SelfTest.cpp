@@ -107,7 +107,7 @@ const char *resetReasonName(int reason) {
 } // namespace
 
 void SelfTest::beginAdc() {
-  analogReadResolution(12);
+  analogReadResolution(conversions::kAdcResolutionBits);
   pinMode(pins::kSwRailSenseDiv2, INPUT);
   pinMode(pins::kHvSns, INPUT);
 }

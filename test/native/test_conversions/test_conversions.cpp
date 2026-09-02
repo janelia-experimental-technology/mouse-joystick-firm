@@ -50,7 +50,15 @@ void test_hv_sense_is_raw_volts(void) {
   TEST_ASSERT_FLOAT_WITHIN(1e-6f, countsToVolts(500), hvSenseVolts(500));
 }
 
+void test_full_scale_matches_declared_resolution(void) {
+  // These two drifting apart is not hypothetical: stage 2 initially read at the
+  // Arduino core's default 10 bits while dividing by the 12-bit full scale, and
+  // reported a quarter of every voltage.
+  TEST_ASSERT_EQUAL_UINT16((1u << kAdcResolutionBits) - 1u, kAdcFullScale);
+}
+
 void test_board_constants(void) {
+  TEST_ASSERT_EQUAL_UINT8(12, kAdcResolutionBits);
   TEST_ASSERT_EQUAL_UINT16(4095, kAdcFullScale);
   TEST_ASSERT_FLOAT_WITHIN(1e-6f, 3.3f, kAdcReferenceVolts);
   TEST_ASSERT_FLOAT_WITHIN(1e-6f, 2.0f, kSwRailDividerRatio);
@@ -65,6 +73,7 @@ int main(int, char **) {
   RUN_TEST(test_sw_rail_undoes_the_divider);
   RUN_TEST(test_sw_rail_off_reads_below_threshold);
   RUN_TEST(test_hv_sense_is_raw_volts);
+  RUN_TEST(test_full_scale_matches_declared_resolution);
   RUN_TEST(test_board_constants);
   return UNITY_END();
 }

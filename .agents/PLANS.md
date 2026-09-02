@@ -8,10 +8,19 @@ rev 0 board, received 2026-09-01. USB only; 36 V stays unplugged.
 ## Status
 
 **Stage 1 passed on hardware, 2026-09-01.** Board serial `E4654C159F2C2534`.
-27 checks, 0 failed. Flash written and verified by `picotool`. Not yet recorded
-in the PCB repository's bring-up log, and the LA5032 taps are still unconfirmed.
+27 checks, 0 failed. Recorded in `../mouse-joystick-pcb/docs/bringup-log.md`.
 
-Stage 2 is unblocked, and needs 36 V.
+**The LA5032 capture path and `la5032-instrument-port-adapter` v1.0 are both
+validated**, same day, against the boot signature. `TRIG0`/`TRIG1` on LA5032
+channels 16/17; cable not mirrored. Recorded in
+`../la5032-instrument-port-adapter/docs/bringup-log.md`.
+
+**Stage 2 is written and has been run. It is blocked at gate 2.** With 36 V
+applied, `+3.3V_SW` comes up to 3.309 V in 3 ms, holds steady, and then dies at
+56-57 ms — repeatably. The sequence never reaches the driver, so **SPI to the
+TMC5130A has never been exercised.** See [The 36 V Rail Collapse](#the-36-v-rail-collapse-open-2026-09-01).
+
+Read `.agents/handoff.local.md` for bench state and the immediate next actions.
 
 ## Milestones
 
@@ -27,10 +36,16 @@ Stage 2 is unblocked, and needs 36 V.
       `mouse_joystick_rev1`; 7/7 host tests pass
 - [x] BOOTSEL enumerates (`RPI-RP2` mass storage) — passed 2026-09-01
 - [x] Firmware flashes, verifies, and runs — **27 checks, 0 failed**, 2026-09-01
-- [ ] Results recorded in `../mouse-joystick-pcb/docs/bringup-log.md`
-- [ ] LA5032 channel map confirmed against the boot signature
-- [ ] Stage 2: `examples/TMC5130Communication` — 36 V on, `HV_EN` raised, bus
-      switch enabled, driver still disabled, register read proves SPI
+- [x] Results recorded in `../mouse-joystick-pcb/docs/bringup-log.md`, 2026-09-01
+- [x] LA5032 channel map confirmed against the boot signature, 2026-09-01, and
+      recorded in the adapter's own bring-up log
+- [x] Stage 2 written: `examples/TMC5130Communication`. Builds clean, plus 8 host
+      tests pinning the register decoding and the expected-IOIN claim.
+- [x] Stage 2 run on hardware 2026-09-01 — reached gate 2 and stopped there
+- [x] 36 V power chain shown to work at least momentarily: rail up in 3 ms to
+      3.309 V, measured
+- [ ] **Resolve the 36 V rail collapse at 56 ms** — blocking everything below
+- [ ] Stage 2 gates 4 and 5: bus switch closed, TMC5130A `IOIN` read
 - [ ] Stage 3: motion, with `vsense = 1` set and read back first
 - [ ] Stage 4: pyControl UART protocol
 
@@ -113,6 +128,84 @@ a `#error` canary.
 
 **`TMC51X0` uses the same bare-path arrangement** (`lib_deps_local = src/TMC51X0`)
 and so has the same trap. Worth fixing there.
+
+## The 36 V Rail Collapse (open, 2026-09-01)
+
+The blocking issue. Full detail and raw data references in
+`.agents/handoff.local.md`; the durable summary:
+
+**Symptom.** `HV_EN` high with 36 V on `J201`: `+3.3V_SW` reaches 3.309 V at
+t=3 ms, holds rock steady, collapses at t=56-57 ms and stays down. Repeatable to
+±1 ms. Captures in `../mouse-joystick-pcb/docs/captures/2026-09-01/`.
+
+**Ruled out.** A resistive short — `+36V_SW` to `GND` measures 0.87 MΩ with a
+DMM, board unpowered. A too-low bench supply limit — the supply was not limited
+and can deliver 4 A. Note the DMM result does not rule out a *voltage-dependent*
+load.
+
+**Leading hypothesis.** Capacitive-charging thermal shutdown in `U201`, which
+`tps1htc100-q1.pdf` explicitly warns about. Charging `+36V_SW`'s ~208 µF to 36 V
+costs ½CV² = 135 mJ **independent of the current limit**, `T_REL` is 60 °C, and
+`R203` ties `LATCH` high which disables the auto-retry TI says is acceptable for
+high-impedance loads. 0.87 MΩ is a high-impedance load.
+
+**Not yet distinguishable.** Whether `U201` turned off or `U901`/`U1001` shut
+down. Only `+3.3V_SW` is instrumented; `+36V_SW` and `+5V_SW` reach neither the
+MCU nor the InstrumentPort. **This cannot be resolved from firmware** — it needs a
+scope directly on those two rails. Do not add more ADC reads hoping to close it.
+
+**Trap.** `HV_SNS` at `VSNSFH` does not identify a fault. Per Table 7-2 that
+level is shared by overcurrent, overvoltage, short-to-ground and thermal
+shutdown, and with `EN` low it is also OFF-state open-load. An earlier diagnosis
+of "continuous 1.15 A load" came from misreading it and was wrong.
+
+**If confirmed, the fix is a board change, not firmware:** reduce bulk
+capacitance, raise `R206` to *lower* `I_CL` and spread the same energy over more
+time, or free `LATCH` for auto-retry. Raising `I_CL` does not help.
+
+## Stage 2 Design Notes
+
+- **Raw SPI, not the TMC51X0 library.** Stage 2 asks one question: does this
+  board's SPI path reach the driver. Answering it with a 40-bit datagram nobody
+  has to trust beats answering it with a library that would then be a second
+  unknown. Bringing TMC51X0 up on this board is its own step and starts from a
+  bus already known to work. Byte order and register addresses are copied from
+  `TMC51X0`'s `SpiProtocol.hpp` and `Registers.hpp` so the two cannot diverge.
+- **No register writes at all.** A TMC5130A read requires a correct address over
+  MOSI, a clock on SCK, framing on CS, and an answer on MISO, so reads alone
+  prove the whole bus. Writes would buy nothing and add a way to leave the chip
+  misconfigured.
+- **The load-bearing check is `IOIN` bit 4, `DRV_ENN`.** It reads back the level
+  firmware drives on `GP3` *through the bus switch*. Nothing else in the test
+  proves that path. Expected `IOIN` on this board is `0x11000010` with bit 7
+  (`SWCOMP_IN`, a comparator output) free.
+- **Ordering is the whole point of the bus switch.** Power up: `HV_EN` high, wait
+  for `+3.3V_SW`, settle, *then* close the bus. Power down: open the bus, *then*
+  drop `HV_EN`. Get it backwards and MCU pins drive into an unpowered TMC5130A.
+  `PowerSequence` enforces this and `connectBus()` refuses while the rail is down.
+- **`PowerSequence` is the only file that raises `HV_EN`**, and it refuses to
+  start unless `+3.3V_SW` is measurably dead first.
+- **`vsense` is reported, never written.** Stage 3 owns setting it to 1 and
+  reading it back before it lowers `~{TMC_DRV_EN}`.
+- `FW_TRIG1` goes high for the duration of each register-read burst, so the
+  LA5032 can trigger on ch 17 rising and capture `DIG2`-`DIG5` for the `spi`
+  decoder.
+- Gotcha found: `Arduino.h` defines `bitSet()` as a macro, so the helper is named
+  `bitIsSet()`. A function called `bitSet` will not compile.
+
+## Instrumentation Reach — A Standing Limitation
+
+Worth stating once because it shaped this session. Firmware can see:
+
+- `+3.3V_SW`, divided, on `GP26`
+- `HV_SNS` and `~{HV_FAULT}`, both only while `HV_DIAG_EN` is high
+- the TMC5130A's registers, once the bus switch is closed
+
+Firmware cannot see `+36V_SW`, `+5V_SW`, `+3.3V_MCU` (it is the ADC reference),
+or `+5V_MCU`. InstrumentPort-40 carries no divided motor rail to any `AIN` by
+design. Any question about those rails needs a meter or a scope on the board, and
+there are no test points anywhere. Budget for that rather than trying to reason
+around it.
 
 ## Not A Priority
 

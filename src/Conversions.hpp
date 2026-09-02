@@ -15,7 +15,11 @@ namespace conversions {
 // absolute accuracy is only as good as that rail.
 constexpr float kAdcReferenceVolts = 3.3f;
 
-// The self test runs the ADC at 12 bits, the RP2040's native width.
+// The RP2040's native ADC width. The Arduino core defaults to 10 bits, so
+// every read path must set this explicitly -- a reader that forgets divides by
+// the wrong full scale and reports a quarter of the real voltage. These two
+// constants must agree; a host test asserts it.
+constexpr uint8_t kAdcResolutionBits = 12;
 constexpr uint16_t kAdcFullScale = 4095;
 
 // R401 1k / R402 1k inside the mcu sheet.
