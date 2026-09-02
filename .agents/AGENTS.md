@@ -37,6 +37,18 @@ pyControl host over one UART. Two of these boards serve the rig's two joysticks.
 This repository owns firmware only. It owns no schematic, no netlist, and no
 electrical decision.
 
+**Firmware means both ends of the UART protocol.** `src/` and `examples/` are the
+RP2040 side. `pycontrol/` is the MicroPython device class, hardware definition
+and task that run on the pyControl Breakout 1.2. They are one contract — sequence
+numbers, `ack`/`nak`, a nine-bit fault mask — and they version together, which is
+why they are not in separate repositories. The protocol is *specified* in
+`../mouse-joystick-pcb/docs/uart-protocol.md`; this repository implements it and
+does not redefine it.
+
+The rig integration repository is `~/Repositories/github/joystick-rig`, which is a
+collaborator's. It is a delivery target, not a development target: deliver a
+device class that has passed Gate C, do not develop one on a branch there.
+
 ## Bring-Up Is Staged, And The Stages Are Load-Bearing
 
 The board has two power domains and a bus switch between the MCU and everything
@@ -177,6 +189,29 @@ confirm the build fails without cleaning first.
 - `make format` — clang-format staged changes
 
 Select a different program with `EXAMPLE=`, a different board config with `ENV=`.
+
+### Two Pixi Environments, Deliberately Disjoint
+
+The `pycontrol` environment is declared `no-default-feature`, so PlatformIO and Qt
+never resolve together. Someone building firmware never downloads Qt; someone
+running the GUI never downloads a toolchain. Do not merge them to save a solve.
+
+- `make pycontrol-install` — resolve it
+- `make pycontrol-check` — verify pyControl's dependency gate before blaming the GUI
+- `make pycontrol-test` — host-side pytest, no board needed (Gate C)
+- `make pycontrol-link` — point a pyControl checkout at `pycontrol/`
+- `make gui` — launch the pyControl GUI
+
+Set `PYCONTROL_DIR` to a pyControl checkout, or let the tool autodetect one.
+
+**pyControl fails its dependency check silently** — `pyControl_GUI.pyw` catches the
+exception, writes `ErrorLog.txt`, and exits. "The GUI did not open" with nothing on
+the terminal is that. Run `make pycontrol-check` first.
+
+**Do not merge this environment with the rig's camera environment.**
+`joystick-rig/scripts/constraints.txt` pins `numpy<2` for PySpin 4.3.0.190;
+pyqtgraph 0.14 wants numpy 2.x. They are separate processes. `pycontrol/tests`
+asserts on this so a merge fails loudly.
 
 ## Validation
 

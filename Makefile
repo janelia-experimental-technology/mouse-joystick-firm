@@ -11,6 +11,12 @@ ENV ?= mouse_joystick
 PORT ?= /dev/ttyACM0
 BAUD ?= 115200
 
+# Path to a pyControl checkout, for the pycontrol-* targets. Exported explicitly
+# rather than relying on make's command-line export rules, because the tool reads
+# it from the environment and an empty value silently falls back to autodetection.
+PYCONTROL_DIR ?=
+export PYCONTROL_DIR
+
 .PHONY: help
 help:
 	@printf "targets:\\n"
@@ -26,7 +32,14 @@ help:
 	@printf "  clean        clean build artifacts for EXAMPLE/ENV\\n"
 	@printf "  deepclean    delete the build directory for EXAMPLE\\n"
 	@printf "  udev-rules   install the PlatformIO udev rules (needs sudo)\\n"
+	@printf "\\npyControl host, a separate environment with no PlatformIO in it:\\n"
+	@printf "  pycontrol-install  resolve the pycontrol environment\\n"
+	@printf "  pycontrol-check    verify pyControl's dependency gate\\n"
+	@printf "  pycontrol-test     host-side pytest (Gate C)\\n"
+	@printf "  pycontrol-link     point a pyControl checkout at this repo\\n"
+	@printf "  gui                launch the pyControl GUI\\n"
 	@printf "\\nEXAMPLE=%s ENV=%s PORT=%s\\n" "$(EXAMPLE)" "$(ENV)" "$(PORT)"
+	@printf "PYCONTROL_DIR=%s\\n" "$(PYCONTROL_DIR)"
 
 .PHONY: install
 install:
@@ -71,6 +84,39 @@ clean:
 .PHONY: deepclean
 deepclean:
 	$(PIXI) run deepclean $(EXAMPLE)
+
+# pyControl host targets. These use the `pycontrol` pixi environment, which shares
+# nothing with the firmware environment - no PlatformIO, no toolchain, no Qt on
+# either side of the fence. Set PYCONTROL_DIR to point at a pyControl checkout,
+# or let the tool autodetect one.
+#
+#   make gui PYCONTROL_DIR=~/Repositories/github/pycontrol-code
+
+PYC_RUN = $(PIXI) run -e pycontrol
+
+.PHONY: pycontrol-install
+pycontrol-install:
+	$(PIXI) install -e pycontrol
+
+.PHONY: pycontrol-check
+pycontrol-check:
+	$(PYC_RUN) pycontrol-check
+
+.PHONY: pycontrol-test
+pycontrol-test:
+	$(PYC_RUN) pycontrol-test
+
+.PHONY: pycontrol-link
+pycontrol-link:
+	$(PYC_RUN) pycontrol-link
+
+.PHONY: pycontrol-unlink
+pycontrol-unlink:
+	$(PYC_RUN) pycontrol-link --unlink
+
+.PHONY: gui
+gui:
+	$(PYC_RUN) gui
 
 # The RP2040 in BOOTSEL enumerates as mass storage and needs no rule, but
 # picotool talking to running firmware and the CDC port both do.

@@ -34,6 +34,24 @@ make upload PORT=/dev/ttyACM0
 make monitor PORT=/dev/ttyACM0
 ```
 
+The pyControl host side is a **separate pixi environment** with no PlatformIO in
+it, so building firmware never downloads Qt and running the GUI never downloads a
+toolchain:
+
+```sh
+make pycontrol-install        # resolve it (numpy, pyserial, pyqtgraph, PyQt6, pytest)
+make pycontrol-check          # verify pyControl's dependency gate
+make pycontrol-test           # host-side tests, no board and no pyControl needed
+
+export PYCONTROL_DIR=~/Repositories/github/pycontrol-code
+make pycontrol-link           # point that checkout at pycontrol/
+make gui                      # launch the pyControl GUI
+```
+
+`make pycontrol-check` exists because **pyControl fails its own dependency check
+silently**: `pyControl_GUI.pyw` catches the exception, writes `ErrorLog.txt`, and
+exits. The symptom is a GUI that does not open with nothing on the terminal.
+
 Uploading the first time needs the board in BOOTSEL. See
 [`docs/rp2040-bringup.md`](docs/rp2040-bringup.md) — on this board that is more
 awkward than usual, and the self test gives you a way to avoid repeating it.
@@ -48,7 +66,7 @@ else. The stages follow that boundary:
 | 1 | RP2040 alone | absent | isolated | disabled | `examples/RP2040SelfTest` — **passed** |
 | 2 | TMC5130A register reads | applied | closed | disabled | `examples/TMC5130Communication` — **passed** |
 | 3 | Motion, encoder, homing | applied | closed | enabled | `examples/MotionAndHoming` — **passed** |
-| 4 | pyControl UART protocol | applied | closed | as needed | not written |
+| 4 | pyControl UART protocol | applied | closed | as needed | host environment ready, protocol not written |
 
 **Stage 1 has no way to raise `HV_EN` and no way to enable the bus switch.** That
 is deliberate, not an omission: until the MCU is proven there is no reason to put

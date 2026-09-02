@@ -62,7 +62,32 @@ Read `.agents/handoff.local.md` for bench state and the immediate next actions.
       current ceiling deliberately. Needs a coil-current measurement
 - [ ] Run stage 3 on board `E4654C159F2C2534`, whose empty-connector
       `REFL_STEP` = 1 is still unexplained
+- [x] **Stage 4 host environment, 2026-09-02.** `pycontrol` pixi environment
+      (`no-default-feature`, so no PlatformIO), `tools/pycontrol_task.py`, and
+      `pycontrol/`. Resolved and locked for linux-64, osx-64, osx-arm64 and
+      **win-64** — the rig PC is Windows 11, which is what ruled out a Guix-only
+      environment. Verified: PyQt6 6.11.0 / pyqtgraph 0.14.0 / numpy 2.5.2 /
+      pyserial 3.5 against pyControl v2.1.1; 6 environment tests pass; firmware
+      env unchanged at 33/33
 - [ ] Stage 4: pyControl UART protocol
+  - [ ] Protocol framer/parser in `src/`, host-testable
+  - [ ] Board simulator, so the device class and the firmware can be tested
+        against each other without hardware
+  - [ ] Gate C conformance suite in `pycontrol/tests/`
+  - [ ] `pycontrol/devices/mouse_joystick.py`, asserting on `port.UART`
+  - [ ] Gate E on the Breakout 1.2, then deliver to `joystick-rig`
+
+## Controller Decided 2026-09-02
+
+**Breakout Board 1.2.** UART-capable ports **1** (`UART4`), **3** (`USART1`),
+**4** (`USART3`), from `devices/breakout_1_2.py`. Two boards fit with a port
+spare.
+
+This closes the "Which breakout the lab actually deploys" unknown in Gate A of
+`../mouse-joystick-pcb/docs/pycontrol-interface.md`, and it means **no
+`breakout_h7.py` is needed.** pyControl v2.1.1 declares no `port.UART` for any H7
+port, so the H7 breakout would have required writing and upstreaming that driver
+first. It does not block anything now.
 
 ## Revision Facts Established 2026-09-01
 

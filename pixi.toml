@@ -108,6 +108,53 @@ description = "Export the repository at the tip of the current branch."
 cmd = "git archive --format=zip --output=../mouse-joystick-firm.zip HEAD"
 
 # --------------------------------------------------------------------------------------
+# pyControl host environment (Stage 4)
+#
+# This is the OTHER end of the UART protocol: the host GUI, and the Python used to
+# develop and test the MicroPython device class that runs on the pyControl board.
+#
+# It is a separate environment with `no-default-feature`, so PlatformIO and Qt never
+# resolve together. Someone who only wants to build firmware runs `pixi install` and
+# never downloads Qt; someone who only wants the GUI never downloads a toolchain.
+#
+# Deps are what pyControl v2.1.1 actually requires. `pyControl_GUI.pyw` checks for
+# numpy, serial and pyqtgraph; `source/gui/GUI_main.py` imports Qt through
+# `pyqtgraph.Qt`, so the binding is pyqtgraph's choice and pyqt6 is supplied for it.
+#
+# Deliberately NOT merged with the rig's camera environment: `joystick-rig`
+# pins numpy<2 for PySpin 4.3.0.190, and pyqtgraph 0.14 wants numpy 2.x. They are
+# separate processes. Keep them separate environments.
+# --------------------------------------------------------------------------------------
+
+[feature.pycontrol.dependencies]
+python = ">=3.11,<3.14"
+numpy = ">=2,<3"
+pyserial = ">=3.5"
+pyqtgraph = ">=0.13"
+pyqt6 = ">=6.7"
+pytest = ">=8"
+
+[feature.pycontrol.tasks.pycontrol-check]
+description = "Verify the environment satisfies pyControl's own dependency gate."
+cmd = "python tools/pycontrol_task.py check"
+
+[feature.pycontrol.tasks.gui]
+description = "Launch the pyControl GUI from a checkout. Set PYCONTROL_DIR, or pass --pycontrol-dir."
+cmd = "python tools/pycontrol_task.py gui"
+
+[feature.pycontrol.tasks.pycontrol-link]
+description = "Point an unforked pyControl checkout at this repo's device class, hardware definition and tasks."
+cmd = "python tools/pycontrol_task.py link"
+
+[feature.pycontrol.tasks.pycontrol-test]
+description = "Host-side pytest for the pyControl device class and protocol (Gate C)."
+cmd = "pytest pycontrol/tests -q"
+
+[environments]
+# `default` stays implicit: the firmware toolchain, unchanged.
+pycontrol = { features = ["pycontrol"], no-default-feature = true }
+
+# --------------------------------------------------------------------------------------
 # Build tooling for PlatformIO native tests on POSIX.
 # --------------------------------------------------------------------------------------
 
