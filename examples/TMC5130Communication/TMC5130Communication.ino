@@ -54,6 +54,12 @@ void printMenu(Print &out) {
   out.println(F("  v  rail state now"));
   out.println(F("  d  36 V switch diagnostics (raises HV_DIAG_EN briefly)"));
   out.println(F("  p  profile a power-up attempt, 1 ms resolution"));
+  out.println(F("  c  staircase soft-start: burst-charge +36V_SW, then hold"));
+  out.println(F("  b  close the GPIO bus and start SPI0 (rail must be up)"));
+  out.println(F("  m  measure 36 V input current, self-zeroed and averaged"));
+  out.println(F("  l  LATCH probe: does this revision still need the"));
+  out.println(F("     firmware workaround? (costs one thermal trip if it does)"));
+  out.println(F("  h  raise HV_EN and HOLD it (for supply-ramp bench tests)"));
   out.println(F("  w  software soft-start: retry HV_EN, 10 attempts"));
   out.println(F("  x  power down: open the bus, drop HV_EN"));
   out.println(F("  B  reboot into BOOTSEL"));
@@ -102,15 +108,33 @@ void printRail(Print &out, const RailState &rail) {
   }
 }
 
-void printHvDiagnostics(Print &out, const HvDiagnostics &diag) {
+void printHvSense(Print &out, uint16_t counts) {
+  namespace conv = mouse_joystick::conversions;
   out.print(F("    HV_SNS: "));
-  out.print(diag.sns_volts, 4);
+  out.print(conv::hvSenseVolts(counts), 4);
   out.print(F(" V across R207 249R ("));
-  out.print(diag.sns_counts);
-  out.println(F(" counts)"));
-  out.println(
-      F("      load current needs the TPS1HTC100-Q1 sense ratio, which"));
-  out.println(F("      this firmware does not carry yet. Volts only for now."));
+  out.print(counts);
+  out.print(F(" counts) -- "));
+  if (conv::hvSenseIsFault(counts)) {
+    out.println(F("FAULT LEVEL (ISNSFLT), not a load reading"));
+    out.print(F("      "));
+    out.print(1000.0f * conv::hvSenseVolts(counts) /
+                  conv::kHvSenseResistorOhms,
+              2);
+    out.println(F(" mA of sense current; datasheet ISNSFLT is 5.2-6.4 mA"));
+  } else if (counts <= conv::kHvSenseFloorCounts) {
+    out.println(F("at the offset floor, no measurable load"));
+    out.println(F("      Quiet state with HV_EN low reads 18-22 counts and one"));
+    out.println(F("      count is 2.6 mA, so idle draw is unresolvable. All"));
+    out.println(F("      this says is 'far below the 1.15 A limit'."));
+  } else {
+    out.print(1000.0f * conv::hvLoadAmps(counts), 1);
+    out.println(F(" mA of load current (KSNS 800 A/A)"));
+  }
+}
+
+void printHvDiagnostics(Print &out, const HvDiagnostics &diag) {
+  printHvSense(out, diag.sns_counts);
   out.print(F("    ~{HV_FAULT}: "));
   out.println(diag.fault_n ? F("high, no latched fault")
                            : F("LOW, FAULT LATCHED"));
@@ -414,6 +438,157 @@ void softStartRetry(Print &out) {
   out.println(F("  Powered down."));
 }
 
+// The workaround for the latched turn-on fault, and the test that proves it.
+void staircase(Print &out) {
+  constexpr uint16_t kPulses = 30;
+  constexpr uint16_t kOnUs = 1200;
+  constexpr uint16_t kOffUs = 800;
+  constexpr uint16_t kHoldMs = 1000;
+
+  out.println(F("Staircase soft-start."));
+  out.print(F("  "));
+  out.print(kPulses);
+  out.print(F(" bursts of "));
+  out.print(kOnUs);
+  out.print(F(" us on / "));
+  out.print(kOffUs);
+  out.print(F(" us off, then HV_EN held high for "));
+  out.print(kHoldMs);
+  out.println(F(" ms."));
+  out.println(F("  HV_DIAG_EN stays low for the train."));
+  out.println();
+
+  PowerSequence::StaircaseReport r;
+  const bool ok = PowerSequence::staircaseStart(r, kPulses, kOnUs, kOffUs,
+                                                kHoldMs);
+
+  namespace conv = mouse_joystick::conversions;
+  out.print(F("  bursts issued:   "));
+  out.println(r.pulses_issued);
+  out.print(F("  rail after train:"));
+  out.print(conv::swRailVolts(r.rail_after_train), 3);
+  out.println(F(" V"));
+  out.print(F("  rail peak:       "));
+  out.print(conv::swRailVolts(r.peak_counts), 3);
+  out.println(F(" V"));
+  out.print(F("  rail final:      "));
+  out.print(conv::swRailVolts(r.final_counts), 3);
+  out.println(F(" V"));
+  out.print(F("  held up for:     "));
+  out.print(r.held_ms);
+  out.print(F(" ms of "));
+  out.print(kHoldMs);
+  out.println(F(" ms"));
+  printHvSense(out, r.sns_counts);
+  out.print(F("    ~{HV_FAULT}: "));
+  out.println(r.fault_n ? F("high, no latched fault")
+                        : F("LOW, FAULT LATCHED"));
+  out.println();
+
+  if (ok) {
+    out.println(F("  [ ok ] the rail came up and STAYED up. The single-shot"));
+    out.println(F("  turn-on failure is an inrush-energy problem, not a load"));
+    out.println(F("  fault. Rail left live -- send 'b' to close the bus."));
+  } else {
+    out.println(F("  [FAIL] the rail did not survive the hold. Powered down."));
+    out.println(F("  If held_ms is near the 34-48 ms single-shot figure the"));
+    out.println(F("  train achieved nothing, so the bulk is being bled"));
+    out.println(F("  between bursts or the cause is not inrush at all."));
+  }
+  out.println();
+}
+
+void measureCurrent(Print &out) {
+  constexpr uint16_t kSamples = 2048;
+  out.print(F("Measuring 36 V input current: "));
+  out.print(kSamples);
+  out.println(F(" samples at each point."));
+  out.println(F("  Zero is taken with HV_EN low, moments before raising it,"));
+  out.println(F("  so it cancels ADC offset and leakage rather than assuming"));
+  out.println(F("  a floor. HV_DIAG_EN is high for both reads."));
+  out.println();
+
+  const PowerSequence::HvCurrent c = PowerSequence::measureHvCurrent(kSamples);
+
+  out.print(F("  zero (HV_EN low):  "));
+  out.print(c.zero_counts, 2);
+  out.println(F(" counts"));
+  out.print(F("  live (HV_EN high): "));
+  out.print(c.live_counts, 2);
+  out.println(F(" counts"));
+  out.print(F("  delta:             "));
+  out.print(c.delta_counts, 2);
+  out.println(F(" counts"));
+  out.print(F("  36 V input current: "));
+  out.print(c.milliamps, 1);
+  out.println(F(" mA   (KSNS 800 A/A, R207 249R, 2.6 mA per count)"));
+  out.print(F("  rail: "));
+  out.println(c.rail_up ? F("live") : F("NOT UP -- the delta means nothing"));
+  if (c.zero_was_fault || c.live_was_fault) {
+    out.println(F("  [warn] a reading sat at the fault level (ISNSFLT), so it"));
+    out.println(F("  is not a current measurement at all."));
+  }
+  if (c.rail_up) {
+    out.println(F("  Rail left live -- send 'b' to close the bus, 'x' to stop."));
+  }
+  out.println();
+}
+
+// The one command to run on a new board revision.
+void latchProbe(Print &out) {
+  constexpr uint16_t kWindowMs = 250;
+
+  out.println(F("LATCH probe: a plain single-shot HV_EN assertion."));
+  out.println(F("  On pcb v0.1-v0.3 `R203` straps the 36 V switch's LATCH to"));
+  out.println(F("  +3.3V_MCU, so it latches off 1-2 ms into charging 208 uF at"));
+  out.println(F("  only ~10-12 V and the rail collapses when the stored charge"));
+  out.println(F("  runs out. Expect FAIL on those, and PASS once LATCH reaches"));
+  out.println(F("  a GPIO or is tied low."));
+  out.println();
+
+  const mouse_joystick::LatchProbe probe =
+      PowerSequence::probeLatchBehaviour(kWindowMs);
+
+  namespace conv = mouse_joystick::conversions;
+  out.print(F("  rail came up:  "));
+  out.println(probe.rail_came_up ? F("yes") : F("no"));
+  out.print(F("  rail held:     "));
+  out.println(probe.rail_held ? F("yes") : F("no"));
+  out.print(F("  held for:      "));
+  out.print(probe.held_ms);
+  out.print(F(" ms of "));
+  out.print(kWindowMs);
+  out.println(F(" ms"));
+  out.print(F("  rail peak:     "));
+  out.print(conv::swRailVolts(probe.peak_counts), 3);
+  out.println(F(" V"));
+  out.print(F("  ~{HV_FAULT}:   "));
+  out.println(probe.fault_n ? F("high, no latched fault")
+                            : F("LOW, FAULT LATCHED"));
+  out.println();
+
+  if (probe.vs_absent) {
+    out.println(F("  [!!] NO 36 V INPUT. The rail never moved AND the switch"));
+    out.println(F("  never reported: HV_SNS stayed at its offset floor instead"));
+    out.println(F("  of pegging at ISNSFLT within 1 ms. Below V_S,UVLOR"));
+    out.println(F("  (5.0-5.75 V) the TPS1HTC100-Q1 does not operate at all."));
+    out.println(F("  Check J201 is seated and the supply is on. J201 pin 1 is"));
+    out.println(F("  GND, pin 2 is positive -- reversed leads are blocked by"));
+    out.println(F("  D201 and look exactly like this."));
+  } else if (probe.fix_present) {
+    out.println(F("  [PASS] LATCH fix is present on this board. A plain"));
+    out.println(F("  HV_EN assertion works, so the firmware staircase is no"));
+    out.println(F("  longer needed. Build with -DMJ_HAS_LATCH_GPIO=1"));
+    out.println(F("  -DMJ_LATCH_GPIO=<n> if the revision routes LATCH to a"));
+    out.println(F("  GPIO, so powerUp() can arm latch-off after the ramp."));
+  } else {
+    out.println(F("  [FAIL] this board still needs the workaround, as"));
+    out.println(F("  expected on pcb v0.1-v0.3. powerUp() uses the staircase"));
+    out.println(F("  automatically -- nothing to do."));
+  }
+  out.println();
+}
+
 void runSequence(Print &out) {
   out.println();
   out.println(
@@ -488,6 +663,10 @@ void runSequence(Print &out) {
   case PowerUpResult::kOk:
     break;
   }
+  out.print(F("    method: "));
+  out.println(report.method == mouse_joystick::PowerUpMethod::kLatchGpio
+                  ? F("LATCH held low, direct HV_EN assertion")
+                  : F("firmware staircase (R203 straps LATCH high)"));
   out.print(F("    [ ok ] +3.3V_SW came up in "));
   out.print(report.rise_time_ms);
   out.print(F(" ms, peak "));
@@ -602,6 +781,32 @@ void loop() {
     break;
   case 'p':
     profilePowerUp(Serial);
+    break;
+  case 'c':
+    staircase(Serial);
+    break;
+  case 'm':
+    measureCurrent(Serial);
+    break;
+  case 'l':
+    latchProbe(Serial);
+    break;
+  case 'b': {
+    if (!PowerSequence::connectBus()) {
+      Serial.println(F("Refused: +3.3V_SW is not live. Run 'c' or 's' first."));
+      break;
+    }
+    delay(10);
+    tmc::Spi::begin();
+    sequence_run = true;
+    Serial.println(F("Bus closed, SPI0 up, ~{TMC_DRV_EN} still high."));
+    Serial.println(F("'r' and 'i' work now."));
+    break;
+  }
+  case 'h':
+    PowerSequence::holdEnable();
+    Serial.println(F("HV_EN HELD high. Bus open, HV_DIAG_EN low."));
+    Serial.println(F("Nothing will drop it but 'x'. Use 'v' to watch the rail."));
     break;
   case 'w':
     softStartRetry(Serial);

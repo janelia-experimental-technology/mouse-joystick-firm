@@ -8,6 +8,17 @@ namespace mouse_joystick {
 
 bool PowerSequence::bus_connected_ = false;
 
+// Staircase defaults, used by powerUp() on a revision whose LATCH is strapped.
+// 1200/800 us is well inside the switch's t_ON_pw (60-134 us) and t_OFF_pw
+// (82-175 us). 30 bursts is ~5x the 5-6 the arithmetic says are needed, and the
+// whole train costs 60 ms. The off-time is the parameter that matters: give the
+// buck long enough and it bleeds the bulk back to its own dropout between
+// bursts, and the staircase never climbs.
+constexpr uint16_t kStaircasePulses = 30;
+constexpr uint16_t kStaircaseOnUs = 1200;
+constexpr uint16_t kStaircaseOffUs = 800;
+constexpr uint16_t kStaircaseHoldMs = 20;
+
 RailState PowerSequence::readRail() {
   RailState state;
   // Set the resolution here, not in an init function. This was a real bug: the
@@ -28,6 +39,7 @@ PowerUpResult PowerSequence::powerUp(PowerUpReport &report) {
   report.peak_counts = 0;
   report.peak_rail_volts = 0.0f;
   report.samples = 0;
+  report.method = PowerUpMethod::kNone;
 
   // Refuse to start from anything but a known-dead rail. If +3.3V_SW is already
   // live with HV_EN low, the switch or its enable network is not doing what
@@ -41,8 +53,17 @@ PowerUpResult PowerSequence::powerUp(PowerUpReport &report) {
   // TMC5130A until its VCC_IO rail is established.
   disconnectBus();
 
-  pinMode(pins::kHvEn, OUTPUT);
   const uint32_t start_ms = millis();
+
+#if MJ_HAS_LATCH_GPIO
+  // The real fix. Hold LATCH low so the switch retries its own way through the
+  // capacitive charge, then raise it once the rail is up so that a genuine
+  // fault latches off instead of retrying forever.
+  report.method = PowerUpMethod::kLatchGpio;
+  pinMode(pins::kHvLatch, OUTPUT);
+  digitalWrite(pins::kHvLatch, LOW);
+
+  pinMode(pins::kHvEn, OUTPUT);
   digitalWrite(pins::kHvEn, HIGH);
 
   bool up = false;
@@ -60,18 +81,36 @@ PowerUpResult PowerSequence::powerUp(PowerUpReport &report) {
     }
     delay(1);
   }
+  if (up) {
+    // Arm latch-off now that charging is done. Measured retry window on a
+    // LATCH-released board is 10-12 ms; the rail-up poll above already covers
+    // it, but leave a margin before taking the retry away.
+    delay(10);
+    digitalWrite(pins::kHvLatch, HIGH);
+  }
+#else
+  // The workaround. R203 straps LATCH high on this revision, so the switch
+  // cannot retry and firmware has to burst-charge the bulk instead.
+  report.method = PowerUpMethod::kStaircase;
+  StaircaseReport staircase;
+  const bool up = staircaseStart(staircase, kStaircasePulses, kStaircaseOnUs,
+                                 kStaircaseOffUs, kStaircaseHoldMs);
+  report.samples = kStaircaseHoldMs;
+  report.peak_counts = staircase.peak_counts;
+  report.peak_rail_volts = conversions::swRailVolts(staircase.peak_counts);
+  report.rise_time_ms = millis() - start_ms;
+#endif
 
   if (!up) {
-    digitalWrite(pins::kHvEn, LOW);
+    powerDown();
     return PowerUpResult::kRailNeverCameUp;
   }
 
   delay(kRailSettleMs);
 
   // ~{HV_FAULT} is open drain with a 10k pull-up to +3.3V_MCU, so low means a
-  // latched fault. LATCH is tied through R203 to +3.3V_MCU on this board, which
-  // means faults latch off rather than auto-retrying -- dropping HV_EN is how
-  // they clear.
+  // latched fault. On a revision with LATCH strapped high, faults latch rather
+  // than auto-retrying -- dropping HV_EN is how they clear.
   //
   // DIAG_EN must be high to read it. That is not optional and it was a bug
   // here: the switch's fault *reporting* is gated by DIAG_EN even though its
@@ -84,11 +123,69 @@ PowerUpResult PowerSequence::powerUp(PowerUpReport &report) {
   const bool faulted = digitalRead(pins::kHvFaultN) == LOW;
   digitalWrite(pins::kHvDiagEn, LOW);
   if (faulted) {
-    digitalWrite(pins::kHvEn, LOW);
+    powerDown();
     return PowerUpResult::kFaultLatched;
   }
 
   return PowerUpResult::kOk;
+}
+
+LatchProbe PowerSequence::probeLatchBehaviour(uint16_t window_ms) {
+  LatchProbe probe{};
+
+  powerDown();
+  delay(50);
+  analogReadResolution(conversions::kAdcResolutionBits);
+  pinMode(pins::kSwRailSenseDiv2, INPUT);
+  pinMode(pins::kHvSns, INPUT);
+
+  // Diagnostics on from the start, so a fault -- or its absence -- is visible
+  // from the first millisecond.
+  pinMode(pins::kHvDiagEn, OUTPUT);
+  digitalWrite(pins::kHvDiagEn, HIGH);
+  delay(2);
+
+#if MJ_HAS_LATCH_GPIO
+  // Probe the *strapped* behaviour even on a board that can drive LATCH, so
+  // the answer means the same thing on every revision.
+  pinMode(pins::kHvLatch, OUTPUT);
+  digitalWrite(pins::kHvLatch, HIGH);
+#endif
+
+  pinMode(pins::kHvEn, OUTPUT);
+  const uint32_t start_ms = millis();
+  digitalWrite(pins::kHvEn, HIGH);
+
+  bool saw_fault_current = false;
+  while ((millis() - start_ms) < window_ms) {
+    const RailState now = readRail();
+    if (now.sense_counts > probe.peak_counts) {
+      probe.peak_counts = now.sense_counts;
+    }
+    if (now.up) {
+      probe.rail_came_up = true;
+      probe.held_ms = static_cast<uint16_t>(millis() - start_ms);
+    }
+    if (conversions::hvSenseIsFault(analogRead(pins::kHvSns))) {
+      saw_fault_current = true;
+    }
+    delay(1);
+  }
+  probe.rail_held = readRail().up;
+
+  pinMode(pins::kHvFaultN, INPUT);
+  probe.fault_n = digitalRead(pins::kHvFaultN) == HIGH;
+  digitalWrite(pins::kHvDiagEn, LOW);
+
+  probe.fix_present = probe.rail_held && probe.fault_n;
+
+  // Nothing at all happened: no rail, and the switch never even reported. Below
+  // its UVLO the device does not operate, so this is an absent input supply
+  // rather than a tripped switch.
+  probe.vs_absent = !probe.rail_came_up && !saw_fault_current;
+
+  powerDown();
+  return probe;
 }
 
 uint16_t PowerSequence::profilePowerUp(ProfileSample *samples,
@@ -184,6 +281,144 @@ uint16_t PowerSequence::softStartRetry(RetryAttempt *attempts,
 
   powerDown();
   return n;
+}
+
+bool PowerSequence::staircaseStart(StaircaseReport &report, uint16_t pulses,
+                                   uint16_t on_us, uint16_t off_us,
+                                   uint16_t hold_ms) {
+  report = StaircaseReport{};
+
+  powerDown();
+  delay(50);
+
+  analogReadResolution(conversions::kAdcResolutionBits);
+  pinMode(pins::kSwRailSenseDiv2, INPUT);
+  pinMode(pins::kHvSns, INPUT);
+
+  // Diagnostics OFF for the train. EN is low between bursts, and DIAG_EN high
+  // with EN low enables the switch's OFF-state open-load pull-up -- 150 kohm
+  // from VS straight onto the node we are trying to charge. That both pollutes
+  // the measurement and makes the switch report an open load instead of the
+  // real fault.
+  pinMode(pins::kHvDiagEn, OUTPUT);
+  digitalWrite(pins::kHvDiagEn, LOW);
+
+  pinMode(pins::kHvEn, OUTPUT);
+
+  for (uint16_t i = 0; i < pulses; ++i) {
+    digitalWrite(pins::kHvEn, HIGH);
+    delayMicroseconds(on_us);
+    digitalWrite(pins::kHvEn, LOW);
+    delayMicroseconds(off_us);
+    ++report.pulses_issued;
+  }
+
+  // Now hold. This is the actual test: the failure this works around collapses
+  // the rail within 34-48 ms, so a rail still up after hold_ms has made it.
+  digitalWrite(pins::kHvEn, HIGH);
+  report.rail_after_train = analogRead(pins::kSwRailSenseDiv2);
+
+  const uint32_t start_ms = millis();
+  while ((millis() - start_ms) < hold_ms) {
+    const RailState now = readRail();
+    if (now.sense_counts > report.peak_counts) {
+      report.peak_counts = now.sense_counts;
+    }
+    if (now.up) {
+      report.held_ms = static_cast<uint16_t>(millis() - start_ms);
+    }
+    report.final_counts = now.sense_counts;
+    delay(1);
+  }
+  report.up_at_end =
+      conversions::swRailVolts(report.final_counts) >= kRailUpVolts;
+
+  // Ask the switch for its own opinion, briefly, and only at the end.
+  digitalWrite(pins::kHvDiagEn, HIGH);
+  delay(2);
+  report.sns_counts = analogRead(pins::kHvSns);
+  pinMode(pins::kHvFaultN, INPUT);
+  report.fault_n = digitalRead(pins::kHvFaultN) == HIGH;
+  digitalWrite(pins::kHvDiagEn, LOW);
+
+  if (!report.up_at_end) {
+    powerDown();
+  }
+  return report.up_at_end;
+}
+
+PowerSequence::HvCurrent PowerSequence::measureHvCurrent(uint16_t samples) {
+  HvCurrent out{};
+  if (samples == 0) {
+    samples = 1;
+  }
+
+  powerDown();
+  delay(50);
+  analogReadResolution(conversions::kAdcResolutionBits);
+  pinMode(pins::kHvSns, INPUT);
+  pinMode(pins::kSwRailSenseDiv2, INPUT);
+
+  pinMode(pins::kHvDiagEn, OUTPUT);
+  digitalWrite(pins::kHvDiagEn, HIGH);
+  delay(2);
+
+  uint32_t acc = 0;
+  for (uint16_t i = 0; i < samples; ++i) {
+    acc += analogRead(pins::kHvSns);
+  }
+  out.zero_counts = static_cast<float>(acc) / static_cast<float>(samples);
+  out.zero_was_fault =
+      conversions::hvSenseVolts(static_cast<uint16_t>(out.zero_counts)) >=
+      conversions::kHvSenseFaultVolts;
+
+  // Bring the rail up the same way everything else does. A raw HV_EN assertion
+  // here was a bug: on a revision whose LATCH is strapped high it latches off,
+  // so the "live" average read ISNSFLT and the delta was a fictitious 5 A.
+  // powerUp() raises DIAG_EN itself for its fault check and lowers it again.
+  digitalWrite(pins::kHvDiagEn, LOW);
+  PowerUpReport up_report;
+  const PowerUpResult result = powerUp(up_report);
+  out.rail_up = (result == PowerUpResult::kOk);
+  if (!out.rail_up) {
+    powerDown();
+    return out;
+  }
+  digitalWrite(pins::kHvDiagEn, HIGH);
+  delay(2);
+
+  acc = 0;
+  for (uint16_t i = 0; i < samples; ++i) {
+    acc += analogRead(pins::kHvSns);
+  }
+  out.live_counts = static_cast<float>(acc) / static_cast<float>(samples);
+  out.live_was_fault =
+      conversions::hvSenseVolts(static_cast<uint16_t>(out.live_counts)) >=
+      conversions::kHvSenseFaultVolts;
+
+  digitalWrite(pins::kHvDiagEn, LOW);
+
+  out.delta_counts = out.live_counts - out.zero_counts;
+  out.milliamps = 1000.0f * out.delta_counts *
+                  conversions::kAdcReferenceVolts /
+                  static_cast<float>(conversions::kAdcFullScale) *
+                  conversions::kHvSenseRatio /
+                  conversions::kHvSenseResistorOhms;
+
+  if (!out.rail_up) {
+    powerDown();
+  }
+  return out;
+}
+
+void PowerSequence::holdEnable() {
+  // Bus stays open: nothing may drive the driver until a caller has checked
+  // the rail and closed the bus deliberately.
+  disconnectBus();
+  pinMode(pins::kHvDiagEn, OUTPUT);
+  digitalWrite(pins::kHvDiagEn, LOW);
+  pinMode(pins::kHvEn, OUTPUT);
+  digitalWrite(pins::kHvEn, HIGH);
 }
 
 HvDiagnostics PowerSequence::readHvDiagnostics() {

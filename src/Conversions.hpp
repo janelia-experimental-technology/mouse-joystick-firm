@@ -47,6 +47,26 @@ constexpr float swRailVolts(uint16_t counts,
          kSwRailDividerRatio;
 }
 
+// TPS1HTC100-Q1 current-sense ratio, `KSNS` = 800 A/A, constant across
+// temperature and supply voltage (datasheet Section 5.5). With R207 = 249 ohm
+// that makes the sense chain 0.311 V/A, so the ADC's 0.806 mV LSB is 2.6 mA of
+// load current.
+constexpr float kHvSenseRatio = 800.0f;
+
+// The switch reports faults on the same pin by forcing `ISNSFLT`, 5.2-6.4 mA,
+// instead of KSNS-divided load current. Into 249 ohm that is 1.29-1.59 V, and
+// measured parts sit a little above the datasheet maximum (6.3-6.5 mA has been
+// seen on this board). Anything above this threshold is the fault current
+// source, NOT a load reading -- converting it to amps yields a fictitious 4 A.
+constexpr float kHvSenseFaultVolts = 1.20f;
+
+// Measured quiet-state floor on this board: 18-22 counts with HV_EN low and no
+// load at all, i.e. ADC offset plus leakage. One count is 2.6 mA of load
+// current, so at the ~10-15 mA idle draw the sense chain resolves nothing.
+// Printing a reading this small as amps is exactly how HV_SNS has been
+// misread before -- twice.
+constexpr uint16_t kHvSenseFloorCounts = 40;
+
 // Voltage across R1907. Converting this to load current needs the
 // TPS1HTC100-Q1's current-sense ratio, which this firmware does not use yet:
 // stage 1 runs with the 36 V input absent, so the only expected reading is
@@ -56,6 +76,21 @@ constexpr float hvSenseVolts(uint16_t counts,
                              uint16_t full_scale = kAdcFullScale,
                              float reference_volts = kAdcReferenceVolts) {
   return countsToVolts(counts, full_scale, reference_volts);
+}
+
+// Load current through the high-side switch, from the SNS voltage. Only
+// meaningful below kHvSenseFaultVolts -- check hvSenseIsFault() first.
+constexpr float hvLoadAmps(uint16_t counts, uint16_t full_scale = kAdcFullScale,
+                           float reference_volts = kAdcReferenceVolts) {
+  return countsToVolts(counts, full_scale, reference_volts) * kHvSenseRatio /
+         kHvSenseResistorOhms;
+}
+
+constexpr bool hvSenseIsFault(uint16_t counts,
+                              uint16_t full_scale = kAdcFullScale,
+                              float reference_volts = kAdcReferenceVolts) {
+  return countsToVolts(counts, full_scale, reference_volts) >=
+         kHvSenseFaultVolts;
 }
 
 } // namespace conversions

@@ -114,6 +114,32 @@ constexpr uint8_t kDacCsN = 13;     // ~{DAC_CS_}, DAC ~SYNC   (rev 1)
 // of staying off, which silently destroys the power-cycle-as-reset property and
 // corrupts the rail sense. Protection is unaffected by DIAG_EN -- only
 // reporting is gated -- so raise it *only* while reading kHvSns or kHvFaultN.
+// The TPS1HTC100-Q1's LATCH pin is NOT on a GPIO on pcb v0.1, v0.2 or v0.3.
+// `R203` (0402, 1 kohm) straps it to `+3.3V_MCU`, which selects latch-off over
+// the device's own 2 ms auto-retry -- and auto-retry is the only thing that can
+// charge this board's 208 uF of `+36V_SW` bulk, because the switch trips its
+// relative thermal shutdown 1-2 ms in, at only ~10-12 V. Measured 2026-09-02 on
+// board E4654C159F2C2534; removing `R203` fixes it outright.
+//
+// So firmware has to do the retrying. See `PowerSequence::staircaseStart()`.
+//
+// WHEN A FUTURE REVISION ROUTES LATCH TO A GPIO, build with
+//   -DMJ_HAS_LATCH_GPIO=1 -DMJ_LATCH_GPIO=<n>
+// and `PowerSequence::powerUp()` switches to the direct path: drive LATCH low,
+// assert HV_EN, then raise LATCH once the rail is up so real faults latch off.
+// `PowerSequence::probeLatchBehaviour()` reports whether a board needs the
+// workaround, so a new revision can be checked in one command.
+#ifndef MJ_HAS_LATCH_GPIO
+#define MJ_HAS_LATCH_GPIO 0
+#endif
+#if MJ_HAS_LATCH_GPIO
+#ifndef MJ_LATCH_GPIO
+#error "MJ_HAS_LATCH_GPIO=1 requires MJ_LATCH_GPIO=<pin>. Do not guess it -- \
+read it off the revision's netlist."
+#endif
+constexpr uint8_t kHvLatch = MJ_LATCH_GPIO;
+#endif
+
 constexpr uint8_t kHvDiagEn = 14; // HV_DIAG_EN, via `R202` 1k
 constexpr uint8_t kHvEn = 19;     // HV_EN,      via `R201` 1k
 constexpr uint8_t kHvSns = 28;    // HV_SNS,     ADC2, `R207` 249 ohm to GND
