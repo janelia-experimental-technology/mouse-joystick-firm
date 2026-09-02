@@ -1,7 +1,7 @@
 {
   "name": "MouseJoystickBoard",
   "version": "0.1.0",
-  "description": "Board support for mouse-joystick-pcb: GPIO allocation, safe idle state, and the RP2040 self test. Public headers live one level up in src/ and are reached through the project-wide -Isrc flag.",
+  "description": "Board support for mouse-joystick-pcb: GPIO allocation, safe idle state, the switched-rail power sequence, the RP2040 self test, and the stage 3 TMC5130A motion configuration. Public headers live one level up in src/ and are reached through the project-wide -Isrc flag.",
   "keywords": "rp2040, tmc5130, mouse-joystick",
   "authors": [
     {
@@ -13,5 +13,11 @@
   "platforms": "raspberrypi",
   "build": {
     "srcDir": "."
-  }
+  },
+  "dependencies": [
+    {
+      "name": "TMC51X0",
+      "version": "https://github.com/janelia-arduino/TMC51X0.git#4.1.0"
+    }
+  ]
 }

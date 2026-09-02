@@ -34,6 +34,17 @@ RailState PowerSequence::readRail() {
   return state;
 }
 
+bool PowerSequence::waitForRailOff(uint32_t timeout_ms) {
+  const uint32_t deadline = millis() + timeout_ms;
+  while (millis() < deadline) {
+    if (readRail().off) {
+      return true;
+    }
+    delay(10);
+  }
+  return readRail().off;
+}
+
 PowerUpResult PowerSequence::powerUp(PowerUpReport &report) {
   report.rise_time_ms = 0;
   report.peak_counts = 0;
@@ -399,8 +410,7 @@ PowerSequence::HvCurrent PowerSequence::measureHvCurrent(uint16_t samples) {
   digitalWrite(pins::kHvDiagEn, LOW);
 
   out.delta_counts = out.live_counts - out.zero_counts;
-  out.milliamps = 1000.0f * out.delta_counts *
-                  conversions::kAdcReferenceVolts /
+  out.milliamps = 1000.0f * out.delta_counts * conversions::kAdcReferenceVolts /
                   static_cast<float>(conversions::kAdcFullScale) *
                   conversions::kHvSenseRatio /
                   conversions::kHvSenseResistorOhms;

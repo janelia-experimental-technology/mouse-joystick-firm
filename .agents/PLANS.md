@@ -2,8 +2,7 @@
 
 ## Current Goal
 
-Stage 1: prove the RP2040 subsystem of the first assembled `mouse-joystick-pcb`
-rev 0 board, received 2026-09-01. USB only; 36 V stays unplugged.
+Stage 4: the pyControl UART protocol. Stages 1 to 3 have passed on hardware.
 
 ## Status
 
@@ -15,10 +14,16 @@ validated**, same day, against the boot signature. `TRIG0`/`TRIG1` on LA5032
 channels 16/17; cable not mirrored. Recorded in
 `../la5032-instrument-port-adapter/docs/bringup-log.md`.
 
-**Stage 2 is written and has been run. It is blocked at gate 2.** With 36 V
-applied, `+3.3V_SW` comes up to 3.309 V in 3 ms, holds steady, and then dies at
-56-57 ms — repeatably. The sequence never reaches the driver, so **SPI to the
-TMC5130A has never been exercised.** See [The 36 V Rail Collapse](#the-36-v-rail-collapse-open-2026-09-01).
+**Stage 2 passed 2026-09-02** on both boards, once the 36 V rail collapse was
+diagnosed as `R203` strapping the switch's `LATCH` high and worked around with
+`PowerSequence::staircaseStart()`. See
+[The 36 V Rail Collapse](#the-36-v-rail-collapse-resolved-2026-09-02).
+
+**Stage 3 passed 2026-09-02** on board `E4654C159F4D1334`, the as-built unit.
+The motor turns, the encoder tracks it to 1.000, and homing repeats to 4 encoder
+counts. Written over **TMC51X0 4.0.3**, pinned in `platformio.ini`. Procedure and
+findings in `docs/motion-bringup.md`; measurements in
+`../mouse-joystick-pcb/docs/bringup-log.md`.
 
 Read `.agents/handoff.local.md` for bench state and the immediate next actions.
 
@@ -44,9 +49,19 @@ Read `.agents/handoff.local.md` for bench state and the immediate next actions.
 - [x] Stage 2 run on hardware 2026-09-01 — reached gate 2 and stopped there
 - [x] 36 V power chain shown to work at least momentarily: rail up in 3 ms to
       3.309 V, measured
-- [ ] **Resolve the 36 V rail collapse at 56 ms** — blocking everything below
-- [ ] Stage 2 gates 4 and 5: bus switch closed, TMC5130A `IOIN` read
-- [ ] Stage 3: motion, with `vsense = 1` set and read back first
+- [x] **36 V rail collapse resolved 2026-09-02** — `R203` straps the switch's
+      `LATCH` high, so it cannot auto-retry through the inrush. Worked around by
+      `PowerSequence::staircaseStart()`; the real fix is a board change, tracked
+      in `../mouse-joystick-pcb/.agents/PLANS.md`
+- [x] Stage 2 gates 4 and 5: bus switch closed, TMC5130A `IOIN` read, both
+      boards, 2026-09-02
+- [x] **Stage 3: motion, encoder and homing, passed 2026-09-02** on board
+      `E4654C159F4D1334`, with `vsense = 1` set and read back before the output
+      stage was ever enabled
+- [ ] Resolve whether the motor's 0.6 A rating is RMS or peak, and set the run
+      current ceiling deliberately. Needs a coil-current measurement
+- [ ] Run stage 3 on board `E4654C159F2C2534`, whose empty-connector
+      `REFL_STEP` = 1 is still unexplained
 - [ ] Stage 4: pyControl UART protocol
 
 ## Revision Facts Established 2026-09-01
@@ -129,7 +144,7 @@ a `#error` canary.
 **`TMC51X0` uses the same bare-path arrangement** (`lib_deps_local = src/TMC51X0`)
 and so has the same trap. Worth fixing there.
 
-## The 36 V Rail Collapse (open, 2026-09-01)
+## The 36 V Rail Collapse (resolved, 2026-09-02)
 
 The blocking issue. Full detail and raw data references in
 `.agents/handoff.local.md`; the durable summary:
@@ -162,6 +177,96 @@ of "continuous 1.15 A load" came from misreading it and was wrong.
 **If confirmed, the fix is a board change, not firmware:** reduce bulk
 capacitance, raise `R206` to *lower* `I_CL` and spread the same energy over more
 time, or free `LATCH` for auto-retry. Raising `I_CL` does not help.
+
+## Stage 3, Passed 2026-09-02
+
+Full procedure, measurements and the reasoning behind each gate are in
+`docs/motion-bringup.md`. The durable summary:
+
+**It uses TMC51X0.** Stage 2 deliberately did not, because first contact with a
+bus should not also be first contact with a library. Stage 3 needs a ramp
+generator, an encoder scaler and homing, TMC51X0 has all three, and the bus was
+already proven. Pinned to tag `4.0.3` in `platformio.ini` and declared again in
+`src/MouseJoystickBoard/library.json` — `lib_ldf_mode = off` means PlatformIO
+will not find it from an `#include`.
+
+**`src/MotionSetup.hpp` is glue, not a driver.** It holds only what the library
+cannot know: the 16 MHz external clock, the 0.15 ohm shunts, the motor's rating,
+the encoder's resolution, the rig's travel, and `CHOPCONF.vsense`.
+
+**The one bit that matters.** TMC51X0's `Registers::Chopconf` has no `VSENSE`
+field — it follows the TMC5160 layout, where bit 17 does not exist. On a
+TMC5130A that bit is `vsense`, and with 0.15 ohm shunts it is a factor of 1.8 in
+motor current. `IHOLD_IRUN` is write-only, so the current scale can never be
+read back; `CHOPCONF` is the readable half of the decision. Firmware sets bit 17
+with a raw register write, reads `CHOPCONF` back, and refuses to enable the
+output stage unless the read-back says 1. **It does not survive a device reset
+or `recoverFromDeviceReset()`** — re-assert and re-verify after any power cycle
+of the switched domain.
+
+**Measured facts about the rig**, all of which were unknown before:
+
+- Travel is **~4000 microsteps, 28 deg at the motor shaft**: the limit switch
+  bounds the positive end, a mechanical stop bounds the negative end. Every
+  bring-up distance has to fit inside it.
+- The limit switch is **active high** (`REFL` rests low, goes high when hit),
+  throw 256 microsteps, and it is at the **positive** end of travel. It is wired
+  to `REFL`, which stops *negative* motion, so `SW_MODE.swap_lr` is required or
+  the hardware stop guards the wrong direction.
+- The encoder **counts down as `XACTUAL` counts up**. `ENC_CONST` resets to zero
+  so `X_ENC` does not count until it is written, and the negation is
+  **−13 + 0.2**, not −12 and 0.8, because the fraction is always added.
+  Bench-confirmed: the other encoding gives a ratio of 0.875 instead of 1.000.
+- The switch's reporting delay is **8.74 ms**, measured by taking two
+  closing-edge latches at two approach velocities in one position frame. No
+  instrument needed, and it is what justifies two-stage homing.
+- **Homing is two-stage**: a fast approach latching the closing edge, then a
+  slow creep off the switch latching the **release** edge, which is the datum.
+  It buys **accuracy, not precision** -- the datum stops depending on approach
+  velocity (89 usteps of offset at 0.200 rev/s versus 4.5 at the creep) and the
+  primary approach can run four times faster. Repeatability is **2-5 encoder
+  counts in both schemes** across four series of five runs, and the rig cannot
+  distinguish them at n = 5. An earlier claim that the second stage halved the
+  scatter came from one lucky series and is retracted: a repeatable 8.74 ms
+  delay is a systematic offset, and systematic offsets do not widen spread.
+
+**Every move is bounded and encoder-watched.** `MotionSetup::moveTo()` targets a
+position rather than a stop condition, and compares `X_ENC` against `XACTUAL` —
+the ramp generator advances whether or not the shaft follows, so that comparison
+is what detects an end stop, a stall, a slipping coupling or a dead encoder. It
+found the negative end stop on the first attempt without straining anything.
+
+## Firmware Traps Found On Hardware, Stage 3
+
+All fixed; do not reintroduce. All four were invisible to a compile and to the
+host tests, and three would have moved the motor when nothing asked.
+
+- **`RAMPMODE` = hold does not stop the motor**, it freezes the current
+  velocity. TMC51X0's `Controller::initialize()` runs during `setupSpi()` and
+  leaves `VelocityPositiveMode` with `VMAX` = 10, so the chip is commanded to
+  turn from the moment the bus closes. `XACTUAL` crept to 125 microsteps with
+  the driver disabled, and the motor would have started the instant
+  `~{TMC_DRV_EN}` went low. Bring the ramp to a real standstill — velocity mode,
+  `VMAX` = 0, wait for `VACTUAL` = 0, then hold.
+- **A real-unit ramp value can round to zero.** One chip unit of acceleration at
+  16 MHz is 116.4 microsteps/s^2, so asking for the library's default of 10 in
+  real units gave `D1` = 0. The datasheet forbids that in positioning mode and a
+  TMC5130A with `D1` = 0 does not fault — it crawls at about `VSTOP`. Symptom:
+  `VMAX` 5368 written, 9.5 microsteps/s observed. `conversions::nonZeroRampParameter`
+  guards it, with a host test.
+- **A limit switch must only block the direction that drives into it.** Checking
+  both stop status bits refused the move that gets *off* the switch, in 3 ms.
+  Check only the bit guarding the direction of travel, which is what the
+  hardware does.
+- **A diagnostic that can be truncated must say so.** The encoder round trip ran
+  into the switch, lost part of a leg, and reported the resulting 0.786 ratio as
+  a possible CPR error. Run it away from the switch, and report `[inconclusive]`
+  when a leg does not reach its target.
+
+Also: reading `RAMP_STAT` twice loses flags. Several bits are read-and-clear and
+TMC51X0's `leftSwitchActive()` / `leftLatchActive()` / `leftStopEvent()` each
+perform their own read, so read it once and decode all of it. `MotionSnapshot`
+does.
 
 ## Stage 2 Design Notes
 

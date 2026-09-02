@@ -46,9 +46,14 @@ else. The stages follow that hardware boundary, not convenience:
    flash, RAM, USB, ADC, pads, and the board's pull resistors.
    `examples/RP2040SelfTest`.
 2. **TMC5130A communication.** 36 V applied, `HV_EN` raised, bus switch enabled,
-   driver still disabled. Proves SPI and register reads. Not written yet.
-3. **Motion.** Current limits set and read back *before* the driver is enabled.
-   Not written yet.
+   driver still disabled. Proves SPI and register reads.
+   `examples/TMC5130Communication`. Raw SPI datagrams, no driver library, on
+   purpose — first contact with a bus should not also be first contact with a
+   library.
+3. **Motion.** Current limits set and read back *before* the driver is enabled,
+   then motion, the encoder, and homing against the limit switch.
+   `examples/MotionAndHoming`, over `TMC51X0`, which is the right layer once the
+   bus is known good. Procedure and findings in `docs/motion-bringup.md`.
 4. **pyControl UART protocol.** Not written yet.
 
 **Do not let a later stage's code leak into an earlier stage's example.** Stage 1
@@ -84,15 +89,48 @@ oversight to be helpfully fixed.
   way** until the switched rails are up. R601 7.87 k is the only isolation
   mechanism — all four `SN74CB3Q3245` packages run from the always-on rail, so
   `Ioff` never engages.
-- **`vsense = 1` with the 0.15 ohm shunts, `IRUN = 28`.** The shunt value and the
-  `vsense` bit are one decision. `vsense` resets to 0, which with 0.15 ohm
-  installed drives roughly 1.8x the motor's rated current. Firmware must set and
-  read back `vsense = 1` before it lowers `~{TMC_DRV_EN}`. Stage 3 concern, but
-  never trade it away.
+- **`vsense = 1` with the 0.15 ohm shunts.** The shunt value and the `vsense`
+  bit are one decision. `vsense` resets to 0, which with 0.15 ohm installed
+  drives roughly 1.8x the intended current. Firmware must set and read back
+  `vsense = 1` before it lowers `~{TMC_DRV_EN}`. Never trade it away.
+
+  `TMC51X0`'s `Registers::Chopconf` **cannot express this bit** — it follows the
+  TMC5160 layout, where bit 17 does not exist. Set it with a raw
+  `registers.write()` so it lands in the library's mirror, then read `CHOPCONF`
+  back. `MotionSetup::applyHighSensitivity()` does; `enableDriver()` refuses
+  until the read-back says 1. `IHOLD_IRUN` is write-only, so `CHOPCONF` is the
+  only readable half of the current decision.
+
+- **The run current is `IRUN <= 17` (0.421 A RMS) until someone measures a coil
+  current.** Corrected 2026-09-02, when the motor was identified as a **Lin
+  Engineering WO-208-13-01D rated 0.6 A per phase**. The `IRUN = 28` this file
+  used to name is 0.679 A RMS and predates the motor: it is above the rating on
+  either reading of that 0.6 A. The vendor does not say whether it is RMS or
+  peak, so firmware enforces the conservative peak-of-sine reading and bring-up
+  runs at `IRUN = 8` (0.211 A RMS). Settle it with a meter and a case
+  temperature, then change the number in `src/Conversions.hpp` and record which
+  reading won. `../mouse-joystick-pcb/docs/bringup-log.md` owns the finding.
 - **The encoder and limit switch never reach a GPIO, on any revision.** Position
   comes from the driver's `X_ENC`/`XACTUAL`, homing state from driver status,
   both over SPI. There is no PIO encoder cross-check and no `ENCODER_MISMATCH`
   fault; they are deleted, not deferred.
+
+- **`ENC_CONST` resets to zero, so `X_ENC` does not count until it is written.**
+  An encoder reading a constant 0 is the symptom of forgetting that, not of a
+  broken encoder. The register is write-only, so the only verification is that
+  `X_ENC` tracks a commanded move.
+
+- **Every move is bounded by a target position and watched against the
+  encoder.** The rig's travel is about 4000 microsteps and the ramp generator
+  has no idea when it has run out of mechanism, so `XACTUAL` advancing while
+  `X_ENC` does not is how firmware detects an end stop, a stall, a slipping
+  coupling or a dead encoder. Do not add a motion path that skips it.
+
+- **The limit switch is at the POSITIVE end of travel and wired to `REFL`**,
+  which stops *negative* motion. `SW_MODE.swap_lr` is required, or the hardware
+  stop guards the direction that moves away from the switch. Measured
+  2026-09-02; the board fact lives in
+  `../mouse-joystick-pcb/docs/bringup-log.md`.
 - **There are no LEDs, no test points, and on rev 0 no SWD header.** USB CDC and
   the two `FW_TRIG` pins on InstrumentPort-40 are the entire observable surface.
   Do not write a diagnostic that assumes an LED or a debugger.

@@ -65,18 +65,17 @@ enum class PowerUpResult {
   kFaultLatched,    // the 36 V switch reported a fault
 };
 
-
 // What a deliberate single-shot HV_EN assertion did. This is the test for
 // "has the LATCH fix landed on this revision?" -- on a board with LATCH
 // strapped high it fails, on one with LATCH low or on a GPIO it succeeds.
 struct LatchProbe {
-  bool rail_came_up;  // reached kRailUpVolts at all
-  bool rail_held;     // still up at the end of the window
-  uint16_t held_ms;   // how long it stayed up
+  bool rail_came_up; // reached kRailUpVolts at all
+  bool rail_held;    // still up at the end of the window
+  uint16_t held_ms;  // how long it stayed up
   uint16_t peak_counts;
-  bool fault_n;       // ~{HV_FAULT} at the end; false = latched fault
-  bool fix_present;   // rail_held && no latched fault
-  bool vs_absent;     // no fault AND no rail AND no sense current: no 36 V in
+  bool fault_n;     // ~{HV_FAULT} at the end; false = latched fault
+  bool fix_present; // rail_held && no latched fault
+  bool vs_absent;   // no fault AND no rail AND no sense current: no 36 V in
 };
 
 class PowerSequence {
@@ -99,6 +98,18 @@ public:
   static constexpr uint32_t kRailSettleMs = 100;
 
   static RailState readRail();
+
+  // Wait for +3.3V_SW to actually fall after HV_EN has been dropped.
+  //
+  // Dropping HV_EN does not make the switched rail go away: +36V_SW's ~208 uF
+  // keeps the buck running until it bleeds below the buck's minimum input, and
+  // with only board leakage as a load that takes seconds. Measured on board
+  // E4654C159F4D1334 on 2026-09-02: still 3.31 V immediately after HV_EN
+  // dropped, 0.034 V a few seconds later.
+  //
+  // So anything that requires a dead rail as a precondition has to wait for it
+  // rather than sample once. Returns true if the rail reached kRailOffVolts.
+  static bool waitForRailOff(uint32_t timeout_ms);
 
   // Assert HV_EN once, plainly, and see whether the rail survives. Costs one
   // thermal trip on a board that still needs the workaround, so this is a
@@ -190,8 +201,7 @@ public:
   // Leaves the rail UP on success, so the caller can close the bus and talk to
   // the driver. Powers down on failure.
   static bool staircaseStart(StaircaseReport &report, uint16_t pulses,
-                             uint16_t on_us, uint16_t off_us,
-                             uint16_t hold_ms);
+                             uint16_t on_us, uint16_t off_us, uint16_t hold_ms);
 
   // A self-zeroed reading of the 36 V input current.
   //

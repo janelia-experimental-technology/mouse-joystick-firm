@@ -9,10 +9,15 @@ The board lives in
 this firmware depends on. The driver library is
 [`TMC51X0`](https://github.com/janelia-arduino/TMC51X0).
 
-**Status:** stage 1 **passed on hardware** 2026-09-01 — board serial
-`E4654C159F2C2534`, 27 checks, 0 failed. Stage 2 is written and builds but has
-not been run; it needs 36 V. Results are recorded in
-`../mouse-joystick-pcb/docs/bringup-log.md`.
+**Status:** stages 1 to 3 have passed on hardware.
+
+- **Stage 1**, 2026-09-01, board `E4654C159F2C2534`: 27 checks, 0 failed.
+- **Stage 2**, 2026-09-02, both boards: `IOIN.VERSION` = `0x11`.
+- **Stage 3**, 2026-09-02, board `E4654C159F4D1334`: motor turns, encoder
+  tracks it to 1.000, homing repeats to 4 encoder counts.
+
+Results are recorded in `../mouse-joystick-pcb/docs/bringup-log.md`, per board
+serial. Stage 3's procedure and findings are in `docs/motion-bringup.md`.
 
 The pin map is verified against PCB git tag **v0.1**, the revision manufactured
 as rev 0. Tags v0.1 and v0.2 have byte-identical RP2040 pad-to-net maps.
@@ -41,8 +46,8 @@ else. The stages follow that boundary:
 | Stage | What runs | 36 V | Bus switch | Driver | Status |
 |-------|-----------|------|-----------|--------|--------|
 | 1 | RP2040 alone | absent | isolated | disabled | `examples/RP2040SelfTest` — **passed** |
-| 2 | TMC5130A register reads | applied | closed | disabled | `examples/TMC5130Communication` — **written, not run** |
-| 3 | Motion | applied | closed | enabled | not written |
+| 2 | TMC5130A register reads | applied | closed | disabled | `examples/TMC5130Communication` — **passed** |
+| 3 | Motion, encoder, homing | applied | closed | enabled | `examples/MotionAndHoming` — **passed** |
 | 4 | pyControl UART protocol | applied | closed | as needed | not written |
 
 **Stage 1 has no way to raise `HV_EN` and no way to enable the bus switch.** That
@@ -112,7 +117,7 @@ Collected here because none of them are guessable from the code:
   buck's minimum input in about three seconds and the switched domain hiccups
   instead of staying off.
 - **`vsense = 1` with the 0.15 Ω shunts.** It resets to 0, which at 0.15 Ω drives
-  roughly 1.8× the motor's rated current. Stage 3 must set and read it back
+  roughly 1.8× the intended current. Stage 3 sets and reads it back
   before enabling the driver.
 - **The encoder and limit switch never reach a GPIO,** on any revision. Position
   comes from the driver's `X_ENC`/`XACTUAL` over SPI.
@@ -198,16 +203,25 @@ repository are **v0.1** designators; identify parts by value and net.
 ## Layout
 
 ```
-examples/RP2040SelfTest/   stage 1 program
-src/                       board support library
-  BoardPins.hpp            GPIO allocation, single source of truth
-  Conversions.hpp          ADC scaling, Arduino-free so the host can test it
-  SafeState.hpp            safe idle state; the only thing that touches HV_EN
-  SelfTest.hpp             the checks
-test/native/               host tests for the Arduino-free arithmetic
-tools/pio_task.py          example selection without editing platformio.ini
-docs/rp2040-bringup.md     the procedure, and what each failure means
-.agents/                   agent guidance and plans
+examples/RP2040SelfTest/       stage 1 program
+examples/TMC5130Communication/ stage 2: raw SPI, no driver library
+examples/MotionAndHoming/      stage 3: motion, encoder, homing, over TMC51X0
+src/                           board support library
+  BoardPins.hpp                GPIO allocation, single source of truth
+  Conversions.hpp              ADC and motion scaling, Arduino-free so the
+                               host can test it; also the fitted parts' facts
+  SafeState.hpp                safe idle state
+  PowerSequence.hpp            the switched rail; the only thing that touches
+                               HV_EN
+  SelfTest.hpp                 the stage 1 checks
+  TmcSpi.hpp                   stage 2's raw datagram layer
+  MotionSetup.hpp              stage 3's TMC51X0 glue: this board's facts, and
+                               CHOPCONF.vsense, which TMC51X0 cannot express
+test/native/                   host tests for the Arduino-free arithmetic
+tools/pio_task.py              example selection without editing platformio.ini
+docs/rp2040-bringup.md         stage 1: the procedure, and each failure's meaning
+docs/motion-bringup.md         stage 3: the same, plus the rig's measured facts
+.agents/                       agent guidance and plans
 ```
 
 The example to build is selected by `PLATFORMIO_SRC_DIR`, not by editing
