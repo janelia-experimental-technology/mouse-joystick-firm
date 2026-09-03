@@ -100,6 +100,44 @@ class MouseJoystickProtocol:
     # draft writes this position as `<seq or ?>`.
     SEQ_UNKNOWN = "?"
 
+    # ------------------------------------------- retransmission classification
+    #
+    # Which commands may have their reply served from the retransmission cache.
+    # Resolved in `../../../mouse-joystick-pcb/docs/uart-protocol.md`, open
+    # question 1: the cache is restricted to state-changing commands, because
+    # re-executing a read is better than replaying one -- a retried STATUS
+    # returning fresh state beats a stale one, and a retried CLRFAULT
+    # re-evaluates whether the cause has gone where a cached "cleared" could
+    # mask a fault latched since.
+    #
+    # Note the cache is NOT what keeps the heartbeat alive. The host-loss
+    # watchdog is reset on receipt of any well-formed command, before dispatch,
+    # so a cache hit is irrelevant to it.
+
+    # Reads and heartbeats. Never cached; always re-executed.
+    READ_VERBS = frozenset({"id", "ping", "status", "limits", "faults"})
+
+    # Verbs that are a read or a write depending on their first argument, which
+    # is why classification must happen on the PARSED command and not on the
+    # verb name. A verb-name table gets all three of these wrong.
+    DUAL_MODE_READ_ARG = {"cal": "get", "instr": "state", "hv": "state"}
+
+    @classmethod
+    def changes_state(cls, verb, args=()):
+        """Should a repeat of this command be served from the cache?
+
+        Defaults to True for anything unrecognised. Over-caching costs a stale
+        ack; under-caching moves the joystick twice, so a verb added carelessly
+        should be merely suboptimal rather than dangerous.
+        """
+        verb = verb.lower()
+
+        read_arg = cls.DUAL_MODE_READ_ARG.get(verb)
+        if read_arg is not None:
+            return not (args and str(args[0]).lower() == read_arg)
+
+        return verb not in cls.READ_VERBS
+
     # ---------------------------------------------------------------- helpers
 
     @staticmethod

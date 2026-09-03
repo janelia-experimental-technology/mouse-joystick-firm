@@ -5,7 +5,9 @@ Runs on the pyControl controller in MicroPython. Speaks the protocol in
 behavior port. One object per board; two boards means two objects on two ports.
 
 Target controller is **Breakout Board 1.2**, whose UART-capable ports are 1
-(`UART4`), 3 (`USART1`) and 4 (`USART3`). The `port.UART` assertion below is what
+(`UART4`), 3 (`USART1`) and 4 (`USART3`) — verified on the controller
+2026-09-03. This rig uses **1 and 4**; port 3 belongs to `LaserLickPort`, the
+only port with both I2C and a free `DIO_C`. The `port.UART` assertion below is what
 turns a wrong port into a loud failure at hardware-definition load rather than a
 link that silently never receives.
 
@@ -22,7 +24,7 @@ Hardware definition:
 
     board = Breakout_1_2()
     left  = MouseJoystick(port=board.port_1, event_name="joystick_L")
-    right = MouseJoystick(port=board.port_3, event_name="joystick_R")
+    right = MouseJoystick(port=board.port_4, event_name="joystick_R")
 
 Task:
 

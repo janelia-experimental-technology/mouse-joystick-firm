@@ -9,6 +9,7 @@ No board, no breakout, no pyControl installation is needed to run this.
 
 import pytest
 
+from devices.mouse_joystick_protocol import MouseJoystickProtocol as P
 from sim import BoardSim, Fault, State
 
 
@@ -134,7 +135,11 @@ def test_partial_lines_are_buffered_until_terminated(sim):
 
 
 def test_unterminated_over_length_input_does_not_grow_without_bound(sim):
-    out = sim.feed("x" * (BoardSim.RETRANSMIT_CACHE_SIZE * 40))
+    # Length derived from MAX_LINE, which is what this actually tests. It used
+    # to be derived from RETRANSMIT_CACHE_SIZE, which is unrelated -- and when
+    # that constant dropped from 16 to 2 the input stopped being over-length
+    # and the test passed for the wrong reason.
+    out = sim.feed("x" * (P.MAX_LINE + 1))
     assert out == ["nak;?;badframe"]
     # Resynchronises on the next complete line rather than staying wedged.
     assert sim.feed("ping;1\n") == ["ack;1"]
@@ -179,10 +184,54 @@ def test_out_of_order_sequence_numbers_are_each_executed(armed):
 
 
 def test_retransmission_cache_is_bounded(armed):
-    """An unbounded cache is a slow leak on a device with no way to report one."""
+    """An unbounded cache is a slow leak on a device with no way to report one.
+
+    Uses `stop`, not `ping`: reads are never cached now, so a ping loop would
+    leave the cache empty and this test would pass without exercising anything.
+    """
     for seq in range(BoardSim.RETRANSMIT_CACHE_SIZE + 4):
-        reply_to(armed, "ping;%d" % seq)
-    assert len(armed._retransmit) <= BoardSim.RETRANSMIT_CACHE_SIZE
+        reply_to(armed, "stop;%d" % seq)
+    assert len(armed._retransmit) == BoardSim.RETRANSMIT_CACHE_SIZE
+
+
+def test_reads_are_never_cached(armed):
+    """The cache is restricted to state-changing commands."""
+    # The `armed` fixture already ran `home` and `arm`, which are cached, so
+    # compare against a snapshot rather than against an empty cache.
+    before = dict(armed._retransmit)
+    for seq in range(6):
+        reply_to(armed, "status;%d" % seq)
+        reply_to(armed, "ping;%d" % (100 + seq))
+        reply_to(armed, "cal;%d;get" % (200 + seq))
+    assert armed._retransmit == before, "a read was cached"
+
+
+def test_a_repeated_read_is_re_executed_and_returns_fresh_state(armed):
+    """A retried STATUS returning fresh state beats a replayed stale one."""
+    before = reply_to(armed, "status;9")
+    assert reply_to(armed, "moveto;10;5.0") == "ack;10"
+    advance_with_heartbeat(armed, 100_000)
+    after = reply_to(armed, "status;9")  # same seq, same content as `before`
+    assert after != before, "a repeated STATUS was replayed from cache"
+
+
+def test_a_repeated_relative_move_is_not_re_executed(armed):
+    """MOVE is the one non-idempotent command, and the reason the cache exists."""
+    assert reply_to(armed, "move;40;4.0") == "ack;40"
+    advance_with_heartbeat(armed, 200_000)
+    once = armed.angle
+    assert reply_to(armed, "move;40;4.0") == "ack;40"  # byte-identical retry
+    advance_with_heartbeat(armed, 200_000)
+    assert armed.angle == pytest.approx(once), "a retried MOVE moved twice"
+
+
+def test_dual_mode_verbs_are_classified_on_the_parsed_argument(armed):
+    """`CAL get` is a read and `CAL set` is a write, under one verb name."""
+    before = dict(armed._retransmit)
+    reply_to(armed, "cal;50;get")
+    assert armed._retransmit == before, "`CAL get` was cached"
+    reply_to(armed, "cal;51;set;angle_zero;1.0")
+    assert 51 in armed._retransmit, "`CAL set` was not cached"
 
 
 # -------------------------------------------------------------- state machine
@@ -284,22 +333,51 @@ def test_ping_resets_the_host_loss_watchdog(armed):
 
 
 def test_a_repeated_ping_still_resets_the_watchdog(armed):
-    """The retransmission rule and PING contradict each other in the draft.
+    """Resolved 2026-09-03: the watchdog is reset by arrival, not by execution.
 
-    "A repeated `seq` with identical content is treated as a retransmission and
-    re-acknowledged without re-executing" assumes re-execution is the harm. For
-    PING the side effect *is* the command - it has no result other than resetting
-    the watchdog. Serving it purely from cache means the safety timeout expires
-    while the host believes it is being answered.
+    The draft reset it inside PING's handler, so a PING served from the
+    retransmission cache did not reset it -- and the host, receiving acks,
+    could not see the safety timeout running out. The reset now happens in the
+    receive path before dispatch, so a cache hit is irrelevant to it and PING
+    needs no exemption.
 
-    A host that increments `seq` never hits this, which is precisely why it would
-    survive review and then fire after a 65536 wrap, mid-experiment.
+    Byte-identical retries here, which is the case a retry burst on a degraded
+    link actually produces.
     """
     for _ in range(5):
         armed.advance(armed.host_timeout_us - 10_000)
         assert reply_to(armed, "ping;7") == "ack;7"  # the same seq every time
     assert armed.state == State.ARMED, "a repeated PING was served from cache and the watchdog lapsed"
     assert armed.fault_mask == 0
+
+
+def test_any_well_formed_command_resets_the_watchdog(armed):
+    """Not just PING. Liveness is proven by a frame arriving, not by PING.
+
+    This is what makes open question 2 survivable: a host polling STATUS during
+    a long move keeps the link alive, where under the draft only PING did.
+    """
+    for seq in range(5):
+        armed.advance(armed.host_timeout_us - 10_000)
+        assert reply_to(armed, "status;%d" % seq).startswith("ack;")
+    assert armed.state == State.ARMED
+    assert armed.fault_mask == 0
+
+
+def test_malformed_frames_do_not_hold_the_watchdog_open(armed):
+    """A host with a wedged serial driver is not usefully alive.
+
+    The refresh sits after the badframe branch deliberately: garbage arriving
+    must not keep the safety timeout from expiring.
+    """
+    for _ in range(5):
+        armed.advance(armed.host_timeout_us - 10_000)
+        out = armed.feed("!!! not a command\n")
+        assert any("badframe" in line for line in out)
+    armed.advance(armed.host_timeout_us)
+    assert armed.fault_mask & (1 << Fault.HOST_TIMEOUT), (
+        "malformed frames kept the host-loss watchdog alive"
+    )
 
 
 def test_delayed_command_after_a_timeout_is_refused_not_executed(armed):

@@ -4,11 +4,14 @@ Gate C: "A host simulator or protocol fixture and the firmware agree on framing
 and versions."
 
 This half proves the simulator reproduces `fixtures/protocol_cases.txt`. The
-other half - the RP2040 firmware reproducing the same file from its own host
-test - is not written yet, and until it is, Gate C is not passed. A simulator
-agreeing with a corpus that only the simulator has ever been checked against
-proves nothing about the firmware; the corpus is only worth something once two
-independent implementations are held to it.
+other half is `test/native/test_protocol/test_protocol.cpp`, written 2026-09-03,
+which holds the firmware's own `ProtocolBoard` to the same file. Both halves
+exist, so the corpus is now evidence rather than a restatement of one
+implementation.
+
+Keep them in step: a case added here must be added for both, and mutation-testing
+the firmware against this corpus is what found that the ARMED-before-range
+ordering was documented but not enforced.
 
 The parser here is deliberately trivial so the C++ side can be a direct
 translation rather than a reinterpretation.

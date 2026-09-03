@@ -25,6 +25,86 @@ counts. Written over **TMC51X0 4.0.3**, pinned in `platformio.ini`. Procedure an
 findings in `docs/motion-bringup.md`; measurements in
 `../mouse-joystick-pcb/docs/bringup-log.md`.
 
+**Controller MicroPython upgraded 2026-09-03: 1.22.2 -> 1.26.1.** This cleared a
+blocker that had not been recorded anywhere: `devices/uart_handler.py` asserts
+on MicroPython >= 1.26, added in pyControl 2.1.1, and `MouseJoystick.__init__`
+constructs a `UART_handler`. The bench pyboard was on framework 2.1.1 over
+MicroPython 1.22.2, so **the device class could not have been instantiated at
+all** — every host test passes against stubs and none of them can see this.
+Standard `PYBV11` build; the internal filesystem survived (firmware writes flash
+sector 0 and sectors 5+, the filesystem lives in sectors 1-4), verified rather
+than assumed. Backup of the board's filesystem taken first, at
+`~/pyboard-flash-backup-2026-09-03`. `UART.IRQ_RXIDLE` reads `0x10`, matching
+`pycontrol/tests/stubs.py`.
+
+**The rig's controller has not been checked.** The board upgraded is a bench
+pyboard carrying a rotary-encoder test task, not the rig's
+`hardware_definition_joystick.py`. Expect to upgrade the rig's too.
+
+**Ports assigned 2026-09-03: 1 (`UART4`) and 4 (`USART3`).** All three
+UART-capable ports were verified on the live controller — constructed at
+115200 8N1 with an `IRQ_RXIDLE` handler accepted, achieved baud 115384 (+0.16%)
+on `UART4` and `USART3`, 115226 (+0.02%) on `USART1`. Ports 2, 5 and 6 report
+`UART = None`. `pycontrol/hardware_definitions/mouse_joystick_bringup.py` now
+assigns ports 1 and 4.
+
+**This depends on one rig change that has been requested but not confirmed.**
+Peter asked the researcher on 2026-09-03 to move the reward solenoid from
+`port_4.POW_A` to `port_5.POW_A`. Until that is reported done and
+`joystick-rig`'s `hardware_definition_joystick.py` on `source/main` reads
+`port_5.POW_A`, **port 4 is contested** — a solenoid cable still in port 4 means
+the `right` board's connector is occupied, and the symptom is a link that never
+answers rather than an error. Verify before blaming the protocol.
+
+Why port 3 was given up: it is the **only** Breakout 1.2 port with I2C on
+`DIO_A`/`DIO_B` *and* a free `DIO_C`, which is what `LaserLickPort` needs. That
+device was converted from UART to I2C (ATtiny 0x15 + MPR121 0x5A share I2C bus 1;
+ATtiny PB1 drives `DIO_C`/`X5`), and port 4's `DIO_C` is `X6` = `DAC_2` = the
+live rsync — so the lick port has exactly one home and cannot move. The solenoid
+needs only a driver line and all six ports have `POW_A`, so it is the thing that
+moves. Ports 1 and 4 also give both boards an identical achieved baud, both
+being on APB1.
+
+**On port 4, RJ-45 pin 5 must stay unconnected.** It is `DIO_C` = `X6` = the
+rsync driver. Rev 0 leaves it open, which is correct; driving or pulling it would
+fight the DAC and corrupt the alignment fingerprint the recording pipeline
+depends on. Full reasoning:
+`../mouse-joystick-pcb/docs/pycontrol-port-pinout.md`.
+
+**Gate C's firmware half written 2026-09-03, and Gate C's corpus requirement is
+now met by two independent implementations.** `src/Protocol.hpp` is the framing
+codec and `src/ProtocolBoard.hpp` the command layer and state machine; both are
+Arduino-free and allocation-free, which is what lets
+`test/native/test_protocol/test_protocol.cpp` run the shared corpus on the host.
+54 native tests pass, up from 33. All three examples still build for
+`mouse_joystick`.
+
+**Mutation-testing the corpus was the part that paid.** Four deliberate defects
+were injected to check the tests had teeth; two were not caught at first:
+
+- Inverting the ARMED and range checks in `MOVETO` passed every corpus case, so
+  the corpus *documented* a safety-relevant ordering it did not *enforce*. Added
+  `armed-is-checked-before-the-range-check`, which both implementations now pass.
+- A test asserting that malformed frames do not refresh the host-loss watchdog
+  advanced a full extra timeout at the end, tripping the watchdog either way. It
+  passed against a board that refreshed on garbage. Margins tightened.
+
+All four mutations are caught now. Neither gap was findable from one
+implementation plus its own fixture.
+
+**Standing requirement for firmware integration: event time must not be a raw
+32-bit microsecond counter.** `ProtocolBoard` keeps time in `uint64_t` because
+`micros()` wraps at 71.6 minutes, which is shorter than a session, and every
+event on this link carries `t_us` into a recorded dataset used for alignment. A
+wrap would not fail loudly — it would produce timestamps that go backwards.
+Whatever feeds this from `micros()` must accumulate the wrap.
+
+**Not yet done:** none of this is wired to a UART or to real motion. Motion in
+`ProtocolBoard` is the simulator's linear model at `v_max`, and its defaults are
+the simulator's placeholders (travel +/-20 deg, 180 deg/s), **not** the measured
+bench values. Replacing them changes corpus timings and belongs in its own
+commit with the corpus updated alongside.
+
 Read `.agents/handoff.local.md` for bench state and the immediate next actions.
 
 ## Milestones
@@ -69,7 +149,11 @@ Read `.agents/handoff.local.md` for bench state and the immediate next actions.
       environment. Verified: PyQt6 6.11.0 / pyqtgraph 0.14.0 / numpy 2.5.2 /
       pyserial 3.5 against pyControl v2.1.1; 6 environment tests pass; firmware
       env unchanged at 33/33
-- [ ] Stage 4: pyControl UART protocol
+- [x] Stage 4 host half: framing codec, device class, simulator, 22-case corpus
+- [x] Stage 4 firmware half: `src/Protocol.hpp` + `src/ProtocolBoard.hpp`, held
+      to the same corpus by `test/native/test_protocol/`. 2026-09-03
+- [ ] Stage 4: wire the protocol layer to a real UART and to real motion
+- [ ] Stage 4: pyControl UART protocol on hardware (Gate E)
   - [x] **Host half written and green, 2026-09-02.** 128 tests.
         `pycontrol/devices/mouse_joystick_protocol.py` (codec, runs on the board
         and under pytest), `pycontrol/sim/board_sim.py` (simulator with an
@@ -99,13 +183,18 @@ First Implementation", which is where they should be resolved - this repository
 implements the protocol and does not define it. Summarised here because they
 gate Stage 4.
 
-1. **The retransmission rule breaks the heartbeat.** "A repeated `seq` with
-   identical content is re-acknowledged without re-executing" assumes
-   re-execution is the harm. For `PING` the side effect *is* the command — it
-   only resets the host-loss watchdog. Served from cache, the safety timeout
-   expires while the host believes it is being answered. A host that increments
-   `seq` never hits it, so it would survive review and fire after a 65536 wrap.
-   Likely fix: exempt `PING` from the cache.
+1. ~~**The retransmission rule breaks the heartbeat.**~~ **RESOLVED
+   2026-09-03**, and not by exempting `PING`. It was a layering error: the
+   watchdog measures host liveness, so it is now reset on **receipt of any
+   well-formed command**, before dispatch and regardless of a cache hit —
+   `badframe` excepted, so a wedged serial driver cannot hold the safety
+   timeout open. The cache is separately restricted to state-changing commands,
+   classified on the *parsed* command because `CAL`/`INSTR`/`HV` are each a read
+   or a write depending on their argument. Cache bounded at 2. Note **`MOVE` is
+   the only non-idempotent command in the set**, so the cache guards one verb
+   and could go entirely if the trial uses only absolute positioning.
+   Implemented in `pycontrol/`; the corpus did not change. Owned by
+   `../mouse-joystick-pcb/docs/uart-protocol.md`, open question 1.
 2. **The 100 ms host timeout is shorter than a long move.** At 180 deg/s an 18
    degree move consumes the whole timeout, and travel is 40 degrees wide. The
    host must ping *during* motion. Possibly fine, but it should be written down
@@ -140,8 +229,17 @@ Not blocking Stage 4, but they change the command set when answered. Raised
   interfaces, not fine for behavioural data"
 - On heartbeat loss mid-trial, whether latching a fault and requiring `CLRFAULT`
   is the behaviour they want, given it ends the session
-- Which Breakout 1.2 ports the two boards get, and whether one `RSYNC` output
-  can drive both - both open in Gate A of `pycontrol-interface.md`
+- ~~Which Breakout 1.2 ports the two boards get~~ — **assigned 2026-09-03:
+  ports 1 and 4.** Requested of the researcher: move the reward solenoid from
+  `port_4.POW_A` to `port_5.POW_A`. **Awaiting confirmation that it is done** —
+  that is the only thing standing between this assignment and a working link.
+  Port 3 stays with `LaserLickPort`, which needs the one port having both I2C
+  and a free `DIO_C`. Reasoning in
+  `../mouse-joystick-pcb/docs/pycontrol-port-pinout.md`
+- Whether one `RSYNC` output can drive both boards - still open in Gate A of
+  `pycontrol-interface.md`, and now sharper: Breakout 1.2 has **two** BNCs and
+  both are already in use (camera trigger, opto gate), against **six** lines
+  wanted at rev 1
 
 ## Controller Decided 2026-09-02
 

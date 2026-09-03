@@ -8,7 +8,13 @@
 #
 # Consumed by:
 #   - pycontrol/tests/test_fixture_corpus.py   (the Python simulator)
-#   - the RP2040 firmware's own host-native test               [NOT YET WRITTEN]
+#   - test/native/test_protocol/test_protocol.cpp             (the RP2040 half)
+#
+# BOTH consumers exist as of 2026-09-03, which is when this file started being
+# evidence rather than a restatement of one implementation. Change a case and
+# BOTH must be re-run: `pixi run pycontrol-test` and `pixi run -- pio test -e
+# native`. A change that only one side is checked against silently forks the
+# contract.
 #
 # Format is line-oriented, not JSON, so the C++ side can parse it with getline
 # and a prefix compare rather than pulling in a JSON library. It is also
@@ -131,6 +137,21 @@ END
 
 CASE motion-is-refused-outside-armed
   SEND moveto;1;5.0
+  EXPECT nak;1;notarmed
+END
+
+# The ordering above is pinned deliberately: ARMED is checked BEFORE the range
+# check, so an OUT-OF-RANGE value from an UNARMED board answers `notarmed` and
+# not `outofrange`. Refusing motion outside ARMED is the safety-relevant rule
+# and must not be reachable past an argument check.
+#
+# `motion-is-refused-outside-armed` above cannot pin this, because 5.0 is in
+# range and both orderings answer `notarmed`. Only an out-of-range value from an
+# unarmed board tells the two apart. Added 2026-09-03 after mutation-testing the
+# corpus against the firmware: inverting the two checks passed every case in
+# this file, which meant the corpus documented an ordering it did not enforce.
+CASE armed-is-checked-before-the-range-check
+  SEND moveto;1;-999
   EXPECT nak;1;notarmed
 END
 

@@ -15,6 +15,33 @@ version independently.
 port to spare. The device class asserts `port.UART is not None`, so a
 non-UART port fails loudly rather than silently not receiving.
 
+## Controller Prerequisite: MicroPython >= 1.26
+
+**Check this before anything else.** `devices/uart_handler.py` in `pycontrol/code`
+asserts on it:
+
+```python
+assert (major > 1) or (major == 1 and minor >= 26), "UART_handler requires MicroPython version >= 1.26"
+```
+
+`MouseJoystick.__init__` constructs a `UART_handler` and registers an
+`IRQ_RXIDLE` handler, so on an older controller **the device class cannot be
+instantiated** — it asserts before a single byte moves, and none of the 128
+tests here can catch it because they run against stubs.
+
+The pyControl *framework* version tells you nothing about this. The bench
+pyboard was found on 2026-09-03 carrying framework 2.1.1 on MicroPython 1.22.2,
+which cannot run `UART_handler` at all. Check the interpreter, not the framework:
+
+```
+>>> import sys; sys.implementation.version
+(1, 26, 1, '')
+```
+
+The bench controller was upgraded 1.22.2 -> 1.26.1 on 2026-09-03 (standard
+`PYBV11` build, not `THREAD`). **The rig's controller has not been checked.**
+Full account in `../../mouse-joystick-pcb/docs/pycontrol-interface.md`.
+
 ## Layout
 
 | Path | Runs on | Delivered by |
@@ -93,14 +120,31 @@ checkout.
 | `devices/mouse_joystick.py` | The device class. |
 | `sim/board_sim.py` | Host simulator: state machine, faults, retransmission, watchdog. Injected clock, so every timestamp is deterministic. |
 | `tests/fixtures/protocol_cases.txt` | The shared corpus. |
+| `../src/Protocol.hpp` | The firmware framing codec. Arduino-free and allocation-free, which is what makes it testable on the host. |
+| `../src/ProtocolBoard.hpp` | The firmware command layer and state machine, with an injected clock. |
+| `../test/native/test_protocol/test_protocol.cpp` | The firmware half of the corpus check, plus codec unit tests. |
 
-**Gate C is not passed yet, and the missing half is the firmware.** The corpus is
-line-oriented rather than JSON specifically so a PlatformIO native C++ test can
-parse it with `getline` and a prefix compare. Until that test exists, the
-simulator agreeing with a corpus that only the simulator has ever been checked
-against proves nothing about the RP2040 — two independent readings of a draft
-agree right up until they do not, and the corpus is only worth something once
-both are held to it.
+**Both halves now exist, as of 2026-09-03.** The firmware side is
+`src/Protocol.hpp` (the framing codec) and `src/ProtocolBoard.hpp` (the command
+layer and state machine), held to the same corpus by
+`test/native/test_protocol/test_protocol.cpp`. The corpus is line-oriented
+rather than JSON specifically so that C++ test can parse it with `getline` and a
+prefix compare; it does exactly that. Run both:
+
+```sh
+make pycontrol-test                  # the Python half
+pixi run -- pio test -e native       # the firmware half
+```
+
+A case changed in the corpus must be re-run against **both**, or the contract
+silently forks.
+
+**What holding two implementations to it actually bought.** Mutation-testing the
+firmware against the corpus found that inverting the ARMED and range checks in
+`MOVETO` passed every case in the file — so the corpus documented a
+safety-relevant ordering it did not enforce. `armed-is-checked-before-the-range-check`
+was added to close it. That is the class of thing a single implementation and its
+own fixture cannot find, and it is the argument for the whole exercise.
 
 The simulator is **not** a model of the board. No TMC5130A, no encoder, no
 current control, no real motion profile. Position moves linearly at a configured
@@ -177,19 +221,44 @@ given a bit unilaterally.
 two ends of it turned up the following. Everything below is marked `SPEC:` at the
 point in the code where it was decided.
 
-### Two that are real problems, not just gaps
+### One real problem, now resolved; one still open
 
-**1. The retransmission rule breaks the heartbeat.** The draft says "a repeated
-`seq` with identical content is treated as a retransmission and re-acknowledged
-without re-executing." That rule exists so a retried `MOVETO` does not move the
-joystick twice — it assumes re-execution is the harm. For `PING` the side effect
-*is* the command: it has no result other than resetting the host-loss watchdog.
-Serving a repeated `PING` purely from cache means the safety timeout expires
-while the host believes it is being answered, and the board faults mid-experiment
-for no reason the host can see. A host that increments `seq` never hits this,
-which is exactly why it would survive review and then fire after a 65536 wrap.
-The simulator refreshes the watchdog on a cache hit; the cleaner fix is probably
-to exempt `PING` from the cache entirely. **Needs a decision before freeze.**
+**1. The retransmission rule broke the heartbeat — RESOLVED 2026-09-03.** The
+draft said "a repeated `seq` with identical content is treated as a
+retransmission and re-acknowledged without re-executing." That rule exists so a
+retried relative `MOVE` does not move the joystick twice — it assumes
+re-execution is the harm. For `PING` the side effect *was* the command: it had no
+result other than resetting the host-loss watchdog, so a `PING` served from
+cache let the safety timeout expire while the host believed it was being
+answered.
+
+The likely failure was not the 65536 wrap the draft reached for — a bounded
+cache makes that unreachable. It was the ordinary retry: reply lost, host
+retries, retry served from cache without resetting, repeat. On a degraded link
+no retry in the burst resets the watchdog, so the board faults exactly when the
+link is marginal, while the host is receiving acks.
+
+**Resolved as a layering fix, in `../../../mouse-joystick-pcb/docs/uart-protocol.md`
+open question 1.** Two changes, now implemented here:
+
+- **The watchdog is reset on receipt of any well-formed command**, in
+  `_handle_line` before dispatch, cache hit or miss — not inside a handler.
+  Liveness is a link property. `badframe` does not reset it, so a wedged serial
+  driver cannot hold the safety timeout open. `PING` is no longer special and
+  needs no exemption, and a `STATUS` poll now proves liveness.
+- **The cache is restricted to state-changing commands**, via
+  `MouseJoystickProtocol.changes_state()`, which classifies the *parsed* command
+  because `CAL`, `INSTR` and `HV` are each a read or a write depending on their
+  argument. Unrecognised commands default to cached: over-caching costs a stale
+  ack, under-caching moves the joystick twice.
+
+Worth carrying: **`MOVE` is the only non-idempotent command in the set**, so the
+cache protects exactly one verb. If the trial only ever uses absolute
+positioning, `MOVE` and the cache can both go. The cache is also now bounded at
+**2** entries rather than 16.
+
+The corpus did not change — it pins `PING` framing, not retransmission or
+watchdog timing — so the contract the RP2040 half will be held to is unmoved.
 
 **2. The host timeout is shorter than a long move.** The cited host timeout is
 100 ms (`pycontrol-port-pinout.md`). At the simulator's default 180 °/s, an 18°

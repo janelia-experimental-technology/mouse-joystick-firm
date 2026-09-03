@@ -98,11 +98,14 @@ class State:
 class BoardSim:
     """One board on one link. Two instances share nothing."""
 
-    # SPEC: the draft does not bound the retransmission cache. Sixteen entries
-    # covers any plausible in-flight window on a 115200 link with a 100 ms host
-    # timeout, and bounding it matters because an unbounded cache on the real
-    # firmware is a slow memory leak on a device with no way to report one.
-    RETRANSMIT_CACHE_SIZE = 16
+    # The draft now bounds the cache at 2 entries
+    # (`../../../mouse-joystick-pcb/docs/uart-protocol.md`, framing). The case
+    # it exists for is "the host retried immediately because a reply was lost";
+    # a deeper window buys nothing and is the only thing that makes `seq` reuse
+    # across a 65536 wrap reachable. Bounding it also matters because an
+    # unbounded cache on the real firmware is a slow memory leak on a device
+    # with no way to report one.
+    RETRANSMIT_CACHE_SIZE = 2
 
     # Cited from `../../../mouse-joystick-pcb/docs/pycontrol-port-pinout.md`.
     DEFAULT_HOST_TIMEOUT_US = 100_000
@@ -261,38 +264,47 @@ class BoardSim:
         kind, verb, seq, rest = P.decode_command(line)
 
         if kind == P.KIND_BAD:
+            # Deliberately before the watchdog refresh below: a frame that does
+            # not parse does not prove the host is alive. A wedged serial driver
+            # emitting garbage must not hold the safety timeout open.
             self._out(P.encode_nak(seq if seq is not None else P.SEQ_UNKNOWN, rest))
             return
 
+        # The host-loss watchdog is reset HERE -- on receipt of a well-formed
+        # command, before dispatch, cache hit or miss -- and not inside any
+        # handler. Liveness is a property of the link, so it is decided where
+        # the frame arrives. Resolved 2026-09-03 in
+        # `../../../mouse-joystick-pcb/docs/uart-protocol.md` open question 1;
+        # the draft used to reset it inside PING, which put a link-layer fact
+        # behind an application-layer decision and made the retransmission rule
+        # a safety rule by accident.
+        self._refresh_watchdog()
+
         canonical = P.DELIMITER.join([verb, str(seq)] + list(rest))
-        cached = self._retransmit.get(seq)
-        if cached is not None and cached[0] == canonical:
-            # "A repeated `seq` with identical content is treated as a
-            # retransmission and re-acknowledged without re-executing."
-            #
-            # SPEC: that rule and `PING` contradict each other, and the draft
-            # does not notice. The rule exists so a retried `MOVETO` does not
-            # move the joystick twice - it assumes re-execution is the harm. For
-            # `PING` the side effect *is* the command: it has no result other
-            # than resetting the host-loss watchdog. Serving a repeated `PING`
-            # purely from cache means the safety timeout expires while the host
-            # believes it is being answered, and the board faults mid-experiment
-            # for no reason the host can see.
-            #
-            # So the watchdog is refreshed even on a cache hit. A host normally
-            # increments `seq`, so this only bites after a 65536 wrap or on a
-            # host that reuses numbers - but "only after a wrap" is not a safety
-            # argument. Raised in `../README.md` for the draft to resolve
-            # properly, most likely by exempting `PING` from the cache entirely.
-            if verb == "ping" and self._watchdog_deadline is not None:
-                self._watchdog_deadline = self.now_us + self.host_timeout_us
-            self._out(cached[1])
-            return
+        cacheable = P.changes_state(verb, rest)
+
+        if cacheable:
+            cached = self._retransmit.get(seq)
+            if cached is not None and cached[0] == canonical:
+                # "A repeated `seq` with identical content and a state-changing
+                # verb is treated as a retransmission and re-acknowledged
+                # without re-executing." The one command in the set this
+                # actually protects is MOVE, which is relative and would double
+                # the movement; everything else names a destination.
+                self._out(cached[1])
+                return
 
         reply = self._dispatch(verb, seq, rest)
         if reply is not None:
-            self._remember(seq, canonical, reply)
+            if cacheable:
+                self._remember(seq, canonical, reply)
             self._out(reply)
+
+    def _refresh_watchdog(self):
+        # Only meaningful once the watchdog is armed. Before that there is no
+        # deadline to push out and nothing to do.
+        if self._watchdog_deadline is not None:
+            self._watchdog_deadline = self.now_us + self.host_timeout_us
 
     def _remember(self, seq, canonical, reply):
         if seq in self._retransmit:
@@ -352,10 +364,13 @@ class BoardSim:
         return "+".join(caps)
 
     def _cmd_ping(self, seq, args):
-        # The heartbeat. Only meaningful while the watchdog is armed, but always
-        # answered: a host has to be able to probe a link it is not yet armed on.
-        if self._watchdog_deadline is not None:
-            self._watchdog_deadline = self.now_us + self.host_timeout_us
+        # Carries no data and has no side effect of its own. The watchdog was
+        # already refreshed in `_handle_line`, by the frame arriving, so PING is
+        # simply the command to send when there is nothing else to say -- and a
+        # STATUS poll keeps the link alive just as well.
+        #
+        # Always answered, including before ARM: a host has to be able to probe
+        # a link it is not yet armed on.
         return P.encode_ack(seq)
 
     def _cmd_status(self, seq, args):
