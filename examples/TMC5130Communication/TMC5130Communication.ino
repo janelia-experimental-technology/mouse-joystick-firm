@@ -35,6 +35,7 @@ using mouse_joystick::PowerUpReport;
 using mouse_joystick::PowerUpResult;
 using mouse_joystick::RailState;
 using mouse_joystick::SafeState;
+using mouse_joystick::SelfTest;
 
 namespace tmc = mouse_joystick::tmc;
 
@@ -62,6 +63,8 @@ void printMenu(Print &out) {
   out.println(F("  h  raise HV_EN and HOLD it (for supply-ramp bench tests)"));
   out.println(F("  w  software soft-start: retry HV_EN, 10 attempts"));
   out.println(F("  x  power down: open the bus, drop HV_EN"));
+  out.println(F("  I  beacon the board serial on the InstrumentPort"));
+  out.println(F("     triggers (no 36 V, no bus)"));
   out.println(F("  B  reboot into BOOTSEL"));
   out.println(F("  R  reboot"));
   out.println();
@@ -816,6 +819,9 @@ void loop() {
     PowerSequence::powerDown();
     sequence_run = false;
     Serial.println(F("Powered down: bus open, HV_EN low, HV_DIAG_EN low."));
+    break;
+  case 'I':
+    SelfTest::emitIdentityBeacon(Serial, 3);
     break;
   case 'B':
     PowerSequence::powerDown();

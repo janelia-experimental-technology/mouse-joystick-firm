@@ -44,6 +44,8 @@ void printMenu(Print &out) {
   out.println(F("  r  re-run the full self test"));
   out.println(F("  a  read the ADC channels once"));
   out.println(F("  t  pulse FW_TRIG0/FW_TRIG1 into InstrumentPort-40"));
+  out.println(F("  I  beacon the board serial on the triggers, so a"));
+  out.println(F("     capture identifies which board it came from"));
   out.println(F("  i  toggle the instrumentation buffers, which silences"));
   out.println(F("     or restores the 1 Hz FW_TRIG0 heartbeat"));
   out.println(F("  k  10 s clock tick stream, for host-side crystal check"));
@@ -122,6 +124,9 @@ void loop() {
     Serial.println(enabled ? F("enabled") : F("disabled"));
     break;
   }
+  case 'I':
+    SelfTest::emitIdentityBeacon(Serial, 3);
+    break;
   case 'k':
     SelfTest::streamClockTicks(Serial, 10);
     break;

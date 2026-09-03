@@ -44,6 +44,20 @@ constexpr uint32_t kSignatureFastHalfMs = 1;
 // by eye in a long capture, fast enough not to wait for.
 constexpr uint32_t kHeartbeatHalfPeriodMs = 500;
 
+// Identity beacon. FW_TRIG0 is the clock and FW_TRIG1 the data, which makes the
+// frame decodable by sampling TRIG1 at each TRIG0 rising edge -- no timing
+// tolerance beyond sampling faster than the clock, and no assumption that the
+// analyser and this board agree on rate.
+//
+// The preamble is one long FW_TRIG1 high with the clock parked low. 50 ms is
+// chosen to be unmistakable against the two other things that drive these
+// pins: the boot signature's 10 ms FW_TRIG1 pulses and the 500 ms heartbeat,
+// which is on FW_TRIG0 and never touches FW_TRIG1.
+constexpr uint32_t kBeaconPreambleMs = 50;
+constexpr uint32_t kBeaconGapMs = 10;
+constexpr uint32_t kBeaconHalfBitUs = 500;
+constexpr uint32_t kBeaconIdBits = 8u * PICO_UNIQUE_BOARD_ID_SIZE_BYTES;
+
 // A plausible junction temperature for a board sitting on a bench. Mostly this
 // proves the ADC and ADC_AVDD work at all.
 constexpr float kTempMinCelsius = 5.0f;
@@ -507,6 +521,67 @@ void SelfTest::pulseTriggers(Print &out, uint32_t half_period_us,
   SafeState::setTrigger0(false);
   SafeState::setTrigger1(false);
 
+  SafeState::setInstrumentationEnabled(was_enabled);
+  out.println(F("Done."));
+}
+
+void SelfTest::emitIdentityBeacon(Print &out, uint32_t repeats) {
+  pico_unique_board_id_t raw;
+  pico_get_unique_board_id(&raw);
+
+  char id[2 * PICO_UNIQUE_BOARD_ID_SIZE_BYTES + 1] = {0};
+  pico_get_unique_board_id_string(id, sizeof(id));
+
+  const uint32_t frame_ms = kBeaconPreambleMs + kBeaconGapMs +
+                            (kBeaconIdBits * 2u * kBeaconHalfBitUs) / 1000u +
+                            kBeaconGapMs;
+
+  out.print(F("Beaconing board identity on InstrumentPort-40: "));
+  out.println(id);
+  out.println(F("  TRIG1 (ch17) high 50 ms starts a frame; TRIG0 (ch16) then"));
+  out.println(F("  clocks 64 bits MSB first, each valid on TRIG1 at the"));
+  out.println(F("  rising edge. Trigger the capture on ch17 rising."));
+  out.print(F("  "));
+  out.print(repeats);
+  out.print(F(" frames, "));
+  out.print(frame_ms);
+  out.println(F(" ms each."));
+  out.println(F("  No 36 V and no bus needed: U1801 runs from +3.3V_MCU, so"));
+  out.println(F("  this reaches the port with the switched domain dark."));
+
+  const bool was_enabled = SafeState::instrumentationEnabled();
+  SafeState::setInstrumentationEnabled(true);
+
+  for (uint32_t frame = 0; frame < repeats; ++frame) {
+    // Frame start, with the clock parked low so the preamble cannot be read as
+    // data by a decoder that only counts clock edges.
+    SafeState::setTrigger0(false);
+    SafeState::setTrigger1(true);
+    delay(kBeaconPreambleMs);
+    SafeState::setTrigger1(false);
+    delay(kBeaconGapMs);
+
+    for (uint32_t bit = 0; bit < kBeaconIdBits; ++bit) {
+      // MSB first, so the clocked bits arrive in the same order as the hex
+      // string printed above and as the USB serial in /dev/serial/by-id.
+      const uint8_t mask = static_cast<uint8_t>(0x80u >> (bit % 8u));
+      const bool level = (raw.id[bit / 8u] & mask) != 0;
+
+      // Data set up before the edge, held across it: the decoder samples
+      // TRIG1 on the rising edge of TRIG0 and needs no phase guess.
+      SafeState::setTrigger1(level);
+      delayMicroseconds(kBeaconHalfBitUs);
+      SafeState::setTrigger0(true);
+      delayMicroseconds(kBeaconHalfBitUs);
+      SafeState::setTrigger0(false);
+    }
+
+    SafeState::setTrigger1(false);
+    delay(kBeaconGapMs);
+  }
+
+  SafeState::setTrigger0(false);
+  SafeState::setTrigger1(false);
   SafeState::setInstrumentationEnabled(was_enabled);
   out.println(F("Done."));
 }

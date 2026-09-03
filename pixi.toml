@@ -150,6 +150,17 @@ cmd = "python tools/pycontrol_task.py link"
 description = "Host-side pytest for the pyControl device class and protocol (Gate C)."
 cmd = "pytest pycontrol/tests -q"
 
+# Which LA5032 is watching which board. Runs `instrument-control`'s general
+# tool -- the decode logic and the frame contract live there and in
+# `board-interfaces`, not here -- but under THIS environment's interpreter,
+# which is where pyserial comes from. Deliberately not a second copy of that
+# script: two divergent implementations of a wire format is the failure mode
+# worth avoiding.
+[feature.pycontrol.tasks.identify-analyzers]
+description = "Map each LA5032 to the board it probes, by identity beacon. No 36 V needed."
+cmd = """python ../instrument-control/tools/identify_boards.py
+  --board-glob '/dev/serial/by-id/usb-Orb_Weaver_mouse-joystick-pcb_*-if00'"""
+
 [environments]
 # `default` stays implicit: the firmware toolchain, unchanged.
 pycontrol = { features = ["pycontrol"], no-default-feature = true }

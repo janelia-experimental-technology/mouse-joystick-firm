@@ -66,6 +66,24 @@ public:
   static void pulseTriggers(Print &out, uint32_t half_period_us,
                             uint32_t cycles);
 
+  // Clock this board's flash unique id out of the InstrumentPort triggers, so
+  // a capture says which board it came from without anyone writing it down.
+  //
+  //   FW_TRIG1 (TRIG1, ch17) high for 50 ms   frame start
+  //   FW_TRIG0 (TRIG0, ch16)                  64 clocks, one per bit
+  //   FW_TRIG1                                the bit, valid at each rising
+  //                                           clock edge, MSB first
+  //
+  // The 64 bits are the same ones the USB serial string is built from, so a
+  // decoded frame compares directly against /dev/serial/by-id.
+  //
+  // Needs nothing but USB: `U1801` runs from +3.3V_MCU and reaches `J1501`
+  // through 33 ohm series resistors, so this works with HV_EN low and the bus
+  // switch open. That is what makes it usable to tell two analysers apart
+  // before any joystick is energised. Emits `repeats` frames so a capture
+  // started mid-frame still contains a whole one.
+  static void emitIdentityBeacon(Print &out, uint32_t repeats);
+
   // Emit one line per second for `seconds`, each carrying the RP2040's own
   // microsecond count. Comparing the drift against the host's wall clock is the
   // only absolute check on the 12 MHz crystal available on this board -- the

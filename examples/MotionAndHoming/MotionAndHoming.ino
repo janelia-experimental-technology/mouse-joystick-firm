@@ -46,6 +46,7 @@ using mouse_joystick::PowerUpReport;
 using mouse_joystick::PowerUpResult;
 using mouse_joystick::RailState;
 using mouse_joystick::SafeState;
+using mouse_joystick::SelfTest;
 
 namespace conv = mouse_joystick::conversions;
 
@@ -158,6 +159,8 @@ void printMenu(Print &out) {
   out.println(F("  d  ramp generator: mode, target, and every ramp register"));
   out.println(F("  i  IOIN"));
   out.println(F("  v  +3.3V_SW rail state"));
+  out.println(F("  I  beacon the board serial on the InstrumentPort"));
+  out.println(F("     triggers (no 36 V, no bus, no motion)"));
   out.println(F("  x  power down: driver off, bus open, HV_EN low"));
   out.println(F("  B  reboot into BOOTSEL      R  reboot"));
   out.println();
@@ -1479,6 +1482,9 @@ void loop() {
     homed = false;
     current_check.safe = false;
     Serial.println(F("Powered down: driver disabled, bus open, HV_EN low."));
+    break;
+  case 'I':
+    SelfTest::emitIdentityBeacon(Serial, 3);
     break;
   case 'B':
     MotionSetup::disableDriver(stepper);

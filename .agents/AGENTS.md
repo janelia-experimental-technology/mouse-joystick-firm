@@ -22,6 +22,13 @@ If sibling checkouts exist, read:
 - `../mouse-joystick-pcb/docs/bringup-log.md` — where real measurements go.
 - `~/Repositories/arduino/TMC51X0` — the driver library this firmware will use,
   and the source of this repository's Pixi/PlatformIO layout.
+- `../instrument-control` — host-side logic-analyzer control. It owns the
+  `sigrok-cli` environment, the LA5032 quirks, and the identity-beacon decoder;
+  `pixi run identify-analyzers` runs its tool under this repo's `pycontrol`
+  environment. The beacon's **frame format** is owned by
+  `../board-interfaces/docs/instrument-port-identity-beacon.md`. This repository
+  implements the board half (`SelfTest::emitIdentityBeacon()`) and must not
+  redefine the format.
 
 If `.agents/handoff.local.md` exists, read it before planning or editing. Treat
 it as local, current-session context rather than permanent project policy.
