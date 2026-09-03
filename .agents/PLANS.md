@@ -230,6 +230,54 @@ against a 100 ms watchdog. The loop-ordering fix stands on its own merits -- the
 watchdog was genuinely evaluated before the link was read -- but the margin is
 unmeasured. Set the UART read timeout deliberately before timing this link.
 
+**`freewheel` works on hardware 2026-09-03, and so do both exits.** The
+compliant state entered from ARMED, `status` reported `FREEWHEEL`, and the
+encoder moved 0.133 deg while the ramp generator did not -- the divergence that
+makes `angle` and `xactual` two quantities, observed without touching the
+mechanism. `moveto` re-engages implicitly, `stop` takes the joystick back,
+`disarm` leaves it held, and after `disarm` both frames read identically.
+
+**Bug found: leaving FREEWHEEL never re-energised the driver**, despite a comment
+claiming the move "re-engages implicitly". All three exits were separate
+omissions and now share one `leaveCompliance()`. **Third time the encoder follow
+check has caught a state transition that forgot to energise what it was about to
+use** -- the other two were homing and, indirectly, the same pattern at `arm`.
+That check has paid for itself repeatedly and should not be weakened.
+
+**OPEN: sub-degree discrepancies at the release/re-engage boundary.** After
+`freewheel` -> `moveto`, `xactual=-2.995` against `angle=-3.691` (0.70 deg);
+after `freewheel` -> `stop`, 0.27 deg. Leading hypothesis is the rotor snapping
+when the driver re-energises -- a stepper's electrical angle repeats every four
+full steps, bounding it at ~+/-3.6 deg here, and both figures fit. The candidate
+fix is to re-enable BEFORE resyncing so the resync captures the post-snap truth,
+**deliberately not done** because energising against a stale `XACTUAL` would aim
+the snap at where the ramp generator thought the joystick was. Needs a
+measurement: park, freewheel, hand-move a known distance, read both frames before
+the re-engage, immediately after, and after the resync.
+
+**Stage 4's rev-0 protocol surface is fully exercised on hardware, 2026-09-03.**
+`PULL` fires at the crossing (-8.016 against an armed -8.0, twice), and the raw
+encoder edges captured on the InstrumentPort **corroborate the driver's `X_ENC`
+to 3-8 counts on a ~15 deg hand pull** with zero invalid transitions. So every
+"anomalous" encoder reading earlier in the session was real motion, and the
+register can be trusted. Measurements in
+`../mouse-joystick-pcb/docs/bringup-log.md` under board 3.
+
+**The identity beacon earned itself.** The analyzers were power-cycled to clear a
+wedged capture and came back in opposite USB ports, silently inverting the
+topology-to-board mapping while the probe cables stayed put -- a capture was
+taken on the wrong instrument before Peter noticed the wrong analyzer blinking.
+The beacon re-established the mapping in one shot. **`examples/PyControlLink`
+now emits it at boot**, because the `I` command exists only in the bench
+consoles and the protocol firmware was the one case where identification was
+impossible without reflashing.
+
+**Bench consoles can wedge on USB CDC output.** `MotionAndHoming` blocked its
+own loop on a `Serial.print` with no host draining, which enumerates fine but
+stops answering and stops honouring the 1200 baud reset -- recovery needed
+`SW501`. `PyControlLink` is guarded via `usbMirror()`; the three consoles are
+not. Worth the same guard if they are touched again.
+
 Read `.agents/handoff.local.md` for bench state and the immediate next actions.
 
 ## Milestones

@@ -433,10 +433,17 @@ void test_a_backend_fault_becomes_a_latched_fault_and_an_event(void) {
   // Faults drop HV_EN, per the board's safety rules.
   TEST_ASSERT_FALSE(board.hvOn());
 
-  // FAULTED is exited only through CLRFAULT, and only once the cause has gone.
-  // This one was injected as still-active, so it stays latched.
-  TEST_ASSERT_EQUAL_STRING("nak;5;latched", sendOne(board, "clrfault;5").c_str());
-  TEST_ASSERT_EQUAL_STRING("nak;6;faulted", sendOne(board, "moveto;6;0.0").c_str());
+  // Motion is refused while faulted...
+  TEST_ASSERT_EQUAL_STRING("nak;5;faulted", sendOne(board, "moveto;5;0.0").c_str());
+
+  // ...but CLRFAULT must succeed. This test previously asserted `nak;latched`,
+  // encoding as intended behaviour what turned out on hardware to be a deadlock:
+  // the remedy for a motion fault is to move, and a fault that refuses to clear
+  // makes that impossible without a reset. If the cause is still present the
+  // next command that touches it faults again, which is recoverable and just as
+  // loud.
+  TEST_ASSERT_EQUAL_STRING("ack;6", sendOne(board, "clrfault;6").c_str());
+  TEST_ASSERT_EQUAL_STRING("IDLE", board.state());
 }
 
 void test_a_backend_fault_outranks_a_completion(void) {
@@ -609,6 +616,152 @@ void test_home_is_refused_when_the_driver_will_not_enable(void) {
   TEST_ASSERT_EQUAL_STRING("nak;2;faulted", board.output(0));
   TEST_ASSERT_EQUAL_STRING("ev;FAULT;0;code=7;detail=vsense_not_1",
                            board.output(1));
+}
+
+void test_leaving_freewheel_re_energises_the_driver(void) {
+  // Found on hardware 2026-09-03: `freewheel` releases the driver and every
+  // path out of it resynced and set ARMED without re-enabling. The ramp then
+  // advanced with no torque and the follow check faulted `not_following`.
+  //
+  // Checked for all three exits, because they were three separate omissions.
+  const char *exits[] = {"moveto;30;-3.0", "stop;30", "disarm;30"};
+  for (const char *exit : exits) {
+    RecordingMotion motion;
+    ProtocolBoard board(motion, Rig::corpusConfig());
+    board.boot();
+    board.clearOutput();
+
+    sendOne(board, "hv;1;on");
+    sendOne(board, "home;2");
+    board.advance(50000);
+    sendOne(board, "arm;3");
+    TEST_ASSERT_EQUAL_STRING("ack;4", sendOne(board, "freewheel;4").c_str());
+
+    const int before = motion.enable_calls;
+    sendOne(board, exit);
+    TEST_ASSERT_EQUAL_INT_MESSAGE(before + 1, motion.enable_calls, exit);
+    TEST_ASSERT_FALSE_MESSAGE(board.faultMask() != 0, exit);
+  }
+}
+
+static void armAndFreewheel(ProtocolBoard &board) {
+  sendOne(board, "hv;1;on");
+  sendOne(board, "home;2");
+  board.advance(50000);
+  sendOne(board, "arm;3");
+}
+
+void test_a_pull_past_the_threshold_emits_one_pull_event(void) {
+  Rig rig;
+  ProtocolBoard &board = rig.board;
+  armAndFreewheel(board);
+  TEST_ASSERT_EQUAL_STRING("ack;4", sendOne(board, "armpull;4;-5.0").c_str());
+  TEST_ASSERT_EQUAL_STRING("ack;5", sendOne(board, "freewheel;5").c_str());
+
+  // Not yet past it.
+  rig.motion.setEncoderAngleDeg(-4.0);
+  board.clearOutput();
+  board.advance(1000);
+  TEST_ASSERT_EQUAL_UINT8(0, board.outputCount());
+
+  // The animal pulls past.
+  rig.motion.setEncoderAngleDeg(-6.5);
+  board.clearOutput();
+  board.advance(1000);
+  TEST_ASSERT_EQUAL_UINT8(1, board.outputCount());
+  TEST_ASSERT_EQUAL_STRING("ev;PULL;52000;angle=-6.5", board.output(0));
+
+  // Latched: one ARMPULL yields one PULL, not a stream while it sits past.
+  rig.motion.setEncoderAngleDeg(-7.5);
+  board.clearOutput();
+  board.advance(1000);
+  TEST_ASSERT_EQUAL_UINT8(0, board.outputCount());
+
+  // Re-arming is how a task asks for the next trial's. Present the joystick
+  // back above the threshold FIRST -- re-arming while it still sits past would
+  // arm from the far side, and the next crossing would be in the other
+  // direction. That is the rule working, not a quirk to work around.
+  rig.motion.setEncoderAngleDeg(-4.0);
+  sendOne(board, "armpull;6;-5.0");
+  rig.motion.setEncoderAngleDeg(-6.0);
+  board.clearOutput();
+  board.advance(1000);
+  TEST_ASSERT_EQUAL_UINT8(1, board.outputCount());
+}
+
+void test_the_pull_direction_follows_where_detection_was_armed(void) {
+  // Travel is mirrored between the left and right joysticks, so a baked-in sign
+  // would need side-specific state. Arming from BELOW the threshold must detect
+  // an upward crossing.
+  Rig rig;
+  ProtocolBoard &board = rig.board;
+  armAndFreewheel(board);
+  rig.motion.setEncoderAngleDeg(-8.0);
+  sendOne(board, "armpull;4;-5.0");  // armed from below
+  sendOne(board, "freewheel;5");
+
+  rig.motion.setEncoderAngleDeg(-9.0);  // further below: not a crossing
+  board.clearOutput();
+  board.advance(1000);
+  TEST_ASSERT_EQUAL_UINT8(0, board.outputCount());
+
+  rig.motion.setEncoderAngleDeg(-2.0);  // crossed upward
+  board.clearOutput();
+  board.advance(1000);
+  TEST_ASSERT_EQUAL_UINT8(1, board.outputCount());
+  TEST_ASSERT_EQUAL_STRING("ev;PULL;52000;angle=-2.0", board.output(0));
+}
+
+void test_a_commanded_move_across_the_threshold_is_not_a_pull(void) {
+  // Reporting the board's own motion as a pull would put a fabricated event
+  // into a behavioural dataset.
+  Rig rig;
+  ProtocolBoard &board = rig.board;
+  armAndFreewheel(board);
+  sendOne(board, "armpull;4;-5.0");
+  TEST_ASSERT_EQUAL_STRING("ack;5", sendOne(board, "moveto;5;-9.0").c_str());
+  board.clearOutput();
+  // 60 ms: past the 50 ms move but inside the 100 ms watchdog armed by `arm`.
+  // An earlier version advanced 200 ms and got a second event -- the
+  // host_timeout fault -- which is the watchdog doing its job, not a pull.
+  board.advance(60000);
+
+  // Exactly one event, and it is TARGET rather than PULL.
+  TEST_ASSERT_EQUAL_UINT8(1, board.outputCount());
+  TEST_ASSERT_EQUAL_STRING("ev;TARGET;100000;angle=-9.0", board.output(0));
+}
+
+void test_every_fault_this_board_raises_can_be_cleared(void) {
+  // Found on hardware 2026-09-03: a `not_following` fault at the mechanical stop
+  // refused CLRFAULT with `latched` forever, and the remedy for being against a
+  // stop is to move -- which is refused while faulted. Only a reset recovered
+  // it, and it silently invalidated two measurements that looked like they ran.
+  //
+  // An unclearable fault whose only remedy is the action it blocks is a
+  // deadlock, so nothing here may latch permanently.
+  FaultingMotion motion;
+  ProtocolBoard board(motion, Rig::corpusConfig());
+  board.boot();
+  board.clearOutput();
+
+  sendOne(board, "hv;1;on");
+  sendOne(board, "home;2");
+  board.advance(50000);
+  sendOne(board, "arm;3");
+
+  motion.injectFault(mouse_joystick::fault::kOverTravel, "not_following");
+  board.advance(1000);
+  TEST_ASSERT_EQUAL_STRING("FAULTED", board.state());
+
+  TEST_ASSERT_EQUAL_STRING_MESSAGE(
+      "ack;4", sendOne(board, "clrfault;4").c_str(),
+      "a motion fault could not be cleared, so recovery needs a reset");
+  TEST_ASSERT_EQUAL_STRING("IDLE", board.state());
+  TEST_ASSERT_EQUAL_UINT32(0, board.faultMask());
+
+  // And the board is usable again from there.
+  TEST_ASSERT_EQUAL_STRING("ack;5", sendOne(board, "hv;5;on").c_str());
+  TEST_ASSERT_EQUAL_STRING("ack;6", sendOne(board, "home;6").c_str());
 }
 
 void test_a_reply_is_never_silently_truncated(void) {
@@ -846,6 +999,11 @@ int main(int, char **) {
   RUN_TEST(test_home_energises_the_driver_it_is_about_to_use);
   RUN_TEST(test_a_fault_drops_the_rail_and_not_just_the_flag);
   RUN_TEST(test_home_is_refused_when_the_driver_will_not_enable);
+  RUN_TEST(test_leaving_freewheel_re_energises_the_driver);
+  RUN_TEST(test_a_pull_past_the_threshold_emits_one_pull_event);
+  RUN_TEST(test_the_pull_direction_follows_where_detection_was_armed);
+  RUN_TEST(test_a_commanded_move_across_the_threshold_is_not_a_pull);
+  RUN_TEST(test_every_fault_this_board_raises_can_be_cleared);
   RUN_TEST(test_a_reply_is_never_silently_truncated);
 
   RUN_TEST(test_the_corpus_was_found);

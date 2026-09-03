@@ -227,7 +227,6 @@ public:
 
     if (MotionSetup::switchActive(stepper_)) {
       const int32_t here = stepper_.controller.readActualPosition();
-      seedFollowWindow();
       commandTo(here - toward() * cfg_.home_clearance_microsteps);
       phase_ = Phase::kHomeBackoff;
       return true;
@@ -243,7 +242,6 @@ public:
     started_us_ = now_us_;
     MotionSetup::setJogVelocity(stepper_);
     move_start_position_ = stepper_.controller.readActualPosition();
-    seedFollowWindow();
     commandTo(conversions::degreesToMicrosteps(static_cast<float>(target_deg)));
     phase_ = Phase::kMove;
     return true;
@@ -278,6 +276,7 @@ public:
     const int32_t encoder = stepper_.encoder.readActualPosition();
     stepper_.controller.writeActualPosition(encoder);
     stepper_.controller.writeTargetPosition(encoder);
+    seedFollowWindow();  // XACTUAL moved under the check
   }
 
   // The whole "rail up, bus closed, driver attached and configured" sequence --
@@ -328,6 +327,7 @@ public:
 
     MotionSetup::configure(stepper_, motion_);
     bus_up_ = true;
+    seedFollowWindow();
 
     // Seed the cache immediately, so the first STATUS after `hv on` reports
     // real numbers rather than the zeros it was holding while dark.
@@ -412,6 +412,25 @@ private:
     return ratio >= conversions::kFollowFractionMin;
   }
 
+  // Seed the follow-check window.
+  //
+  // Called ONLY where `XACTUAL` is written out from under the check -- the
+  // homing datum, a compliance resync, and bus bring-up -- and deliberately NOT
+  // per move.
+  //
+  // Found on hardware 2026-09-03: re-seeding at every `startMoveTo()` meant the
+  // window restarted before it could ever reach its 200 microstep evaluation
+  // threshold, so ANY move smaller than 1.4 deg was never follow-checked at all.
+  // A walk toward the mechanical stop in 0.25 deg steps (36 microsteps each)
+  // pushed the motor against it repeatedly with no detection, while the same
+  // walk in 2 deg steps faulted correctly. Small commanded moves are exactly
+  // what a trial does, so this was a stall detector that switched itself off
+  // for the normal case.
+  //
+  // Letting the window persist across moves is what makes accumulated commanded
+  // travel the thing being checked. Between moves the encoder catches up, the
+  // ratio comes out near 1, and the window resets itself; against a stop the
+  // commanded side keeps growing while the measured side does not.
   void seedFollowWindow() {
     window_position_ = stepper_.controller.readActualPosition();
     window_encoder_ = stepper_.encoder.readActualPosition();
@@ -426,7 +445,6 @@ private:
                          motion_.switch_end, LatchEdge::kActive);
     MotionSetup::setHomeApproachVelocity(stepper_);
     approach_start_position_ = stepper_.controller.readActualPosition();
-    seedFollowWindow();
     commandTo(approach_start_position_ +
               toward() * cfg_.home_travel_bound_microsteps);
     phase_ = Phase::kHomeApproach;
@@ -533,11 +551,11 @@ private:
       const int32_t overshoot = here - latch;
       stepper_.controller.writeActualPosition(overshoot);
       stepper_.controller.writeTargetPosition(overshoot);
+      seedFollowWindow();  // XACTUAL moved under the check
 
       // Clearance, so a later move is not blocked by a stop that is still
       // active and the next approach starts from outside the switch.
       MotionSetup::setJogVelocity(stepper_);
-      seedFollowWindow();
       commandTo(-toward() * cfg_.home_clearance_microsteps);
       phase_ = Phase::kHomeClearance;
       return;
@@ -591,6 +609,7 @@ private:
       stepper_.controller.writeActualPosition(0);
       stepper_.controller.writeTargetPosition(0);
       stepper_.encoder.writeActualPosition(0);
+      seedFollowWindow();  // both frames rewritten
 
       // Refresh the cache before reporting completion. The snapshot at the top
       // of this poll predates the writes above, so without this the `HOMED`

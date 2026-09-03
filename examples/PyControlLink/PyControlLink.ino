@@ -62,6 +62,17 @@ constexpr uint32_t kUsbBaudRate = 115200;
 // protocol without a logic analyser.
 constexpr bool kMirrorToUsb = true;
 
+// A Print that discards. Needed because `SelfTest` reports through a `Print &`
+// and USB CDC writes BLOCK when a host is connected but not draining -- so a
+// diagnostic must be given somewhere safe to go rather than a channel that can
+// stall the loop. Same discipline as `usbMirror()` below.
+class NullPrint : public Print {
+public:
+  size_t write(uint8_t) override { return 1; }
+  size_t write(const uint8_t *, size_t size) override { return size; }
+};
+NullPrint null_print;
+
 TMC51X0 stepper;
 MonotonicMicros clock_us;
 PycUart link;
@@ -190,6 +201,27 @@ void setup() {
   Serial.println(F("Mirrored below: `>` is from the host, `<` is from us."));
   Serial.println();
 
+  // Emit the identity beacon once at boot, on FW_TRIG0/FW_TRIG1.
+  //
+  // Found the hard way 2026-09-03: with two LA5032s and no USB serial numbers of
+  // their own, the only durable way to know which analyser watches which board
+  // is to ask the BOARD -- and this firmware had no way to be asked. The
+  // `I` command exists in the three bench consoles and not here, so after the
+  // analysers were unplugged and replugged (which can swap which physical
+  // instrument sits on which USB port) the mapping could not be re-established
+  // without reflashing a console onto the board.
+  //
+  // At boot rather than as a command, because this firmware answers a peer
+  // rather than a person and has no console to hang a command off. A reset is
+  // therefore the identification procedure: arm the analysers, reset the board,
+  // and whichever capture decodes to this serial is watching it.
+  //
+  // Reported into a sink that cannot block. The beacon itself is GPIO and needs
+  // no host at all, which is the whole point of it.
+  SelfTest::emitIdentityBeacon(Serial ? static_cast<Print &>(Serial)
+                                      : static_cast<Print &>(null_print),
+                               3);
+
   // READY, once, after boot. The draft: the host should reconnect and re-ID.
   board.advanceTo(clock_us.now());
   board.boot();
@@ -214,6 +246,20 @@ void loop() {
   link.service(board, usbMirror());
   board.advanceTo(clock_us.now());
   link.service(board, usbMirror());
+
+  // FW_TRIG1 is high for the whole compliant window.
+  //
+  // `docs/instrument-strategy.md` asks firmware to define marker semantics
+  // deliberately rather than as an afterthought, and this is the one that
+  // matters: the InstrumentPort is the ONLY account of the encoder that does
+  // not come from the driver's own registers. `ENC_A`/`ENC_B` never reach an
+  // RP2040 pin on any revision, so `X_ENC` is otherwise unfalsifiable.
+  //
+  // Marking FREEWHEEL as a level rather than a pulse means a capture triggered
+  // on this edge starts exactly when the joystick goes compliant and its
+  // duration bounds the window -- so raw quadrature edges can be counted
+  // against what `STATUS` reported over the same interval.
+  SafeState::setTrigger1(strcmp(board.state(), "FREEWHEEL") == 0);
 
   // Deliberately no delay. The host-loss watchdog, the motion poll and the
   // link all run off this loop, and the protocol's whole safety argument is

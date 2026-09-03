@@ -166,6 +166,9 @@ class BoardSim:
         # not need the brake, only a released driver.
         self.pull_threshold = None
         self._pull_reported = False
+        # Which side of the threshold the joystick was on when ARMPULL ran. A
+        # crossing to the other side is the pull. See `move_joystick`.
+        self._pull_armed_above = False
 
         self.cal = {"enc_offset": 1024, "angle_zero": 0.0}
 
@@ -627,6 +630,9 @@ class BoardSim:
         if not (self.travel_lo <= threshold <= self.travel_hi):
             return P.encode_nak(seq, P.NAK_OUTOFRANGE)
         self.pull_threshold = threshold
+        # Equality counts as below, so a threshold armed exactly at the current
+        # position fires on the first movement upward rather than immediately.
+        self._pull_armed_above = self.angle > threshold
         # Re-arming clears the latch, so one ARMPULL yields one PULL per trial
         # rather than a stream of them while the joystick sits past threshold.
         self._pull_reported = False
@@ -743,8 +749,27 @@ class BoardSim:
         # xactual deliberately NOT updated: nothing turns the ramp generator
         # here, and that staleness is the thing _resync_from_encoder exists for.
 
+        # SPEC: a CROSSING of the threshold, from whichever side ARMPULL was
+        # armed on -- not a magnitude comparison.
+        #
+        # This used to read `abs(angle) >= abs(threshold)`, which agreed with the
+        # firmware only because this board's travel happens to be one-signed.
+        # On travel spanning zero -- which is exactly this simulator's own
+        # default of -20..20 -- a threshold of -5.0 also fired at +5.0. It also
+        # ignored where the joystick was presented, so a task that presented
+        # past the threshold got a pull for free.
+        #
+        # Recording the side at arm time instead means no sign convention is
+        # invented, mirrored left and right joysticks need no side-specific
+        # state, and the same rule holds on both ends of the link. The firmware
+        # does the same thing in `ProtocolBoard::service()`.
         if self.pull_threshold is not None and not self._pull_reported:
-            if abs(angle) >= abs(self.pull_threshold):
+            crossed = (
+                angle < self.pull_threshold
+                if self._pull_armed_above
+                else angle > self.pull_threshold
+            )
+            if crossed:
                 self._pull_reported = True
                 self._emit("PULL", {"angle": angle})
         return self._drain()

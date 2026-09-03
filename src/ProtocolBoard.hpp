@@ -354,7 +354,7 @@ private:
     const char *fault_detail = nullptr;
     if (!faulted() && motion_.consumeFault(&fault_bit, &fault_detail)) {
       raiseFault(fault_bit, fault_detail != nullptr ? fault_detail : "motion",
-                 /*cause_active=*/true);
+                 /*cause_active=*/false);
       return;
     }
 
@@ -367,6 +367,32 @@ private:
       } else {
         state_ = state_name::kArmed;
         emitEvent("TARGET", "angle", motion_.angleDeg());
+      }
+    }
+
+    // PULL: the joystick crossed the armed threshold while compliant.
+    //
+    // Only in FREEWHEEL, deliberately. There the joystick is driven by the
+    // animal and a crossing means something; under commanded motion a crossing
+    // means the board did it, and reporting that as a pull would put a
+    // fabricated event into a behavioural dataset.
+    //
+    // Which side counts as "past" is recorded at ARMPULL time rather than
+    // baked in as a sign. The trial presents the joystick somewhere and the
+    // animal moves it away, so the direction follows from where it was when
+    // detection was armed -- and this way the same firmware serves the left and
+    // right joysticks, whose travel is mirrored, with no side-specific state.
+    //
+    // Latched: one ARMPULL yields one PULL. Re-arming is how a task asks for
+    // the next trial's.
+    if (has_pull_threshold_ && !pull_reported_ &&
+        inState(state_name::kFreewheel)) {
+      const double angle = motion_.angleDeg();
+      const bool crossed = pull_armed_above_ ? (angle < pull_threshold_)
+                                             : (angle > pull_threshold_);
+      if (crossed) {
+        pull_reported_ = true;
+        emitEvent("PULL", "angle", angle);
       }
     }
 
@@ -383,6 +409,24 @@ private:
     }
   }
 
+  // On `cause_active`, and why every fault this board raises passes `false`.
+  //
+  // The draft says CLRFAULT "clears only clearable faults whose cause has gone".
+  // That test is not implementable for any cause this board cannot probe without
+  // retrying: whether the mechanism is still against a stop, whether the rail
+  // will come up, whether CHOPCONF reads back 1 -- each is only answerable by
+  // attempting the thing again.
+  //
+  // Marking them active produced a DEADLOCK, found on hardware 2026-09-03: a
+  // `not_following` fault at the mechanical stop refused every CLRFAULT with
+  // `latched`, and the remedy for being against a stop is to MOVE, which is
+  // refused while faulted. The board could only be recovered by a reset -- and
+  // it silently invalidated two measurements that appeared to run and did not.
+  //
+  // So the board clears and re-faults instead: CLRFAULT succeeds, and if the
+  // cause is still there the next command that touches it faults again
+  // immediately. That is recoverable, and it reports the truth just as loudly.
+  // Raised as an open question in `../mouse-joystick-pcb/docs/uart-protocol.md`.
   void raiseFault(uint8_t bit, const char *detail, bool cause_active) {
     motion_.abort();
     watchdog_armed_ = false;
@@ -406,6 +450,25 @@ private:
     line.kvInt("code", bit);
     line.kvStr("detail", detail);
     push(line);
+  }
+
+  // Leaving a compliant state, as ONE operation: reconcile the ramp generator
+  // with the encoder, re-energise the driver, and become ARMED again.
+  //
+  // Found on hardware 2026-09-03: `freewheel` releases the driver, and every
+  // path out of FREEWHEEL resynced and set ARMED without ever re-enabling it.
+  // The ramp generator then advanced with no torque, the encoder did not
+  // follow, and the follow check faulted `not_following` after about 1.4 deg --
+  // correct for what it saw, and the third time that check has caught a state
+  // transition that forgot to energise what it was about to use.
+  //
+  // It is one function because the host must not be able to be interrupted
+  // between the parts. Returns false if the driver refused, which the caller
+  // turns into a fault: a compliant joystick that will not re-engage is not a
+  // state to keep answering commands from.
+  bool leaveCompliance() {
+    motion_.resyncFromEncoder();
+    return motion_.enableDriver();
   }
 
   bool faulted() const { return strcmp(state_, state_name::kFaulted) == 0; }
@@ -548,7 +611,7 @@ private:
         out->nak(cmd.seq, protocol::kNakFaulted);
         push(*out);
         out->clear();
-        raiseFault(fault::kSupplyOutOfRange, "hv_did_not_come_up", true);
+        raiseFault(fault::kSupplyOutOfRange, "hv_did_not_come_up", false);
         return false;
       }
       hv_on_ = true;
@@ -611,6 +674,8 @@ private:
       return true;
     }
     if (inState(state_name::kFreewheel)) {
+      // No re-engage here: `enableDriver()` is called below for every home, so
+      // adding one would be a redundant SPI round trip.
       motion_.resyncFromEncoder();
       state_ = state_name::kArmed;
     }
@@ -666,7 +731,7 @@ private:
       out->nak(cmd.seq, protocol::kNakFaulted);
       push(*out);
       out->clear();
-      raiseFault(fault::kInternal, "vsense_not_1", true);
+      raiseFault(fault::kInternal, "vsense_not_1", false);
       return false;
     }
     if (!motion_.startHome()) {
@@ -698,7 +763,7 @@ private:
       out->nak(cmd.seq, protocol::kNakFaulted);
       push(*out);
       out->clear();
-      raiseFault(fault::kInternal, "vsense_not_1", true);
+      raiseFault(fault::kInternal, "vsense_not_1", false);
       return false;
     }
     state_ = state_name::kArmed;
@@ -711,8 +776,16 @@ private:
   bool cmdDisarm(const protocol::Command &cmd, protocol::Line *out) {
     motion_.abort();
     watchdog_armed_ = false;
-    if (inState(state_name::kArmed) || inState(state_name::kActive) ||
-        inState(state_name::kFreewheel)) {
+    if (inState(state_name::kFreewheel)) {
+      // Re-engage on the way out even though this ends in HOMED rather than
+      // ARMED. "Disarmed" has to mean "not accepting motion commands", not
+      // "limp": a joystick left compliant within an animal's reach is a worse
+      // resting state than one held where it was parked. The return value is
+      // ignored because DISARM is always permitted and must not be refusable --
+      // a driver that will not re-engage shows up on the next command.
+      (void)leaveCompliance();
+      state_ = state_name::kHomed;
+    } else if (inState(state_name::kArmed) || inState(state_name::kActive)) {
       motion_.resyncFromEncoder();
       state_ = state_name::kHomed;
     }
@@ -726,7 +799,19 @@ private:
     // `abort()` holds position wherever the joystick is, which is what makes
     // this safe to send at any time -- including mid-move.
     motion_.abort();
-    if (inState(state_name::kActive) || inState(state_name::kFreewheel)) {
+    if (inState(state_name::kFreewheel)) {
+      // "From FREEWHEEL this is how a host takes the joystick back: re-engage
+      // the driver holding wherever the animal left it." Re-engaging is the
+      // whole point of the command in this state.
+      if (!leaveCompliance()) {
+        out->nak(cmd.seq, protocol::kNakFaulted);
+        push(*out);
+        out->clear();
+        raiseFault(fault::kInternal, "vsense_not_1", false);
+        return false;
+      }
+      state_ = state_name::kArmed;
+    } else if (inState(state_name::kActive)) {
       motion_.resyncFromEncoder();
       state_ = state_name::kArmed;
     }
@@ -743,7 +828,13 @@ private:
     // FREEWHEEL re-engages implicitly. One command that resyncs, re-engages and
     // moves is better than three the host could be interrupted between.
     if (inState(state_name::kFreewheel)) {
-      motion_.resyncFromEncoder();
+      if (!leaveCompliance()) {
+        out->nak(cmd.seq, protocol::kNakFaulted);
+        push(*out);
+        out->clear();
+        raiseFault(fault::kInternal, "vsense_not_1", false);
+        return false;
+      }
       state_ = state_name::kArmed;
     }
     // Checked BEFORE the argument, deliberately: refusing motion outside ARMED
@@ -826,6 +917,11 @@ private:
     }
     pull_threshold_ = threshold;
     has_pull_threshold_ = true;
+    // Which side of the threshold the joystick is on NOW. A crossing to the
+    // other side is the pull. Equality counts as below, so a threshold armed
+    // exactly at the current position fires on the first movement upward
+    // rather than immediately.
+    pull_armed_above_ = motion_.angleDeg() > threshold;
     // Re-arming clears the latch, so one ARMPULL yields one PULL per trial
     // rather than a stream while the joystick sits past threshold.
     pull_reported_ = false;
@@ -929,6 +1025,7 @@ private:
 
   double pull_threshold_ = 0.0;
   bool has_pull_threshold_ = false;
+  bool pull_armed_above_ = false;
   bool pull_reported_ = false;
 
   long cal_enc_offset_ = 1024;

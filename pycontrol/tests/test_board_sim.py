@@ -380,6 +380,39 @@ def test_malformed_frames_do_not_hold_the_watchdog_open(armed):
     )
 
 
+def test_a_pull_is_a_crossing_not_a_magnitude(armed):
+    """The rule has to work on travel that spans zero.
+
+    This simulator's default travel is -20..20. Under the old
+    `abs(angle) >= abs(threshold)` rule a threshold of -5.0 also fired at +5.0,
+    and the firmware -- which records the side at arm time -- disagreed. The
+    corpus could not catch that: no corpus case can move the encoder.
+    """
+    reply_to(armed, "armpull;1;-5.0")
+    assert reply_to(armed, "freewheel;2") == "ack;2"
+
+    # The wrong side of zero, past the threshold in magnitude only.
+    events = armed.move_joystick(6.0)
+    assert not [e for e in events if "PULL" in e], "a magnitude match fired"
+
+    # Genuinely across it.
+    events = armed.move_joystick(-6.0)
+    assert any("ev;PULL;" in e and "angle=-6.0" in e for e in events)
+
+    # Latched: one ARMPULL, one PULL.
+    assert not [e for e in armed.move_joystick(-7.0) if "PULL" in e]
+
+
+def test_arming_from_below_detects_an_upward_crossing(armed):
+    """Mirrored joysticks would otherwise need side-specific state."""
+    reply_to(armed, "freewheel;1")
+    armed.move_joystick(-8.0)
+    reply_to(armed, "armpull;2;-5.0")  # armed from below
+
+    assert not [e for e in armed.move_joystick(-9.0) if "PULL" in e]
+    assert any("PULL" in e for e in armed.move_joystick(-2.0))
+
+
 def test_delayed_command_after_a_timeout_is_refused_not_executed(armed):
     """Gate C: delayed input is handled."""
     armed.advance(armed.host_timeout_us + 1)
@@ -585,7 +618,15 @@ def test_home_still_works_after_a_pull(armed):
 
 
 def test_armpull_reports_one_pull_per_arming(armed):
-    """One ARMPULL, one PULL - not a stream while the joystick sits past threshold."""
+    """One ARMPULL, one PULL - not a stream while the joystick sits past threshold.
+
+    Note the re-arm PRESENTS the joystick back below the threshold first. Under
+    the crossing rule, re-arming while it still sits past arms from the far side,
+    so the next pull would have to be in the other direction. That is the rule
+    behaving, and it matches the trial: present, arm, wait for the pull, present
+    again. This test used to re-arm in place, which only worked under the old
+    magnitude comparison.
+    """
     reply_to(armed, "armpull;1;5.0")
     reply_to(armed, "freewheel;2")
 
@@ -594,6 +635,7 @@ def test_armpull_reports_one_pull_per_arming(armed):
     assert len(out) == 1 and out[0].startswith("ev;PULL;")
     assert armed.move_joystick(7.0) == [], "already reported"
 
+    armed.move_joystick(2.0)  # present it back
     reply_to(armed, "armpull;3;5.0")
     assert len(armed.move_joystick(8.0)) == 1, "re-arming must allow the next pull"
 
