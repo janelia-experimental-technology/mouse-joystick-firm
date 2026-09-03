@@ -5,22 +5,23 @@
 // corpus worth having, because a corpus only one implementation has ever been
 // checked against proves nothing.
 //
-// Arduino-free and allocation-free for the reasons in `Protocol.hpp`. Motion is
-// a *model*, not a driver: `advance()` interpolates linearly at `v_max` and
-// completes at a computed deadline, which is exactly what `BoardSim` does, so
-// the two agree on protocol behaviour without either pretending to model a
-// TMC5130A ramp. Wiring this to real motion means replacing `serviceMotion()`
-// and the two `startMotion()` calls with TMC51X0 calls; nothing else here
-// changes.
+// Arduino-free and allocation-free for the reasons in `Protocol.hpp`. This
+// class owns framing, the state machine, the host-loss watchdog and the
+// retransmission cache, and it owns NO motion: everything about where the
+// joystick is and how it gets somewhere sits behind `MotionBackend`.
 //
-// !! THE DEFAULTS BELOW ARE THE SIMULATOR'S PLACEHOLDERS, NOT MEASURED VALUES.
-//    travel +/-20 deg and v_max 180 deg/s are what `BoardSim` was written with
-//    so the corpus has fixed numbers to divide evenly. The bench measured
-//    travel at ~4000 microsteps ~= 28 deg at the motor shaft and jogged at
-//    0.100 rev/s -- see `../mouse-joystick-pcb/docs/bringup-log.md` under board
-//    2. Replacing these with the measured values is a deliberate act that
-//    changes corpus timings, so it belongs in its own commit with the corpus
-//    updated alongside.
+// That seam is what lets one implementation serve both purposes.
+// `SimulatedMotion` runs the shared corpus on the host with an injected clock;
+// `TmcMotion` drives the real TMC5130A without blocking. Nothing in this file
+// knows which it has.
+//
+// !! `travel_lo`/`travel_hi`/`v_max` BELOW ARE THE SIMULATOR'S PLACEHOLDERS.
+//    They are the limits LIMITS reports and MOVETO enforces, and they must
+//    agree with whatever the backend can actually do -- a board that reports
+//    +/-20 deg while the mechanism has 28 deg of travel would refuse valid
+//    positions or command impossible ones. `test_protocol.cpp` asserts the
+//    default configuration is self-consistent. The measured bench figures are
+//    in `../mouse-joystick-pcb/docs/bringup-log.md` under board 2.
 
 #pragma once
 
@@ -28,6 +29,7 @@
 #include <stdint.h>
 #include <string.h>
 
+#include "MotionBackend.hpp"
 #include "Protocol.hpp"
 
 namespace mouse_joystick {
@@ -68,7 +70,15 @@ public:
   static constexpr uint32_t kDefaultHomeDurationUs = 50000u;
 
   struct Config {
-    const char *serial = "0000000000000000";
+    // Deliberately NOT a plausible serial. `ID` reports this so a task can
+    // confirm it is talking to the board whose calibration matches the joystick
+    // in front of it, and with two interchangeable single-axis boards nothing
+    // else distinguishes them. A default that looked like a real flash unique id
+    // meant a firmware that forgot to set it reported the same value on every
+    // board -- and the host's identity check then PASSED against the wrong
+    // board. Found on hardware 2026-09-03, in the first READY event this
+    // firmware ever emitted. Fail loudly instead.
+    const char *serial = "SERIAL-NOT-SET";
     const char *fw_version = "0.0.0";
     const char *hw_rev = "rev0";
     double travel_lo = -20.0;
@@ -77,19 +87,19 @@ public:
     double a_max = 3600.0;
     double i_max = 0.421;
     uint32_t host_timeout_us = kDefaultHostTimeoutUs;
-    uint32_t home_duration_us = kDefaultHomeDurationUs;
-    // Set false to make the ARM-time vsense read-back fail. CHOPCONF.vsense
-    // resets to 0, which against this board's 0.15 ohm shunts drives roughly
-    // 1.8x the motor's rating, so firmware reads it back before enabling the
-    // driver and refuses if it does not say 1.
-    bool vsense_ok = true;
   };
+  // `home_duration_us` and the vsense read-back used to live here. They are
+  // properties of the thing that moves, so they belong to the backend:
+  // `SimulatedMotion::Config` for the host, a CHOPCONF read-back for the real
+  // driver. Asking the backend keeps one answer instead of two that can drift.
 
-  // Two constructors rather than one with `= Config()`: a default argument
-  // that names a nested type needs the enclosing class to be complete, which
-  // it is not at this point.
-  ProtocolBoard() {}
-  explicit ProtocolBoard(const Config &config) : cfg_(config) {}
+  // The backend is a reference, not owned: the caller decides its lifetime and
+  // its identity, which is the whole point of the seam. Two constructors rather
+  // than one with `= Config()`, because a default argument naming a nested type
+  // needs the enclosing class to be complete and it is not at this point.
+  explicit ProtocolBoard(MotionBackend &motion) : motion_(motion) {}
+  ProtocolBoard(MotionBackend &motion, const Config &config)
+      : cfg_(config), motion_(motion) {}
 
   // ------------------------------------------------------------------- clock
   //
@@ -119,8 +129,12 @@ public:
     uint64_t target = now_us_ + delta_us;
     while (now_us_ < target) {
       uint64_t next_stop = target;
-      if (motion_active_ && motion_end_us_ < next_stop) {
-        next_stop = motion_end_us_;
+      // A backend that can predict its completion gets stepped to exactly that
+      // microsecond, so an event never lands late because the caller advanced
+      // coarsely. A real backend returns 0 and is simply polled.
+      const uint64_t motion_at = motion_.nextEventUs();
+      if (motion_at != 0 && motion_at < next_stop) {
+        next_stop = motion_at;
       }
       if (watchdog_armed_ && watchdog_deadline_us_ < next_stop) {
         next_stop = watchdog_deadline_us_;
@@ -133,6 +147,24 @@ public:
     }
     now_us_ = target;
     service();
+  }
+
+  // Firmware sets this once, in setup(), from the flash unique id. Not done in
+  // the constructor because reading it issues a real QSPI command and the board
+  // is constructed before the runtime is fully up.
+  void setSerial(const char *serial) {
+    if (serial != nullptr && *serial != '\0') {
+      cfg_.serial = serial;
+    }
+  }
+
+  // Advance to an absolute time, which is what firmware has. The delta
+  // arithmetic lives here so a caller cannot hand over a negative one, and a
+  // clock that has not moved is a no-op rather than a rewind.
+  void advanceTo(uint64_t now_us) {
+    if (now_us > now_us_) {
+      advance(now_us - now_us_);
+    }
   }
 
   // -------------------------------------------------------------------- link
@@ -180,8 +212,8 @@ public:
   // ------------------------------------------------------------- observation
 
   const char *state() const { return state_; }
-  double angle() const { return angle_; }
-  double xactual() const { return xactual_; }
+  double angle() const { return motion_.angleDeg(); }
+  double xactual() const { return motion_.xactualDeg(); }
   bool homed() const { return homed_; }
   bool hvOn() const { return hv_on_; }
   uint32_t faultMask() const { return fault_mask_; }
@@ -313,22 +345,28 @@ private:
   // --------------------------------------------------------------- scheduler
 
   void service() {
-    if (motion_active_ && now_us_ >= motion_end_us_) {
-      const bool was_home = motion_is_home_;
-      motion_active_ = false;
-      angle_ = motion_target_;
-      // Under commanded motion the encoder tracks the ramp generator. That they
-      // agree here is what makes their disagreement elsewhere mean something.
-      xactual_ = angle_;
+    motion_.poll(now_us_);
+
+    // A backend fault outranks a completion: if the driver reported a short to
+    // ground on the same poll that the move finished, the fault is what
+    // happened and TARGET would be a lie.
+    uint8_t fault_bit = 0;
+    const char *fault_detail = nullptr;
+    if (!faulted() && motion_.consumeFault(&fault_bit, &fault_detail)) {
+      raiseFault(fault_bit, fault_detail != nullptr ? fault_detail : "motion",
+                 /*cause_active=*/true);
+      return;
+    }
+
+    bool was_home = false;
+    if (motion_.consumeCompletion(&was_home)) {
       if (was_home) {
         homed_ = true;
-        angle_ = 0.0;
-        xactual_ = 0.0;
         state_ = state_name::kHomed;
-        emitEvent("HOMED", "angle", angle_);
+        emitEvent("HOMED", "angle", motion_.angleDeg());
       } else {
         state_ = state_name::kArmed;
-        emitEvent("TARGET", "angle", angle_);
+        emitEvent("TARGET", "angle", motion_.angleDeg());
       }
     }
 
@@ -346,57 +384,28 @@ private:
   }
 
   void raiseFault(uint8_t bit, const char *detail, bool cause_active) {
-    motion_active_ = false;
+    motion_.abort();
     watchdog_armed_ = false;
     fault_mask_ |= (1u << bit);
     fault_bit_ = bit;
     fault_detail_ = detail;
     fault_cause_active_ = cause_active;
     state_ = state_name::kFaulted;
-    hv_on_ = false;  // faults drop HV_EN, per the board's safety rules
+
+    // Faults drop HV_EN, per the board's safety rules -- and that has to mean
+    // the RAIL and not just this flag. Found on hardware 2026-09-03: after the
+    // first fault, `status` reported `hv=0` while the 36 V rail was still
+    // physically up and the driver still enabled, because only the flag was
+    // cleared. A board that reports a safe state it has not reached is worse
+    // than one that reports the unsafe state honestly.
+    motion_.setHvEnabled(false);
+    hv_on_ = false;
 
     protocol::Line line;
     line.beginEvent("FAULT", static_cast<uint32_t>(now_us_));
     line.kvInt("code", bit);
     line.kvStr("detail", detail);
     push(line);
-  }
-
-  void resyncFromEncoder() {
-    // ONLY on leaving a compliant state. Never during commanded motion and
-    // never on a timer: `XACTUAL` advancing while `X_ENC` does not is the
-    // board's only detector for an end stop, a stall, a slipping coupling or a
-    // dead encoder, and that divergence IS the detector -- so a resync deletes
-    // it. The two cases are distinguishable by state and by nothing else.
-    xactual_ = angle_;
-  }
-
-  double interpolate() const {
-    if (!motion_active_) {
-      return angle_;
-    }
-    uint64_t span = motion_end_us_ - motion_start_us_;
-    if (span == 0) {
-      return motion_target_;
-    }
-    double fraction =
-        static_cast<double>(now_us_ - motion_start_us_) / static_cast<double>(span);
-    if (fraction < 0.0) {
-      fraction = 0.0;
-    }
-    if (fraction > 1.0) {
-      fraction = 1.0;
-    }
-    return motion_start_ + (motion_target_ - motion_start_) * fraction;
-  }
-
-  void startMotion(bool is_home, double target, uint32_t duration_us) {
-    motion_active_ = true;
-    motion_is_home_ = is_home;
-    motion_start_ = angle_;
-    motion_target_ = target;
-    motion_start_us_ = now_us_;
-    motion_end_us_ = now_us_ + (duration_us > 0 ? duration_us : 1);
   }
 
   bool faulted() const { return strcmp(state_, state_name::kFaulted) == 0; }
@@ -469,10 +478,10 @@ private:
     // encoder says -- the only one that is ever true. `xactual` is what the
     // ramp generator thinks, true only while the board is driving and stale the
     // moment the animal moves the joystick in FREEWHEEL.
-    out->kvNumber("angle", angle_);
-    out->kvNumber("xactual", xactual_);
+    out->kvNumber("angle", motion_.angleDeg());
+    out->kvNumber("xactual", motion_.xactualDeg());
     out->kvBool("homed", homed_);
-    out->kvBool("limit", limit_asserted_);
+    out->kvBool("limit", motion_.limitAsserted());
     out->kvInt("faults", static_cast<long>(fault_mask_));
     out->kvBool("hv", hv_on_);
     return true;
@@ -533,16 +542,29 @@ private:
         out->nak(cmd.seq, protocol::kNakFaulted);
         return true;
       }
+      if (!motion_.setHvEnabled(true)) {
+        // The rail was asked for and did not come up. That is a fault and not
+        // a nak: the attempt was made and the hardware answered.
+        out->nak(cmd.seq, protocol::kNakFaulted);
+        push(*out);
+        out->clear();
+        raiseFault(fault::kSupplyOutOfRange, "hv_did_not_come_up", true);
+        return false;
+      }
       hv_on_ = true;
       out->beginAck(cmd.seq);
       return true;
     }
     if (argEquals(cmd.arg(0), "off")) {
       // Always permitted: the board never requires a message in order to become
-      // safe, and this is the message that makes it safer.
+      // safe, and this is the message that makes it safer. The return value is
+      // ignored on purpose -- there is no useful answer to "turning it off
+      // failed", and refusing to report success would leave a host unable to
+      // confirm the safe state it just asked for.
+      motion_.setHvEnabled(false);
       hv_on_ = false;
       if (inState(state_name::kArmed) || inState(state_name::kActive)) {
-        motion_active_ = false;
+        motion_.abort();
         state_ = state_name::kHomed;
         watchdog_armed_ = false;
       }
@@ -584,12 +606,12 @@ private:
       out->nak(cmd.seq, protocol::kNakNoHv);
       return true;
     }
-    if (motion_active_) {
+    if (motion_.isMoving()) {
       out->nak(cmd.seq, protocol::kNakBusy);
       return true;
     }
     if (inState(state_name::kFreewheel)) {
-      resyncFromEncoder();
+      motion_.resyncFromEncoder();
       state_ = state_name::kArmed;
     }
 
@@ -610,10 +632,11 @@ private:
       timeout_us = static_cast<uint32_t>(us);
     }
 
-    if (bounded && timeout_us < cfg_.home_duration_us) {
+    if (bounded && timeout_us < motion_.expectedHomeDurationUs()) {
       // Homing is bounded locally, and exceeding the bound is a fault rather
-      // than a nak because the motion did start.
-      motion_active_ = false;
+      // than a nak because the motion did start. The bound comes from the
+      // backend, which is the only thing that knows how long homing takes.
+      motion_.abort();
       out->beginAck(cmd.seq);
       push(*out);
       out->clear();
@@ -621,7 +644,35 @@ private:
       return false;  // already pushed, in order: ack then the FAULT event
     }
 
-    startMotion(true, 0.0, cfg_.home_duration_us);
+    // HOME has to energise the driver itself, and the draft does not say so.
+    //
+    // Found on hardware 2026-09-03: `ARM` is "refused if not homed", and `ARM`
+    // is what enables the driver -- so homing ran with `~{TMC_DRV_EN}` high, the
+    // ramp generator advanced, and the shaft never moved. The follow check
+    // caught it as `mechanical_stop_first` after about 400 microsteps, which is
+    // the correct report for what it saw and a confusing one for what was wrong.
+    //
+    // The resolution is a distinction the draft's state machine does not draw:
+    // HOST-COMMANDED motion needs `ARM` and therefore needs `homed`, because an
+    // unhomed board does not know where its limits are. BOARD-CONTROLLED homing
+    // is the one motion that is safe while unhomed -- it is bounded by the
+    // switch stop, the follow check and a timeout, and no host argument reaches
+    // it. So HOME manages the driver for itself and the `ARM`-requires-`homed`
+    // rule stands. Raised in `../mouse-joystick-pcb/docs/uart-protocol.md`.
+    //
+    // The driver is deliberately LEFT enabled afterwards, so the joystick holds
+    // the position homing just parked it at instead of going limp.
+    if (!motion_.enableDriver()) {
+      out->nak(cmd.seq, protocol::kNakFaulted);
+      push(*out);
+      out->clear();
+      raiseFault(fault::kInternal, "vsense_not_1", true);
+      return false;
+    }
+    if (!motion_.startHome()) {
+      out->nak(cmd.seq, protocol::kNakBusy);
+      return true;
+    }
     out->beginAck(cmd.seq);
     return true;
   }
@@ -639,9 +690,11 @@ private:
       out->nak(cmd.seq, protocol::kNakNoHv);
       return true;
     }
-    if (!cfg_.vsense_ok) {
-      // The current decision and the shunt value are one decision. Refuse
-      // rather than drive 1.8x the motor's rating.
+    if (!motion_.enableDriver()) {
+      // The current decision and the shunt value are one decision. On real
+      // hardware this is the CHOPCONF.vsense read-back: it resets to 0, which
+      // against this board's 0.15 ohm shunts drives roughly 1.8x the motor's
+      // rating. Refuse rather than drive it.
       out->nak(cmd.seq, protocol::kNakFaulted);
       push(*out);
       out->clear();
@@ -656,11 +709,11 @@ private:
   }
 
   bool cmdDisarm(const protocol::Command &cmd, protocol::Line *out) {
-    motion_active_ = false;
+    motion_.abort();
     watchdog_armed_ = false;
     if (inState(state_name::kArmed) || inState(state_name::kActive) ||
         inState(state_name::kFreewheel)) {
-      resyncFromEncoder();
+      motion_.resyncFromEncoder();
       state_ = state_name::kHomed;
     }
     out->beginAck(cmd.seq);
@@ -670,13 +723,11 @@ private:
   bool cmdStop(const protocol::Command &cmd, protocol::Line *out) {
     // From FREEWHEEL this is how a host takes the joystick back: re-engage the
     // driver holding wherever the animal left it.
-    if (motion_active_) {
-      angle_ = interpolate();
-      xactual_ = angle_;
-      motion_active_ = false;
-    }
+    // `abort()` holds position wherever the joystick is, which is what makes
+    // this safe to send at any time -- including mid-move.
+    motion_.abort();
     if (inState(state_name::kActive) || inState(state_name::kFreewheel)) {
-      resyncFromEncoder();
+      motion_.resyncFromEncoder();
       state_ = state_name::kArmed;
     }
     out->beginAck(cmd.seq);
@@ -692,7 +743,7 @@ private:
     // FREEWHEEL re-engages implicitly. One command that resyncs, re-engages and
     // moves is better than three the host could be interrupted between.
     if (inState(state_name::kFreewheel)) {
-      resyncFromEncoder();
+      motion_.resyncFromEncoder();
       state_ = state_name::kArmed;
     }
     // Checked BEFORE the argument, deliberately: refusing motion outside ARMED
@@ -714,7 +765,7 @@ private:
     // Relative to where the joystick IS, which after a pull is not where the
     // ramp generator thinks it is. Using xactual would silently add the
     // animal's pull to every subsequent relative move.
-    double target = relative ? angle_ + value : value;
+    double target = relative ? motion_.angleDeg() + value : value;
     if (target < cfg_.travel_lo || target > cfg_.travel_hi) {
       // Rejected before anything moves, so a nak and not an OVER_TRAVEL fault.
       // The fault is for a position that got there.
@@ -722,15 +773,10 @@ private:
       return true;
     }
 
-    double distance = target - angle_;
-    if (distance < 0.0) {
-      distance = -distance;
+    if (!motion_.startMoveTo(target)) {
+      out->nak(cmd.seq, protocol::kNakBusy);
+      return true;
     }
-    uint32_t duration_us = 0;
-    if (cfg_.v_max > 0.0) {
-      duration_us = static_cast<uint32_t>(distance / cfg_.v_max * 1000000.0);
-    }
-    startMotion(false, target, duration_us);
     state_ = state_name::kActive;
     out->beginAck(cmd.seq);
     return true;
@@ -757,6 +803,7 @@ private:
       out->nak(cmd.seq, protocol::kNakNotArmed);
       return true;
     }
+    motion_.releaseDriver();
     state_ = state_name::kFreewheel;
     pull_reported_ = false;
     out->beginAck(cmd.seq);
@@ -863,14 +910,12 @@ private:
   };
 
   Config cfg_;
+  MotionBackend &motion_;
 
   uint64_t now_us_ = 0;
   const char *state_ = state_name::kBoot;
 
-  double angle_ = 0.0;
-  double xactual_ = 0.0;
   bool homed_ = false;
-  bool limit_asserted_ = false;
   uint32_t fault_mask_ = 0;
   uint8_t fault_bit_ = 0;
   const char *fault_detail_ = nullptr;
@@ -888,13 +933,6 @@ private:
 
   long cal_enc_offset_ = 1024;
   double cal_angle_zero_ = 0.0;
-
-  bool motion_active_ = false;
-  bool motion_is_home_ = false;
-  double motion_start_ = 0.0;
-  double motion_target_ = 0.0;
-  uint64_t motion_start_us_ = 0;
-  uint64_t motion_end_us_ = 0;
 
   bool watchdog_armed_ = false;
   uint64_t watchdog_deadline_us_ = 0;

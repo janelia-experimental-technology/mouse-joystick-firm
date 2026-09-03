@@ -65,8 +65,28 @@ void test_board_constants(void) {
   TEST_ASSERT_FLOAT_WITHIN(1e-6f, 249.0f, kHvSenseResistorOhms);
 }
 
+void test_degrees_round_trip_through_microsteps(void) {
+  // The protocol speaks degrees and the driver speaks microsteps, so this pair
+  // sits on every commanded position. A sign error here would move the joystick
+  // the wrong way and a scale error would silently rescale the travel limits.
+  TEST_ASSERT_EQUAL_INT32(0, degreesToMicrosteps(0.0f));
+  TEST_ASSERT_EQUAL_INT32(kMicrostepsPerRev, degreesToMicrosteps(360.0f));
+  TEST_ASSERT_EQUAL_INT32(-kMicrostepsPerRev, degreesToMicrosteps(-360.0f));
+
+  // One jog step is 1280 microsteps = 9.00 deg, measured on the bench.
+  TEST_ASSERT_EQUAL_INT32(kJogMicrosteps, degreesToMicrosteps(9.0f));
+  TEST_ASSERT_FLOAT_WITHIN(1e-3f, 9.0f, microstepsToDegrees(kJogMicrosteps));
+
+  for (int32_t deg = -28; deg <= 28; ++deg) {
+    const float back =
+        microstepsToDegrees(degreesToMicrosteps(static_cast<float>(deg)));
+    TEST_ASSERT_FLOAT_WITHIN(0.01f, static_cast<float>(deg), back);
+  }
+}
+
 int main(int, char **) {
   UNITY_BEGIN();
+  RUN_TEST(test_degrees_round_trip_through_microsteps);
   RUN_TEST(test_counts_to_volts_endpoints);
   RUN_TEST(test_counts_to_volts_midscale);
   RUN_TEST(test_counts_to_volts_survives_zero_full_scale);

@@ -123,6 +123,10 @@ checkout.
 | `../src/Protocol.hpp` | The firmware framing codec. Arduino-free and allocation-free, which is what makes it testable on the host. |
 | `../src/ProtocolBoard.hpp` | The firmware command layer and state machine, with an injected clock. |
 | `../test/native/test_protocol/test_protocol.cpp` | The firmware half of the corpus check, plus codec unit tests. |
+| `../src/MotionBackend.hpp` | The seam. `SimulatedMotion` is the host model the corpus runs against; the protocol layer owns no motion of its own. |
+| `../src/TmcMotion.hpp` | Firmware only: non-blocking motion over the real TMC5130A. Not reachable from the native test, which is why the corpus stays host-runnable. |
+| `../src/PycUart.hpp` | Firmware only: UART0 on the RJ-45, and a 64-bit clock accumulated from `micros()`. |
+| `../examples/PyControlLink` | The two ends wired together. Builds; never run. |
 
 **Both halves now exist, as of 2026-09-03.** The firmware side is
 `src/Protocol.hpp` (the framing codec) and `src/ProtocolBoard.hpp` (the command
@@ -145,6 +149,19 @@ firmware against the corpus found that inverting the ARMED and range checks in
 safety-relevant ordering it did not enforce. `armed-is-checked-before-the-range-check`
 was added to close it. That is the class of thing a single implementation and its
 own fixture cannot find, and it is the argument for the whole exercise.
+
+**And what it does not buy, learned on hardware 2026-09-03.** A corpus held by
+two implementations pins protocol **behaviour**. It says nothing about
+**hardware preconditions**, because one of the two implementations has no
+hardware. `status-is-safe-before-anything-is-configured` passes here and hung
+the RP2040's core, because the firmware's `STATUS` read position over SPI before
+the bus existed — and `SimulatedMotion` just returns a number, so there was
+nothing for the corpus to disagree with.
+
+Read a green corpus as "the two ends agree about the wire", never as "the
+firmware is right". Anything the firmware does that this side cannot express is
+unverified by construction. Account in
+`../../mouse-joystick-pcb/docs/bringup-log.md` under board 3, stage 4.
 
 The simulator is **not** a model of the board. No TMC5130A, no encoder, no
 current control, no real motion profile. Position moves linearly at a configured

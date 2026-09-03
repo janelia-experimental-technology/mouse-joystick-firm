@@ -26,11 +26,31 @@
 #include <string>
 #include <vector>
 
+#include "MotionBackend.hpp"
 #include "Protocol.hpp"
 #include "ProtocolBoard.hpp"
 
 using mouse_joystick::ProtocolBoard;
+using mouse_joystick::SimulatedMotion;
 namespace P = mouse_joystick::protocol;
+
+// The board holds its backend by reference, so the two have to be owned
+// together. Declaration order matters: `motion` is constructed first.
+struct Rig {
+  SimulatedMotion motion;
+  ProtocolBoard board;
+
+  Rig() : board(motion, corpusConfig()) {
+    board.boot();
+    board.clearOutput();  // READY drained, as the corpus assumes
+  }
+
+  static ProtocolBoard::Config corpusConfig() {
+    ProtocolBoard::Config cfg;
+    cfg.serial = "0000000000000000";  // the corpus header's stated default
+    return cfg;
+  }
+};
 
 void setUp(void) {}
 void tearDown(void) {}
@@ -197,15 +217,6 @@ void test_retransmission_classification_matches_the_python_side(void) {
 
 // ==================================================== board behaviour, direct
 
-static ProtocolBoard freshBoard(void) {
-  ProtocolBoard::Config cfg;
-  cfg.serial = "0000000000000000";  // the corpus header's stated default
-  ProtocolBoard board(cfg);
-  board.boot();
-  board.clearOutput();  // READY drained, as the corpus assumes
-  return board;
-}
-
 static std::string sendOne(ProtocolBoard &board, const std::string &line) {
   board.clearOutput();
   board.feed((line + "\n").c_str());
@@ -213,7 +224,8 @@ static std::string sendOne(ProtocolBoard &board, const std::string &line) {
 }
 
 void test_partial_lines_are_buffered(void) {
-  ProtocolBoard board = freshBoard();
+  Rig rig;
+  ProtocolBoard &board = rig.board;
   board.feed("pi");
   TEST_ASSERT_EQUAL_UINT8(0, board.outputCount());
   board.feed("ng;");
@@ -226,7 +238,8 @@ void test_partial_lines_are_buffered(void) {
 void test_a_repeated_relative_move_is_not_re_executed(void) {
   // MOVE is the only non-idempotent command in the set, and the sole reason the
   // retransmission cache exists.
-  ProtocolBoard board = freshBoard();
+  Rig rig;
+  ProtocolBoard &board = rig.board;
   sendOne(board, "hv;1;on");
   sendOne(board, "home;2");
   board.advance(50000);
@@ -245,7 +258,8 @@ void test_a_repeated_relative_move_is_not_re_executed(void) {
 }
 
 void test_reads_are_re_executed_and_return_fresh_state(void) {
-  ProtocolBoard board = freshBoard();
+  Rig rig;
+  ProtocolBoard &board = rig.board;
   std::string before = sendOne(board, "status;9");
   sendOne(board, "hv;1;on");
   std::string after = sendOne(board, "status;9");  // same seq, same content
@@ -255,7 +269,8 @@ void test_reads_are_re_executed_and_return_fresh_state(void) {
 void test_any_well_formed_command_resets_the_watchdog(void) {
   // Not just PING: liveness is proven by a frame arriving. This is what makes a
   // host polling STATUS during a long move survivable.
-  ProtocolBoard board = freshBoard();
+  Rig rig;
+  ProtocolBoard &board = rig.board;
   sendOne(board, "hv;1;on");
   sendOne(board, "home;2");
   board.advance(50000);
@@ -274,7 +289,8 @@ void test_any_well_formed_command_resets_the_watchdog(void) {
 void test_malformed_frames_do_not_hold_the_watchdog_open(void) {
   // A host with a wedged serial driver is not usefully alive. The refresh sits
   // after the badframe branch deliberately.
-  ProtocolBoard board = freshBoard();
+  Rig rig;
+  ProtocolBoard &board = rig.board;
   sendOne(board, "hv;1;on");
   sendOne(board, "home;2");
   board.advance(50000);
@@ -297,6 +313,302 @@ void test_malformed_frames_do_not_hold_the_watchdog_open(void) {
   board.advance(20000);  // t = 160000, past the original 150000 deadline
   TEST_ASSERT_TRUE_MESSAGE((board.faultMask() & 1u) != 0u,
                            "a malformed frame refreshed the host-loss watchdog");
+}
+
+void test_reported_limits_agree_with_the_backend(void) {
+  // LIMITS is "what the board will enforce", so it is a protocol fact and lives
+  // in ProtocolBoard::Config. How fast the mechanism moves is an implementation
+  // fact and lives in the backend. They are two places holding one number, so
+  // the invariant is asserted rather than hoped for: a board reporting a v_max
+  // it cannot achieve would make every host-side duration estimate wrong.
+  ProtocolBoard::Config board_cfg;
+  SimulatedMotion::Config motion_cfg;
+  TEST_ASSERT_EQUAL_FLOAT(static_cast<float>(board_cfg.v_max),
+                          static_cast<float>(motion_cfg.v_max_deg_s));
+}
+
+void test_arm_is_refused_when_the_driver_refuses_to_enable(void) {
+  // The vsense read-back path at ARM specifically.
+  //
+  // Since HOME now enables the driver too, reaching ARM at all means enabling
+  // worked once. So the case still worth testing is a driver that succeeded for
+  // homing and then refuses -- a transient, which on real hardware is what a
+  // CHOPCONF read-back that comes back wrong after a recovery looks like.
+  class FailsSecondEnable : public SimulatedMotion {
+  public:
+    bool enableDriver() override {
+      calls += 1;
+      return calls < 2;
+    }
+    int calls = 0;
+  };
+  FailsSecondEnable motion;
+  ProtocolBoard board(motion, Rig::corpusConfig());
+  board.boot();
+  board.clearOutput();
+
+  sendOne(board, "hv;1;on");
+  TEST_ASSERT_EQUAL_STRING("ack;2", sendOne(board, "home;2").c_str());
+  board.advance(50000);
+
+  board.clearOutput();
+  board.feed("arm;3\n");
+  // The nak comes first, then the FAULT event: the refusal is the answer to the
+  // command and the fault is what the board did about it.
+  TEST_ASSERT_EQUAL_UINT8(2, board.outputCount());
+  TEST_ASSERT_EQUAL_STRING("nak;3;faulted", board.output(0));
+  TEST_ASSERT_EQUAL_STRING("ev;FAULT;50000;code=7;detail=vsense_not_1",
+                           board.output(1));
+  TEST_ASSERT_EQUAL_STRING("FAULTED", board.state());
+}
+
+void test_an_animal_pull_diverges_the_two_positions(void) {
+  // The whole reason STATUS reports `angle` and `xactual` separately. In
+  // FREEWHEEL the encoder moves and the ramp generator does not, and the resync
+  // happens only on the way out.
+  Rig rig;
+  ProtocolBoard &board = rig.board;
+  sendOne(board, "hv;1;on");
+  sendOne(board, "home;2");
+  board.advance(50000);
+  sendOne(board, "arm;3");
+  sendOne(board, "freewheel;4");
+
+  rig.motion.setEncoderAngleDeg(-7.5);  // the animal pulls
+  TEST_ASSERT_EQUAL_STRING(
+      "ack;5;state=FREEWHEEL;angle=-7.5;xactual=0.0;homed=1;limit=0;faults=0;hv=1",
+      sendOne(board, "status;5").c_str());
+
+  // Leaving compliance reconciles them, and only then.
+  sendOne(board, "stop;6");
+  TEST_ASSERT_EQUAL_STRING(
+      "ack;7;state=ARMED;angle=-7.5;xactual=-7.5;homed=1;limit=0;faults=0;hv=1",
+      sendOne(board, "status;7").c_str());
+}
+
+// A backend that fails the way real motion does: asynchronously, with no host
+// command in flight.
+class FaultingMotion : public SimulatedMotion {
+public:
+  void injectFault(uint8_t bit, const char *detail) {
+    bit_ = bit;
+    detail_ = detail;
+    pending_ = true;
+  }
+  bool consumeFault(uint8_t *bit, const char **detail) override {
+    if (!pending_) {
+      return false;
+    }
+    pending_ = false;
+    *bit = bit_;
+    *detail = detail_;
+    return true;
+  }
+
+private:
+  bool pending_ = false;
+  uint8_t bit_ = 0;
+  const char *detail_ = "";
+};
+
+void test_a_backend_fault_becomes_a_latched_fault_and_an_event(void) {
+  FaultingMotion motion;
+  ProtocolBoard board(motion, Rig::corpusConfig());
+  board.boot();
+  board.clearOutput();
+
+  sendOne(board, "hv;1;on");
+  sendOne(board, "home;2");
+  board.advance(50000);
+  sendOne(board, "arm;3");
+  sendOne(board, "moveto;4;9.0");
+
+  motion.injectFault(mouse_joystick::fault::kDriverFault, "s2ga");
+  board.clearOutput();
+  board.advance(1000);
+
+  TEST_ASSERT_EQUAL_UINT8(1, board.outputCount());
+  TEST_ASSERT_EQUAL_STRING("ev;FAULT;51000;code=1;detail=s2ga", board.output(0));
+  TEST_ASSERT_EQUAL_STRING("FAULTED", board.state());
+  // Faults drop HV_EN, per the board's safety rules.
+  TEST_ASSERT_FALSE(board.hvOn());
+
+  // FAULTED is exited only through CLRFAULT, and only once the cause has gone.
+  // This one was injected as still-active, so it stays latched.
+  TEST_ASSERT_EQUAL_STRING("nak;5;latched", sendOne(board, "clrfault;5").c_str());
+  TEST_ASSERT_EQUAL_STRING("nak;6;faulted", sendOne(board, "moveto;6;0.0").c_str());
+}
+
+void test_a_backend_fault_outranks_a_completion(void) {
+  // If the driver reports a short to ground on the same poll that the move
+  // finishes, the fault is what happened -- a TARGET event would be a lie.
+  FaultingMotion motion;
+  ProtocolBoard board(motion, Rig::corpusConfig());
+  board.boot();
+  board.clearOutput();
+
+  sendOne(board, "hv;1;on");
+  sendOne(board, "home;2");
+  board.advance(50000);
+  sendOne(board, "arm;3");
+  sendOne(board, "moveto;4;9.0");
+
+  motion.injectFault(mouse_joystick::fault::kOverTravel, "over_travel");
+  board.clearOutput();
+  board.advance(50000);  // the move would otherwise complete here
+
+  // Exactly one line, and it is the FAULT rather than the TARGET. The
+  // timestamp is the motion deadline because the scheduler steps to it, which
+  // is precisely the poll where both things wanted to happen at once.
+  TEST_ASSERT_EQUAL_UINT8(1, board.outputCount());
+  TEST_ASSERT_EQUAL_STRING("ev;FAULT;100000;code=2;detail=over_travel",
+                           board.output(0));
+}
+
+void test_a_rail_that_does_not_come_up_is_a_fault_not_a_nak(void) {
+  // Asking for the rail and not getting it is not a precondition failure -- the
+  // attempt was made and the hardware answered. On these boards this is the
+  // live failure mode, not a hypothetical: `R203` is fitted on every unit and a
+  // single HV_EN assertion cannot charge the 208 uF bulk.
+  class NoRail : public SimulatedMotion {
+  public:
+    bool setHvEnabled(bool on) override { return !on; }  // off works, on does not
+  };
+  NoRail motion;
+  ProtocolBoard board(motion, Rig::corpusConfig());
+  board.boot();
+  board.clearOutput();
+
+  board.feed("hv;1;on\n");
+  TEST_ASSERT_EQUAL_UINT8(2, board.outputCount());
+  TEST_ASSERT_EQUAL_STRING("nak;1;faulted", board.output(0));
+  TEST_ASSERT_EQUAL_STRING("ev;FAULT;0;code=6;detail=hv_did_not_come_up",
+                           board.output(1));
+  TEST_ASSERT_FALSE(board.hvOn());
+
+  // And HV OFF is still permitted while faulted: the board never requires a
+  // message in order to become safe, and this is the message that makes it
+  // safer.
+  TEST_ASSERT_EQUAL_STRING("ack;2", sendOne(board, "hv;2;off").c_str());
+}
+
+void test_the_default_serial_cannot_be_mistaken_for_a_real_one(void) {
+  // Regression, found on hardware 2026-09-03: the first READY this firmware
+  // emitted carried `serial=0000000000000000`, the corpus placeholder, because
+  // the example never called setSerial(). Two boards would have reported the
+  // same value and a host's identity check would have PASSED against the wrong
+  // one -- silently, which is the worst way for an identity check to fail.
+  //
+  // So the default must be impossible to mistake for a flash unique id: 16 hex
+  // characters. Anything that fails that test is fine; a plausible one is not.
+  ProtocolBoard::Config cfg;
+  const char *serial = cfg.serial;
+  bool looks_like_a_real_id = strlen(serial) == 16;
+  for (const char *p = serial; looks_like_a_real_id && *p != '\0'; ++p) {
+    const bool hex = (*p >= '0' && *p <= '9') || (*p >= 'A' && *p <= 'F') ||
+                     (*p >= 'a' && *p <= 'f');
+    if (!hex) {
+      looks_like_a_real_id = false;
+    }
+  }
+  TEST_ASSERT_FALSE_MESSAGE(looks_like_a_real_id,
+                            "the default serial looks like a real board id, so "
+                            "forgetting setSerial() would fail silently");
+}
+
+void test_status_reports_the_limit_switch_from_the_backend(void) {
+  // Regression, found 2026-09-03 while reading `status` on hardware: this field
+  // was a member that nothing ever assigned, so `limit` was a hardcoded 0. A
+  // host could have used it to decide homing was safe to start. A status field
+  // that cannot change is worse than an absent one.
+  class SwitchClosed : public SimulatedMotion {
+  public:
+    bool limitAsserted() const override { return true; }
+  };
+  SwitchClosed motion;
+  ProtocolBoard board(motion, Rig::corpusConfig());
+  board.boot();
+  board.clearOutput();
+
+  TEST_ASSERT_EQUAL_STRING(
+      "ack;1;state=IDLE;angle=0.0;xactual=0.0;homed=0;limit=1;faults=0;hv=0",
+      sendOne(board, "status;1").c_str());
+}
+
+// Records what the protocol layer asked of the hardware, so safety rules can be
+// asserted rather than assumed.
+class RecordingMotion : public SimulatedMotion {
+public:
+  bool setHvEnabled(bool on) override {
+    hv_calls += 1;
+    hv_last = on;
+    return SimulatedMotion::setHvEnabled(on);
+  }
+  bool enableDriver() override {
+    enable_calls += 1;
+    return SimulatedMotion::enableDriver();
+  }
+  int hv_calls = 0;
+  bool hv_last = false;
+  int enable_calls = 0;
+};
+
+void test_home_energises_the_driver_it_is_about_to_use(void) {
+  // Found on hardware 2026-09-03: ARM is refused unless homed, and ARM is what
+  // enables the driver -- so homing commanded a ramp with the driver disabled
+  // and the shaft never moved. HOME must energise for itself.
+  RecordingMotion motion;
+  ProtocolBoard board(motion, Rig::corpusConfig());
+  board.boot();
+  board.clearOutput();
+
+  sendOne(board, "hv;1;on");
+  TEST_ASSERT_EQUAL_INT(0, motion.enable_calls);
+  TEST_ASSERT_EQUAL_STRING("ack;2", sendOne(board, "home;2").c_str());
+  TEST_ASSERT_EQUAL_INT_MESSAGE(1, motion.enable_calls,
+                                "HOME did not enable the driver");
+}
+
+void test_a_fault_drops_the_rail_and_not_just_the_flag(void) {
+  // `status` reporting hv=0 while the 36 V rail is still up is worse than
+  // reporting the unsafe state honestly. Found on hardware 2026-09-03.
+  RecordingMotion motion;
+  ProtocolBoard board(motion, Rig::corpusConfig());
+  board.boot();
+  board.clearOutput();
+
+  sendOne(board, "hv;1;on");
+  TEST_ASSERT_TRUE(motion.hv_last);
+  sendOne(board, "home;2");
+  board.advance(50000);
+  sendOne(board, "arm;3");
+
+  const int before = motion.hv_calls;
+  board.advance(200000);  // let the host-loss watchdog expire
+
+  TEST_ASSERT_EQUAL_STRING("FAULTED", board.state());
+  TEST_ASSERT_TRUE_MESSAGE(motion.hv_calls > before,
+                           "the fault never asked the backend to drop the rail");
+  TEST_ASSERT_FALSE_MESSAGE(motion.hv_last,
+                            "the fault left the rail enabled");
+  TEST_ASSERT_FALSE(board.hvOn());
+}
+
+void test_home_is_refused_when_the_driver_will_not_enable(void) {
+  SimulatedMotion::Config motion_cfg;
+  motion_cfg.driver_enable_ok = false;
+  SimulatedMotion motion(motion_cfg);
+  ProtocolBoard board(motion, Rig::corpusConfig());
+  board.boot();
+  board.clearOutput();
+
+  sendOne(board, "hv;1;on");
+  board.clearOutput();
+  board.feed("home;2\n");
+  TEST_ASSERT_EQUAL_UINT8(2, board.outputCount());
+  TEST_ASSERT_EQUAL_STRING("nak;2;faulted", board.output(0));
+  TEST_ASSERT_EQUAL_STRING("ev;FAULT;0;code=7;detail=vsense_not_1",
+                           board.output(1));
 }
 
 void test_a_reply_is_never_silently_truncated(void) {
@@ -463,11 +775,8 @@ void test_every_case_expects_something(void) {
 
 void test_the_firmware_reproduces_every_corpus_case(void) {
   for (const Case &c : g_cases) {
-    ProtocolBoard::Config cfg;
-    cfg.serial = "0000000000000000";
-    ProtocolBoard board(cfg);
-    board.boot();
-    board.clearOutput();  // READY drained
+    Rig rig;
+    ProtocolBoard &board = rig.board;
 
     std::vector<std::string> pending;
     for (size_t index = 0; index < c.steps.size(); ++index) {
@@ -526,6 +835,17 @@ int main(int, char **) {
   RUN_TEST(test_reads_are_re_executed_and_return_fresh_state);
   RUN_TEST(test_any_well_formed_command_resets_the_watchdog);
   RUN_TEST(test_malformed_frames_do_not_hold_the_watchdog_open);
+  RUN_TEST(test_reported_limits_agree_with_the_backend);
+  RUN_TEST(test_arm_is_refused_when_the_driver_refuses_to_enable);
+  RUN_TEST(test_an_animal_pull_diverges_the_two_positions);
+  RUN_TEST(test_a_backend_fault_becomes_a_latched_fault_and_an_event);
+  RUN_TEST(test_a_backend_fault_outranks_a_completion);
+  RUN_TEST(test_a_rail_that_does_not_come_up_is_a_fault_not_a_nak);
+  RUN_TEST(test_the_default_serial_cannot_be_mistaken_for_a_real_one);
+  RUN_TEST(test_status_reports_the_limit_switch_from_the_backend);
+  RUN_TEST(test_home_energises_the_driver_it_is_about_to_use);
+  RUN_TEST(test_a_fault_drops_the_rail_and_not_just_the_flag);
+  RUN_TEST(test_home_is_refused_when_the_driver_will_not_enable);
   RUN_TEST(test_a_reply_is_never_silently_truncated);
 
   RUN_TEST(test_the_corpus_was_found);

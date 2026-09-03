@@ -246,6 +246,15 @@ constexpr float microstepsToDegrees(int32_t microsteps) {
   return microstepsToRevs(microsteps) * 360.0f;
 }
 
+// The inverse, needed because the pyControl protocol speaks degrees and the
+// driver speaks microsteps. Truncates toward zero like the rest of this file;
+// one microstep is 0.007 deg at the motor shaft, which is far below the 2-5
+// encoder counts of homing repeatability measured on the bench, so the rounding
+// is not a term worth carrying.
+constexpr int32_t degreesToMicrosteps(float degrees) {
+  return revsToMicrosteps(degrees / 360.0f);
+}
+
 // Velocity and acceleration are handed to TMC51X0 in microsteps, with
 // ConverterParameters left at one microstep per real unit and one second per
 // real velocity unit. That keeps the library's integer conversions exact and

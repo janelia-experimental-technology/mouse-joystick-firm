@@ -105,6 +105,131 @@ the simulator's placeholders (travel +/-20 deg, 180 deg/s), **not** the measured
 bench values. Replacing them changes corpus timings and belongs in its own
 commit with the corpus updated alongside.
 
+**Protocol layer wired to a real UART and real motion, 2026-09-03.** Four new
+firmware pieces, and one seam that made them possible:
+
+| File | What it is |
+| --- | --- |
+| `src/MotionBackend.hpp` | The seam. `ProtocolBoard` owns framing, the state machine, the watchdog and the cache, and owns **no** motion. `SimulatedMotion` (host, injected clock) runs the corpus; `TmcMotion` (firmware) drives the real thing. |
+| `src/TmcMotion.hpp` | Non-blocking motion over the TMC5130A, plus the 36 V rail and SPI bring-up. One `snapshot()` per poll, because `RAMP_STAT`'s flags are read-and-clear. |
+| `src/PycUart.hpp` | UART0 on the RJ-45, and a 64-bit clock accumulated from `micros()`. |
+| `examples/PyControlLink` | The two wired together. 61 native tests pass, all four examples build. |
+
+**Why a seam rather than calling `MotionSetup` directly:** `MotionSetup::moveTo()`
+and `homeToSwitch()` are blocking — they return a report once the motion is
+done. Right for a bench console, wrong here: the protocol must ack immediately
+and keep servicing the link for the whole move, and a 2.5 s blocking home would
+silently fail every heartbeat inside a 100 ms timeout. `TmcMotion` drives the
+same primitives in the same order without waiting.
+
+The seam also grew two things real hardware needs and the corpus does not:
+`consumeFault()`, so a driver over-temperature or an unexpected end stop becomes
+a latched fault and a `FAULT` event with no host command in flight; and
+`setHvEnabled()`, because the 36 V domain exists to feed the driver and a rail
+that fails to come up is a fault rather than a nak. Both are defaulted, so the
+corpus behaviour is untouched, and both are tested with stub backends.
+
+**NOT YET RUN ON HARDWARE, and the first run should be supervised.** Stage 3
+validated the blocking implementations; this is a faithful rearrangement, which
+is an argument and not a measurement. Unproven: the non-blocking homing state
+machine, and the travel limits derived from bench geometry rather than exercised
+through the protocol.
+
+**Homing over the protocol is deliberately SINGLE-STAGE.** The bench measured
+two-stage and single-stage repeatability as the same 2-5 encoder counts; the slow
+creep buys datum *accuracy* (89 microsteps of offset at 0.200 rev/s against 4.5
+at the creep) and a faster primary approach, not precision. A single stage is a
+small amount of code whose failure modes are bounded by the chip's own
+reference-switch stop; a blind reimplementation of the validated two-stage
+sequence would not be. **Follow-up: two-stage homing over the protocol**, with
+the 89-microstep offset as the reason it matters.
+
+**First protocol contact on hardware, 2026-09-03: `id` passed with the 36 V
+supply off.** Board `E4654C159F591D34` through Breakout 1.2 port 1, peer driven
+from the pyboard REPL with `machine.UART(4)` directly -- no framework, no
+hardware definition, no device class, for the same reason stage 2 used raw SPI
+datagrams: first contact should not have the framework as a second unknown. The
+reply also closed a standing gap by announcing its own serial, so **the left
+joystick is board `E4654C159F591D34` and the right is `E4654C159F4D1334`**.
+Measurements in `../mouse-joystick-pcb/docs/bringup-log.md` under board 3.
+
+**Two firmware bugs found by that run, both fixed.**
+
+1. **`STATUS` hung the core.** `TmcMotion::angleDeg()`/`xactualDeg()` read
+   position over SPI and `STATUS` calls both, so a `status` before `hv on`
+   reached for SPI0 before `beginSpi()` had run with the bus switch open. The
+   board then stopped answering the link *and* stopped honouring the 1200 baud
+   reset touch; recovery needed `SW501` through a power cycle with both USB and
+   the RJ-45 unplugged. Fixed: position is a cache refreshed once per `poll()`
+   and nothing touches SPI unless `bus_up_`.
+
+2. **`ID` reported the corpus placeholder serial.** The firmware never set it
+   from the flash unique id, so every board would have reported
+   `0000000000000000` and a host confirming it was talking to the right board
+   would have passed against the wrong one. Default is now unmistakable;
+   regression test added.
+
+**THE LESSON, which is worth more than either bug.** The corpus could not have
+caught the first one. `status-is-safe-before-anything-is-configured` passes on
+the host because `SimulatedMotion` just returns a number. **A corpus held by two
+implementations pins protocol behaviour, not hardware preconditions** -- one of
+the two has no hardware. A green corpus means "the two ends agree about the
+wire", not "the firmware is right". Anything the firmware does that the host
+model cannot express is unverified by construction, and the SPI-before-bus class
+is exactly that.
+
+A latent hazard was closed at the same time: the USB mirror could block when a
+host connected and stopped reading, stalling the link, the motion poll and the
+watchdog together. It is now dropped rather than waited on -- losing a
+diagnostic line is free, losing the link is not.
+
+**Stage 4 ran the full motion path on hardware 2026-09-03**: `hv on`, `home`,
+`arm`, `moveto`, `disarm`, `clrfault`, all over the RJ-45 with the motor moving.
+Homing repeats to about one encoder count; the commanded-move follow ratio is
+0.991. ~150 byte-identical `ping;9` were each answered and each refreshed the
+watchdog, which is open question 1's resolution demonstrated on hardware.
+Measurements in `../mouse-joystick-pcb/docs/bringup-log.md` under board 3.
+
+**Eight firmware bugs were found by hardware in one session**, none of which the
+shared corpus could have caught: the placeholder serial, `STATUS` hanging on SPI
+before the bus existed, a `limit` field nothing assigned, the missing encoder
+follow check, the homing driver-enable deadlock, a fault that dropped the flag but
+not the rail, the loop judging time before reading the link, and the datum offset
+below. That ratio is the point, not an accident -- see the corpus-limits note
+above.
+
+**A correction to the VALIDATED stage 3 code, not just the new firmware:
+`ENC_LATCH` is permanently 0 on rev 0.** It latches on the encoder's N event and
+rev 0 leaves the index no-connect with `ENCN` terminated by `R1201`. So
+`MoveReport::latch_encoder` and `HomeReport::coarse_encoder`/`fine_encoder` --
+all filled from that register -- are structurally zero on this hardware. Any
+stage 3 report showing one should be read as "no data".
+
+**RESOLVED: the position-frame offset.** Peter's fix -- zero BOTH frames after
+the clearance move rather than at the switch edge -- removed it and did more
+besides. `moveto -8.0` now reads back `angle=-8.016` against `xactual=-7.995`,
+agreeing to 10 microsteps; `ev;HOMED` reports `angle=0.0`, which is what the
+shared corpus expects, so firmware and corpus stopped disagreeing on a pinned
+value; zero became a commandable position instead of one the travel limits
+exclude; and travel is now -10.125..0.0 deg. `XACTUAL` is still re-based to
+`XLATCH` first so the clearance is measured from the switch edge, which is
+velocity-independent where the stop position is not.
+
+**Also fixed: the approach keyed off `status_latch_*`, which is read-and-clear.**
+A long approach reached the switch (`limit=1`) and then hung until the 8 s
+timeout. `status_stop_*` are plain status bits that survive polling, and the
+validated `homeToSwitch()` already keys off those with an explicit `XLATCH`
+fallback -- the non-blocking version had no fallback. And `ev;HOMED` was
+reporting the cache from before the datum writes.
+
+**WITHDRAWN: the "host must poll faster than the draft implies" measurement.**
+The two observed `host_timeout` faults were the test harness, not the firmware:
+MicroPython's `UART.read()` blocks for its configured `timeout` on an empty
+buffer, so a `timeout=50` made "20 ms pings" 72 ms and "40 ms pings" ~90 ms
+against a 100 ms watchdog. The loop-ordering fix stands on its own merits -- the
+watchdog was genuinely evaluated before the link was read -- but the margin is
+unmeasured. Set the UART read timeout deliberately before timing this link.
+
 Read `.agents/handoff.local.md` for bench state and the immediate next actions.
 
 ## Milestones
@@ -152,7 +277,10 @@ Read `.agents/handoff.local.md` for bench state and the immediate next actions.
 - [x] Stage 4 host half: framing codec, device class, simulator, 22-case corpus
 - [x] Stage 4 firmware half: `src/Protocol.hpp` + `src/ProtocolBoard.hpp`, held
       to the same corpus by `test/native/test_protocol/`. 2026-09-03
-- [ ] Stage 4: wire the protocol layer to a real UART and to real motion
+- [x] Stage 4: protocol layer wired to a real UART and real motion —
+      `MotionBackend` seam, `TmcMotion`, `PycUart`, `examples/PyControlLink`.
+      2026-09-03, **not yet run on hardware**
+- [ ] Stage 4: two-stage homing over the protocol (single-stage today)
 - [ ] Stage 4: pyControl UART protocol on hardware (Gate E)
   - [x] **Host half written and green, 2026-09-02.** 128 tests.
         `pycontrol/devices/mouse_joystick_protocol.py` (codec, runs on the board
