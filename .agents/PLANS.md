@@ -70,26 +70,34 @@ Read `.agents/handoff.local.md` for bench state and the immediate next actions.
       pyserial 3.5 against pyControl v2.1.1; 6 environment tests pass; firmware
       env unchanged at 33/33
 - [ ] Stage 4: pyControl UART protocol
-  - [x] **Host half written and green, 2026-09-02.** 115 tests.
+  - [x] **Host half written and green, 2026-09-02.** 128 tests.
         `pycontrol/devices/mouse_joystick_protocol.py` (codec, runs on the board
         and under pytest), `pycontrol/sim/board_sim.py` (simulator with an
         injected clock), `pycontrol/devices/mouse_joystick.py` (device class,
         asserts on `port.UART` and on duplicate `event_name`),
-        `pycontrol/tests/fixtures/protocol_cases.txt` (19-case shared corpus),
+        `pycontrol/tests/fixtures/protocol_cases.txt` (22-case shared corpus),
         plus a bring-up hardware definition and task
+  - [x] **Narrowed to rev-0 hardware, 2026-09-02.** `ANGOUT`/`ANGSCALE` removed
+        (analog outputs not populated); `FREEWHEEL` and a compliant state added;
+        `STATUS` now reports `angle` (encoder) and `xactual` (ramp generator)
+        separately; encoder resync on leaving compliance only. Findings appended
+        to `../mouse-joystick-pcb/docs/uart-protocol.md` as open questions,
+        without changing its command table
   - [ ] **Protocol framer/parser in `src/`, and a host-native test that
         reproduces `protocol_cases.txt`.** Until this exists Gate C is NOT
         passed: a simulator agreeing with a corpus only it has been checked
         against says nothing about the RP2040. The corpus is line-oriented so
         the C++ side is `getline` plus a prefix compare, no JSON library
-  - [ ] Resolve the two protocol findings below before freezing the draft
+  - [ ] Resolve the six protocol findings below before freezing the draft
   - [ ] Gate E on the Breakout 1.2, then deliver to `joystick-rig`
 
 ## Protocol Findings, 2026-09-02
 
 Raised by implementing `../mouse-joystick-pcb/docs/uart-protocol.md` (Draft
-v0.1). Full list in `pycontrol/README.md`; these two are defects rather than
-gaps and belong to the PCB repo's draft, not to this one.
+v0.1). All six are now written up in that file under "Open Questions From The
+First Implementation", which is where they should be resolved - this repository
+implements the protocol and does not define it. Summarised here because they
+gate Stage 4.
 
 1. **The retransmission rule breaks the heartbeat.** "A repeated `seq` with
    identical content is re-acknowledged without re-executing" assumes
@@ -103,6 +111,37 @@ gaps and belong to the PCB repo's draft, not to this one.
    host must ping *during* motion. Possibly fine, but it should be written down
    rather than discovered. Confirm the real velocity and the real timeout
    together.
+3. **The command set does not match the trial.** The draft models a pull as
+   detection (`ARMPULL threshold`); the rig needs it as mechanical resistance -
+   brake sets the force, motor gets out of the way. Trial shape is park,
+   present, release, pull, present again.
+4. **Brake-then-release cannot be two host commands.** The brake must engage
+   before drive is released or the joystick drops. Belongs in one firmware
+   operation, `BRAKE <torque>`. `FREEWHEEL` is a rev-0 stand-in to be replaced.
+5. **`STATUS`'s "position" is two quantities** once there is a compliant state -
+   measured and commanded, disagreeing by the whole pull.
+6. **Resyncing `XACTUAL` from the encoder deletes the stall detector.** Resync
+   only on leaving compliance. Stall detection is unimplemented: it needs a
+   fault bit the draft does not have, and bit 4 is retired for a different
+   comparison.
+
+## Waiting On The Researcher
+
+Not blocking Stage 4, but they change the command set when answered. Raised
+2026-09-02; the researcher has not scoped the task yet.
+
+- What the joystick must do in a trial - whether `MOVETO`/`MOVE`/`ARMPULL` is
+  the right vocabulary, or whether a hold-against-force mode is needed
+- Whether move speed and motor current should be adjustable or fixed defaults.
+  Current stays out of the protocol either way, per the draft's "deliberately
+  absent" list; speed would be named profiles, not raw numbers
+- Whether rev 0's UART-latency-only event path is acceptable for a pilot.
+  `../mouse-joystick-pcb/docs/pycontrol-interface.md`: "fine for exercising the
+  interfaces, not fine for behavioural data"
+- On heartbeat loss mid-trial, whether latching a fault and requiring `CLRFAULT`
+  is the behaviour they want, given it ends the session
+- Which Breakout 1.2 ports the two boards get, and whether one `RSYNC` output
+  can drive both - both open in Gate A of `pycontrol-interface.md`
 
 ## Controller Decided 2026-09-02
 

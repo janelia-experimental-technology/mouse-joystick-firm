@@ -66,7 +66,7 @@ else. The stages follow that boundary:
 | 1 | RP2040 alone | absent | isolated | disabled | `examples/RP2040SelfTest` — **passed** |
 | 2 | TMC5130A register reads | applied | closed | disabled | `examples/TMC5130Communication` — **passed** |
 | 3 | Motion, encoder, homing | applied | closed | enabled | `examples/MotionAndHoming` — **passed** |
-| 4 | pyControl UART protocol | applied | closed | as needed | host environment ready, protocol not written |
+| 4 | pyControl UART protocol | applied | closed | as needed | host half written (128 tests); RP2040 half not written |
 
 **Stage 1 has no way to raise `HV_EN` and no way to enable the bus switch.** That
 is deliberate, not an omission: until the MCU is proven there is no reason to put

@@ -1,8 +1,14 @@
 # Stage 4 bring-up exerciser for one mouse-joystick board over pyControl.
 #
-# Walks the protocol's state machine from boot to a completed move, printing
-# every line the board sends. This is a bring-up tool, not an experiment: there
-# is no trial structure, no reward, and no subject.
+# Exercises the three things rev 0 hardware can actually do - home, move to a
+# position, and release the driver - printing every line the board sends. A
+# bring-up tool, not an experiment: no trial structure, no reward, no subject.
+#
+# It is a sketch of the real trial shape, as far as this board goes: park the
+# joystick (home), present it (move), then let it be moved (freewheel). What is
+# missing is everything the hardware does not have yet - the electronic brake
+# that would set the pull torque, the torque sensor, and the analog outputs that
+# will stream position and torque continuously.
 #
 # Use with hardware definition `mouse_joystick_bringup.py`.
 #
@@ -10,12 +16,17 @@
 #   ID reply carrying the board serial - record it, it is how this board's
 #   bring-up results are attributed in
 #   ../../../mouse-joystick-pcb/docs/bringup-log.md
-#   then HV on, HOMED, ARM, and a small move ending in TARGET.
+#   then HV on, HOMED, ARM, a small move ending in TARGET, then the driver
+#   releases and PULL follows when you move the joystick by hand.
 #
-# SAFETY: this raises the motor rail and moves the joystick. Nothing should be
-# attached to the joystick that a 0.211 A RMS stepper can damage. The move is
-# bounded by MOVE_DEGREES below and by the board's own travel limits, which it
-# enforces locally and will refuse to exceed.
+# SAFETY: this raises the motor rail, moves the joystick, and then RELEASES the
+# driver so the joystick is free to move under any load on it. Nothing should be
+# attached that a 0.211 A RMS stepper can damage, and nothing should be hanging
+# on the joystick when it goes free. Set `v.do_freewheel = 0` to stop before that
+# step, and `v.do_move = 0` to stop before commanding any motion at all - the
+# right setting the first time a board is connected. The move is bounded by
+# `v.move_degrees` and by the board's own travel limits, which it enforces
+# locally and will refuse to exceed.
 
 from pyControl.utility import *
 import hardware_definition as hw
@@ -39,6 +50,14 @@ v.move_degrees = 5.0
 # motion under host control.
 v.do_move = 1
 
+# Set 0 to stop after the move rather than releasing the driver. With the driver
+# released the joystick is free to move under any load on it, including gravity
+# and its own linkage - check nothing is hanging on it before enabling this.
+v.do_freewheel = 1
+
+# How far the joystick must be moved by hand to report a pull.
+v.pull_degrees = 8.0
+
 v.serial = ""
 
 # ---------------------------------------------------------------------------
@@ -51,6 +70,7 @@ states = [
     "homing",
     "arming",
     "moving",
+    "freewheeling",
     "done",
     "faulted",
 ]
@@ -78,6 +98,10 @@ def run_start():
 
 
 def run_end():
+    # STOP first: it re-engages the driver and reloads position from the
+    # encoder, so the board is not left compliant with an animal on it if the
+    # run was stopped mid-trial.
+    hw.left.stop()
     # Leave the board safe regardless of which state the run stopped in. The
     # board does not require this - it faults itself on heartbeat loss - but
     # relying on the watchdog to tidy up means every clean stop also logs a
@@ -119,8 +143,23 @@ def moving(event):
         hw.left.move_to(v.move_degrees)
 
 
+def freewheeling(event):
+    # The third and last thing rev 0 hardware can test. There is no electronic
+    # brake on these boards, so "compliant" here means only that the driver is
+    # released - move the joystick BY HAND to produce the pull.
+    #
+    # On a board with the brake this step disappears: the brake must engage
+    # before drive is released, and that ordering cannot be split across two
+    # host commands. It becomes one `BRAKE <torque>`.
+    if event == "entry":
+        print("releasing the driver - move the joystick by hand past {} deg".format(v.pull_degrees))
+        hw.left.arm_pull(v.pull_degrees)
+        hw.left.freewheel()
+
+
 def done(event):
     if event == "entry":
+        hw.left.stop()  # re-engage the driver and reload position from the encoder
         print("bring-up sequence complete; serial {}".format(v.serial))
 
 
@@ -157,6 +196,14 @@ def _handle(message):
         if name == "HOMED":
             goto_state("arming")
         elif name == "TARGET":
+            if v.do_freewheel:
+                goto_state("freewheeling")
+            else:
+                goto_state("done")
+        elif name == "PULL":
+            # The board is still compliant here. A move, home or stop re-engages
+            # the driver implicitly, reloading position from the encoder first.
+            print("pull detected at {} deg".format(data.get("angle")))
             goto_state("done")
         elif name == "FAULT":
             goto_state("faulted")

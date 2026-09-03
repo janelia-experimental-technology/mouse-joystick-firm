@@ -106,6 +106,71 @@ The simulator is **not** a model of the board. No TMC5130A, no encoder, no
 current control, no real motion profile. Position moves linearly at a configured
 velocity because the protocol is what is under test.
 
+## Scoped To Rev 0 Hardware
+
+Narrowed 2026-09-02 to what the boards in hand can actually do. Writing firmware
+against absent hardware means the tests assert what was guessed.
+
+| Implemented | Absent, and why |
+|---|---|
+| `ID` `PING` `STATUS` `LIMITS` `FAULTS` `CLRFAULT` `HV` `INSTR` `CAL` | `BRAKE` / torque — no electronic brake, no torque sensor |
+| `HOME` `ARM` `DISARM` `MOVETO` `MOVE` `STOP` | `ANGOUT` `ANGSCALE` — analog outputs not populated |
+| `FREEWHEEL`, `ARMPULL` (testable by moving the joystick by hand) | |
+
+Unimplemented verbs answer `badverb`, never a silent ack — a stub that acked
+would let a host believe the analog output was live and record a trace of
+nothing.
+
+`ID` reports `caps=motion+home+freewheel+instr+hv`. A host should gate on that
+rather than on a firmware version, so a rev-1 board simply reports more.
+
+### The trial shape, and what it changed
+
+Park (`HOME`) → present (`MOVETO`) → release (`FREEWHEEL`) → the animal pulls →
+present again. Two consequences that are not in the draft:
+
+**Homing is no longer how position is recovered.** The previous rig had no
+encoder, so every pull lost the stepper's position outright and every trial had
+to start with a home. Here the encoder keeps it. Homing is now for *parking* the
+joystick between trials — a choice, not a necessity.
+
+**`FREEWHEEL` is a rev-0 verb with a known expiry date.** On a board with the
+brake it must not exist separately: the brake has to engage *before* motor drive
+is released, or the joystick drops as it goes compliant. Two host commands cannot
+guarantee that ordering — the host can die between them, or the second message
+can arrive late over a link whose whole point is that it has latency. It belongs
+inside one `BRAKE <torque>`. Expect this verb to be replaced, not extended.
+
+Leaving compliance is likewise **implicit**: a `MOVETO`, `MOVE`, `HOME` or `STOP`
+reloads position from the encoder, re-engages, and proceeds — one command where
+an explicit "stop freewheeling" would be two, with a window in between.
+
+### The resync fights the stall detector
+
+`.agents/AGENTS.md`: "`XACTUAL` advancing while `X_ENC` does not is how firmware
+detects an end stop, a stall, a slipping coupling or a dead encoder. Do not add a
+motion path that skips it."
+
+That detector *is* the divergence between the two numbers — so reloading
+`XACTUAL` from the encoder deletes it. Doing it continuously, or on a timer,
+trades the board's only stall detection for not having to track which state it is
+in. The two cases are distinguishable by state and by nothing else:
+
+| State | Divergence means | Response |
+|---|---|---|
+| driving | end stop, stall, slipping coupling, dead encoder | fault |
+| compliant | the animal pulled | resync, on exit only |
+
+`STATUS` therefore reports **both** `angle` (encoder — the joystick's real
+position) and `xactual` (ramp generator). The draft's single "position" field
+cannot express the difference, and after a pull they disagree by the whole pull.
+
+**Stall detection is not implemented.** It needs a fault bit the draft does not
+have — bit 4 is retired and permanently reserved, and it was a *different*
+comparison anyway (driver encoder vs. an RP2040 PIO count that never existed).
+This is `XACTUAL` vs `X_ENC`, both inside the driver. Raised below rather than
+given a bit unilaterally.
+
 ## What Implementing The Draft Surfaced
 
 `uart-protocol.md` is marked "Draft v0.1. Not implemented, not frozen." Writing

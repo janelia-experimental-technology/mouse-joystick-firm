@@ -388,47 +388,136 @@ def test_limit_asserted_outside_homing_is_a_fault(sim):
     assert "code=%d" % Fault.LIMIT_UNEXPECTED in out[1]
 
 
-# ------------------------------------------------------------- analog output
+# ----------------------------------------------------------- analog output
+
+# ANGOUT and ANGSCALE have no tests because they have no implementation. The
+# analog outputs are not populated on these boards, so a test would pin what was
+# guessed. They come back with the hardware, and with the second channel -
+# position and torque both stream continuously.
 
 
-def test_analog_output_reports_invalid_whenever_it_reads_zero_volts(armed):
-    """`ANGOUT OFF`, a fault and a dead rail all produce 0 V.
+def test_analog_output_verbs_are_absent_not_stubbed(sim):
+    """An unimplemented verb must be `badverb`, not a silent ack.
 
-    One out-of-band level, not three - which is intended, and is exactly why
-    STATUS has to say which one it is. The recorded trace will not.
+    A stub that acks would let a host believe the analog output is live and
+    record a trace of nothing.
     """
-
-    seq = iter(range(100, 200))
-
-    def angout():
-        # A fresh sequence number each time, or the second STATUS would be
-        # answered from the retransmission cache and report stale state.
-        reply = reply_to(armed, "status;%d" % next(seq))
-        return dict(f.split("=", 1) for f in reply.split(";")[2:])["angout"]
-
-    assert angout() == "invalid", "ANGOUT is off by default"
-
-    reply_to(armed, "angout;1;on")
-    assert angout() == "valid"
-
-    armed.inject_fault(Fault.DRIVER_FAULT)
-    assert angout() == "invalid", "a fault must invalidate the analog output"
+    assert reply_to(sim, "angout;1;on") == "nak;1;badverb"
+    assert reply_to(sim, "angscale;2;-10;10") == "nak;2;badverb"
 
 
-def test_angscale_is_rejected_outside_travel(armed):
-    assert reply_to(armed, "angscale;1;-10;10") == "ack;1"
-    assert reply_to(armed, "angscale;2;10;-10") == "nak;2;outofrange"
-    assert reply_to(armed, "angscale;3;-999;999") == "nak;3;outofrange"
+# -------------------------------------------------------------- compliance
 
 
-def test_analog_output_window_starts_above_ground(armed):
-    """0.05 V, not 0 V: the output amplifier sits ~25 mV off ground at light load.
+def test_freewheel_requires_arming_first(sim):
+    """A joystick held by an energised motor cannot go compliant by accident."""
+    assert reply_to(sim, "freewheel;1") == "nak;1;notarmed"
 
-    Both ends are hardware limits. Firmware cannot overshoot the top because the
-    DAC cannot exceed its own reference.
+
+def test_freewheel_releases_the_driver(armed):
+    assert reply_to(armed, "freewheel;1") == "ack;1"
+    assert armed.state == State.FREEWHEEL
+
+
+def test_freewheel_is_refused_during_motion(armed):
+    reply_to(armed, "moveto;1;9.0")
+    assert reply_to(armed, "freewheel;2") == "nak;2;busy"
+
+
+def test_the_animal_can_only_move_a_released_joystick(armed):
+    """Modelling a "pull" against an energised motor would test the impossible."""
+    with pytest.raises(AssertionError, match="only be moved by hand"):
+        armed.move_joystick(5.0)
+
+
+def test_a_pull_moves_the_encoder_and_strands_the_ramp_generator(armed):
+    """The divergence that the previous rig had no way to see.
+
+    Without an encoder every pull lost the position outright, which is why that
+    rig homed every trial. Here the encoder keeps it - and the ramp generator
+    does not, because nothing turns it while the driver is released.
     """
-    assert BoardSim.ANGOUT_V_MIN == 0.05
-    assert BoardSim.ANGOUT_V_MAX == 3.300
+    reply_to(armed, "freewheel;1")
+    armed.move_joystick(-7.5)
+
+    assert armed.angle == pytest.approx(-7.5), "the encoder must follow the joystick"
+    assert armed.xactual == pytest.approx(0.0), "nothing turns the ramp generator while compliant"
+
+
+def test_leaving_compliance_reloads_position_from_the_encoder(armed):
+    """Resync happens on the way out, and only on the way out.
+
+    Doing it continuously would delete the board's only stall detector:
+    `XACTUAL` advancing while `X_ENC` does not is how an end stop, a stall, a
+    slipping coupling or a dead encoder are detected. The two cases are told
+    apart by state and by nothing else.
+    """
+    reply_to(armed, "freewheel;1")
+    armed.move_joystick(-7.5)
+    assert armed.xactual == pytest.approx(0.0)
+
+    reply_to(armed, "stop;2")
+    assert armed.state == State.ARMED
+    assert armed.xactual == pytest.approx(-7.5), "position was not reloaded from the encoder"
+    assert armed.angle == pytest.approx(-7.5)
+
+
+def test_a_move_after_a_pull_lands_where_it_was_told(armed):
+    """The reason the resync matters, stated as a consequence rather than a mechanism.
+
+    An absolute move must reach the absolute position, whatever the animal did
+    in between. Skipping the resync would offset every trial by the last pull.
+    """
+    reply_to(armed, "freewheel;1")
+    armed.move_joystick(-15.0)
+
+    assert reply_to(armed, "moveto;2;5.0") == "ack;2"
+    advance_with_heartbeat(armed, 200_000)
+    assert armed.angle == pytest.approx(5.0)
+    assert armed.xactual == pytest.approx(5.0)
+
+
+def test_a_relative_move_after_a_pull_is_relative_to_the_joystick(armed):
+    """Relative to where the joystick IS, not where the ramp generator believes."""
+    reply_to(armed, "freewheel;1")
+    armed.move_joystick(-10.0)
+
+    assert reply_to(armed, "move;2;2.5") == "ack;2"
+    advance_with_heartbeat(armed, 200_000)
+    assert armed.angle == pytest.approx(-7.5)
+
+
+def test_home_still_works_after_a_pull(armed):
+    """Homing is now for parking the joystick, not for recovering position.
+
+    Note the sequence number: the `armed` fixture already sent `home;2`, and a
+    second `home;2` with identical content is a retransmission by definition -
+    re-acknowledged without re-executing, which is correct and would make this
+    test silently assert nothing. A real host increments monotonically, as the
+    device class does.
+    """
+    reply_to(armed, "freewheel;10")
+    armed.move_joystick(12.0)
+
+    assert reply_to(armed, "home;11") == "ack;11"
+    advance_with_heartbeat(armed, 100_000)
+    assert armed.angle == pytest.approx(0.0)
+    assert armed.xactual == pytest.approx(0.0)
+    assert armed.homed is True
+
+
+def test_armpull_reports_one_pull_per_arming(armed):
+    """One ARMPULL, one PULL - not a stream while the joystick sits past threshold."""
+    reply_to(armed, "armpull;1;5.0")
+    reply_to(armed, "freewheel;2")
+
+    assert armed.move_joystick(2.0) == [], "below threshold"
+    out = armed.move_joystick(6.0)
+    assert len(out) == 1 and out[0].startswith("ev;PULL;")
+    assert armed.move_joystick(7.0) == [], "already reported"
+
+    reply_to(armed, "armpull;3;5.0")
+    assert len(armed.move_joystick(8.0)) == 1, "re-arming must allow the next pull"
 
 
 # ------------------------------------------------------------------ two boards

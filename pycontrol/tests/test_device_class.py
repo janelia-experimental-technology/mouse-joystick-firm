@@ -214,6 +214,49 @@ def test_full_arm_and_move_sequence(device, link):
     assert target[0][2][1] == {"angle": "9.0"}
 
 
+def test_the_trial_shape_end_to_end(device, link):
+    """Park, present, release, pull, present again - through every real layer.
+
+    This is the sequence the rig actually needs, as far as rev 0 hardware can
+    go: no brake, so the pull is a hand-moved joystick against a released
+    driver, and no analog streaming at all.
+    """
+    device.hv(True)
+    device.home()
+    link.advance(link.sim.home_duration_us)
+    device.poll()
+
+    device.arm()
+    device.move_to(-9.0)  # present the joystick
+    link.advance(50_000)
+    assert events(device)[-1][1] == "TARGET"
+
+    device.arm_pull(-12.0)
+    device.freewheel()
+    device.poll()
+
+    link._absorb(link.sim.move_joystick(-14.0))  # the animal pulls
+    pull = events(device)
+    assert pull[0][1] == "PULL"
+    assert pull[0][2][1] == {"angle": "-14.0"}
+
+    # Presenting again must land where it was told, not offset by the pull.
+    device.move_to(-9.0)
+    for _ in range(6):
+        link.advance(40_000)
+        device.ping()
+        device.poll()
+    assert link.sim.angle == pytest.approx(-9.0)
+    assert link.sim.xactual == pytest.approx(-9.0)
+
+
+def test_freewheel_before_arming_is_refused(device):
+    device.freewheel()
+    kind, seq, reason = replies(device)[0]
+    assert kind == P.KIND_NAK
+    assert reason == P.NAK_NOTARMED
+
+
 def test_move_before_arming_is_nakked_not_silently_dropped(device):
     device.move_to(5.0)
     kind, seq, reason = replies(device)[0]
@@ -225,8 +268,10 @@ def test_float_arguments_are_encoded_stably(device, link):
     """MicroPython and CPython do not agree on str(float); the codec must."""
     device.move_to(-12.5)
     assert link.written[-1] == "moveto;1;-12.5\n"
-    device.analog_scale(-10.0, 10.0)
-    assert link.written[-1] == "angscale;2;-10.0;10.0\n"
+    device.arm_pull(-10.0)
+    assert link.written[-1] == "armpull;2;-10.0\n"
+    device.move(0.0)
+    assert link.written[-1] == "move;3;0.0\n"
 
 
 # --------------------------------------------------------------- buffering

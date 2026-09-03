@@ -27,6 +27,11 @@
 #   serial 0000000000000000   fw 0.0.0   hw rev0   proto 1   axes 1
 #   travel -20.0..20.0 deg    v_max 180.0 deg/s    home takes 50000 us
 #   host timeout 100000 us
+#
+# Move distances here are chosen to divide evenly at v_max (9 deg = 50000 us) so
+# no case depends on how a duration is rounded. The firmware and the simulator
+# both truncate, but that is not something a corpus should be pinning by
+# accident - if rounding ever matters, it needs a case that says so on purpose.
 
 
 # --------------------------------------------------------------- versions
@@ -37,13 +42,13 @@
 # twin-axis board on the same link.
 CASE id-reports-version-serial-and-axis-count
   SEND id;1
-  EXPECT ack;1;hw=rev0;serial=0000000000000000;fw=0.0.0;proto=1;axes=1;caps=motion+home+angout+instr+hv;rxbuf=120
+  EXPECT ack;1;hw=rev0;serial=0000000000000000;fw=0.0.0;proto=1;axes=1;caps=motion+home+freewheel+instr+hv;rxbuf=120
 END
 
 # "Must work before ARM and must never fail" - including before HV is on.
 CASE id-answers-before-arm
   SEND id;7
-  EXPECT ack;7;hw=rev0;serial=0000000000000000;fw=0.0.0;proto=1;axes=1;caps=motion+home+angout+instr+hv;rxbuf=120
+  EXPECT ack;7;hw=rev0;serial=0000000000000000;fw=0.0.0;proto=1;axes=1;caps=motion+home+freewheel+instr+hv;rxbuf=120
 END
 
 
@@ -172,7 +177,7 @@ CASE heartbeat-loss-faults-the-board
   ADVANCE 100000
   EXPECT ev;FAULT;150000;code=0;detail=host_timeout
   SEND status;4
-  EXPECT ack;4;state=FAULTED;angle=0.0;pos=0;homed=1;limit=0;faults=1;hv=0;angout=invalid
+  EXPECT ack;4;state=FAULTED;angle=0.0;xactual=0.0;homed=1;limit=0;faults=1;hv=0
 END
 
 
@@ -180,7 +185,7 @@ END
 
 CASE status-is-safe-before-anything-is-configured
   SEND status;1
-  EXPECT ack;1;state=IDLE;angle=0.0;pos=0;homed=0;limit=0;faults=0;hv=0;angout=invalid
+  EXPECT ack;1;state=IDLE;angle=0.0;xactual=0.0;homed=0;limit=0;faults=0;hv=0
 END
 
 CASE limits-reports-what-the-board-will-enforce
@@ -195,4 +200,53 @@ CASE hv-state-is-observable-not-inferred
   EXPECT ack;2
   SEND hv;3;state
   EXPECT ack;3;hv=1
+END
+
+
+# ------------------------------------------------------------- compliance
+
+# The trial shape the rig actually needs: park, present, then let the animal
+# move the joystick.
+#
+# Rev 0 has no electronic brake, so `freewheel` is its own verb. On a board with
+# the brake it must not be: the brake has to engage BEFORE motor drive is
+# released, and two host commands cannot guarantee that ordering across a link
+# with latency. This case is expected to be REPLACED by a `brake` case, not
+# extended.
+CASE freewheel-releases-the-driver
+  SEND hv;1;on
+  EXPECT ack;1
+  SEND home;2
+  EXPECT ack;2
+  ADVANCE 50000
+  EXPECT ev;HOMED;50000;angle=0.0
+  SEND arm;3
+  EXPECT ack;3
+  SEND freewheel;4
+  EXPECT ack;4
+  SEND status;5
+  EXPECT ack;5;state=FREEWHEEL;angle=0.0;xactual=0.0;homed=1;limit=0;faults=0;hv=1
+END
+
+# Freewheeling is only reachable from ARMED. A joystick held by an energised
+# motor cannot go compliant by accident.
+CASE freewheel-is-refused-before-arming
+  SEND freewheel;1
+  EXPECT nak;1;notarmed
+END
+
+# Moving to a bounded position is what presents the joystick to the animal.
+CASE move-to-the-pull-position
+  SEND hv;1;on
+  EXPECT ack;1
+  SEND home;2
+  EXPECT ack;2
+  ADVANCE 50000
+  EXPECT ev;HOMED;50000;angle=0.0
+  SEND arm;3
+  EXPECT ack;3
+  SEND moveto;4;-9.0
+  EXPECT ack;4
+  ADVANCE 50000
+  EXPECT ev;TARGET;100000;angle=-9.0
 END

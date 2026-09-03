@@ -223,13 +223,27 @@ class MouseJoystick:
         return self._send("stop")
 
     def arm_pull(self, threshold):
+        """Report a `PULL` event when the joystick passes `threshold` degrees.
+
+        Only meaningful while freewheeling: with the driver enabled the motor
+        holds the joystick and there is nothing to detect.
+        """
         return self._send("armpull", threshold)
 
-    def analog_output(self, on):
-        return self._send("angout", "ON" if on else "OFF")
+    def freewheel(self):
+        """Release the driver so the animal can move the joystick.
 
-    def analog_scale(self, degrees_low, degrees_high):
-        return self._send("angscale", degrees_low, degrees_high)
+        REV 0 ONLY. On a board with the electronic brake this must not be a
+        separate command: the brake has to engage before motor drive is
+        released, and two host commands cannot guarantee that ordering across a
+        link with latency. It becomes part of `BRAKE <torque>`.
+
+        A subsequent `move_to`, `move`, `home` or `stop` re-engages the driver
+        implicitly, reloading position from the encoder first. Do not add a
+        separate "stop freewheeling" verb - the implicit form is one command
+        where an explicit one would be two, with a window in between.
+        """
+        return self._send("freewheel")
 
     def faults(self):
         return self._send("faults")

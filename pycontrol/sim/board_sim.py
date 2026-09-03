@@ -82,6 +82,18 @@ class State:
     ACTIVE = "ACTIVE"
     FAULTED = "FAULTED"
 
+    # The state in which the ANIMAL drives the joystick, not the board. The
+    # driver is released so motor torque does not add to the brake's, and the
+    # ramp generator's XACTUAL stops meaning anything - only the encoder knows
+    # where the joystick is. `BoardSim._resync_from_encoder` reconciles them on
+    # the way out, and only on the way out.
+    #
+    # Not in the draft's state machine. Added 2026-09-02 from the trial
+    # structure: home to park, move to present, brake + release for the pull.
+    # It is the state that makes the draft's single "position" field ambiguous,
+    # because in it the measured and commanded positions genuinely differ.
+    FREEWHEEL = "FREEWHEEL"
+
 
 class BoardSim:
     """One board on one link. Two instances share nothing."""
@@ -94,13 +106,6 @@ class BoardSim:
 
     # Cited from `../../../mouse-joystick-pcb/docs/pycontrol-port-pinout.md`.
     DEFAULT_HOST_TIMEOUT_US = 100_000
-
-    # The analog output's usable window. Both ends are hardware limits, not
-    # choices: the DAC cannot exceed its own 2.5 V reference through the gain
-    # stage, and the output amplifier sits ~25 mV off ground at light load, so
-    # 0 V stays out-of-band and means unhomed, disarmed, faulted or unpowered.
-    ANGOUT_V_MIN = 0.05
-    ANGOUT_V_MAX = 3.300
 
     def __init__(
         self,
@@ -126,7 +131,21 @@ class BoardSim:
 
         self.now_us = 0
         self.state = State.BOOT
+
+        # TWO positions, and the distinction is load-bearing.
+        #
+        #   angle    what the encoder says. The joystick's actual position, and
+        #            the only one that is ever true.
+        #   xactual  what the ramp generator thinks. True only while the board
+        #            is driving; stale the moment the animal moves the joystick
+        #            in FREEWHEEL, because nothing turns the ramp generator.
+        #
+        # The previous rig had no encoder and therefore had to home every trial:
+        # each pull lost the position outright. Here the encoder keeps it, so
+        # homing becomes a way to park the joystick rather than a way to recover
+        # from a pull. Reconciling the two is `_resync_from_encoder`.
         self.angle = 0.0
+        self.xactual = 0.0
         self.homed = False
         self.limit_asserted = False
         self.fault_mask = 0
@@ -138,10 +157,12 @@ class BoardSim:
         # state rather than something the host infers.
         self.hv_on = False
         self.instr_on = False
-        self.angout_on = False
-        self.angout_lo = self.travel_lo
-        self.angout_hi = self.travel_hi
+
+        # Set by ARMPULL. While FREEWHEEL, the encoder crossing this emits PULL.
+        # Testable on the boards in hand by moving the joystick by hand - it does
+        # not need the brake, only a released driver.
         self.pull_threshold = None
+        self._pull_reported = False
 
         self.cal = {"enc_offset": 1024, "angle_zero": 0.0}
 
@@ -193,9 +214,14 @@ class BoardSim:
             motion = self._motion
             self._motion = None
             self.angle = motion["target"]
+            # Under commanded motion the encoder tracks the ramp generator; that
+            # they agree here is what makes their disagreement elsewhere mean
+            # something.
+            self.xactual = self.angle
             if motion["kind"] == "home":
                 self.homed = True
                 self.angle = 0.0
+                self.xactual = 0.0
                 self.state = State.HOMED
                 self._emit("HOMED", {"angle": self.angle})
             else:
@@ -317,7 +343,12 @@ class BoardSim:
         # SPEC: the draft says `ID` reports "capabilities" without saying how.
         # A `+`-joined token list avoids the delimiter and stays greppable in a
         # logic-analyzer capture, which is the draft's stated design rule.
-        caps = ["motion", "home", "angout", "instr", "hv"]
+        #
+        # This is the honest list for a rev-0 board: no `angout` because the
+        # analog outputs are not populated, no `brake` or `torque` because that
+        # hardware does not exist yet. A host should gate on this rather than on
+        # the firmware version, so a rev-1 board can simply report more.
+        caps = ["motion", "home", "freewheel", "instr", "hv"]
         return "+".join(caps)
 
     def _cmd_ping(self, seq, args):
@@ -329,30 +360,26 @@ class BoardSim:
 
     def _cmd_status(self, seq, args):
         # "Safe at any time", so no state check.
+        #
+        # SPEC: the draft lists "state, angle, position, homed flag, limit
+        # state, fault mask" without saying whether "angle" and "position" are
+        # the same quantity in different units or two different quantities. With
+        # a compliant state they are two different quantities - measured and
+        # commanded - and after a pull they disagree by the whole pull. Reported
+        # as `angle` (encoder) and `xactual` (ramp generator). Raised in
+        # `../README.md`.
         return P.encode_ack(
             seq,
             {
                 "state": self.state,
                 "angle": self.angle,
-                "pos": int(round(self.angle * 100)),
+                "xactual": self.xactual,
                 "homed": self.homed,
                 "limit": self.limit_asserted,
                 "faults": self.fault_mask,
                 "hv": self.hv_on,
-                "angout": self._angout_state(),
             },
         )
-
-    def _angout_state(self):
-        """Report the analog output as invalid whenever it reads 0 V.
-
-        `ANGOUT OFF`, a fault, and a dead switched rail all produce the same 0 V.
-        The draft calls that intentional - one out-of-band level, not three - but
-        it means the recorded analog trace cannot say which, so STATUS must.
-        """
-        if not self.angout_on or self.fault_mask or not self.hv_on or not self.homed:
-            return "invalid"
-        return "valid"
 
     def _cmd_limits(self, seq, args):
         return P.encode_ack(
@@ -426,12 +453,23 @@ class BoardSim:
         return P.encode_nak(seq, P.NAK_BADARGS)
 
     def _cmd_home(self, seq, args):
+        """Drive to the limit switch and zero.
+
+        With an encoder, homing is no longer how position is RECOVERED - the
+        encoder keeps it through a pull. It is how the joystick is PARKED out of
+        the animal's way between trials. The previous rig had to home every
+        trial because each pull lost the position outright; that requirement is
+        gone, and homing every trial is now a choice rather than a necessity.
+        """
         if self.state == State.FAULTED:
             return P.encode_nak(seq, P.NAK_FAULTED)
         if not self.hv_on:
             return P.encode_nak(seq, P.NAK_NOHV)
         if self._motion is not None:
             return P.encode_nak(seq, P.NAK_BUSY)
+        if self.state == State.FREEWHEEL:
+            self._resync_from_encoder()
+            self.state = State.ARMED
 
         timeout_us = None
         if args:
@@ -482,16 +520,21 @@ class BoardSim:
         # "Always permitted."
         self._motion = None
         self._watchdog_deadline = None
-        if self.state in (State.ARMED, State.ACTIVE):
+        if self.state in (State.ARMED, State.ACTIVE, State.FREEWHEEL):
+            self._resync_from_encoder()
             self.state = State.HOMED
         return P.encode_ack(seq)
 
     def _cmd_stop(self, seq, args):
-        # "Controlled stop; always permitted."
+        # "Controlled stop; always permitted." From FREEWHEEL this is how a host
+        # takes the joystick back: re-engage the driver holding wherever the
+        # animal left it.
         if self._motion is not None:
             self.angle = self._interpolate()
+            self.xactual = self.angle
             self._motion = None
-        if self.state == State.ACTIVE:
+        if self.state in (State.ACTIVE, State.FREEWHEEL):
+            self._resync_from_encoder()
             self.state = State.ARMED
         return P.encode_ack(seq)
 
@@ -504,7 +547,12 @@ class BoardSim:
     def _move(self, seq, args, relative):
         if self.state == State.FAULTED:
             return P.encode_nak(seq, P.NAK_FAULTED)
-        # "Motion verbs are refused outside ARMED."
+        # "Motion verbs are refused outside ARMED" - and FREEWHEEL, which
+        # re-engages implicitly. One command that resyncs, re-engages and moves
+        # is better than three the host could be interrupted between.
+        if self.state == State.FREEWHEEL:
+            self._resync_from_encoder()
+            self.state = State.ARMED
         if self.state != State.ARMED:
             return P.encode_nak(seq, P.NAK_NOTARMED)
         if not args:
@@ -514,6 +562,9 @@ class BoardSim:
         except ValueError:
             return P.encode_nak(seq, P.NAK_BADARGS)
 
+        # Relative to where the joystick IS, which after a pull is not where the
+        # ramp generator thinks it is. Using xactual here would silently add the
+        # animal's pull to every subsequent relative move.
         target = self.angle + value if relative else value
         if not (self.travel_lo <= target <= self.travel_hi):
             # Rejected before anything moves, so this is a nak and not an
@@ -532,6 +583,25 @@ class BoardSim:
         self.state = State.ACTIVE
         return P.encode_ack(seq)
 
+    def _resync_from_encoder(self):
+        """Reload the ramp generator's position from the encoder.
+
+        ONLY on leaving a compliant state. Never during commanded motion, and
+        never on a timer.
+
+        `.agents/AGENTS.md`: "XACTUAL advancing while X_ENC does not is how
+        firmware detects an end stop, a stall, a slipping coupling or a dead
+        encoder. Do not add a motion path that skips it." That detector IS the
+        divergence between these two numbers - so a resync deletes it. Doing it
+        continuously would trade the board's only stall detection for the
+        convenience of not tracking which state it is in.
+
+        The two cases are distinguishable by state, and only by state:
+          driving    divergence means something is broken -> fault
+          compliant  divergence means the animal pulled  -> resync on exit
+        """
+        self.xactual = self.angle
+
     def _cmd_armpull(self, seq, args):
         if len(args) != 1:
             return P.encode_nak(seq, P.NAK_BADARGS)
@@ -542,34 +612,43 @@ class BoardSim:
         if not (self.travel_lo <= threshold <= self.travel_hi):
             return P.encode_nak(seq, P.NAK_OUTOFRANGE)
         self.pull_threshold = threshold
+        # Re-arming clears the latch, so one ARMPULL yields one PULL per trial
+        # rather than a stream of them while the joystick sits past threshold.
+        self._pull_reported = False
         return P.encode_ack(seq)
 
-    def _cmd_angout(self, seq, args):
-        if len(args) != 1:
-            return P.encode_nak(seq, P.NAK_BADARGS)
-        action = args[0].upper()
-        if action not in ("ON", "OFF"):
-            return P.encode_nak(seq, P.NAK_BADARGS)
-        # Firmware ordering, not a protocol matter but easy to get wrong: the
-        # DAC's GAIN register must be written to 0x0101 before the first data
-        # write, or a full-scale code drives ~4.85 V into the BNC. ANGOUT ON is
-        # the natural place to enforce it, which is why it is noted here.
-        self.angout_on = action == "ON"
-        return P.encode_ack(seq)
+    # ANGOUT and ANGSCALE are deliberately NOT implemented. The analog outputs
+    # are not populated on the boards in hand, so anything here would assert what
+    # was guessed rather than what the board does - the 0.05-3.300 V window, the
+    # DAC `GAIN = 0x0101` ordering rule, and the "0 V means invalid" model
+    # included. They return when there is hardware to check them against, and
+    # with a second channel, because position AND torque stream continuously.
 
-    def _cmd_angscale(self, seq, args):
-        if len(args) != 2:
-            return P.encode_nak(seq, P.NAK_BADARGS)
-        try:
-            lo = float(args[0])
-            hi = float(args[1])
-        except ValueError:
-            return P.encode_nak(seq, P.NAK_BADARGS)
-        if lo >= hi:
-            return P.encode_nak(seq, P.NAK_OUTOFRANGE)
-        if lo < self.travel_lo or hi > self.travel_hi:
-            return P.encode_nak(seq, P.NAK_OUTOFRANGE)
-        self.angout_lo, self.angout_hi = lo, hi
+    def _cmd_freewheel(self, seq, args):
+        """Release the driver so the animal can move the joystick.
+
+        SPEC: not in the draft. Added 2026-09-02 for the rev-0 boards.
+
+        On a board WITH a brake this verb should not exist separately. The brake
+        must engage BEFORE motor drive is released, or the joystick drops as it
+        goes compliant, and it must be released only after drive is restored, or
+        the motor fights the brake. Two host commands cannot guarantee that
+        ordering: the host can die between them, or the second message can arrive
+        late over a link whose whole point is that it has latency. The sequence
+        belongs inside one firmware operation - `BRAKE <torque>` - which is what
+        should replace this.
+
+        So this is a bring-up primitive with a known expiry date, not a design.
+        """
+        if self.state == State.FAULTED:
+            return P.encode_nak(seq, P.NAK_FAULTED)
+        if self.state == State.ACTIVE:
+            return P.encode_nak(seq, P.NAK_BUSY)
+        if self.state != State.ARMED:
+            return P.encode_nak(seq, P.NAK_NOTARMED)
+
+        self.state = State.FREEWHEEL
+        self._pull_reported = False
         return P.encode_ack(seq)
 
     def _cmd_cal(self, seq, args):
@@ -632,9 +711,27 @@ class BoardSim:
         """Model the physical cause going away, so CLRFAULT can succeed."""
         self._fault_cause_active[bit] = False
 
-    def inject_pull(self, angle):
-        """Fire a pull event. On real hardware this also asserts the TTL line."""
-        self._emit("PULL", {"angle": angle})
+    def move_joystick(self, angle):
+        """The animal moves the joystick. Only possible while compliant.
+
+        Refused in any other state on purpose: with the driver enabled the motor
+        holds position, so a test that "pulls" a held joystick is testing
+        something that cannot happen. Emits PULL if ARMPULL set a threshold and
+        this crosses it. On rev 1 hardware that also asserts the TTL line; on
+        these boards the UART line is the only report, with UART latency - fine
+        for exercising the interface, not fine for behavioural data.
+        """
+        if self.state != State.FREEWHEEL:
+            raise AssertionError("the joystick can only be moved by hand while FREEWHEEL, not in %s" % self.state)
+
+        self.angle = angle
+        # xactual deliberately NOT updated: nothing turns the ramp generator
+        # here, and that staleness is the thing _resync_from_encoder exists for.
+
+        if self.pull_threshold is not None and not self._pull_reported:
+            if abs(angle) >= abs(self.pull_threshold):
+                self._pull_reported = True
+                self._emit("PULL", {"angle": angle})
         return self._drain()
 
     def inject_limit(self):
