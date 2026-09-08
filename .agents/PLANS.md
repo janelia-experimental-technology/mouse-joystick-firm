@@ -677,6 +677,44 @@ design. Any question about those rails needs a meter or a scope on the board, an
 there are no test points anywhere. Budget for that rather than trying to reason
 around it.
 
+## Task: Enable The RP2040 Hardware Watchdog (opened 2026-09-08)
+
+Paired with a **`RUN` reset switch** added to `mouse-joystick-pcb` v1.0. Both
+were justified by the same incident and they cover **different** halves of it, so
+neither replaces the other.
+
+The incident: `../mouse-joystick-pcb/docs/bringup-log.md` → "`STATUS` hung the
+core", 2026-09-03. The board stopped answering the link **and** stopped honouring
+the 1200 baud reset touch, so it could not be reflashed. Recovery needed `SW501`
+held through a power cycle with **both USB and the RJ-45 unplugged** — pulling USB
+alone leaves the board alive on pyControl's 5 V through the ORing diodes.
+
+- [ ] **Enable the RP2040 hardware watchdog.** A transient hang then self-recovers
+      unattended, in the rig, with no button and no cables — the `STATUS` hang
+      would have auto-recovered.
+- [ ] **Decide the petting point deliberately, and write down why.** Petting from
+      the main loop catches a wedged loop, which is the observed failure. Petting
+      from a timer interrupt would have kept petting through that exact hang and
+      bought nothing.
+- [ ] **Make the reset safe by construction, and verify it on hardware.** The
+      board already argues it is: `HV_EN` releases into `R1904` 10 kΩ pulling `EN`
+      low at the `TPS1HTC100` so `+36V_SW` drops, and `~{TMC_DRV_EN}` pulls up to
+      `+3.3V_SW` through `R1103` 10 kΩ so the driver disables. Confirm that a
+      watchdog reset mid-move actually lands there rather than leaving the motor
+      energised.
+- [ ] **Guard against a reset loop being worse than a stop.** A watchdog reset
+      does **not** enter BOOTSEL, so firmware that hangs early gives a reset loop
+      that cannot be reflashed out of — the watchdog makes that case *harder* to
+      escape, and the `RUN` switch plus BOOTSEL is the only exit. Consider a
+      scratch-register reboot counter so repeated watchdog resets land in a safe
+      halt (rail off, driver disabled, link answering) rather than looping.
+- [ ] **Record the watchdog reset in `STATUS`** so a reset is visible to the host
+      and to the capture instead of looking like a clean boot. `WATCHDOG_REASON`
+      distinguishes it from a power-on reset.
+- [ ] Note the division of labour in `.agents/AGENTS.md`: **watchdog for "it
+      wedged mid-session", `RUN` + BOOTSEL for "I just flashed something
+      broken".**
+
 ## Not A Priority
 
 - OTA, filesystem, or EEPROM use. `board_build.filesystem_size` is 0.
