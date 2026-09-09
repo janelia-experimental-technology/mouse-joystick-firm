@@ -76,6 +76,16 @@ struct LatchProbe {
   bool fault_n;     // ~{HV_FAULT} at the end; false = latched fault
   bool fix_present; // rail_held && no latched fault
   bool vs_absent;   // no fault AND no rail AND no sense current: no 36 V in
+
+  // Whether the probe managed to start from a genuinely discharged +36V_SW,
+  // and how long that took. THIS QUALIFIES EVERY OTHER FIELD. A probe that
+  // starts with the bulk still charged has no inrush to supply, so the switch
+  // never trips and `fix_present` reads true on a board that does need the
+  // workaround. Observed on v0.3 board E4654C159F171E34 on 2026-09-09: PASS
+  // when run straight after the stage 2 sequence, FAIL when run cold, same
+  // board, same firmware, minutes apart.
+  bool started_cold;
+  uint16_t discharge_ms;
 };
 
 class PowerSequence {
@@ -96,6 +106,17 @@ public:
   // internal reset and charge pump, and its 16 MHz clock source X1201 is itself
   // on +3.3V_SW and has only just been powered.
   static constexpr uint32_t kRailSettleMs = 100;
+
+  // How long to allow +36V_SW's bulk to bleed down before giving up on the
+  // switched rail being dead. Measured at a few seconds; this is a give-up
+  // point, not an expected duration.
+  static constexpr uint32_t kRailOffTimeoutMs = 10000;
+
+  // After +3.3V_SW reads off, before treating +36V_SW as discharged. The rail
+  // sense watches +3.3V_SW, and the buck holds that up until its input falls
+  // below ~3.6 V, so "off" already means the bulk is nearly empty -- this is
+  // margin for the last of it, not the bulk of the wait.
+  static constexpr uint32_t kBulkBleedMarginMs = 200;
 
   static RailState readRail();
 
@@ -119,6 +140,11 @@ public:
   // below V_S,UVLOR (5.0-5.75 V) and VS_ISNS (5.9 V at DIAG_EN = 3.3 V) the
   // device does not operate and reports nothing at all, so HV_SNS stays at its
   // offset floor instead of pegging at ISNSFLT within 1 ms.
+  //
+  // Waits for waitForRailOff() before asserting, and reports whether it got
+  // there in `started_cold`. It must: the whole test is whether the switch
+  // survives charging +36V_SW's ~208 uF, so a run that begins with that bulk
+  // already charged asks nothing of the switch and passes regardless.
   static LatchProbe probeLatchBehaviour(uint16_t window_ms);
 
   // One sample of the switched rail and the switch's current sense.

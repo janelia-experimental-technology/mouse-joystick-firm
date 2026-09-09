@@ -1,6 +1,7 @@
 // Stage 2 bring-up: prove this board can talk to its TMC5130A.
 //
-// REQUIRES 36 V on J201. Stage 1 (examples/RP2040SelfTest) must have passed
+// REQUIRES 36 V on the input terminal -- J201 at v0.1/v0.2, J1901 at v0.3.
+// Stage 1 (examples/RP2040SelfTest) must have passed
 // first; this program assumes the MCU, its clocks, its flash and its ADC are
 // already known good and does not re-test them.
 //
@@ -38,6 +39,32 @@ using mouse_joystick::SafeState;
 using mouse_joystick::SelfTest;
 
 namespace tmc = mouse_joystick::tmc;
+
+// Designators for the 36 V input block rotate between revisions: the whole
+// block moved from the R2xx/U2xx range at v0.1/v0.2 into R19xx/U1901 at v0.3.
+// Printing the wrong one sends whoever is probing to a part that is not on the
+// board in front of them, which has already cost time on this project. Values
+// and nets are stable; designators are not. Mapping read from the v0.3
+// schematic and kicad_pcb, not inferred.
+#if MJ_BOARD_REV == 0
+#define MJ_REF_HV_CONN "J201"
+#define MJ_REF_HV_SWITCH "U201"
+#define MJ_REF_HV_DIODE "D201"
+#define MJ_REF_HV_EN_SERIES "R201"
+#define MJ_REF_HV_EN_PULLDOWN "R204"
+#define MJ_REF_HV_LATCH_STRAP "R203"
+#define MJ_REF_HV_ICL "R206"
+#define MJ_REF_HV_SNS_BOTTOM "R207"
+#else
+#define MJ_REF_HV_CONN "J1901"
+#define MJ_REF_HV_SWITCH "U1901"
+#define MJ_REF_HV_DIODE "D1901"
+#define MJ_REF_HV_EN_SERIES "R1901"
+#define MJ_REF_HV_EN_PULLDOWN "R1904"
+#define MJ_REF_HV_LATCH_STRAP "R1903"
+#define MJ_REF_HV_ICL "R1906"
+#define MJ_REF_HV_SNS_BOTTOM "R1907"
+#endif
 
 constexpr uint32_t kSerialBaudRate = 115200;
 constexpr uint32_t kSerialWaitMs = 5000;
@@ -115,7 +142,7 @@ void printHvSense(Print &out, uint16_t counts) {
   namespace conv = mouse_joystick::conversions;
   out.print(F("    HV_SNS: "));
   out.print(conv::hvSenseVolts(counts), 4);
-  out.print(F(" V across R207 249R ("));
+  out.print(F(" V across " MJ_REF_HV_SNS_BOTTOM " 249R ("));
   out.print(counts);
   out.print(F(" counts) -- "));
   if (conv::hvSenseIsFault(counts)) {
@@ -267,14 +294,35 @@ void reportRegisters(Print &out) {
         F("      With nothing plugged into the motor, encoder or limit"));
     out.println(
         F("      switch connectors these should all read 0, held there by"));
+#if MJ_BOARD_REV == 0
     out.println(F("      R1405, the GND tie on REFR, R805/R806 and R1201."));
+#else
+    out.println(
+        F("      That list is v0.2's and does not hold on v0.3, where"));
+    out.println(
+        F("      REFL_STEP = 1 is CORRECT with the switch unplugged and"));
+    out.println(
+        F("      the check below is simply wrong: U1301's IN pin has no"));
+    out.println(
+        F("      external pull -- it reaches only J1301 pad 2 -- so the"));
+    out.println(
+        F("      MAX6816 supplies its own pull-up, drives OUT high, and"));
+    out.println(
+        F("      nothing can override a driven output. There is no"));
+    out.println(F("      LIMIT_SW pull-down anywhere on v0.3."));
+#endif
 
     ++checks;
-    if (tmc::ioinMatchesExpected(ioin)) {
-      out.println(F("    [ ok ] IOIN matches 0x11000010, bit 7 free"));
+    if (tmc::ioinInvariantsMatch(ioin)) {
+      out.println(F("    [ ok ] IOIN board-invariant fields correct:"));
+      out.println(F("      VERSION, DRV_ENN, SD_MODE and REFR_DIR"));
     } else {
       ++failures;
-      out.println(F("    [FAIL] IOIN does not match the expected 0x11000010"));
+      out.println(F("    [FAIL] an IOIN board-invariant field is wrong."));
+      out.println(F("      Only VERSION, DRV_ENN, SD_MODE and REFR_DIR are"));
+      out.println(F("      checked; the switch and encoder bits are reported"));
+      out.println(F("      above but never asserted, because their value is"));
+      out.println(F("      a property of what is plugged in."));
     }
 
     if (!d.drv_enn) {
@@ -383,7 +431,8 @@ void profilePowerUp(Print &out) {
   out.println(F(" V"));
   out.println(
       F("  HV_SNS in the 1.3-1.6 V band is the switch's ISNSFLT fault"));
-  out.println(F("  current into R207 249R, not a load-current reading."));
+  out.println(F("  current into " MJ_REF_HV_SNS_BOTTOM
+                 " 249R, not a load-current reading."));
   out.println(F("  Powered down."));
 }
 
@@ -524,7 +573,8 @@ void measureCurrent(Print &out) {
   out.println(F(" counts"));
   out.print(F("  36 V input current: "));
   out.print(c.milliamps, 1);
-  out.println(F(" mA   (KSNS 800 A/A, R207 249R, 2.6 mA per count)"));
+  out.println(F(" mA   (KSNS 800 A/A, " MJ_REF_HV_SNS_BOTTOM
+                 " 249R, 2.6 mA per count)"));
   out.print(F("  rail: "));
   out.println(c.rail_up ? F("live") : F("NOT UP -- the delta means nothing"));
   if (c.zero_was_fault || c.live_was_fault) {
@@ -542,7 +592,8 @@ void latchProbe(Print &out) {
   constexpr uint16_t kWindowMs = 250;
 
   out.println(F("LATCH probe: a plain single-shot HV_EN assertion."));
-  out.println(F("  On pcb v0.1-v0.3 `R203` straps the 36 V switch's LATCH to"));
+  out.println(F("  On pcb v0.1-v0.3 " MJ_REF_HV_LATCH_STRAP
+                 " straps the 36 V switch's LATCH to"));
   out.println(F("  +3.3V_MCU, so it latches off 1-2 ms into charging 208 uF at"));
   out.println(F("  only ~10-12 V and the rail collapses when the stored charge"));
   out.println(F("  runs out. Expect FAIL on those, and PASS once LATCH reaches"));
@@ -568,16 +619,31 @@ void latchProbe(Print &out) {
   out.print(F("  ~{HV_FAULT}:   "));
   out.println(probe.fault_n ? F("high, no latched fault")
                             : F("LOW, FAULT LATCHED"));
+  out.print(F("  started cold:  "));
+  out.print(probe.started_cold ? F("yes") : F("NO"));
+  out.print(F(", +36V_SW bulk bled down in "));
+  out.print(probe.discharge_ms);
+  out.println(F(" ms"));
   out.println();
+
+  if (!probe.started_cold) {
+    out.println(F("  [!!] COULD NOT DISCHARGE +36V_SW. Every field above is"));
+    out.println(F("  meaningless: with the bulk still charged there is no"));
+    out.println(F("  inrush, the switch is asked nothing, and this probe"));
+    out.println(F("  would report the fix as present on a board without it."));
+    out.println(F("  Something is holding the rail up. Check 'v'."));
+    return;
+  }
 
   if (probe.vs_absent) {
     out.println(F("  [!!] NO 36 V INPUT. The rail never moved AND the switch"));
     out.println(F("  never reported: HV_SNS stayed at its offset floor instead"));
     out.println(F("  of pegging at ISNSFLT within 1 ms. Below V_S,UVLOR"));
     out.println(F("  (5.0-5.75 V) the TPS1HTC100-Q1 does not operate at all."));
-    out.println(F("  Check J201 is seated and the supply is on. J201 pin 1 is"));
+    out.println(F("  Check " MJ_REF_HV_CONN
+                   " is seated and the supply is on. Pin 1 is"));
     out.println(F("  GND, pin 2 is positive -- reversed leads are blocked by"));
-    out.println(F("  D201 and look exactly like this."));
+    out.println(F("  " MJ_REF_HV_DIODE " and look exactly like this."));
   } else if (probe.fix_present) {
     out.println(F("  [PASS] LATCH fix is present on this board. A plain"));
     out.println(F("  HV_EN assertion works, so the firmware staircase is no"));
@@ -613,8 +679,10 @@ void runSequence(Print &out) {
     out.println(F("      Refusing to continue. Either 36 V is reaching the"));
     out.println(F("      switched domain around the high-side switch, or the"));
     out.println(
-        F("      switch is passing with EN low. Check R201 1k and R204"));
-    out.println(F("      10k at U201's EN pin before going further."));
+        F("      switch is passing with EN low. Check " MJ_REF_HV_EN_SERIES
+          " 1k and"));
+    out.println(F("      " MJ_REF_HV_EN_PULLDOWN " 10k at " MJ_REF_HV_SWITCH
+                  "'s EN pin before going further."));
     return;
   }
   out.println(F("    [ ok ] switched domain dead, as it must be before HV_EN"));
@@ -646,12 +714,14 @@ void runSequence(Print &out) {
     out.println(F("      came up partway, which is a different fault."));
     printRail(out, PowerSequence::readRail());
     out.println(
-        F("      Is 36 V actually connected to J201? If the bench supply"));
+        F("      Is 36 V actually connected to " MJ_REF_HV_CONN
+          "? If the supply"));
     out.println(
         F("      went into constant-current, stop and find the short."));
     out.println(
-        F("      Otherwise work down the chain: U201 high-side switch,"));
-    out.println(F("      U901 TPSM365R6 buck to +5V_SW, U1001 TPS73733 to"));
+        F("      Otherwise work down the chain: " MJ_REF_HV_SWITCH
+          " high-side switch,"));
+    out.println(F("      the TPSM365R6 buck to +5V_SW, the TPS73733 to"));
     out.println(F("      +3.3V_SW."));
     return;
   case PowerUpResult::kFaultLatched:
@@ -661,7 +731,8 @@ void runSequence(Print &out) {
         F("      LATCH is tied high on this board, so faults latch off"));
     out.println(
         F("      rather than auto-retrying. HV_EN has been dropped, which"));
-    out.println(F("      is what clears it. I_CL is about 1.2 A (R206 40k)."));
+    out.println(F("      is what clears it. I_CL is about 1.2 A ("
+                   MJ_REF_HV_ICL " 40k)."));
     return;
   case PowerUpResult::kOk:
     break;
@@ -669,7 +740,8 @@ void runSequence(Print &out) {
   out.print(F("    method: "));
   out.println(report.method == mouse_joystick::PowerUpMethod::kLatchGpio
                   ? F("LATCH held low, direct HV_EN assertion")
-                  : F("firmware staircase (R203 straps LATCH high)"));
+                  : F("firmware staircase (" MJ_REF_HV_LATCH_STRAP
+                      " straps LATCH high)"));
   out.print(F("    [ ok ] +3.3V_SW came up in "));
   out.print(report.rise_time_ms);
   out.print(F(" ms, peak "));
@@ -745,7 +817,8 @@ void setup() {
 
   Serial.println();
   Serial.println(F("mouse-joystick-pcb stage 2, idle and powered down."));
-  Serial.println(F("36 V must be connected to J201. Send 's' to begin."));
+  Serial.println(F("36 V must be connected to " MJ_REF_HV_CONN
+                   ". Send 's' to begin."));
   Serial.println();
   printMenu(Serial);
 }

@@ -6,9 +6,15 @@
 // was manufactured as rev 0. Cross-checked against
 // `mouse-joystick-pcb/docs/interface-map.md`.
 //
-// Tags v0.1 and v0.2 have byte-identical RP2040 pad-to-net maps. Current HEAD
-// differs on exactly three pins, GP10/GP11/GP13, which HEAD routes to the rev 1
-// angle-output DAC and v0.1 leaves unrouted. See MJ_BOARD_REV below.
+// Tags v0.1 and v0.2 have byte-identical RP2040 pad-to-net maps. Tag v0.3 and
+// current HEAD differ from them on exactly three pins, GP10/GP11/GP13, which
+// v0.3 and HEAD route to the angle-output DAC and v0.1/v0.2 leave unrouted. See
+// MJ_BOARD_REV below.
+//
+// A v0.3 BOARD IS MJ_BOARD_REV 1. Build env:mouse_joystick_rev1 for it. Read
+// off the v0.3 kicad_pcb, footprint `U501`: pads 13, 14 and 16 carry
+// /mcu/DAC_SPI_SCK_, /mcu/DAC_SPI_COPI_ and /mcu/~{DAC_CS_}. Confirmed on board
+// E4654C159F171E34, stage 1, 2026-09-09.
 //
 // Names here are the board's net names, not Pico conventions. Trailing `_N`
 // marks an active-low signal, which the schematic spells `~{NAME}`.
@@ -33,9 +39,13 @@
 
 #include <stdint.h>
 
-// Which manufactured revision this build targets. 0 = tags v0.1 and v0.2, the
-// boards sent for assembly as rev 0. 1 = HEAD, with the angle-output DAC
-// fitted. Only the spare-pad set differs; no connected pin moves.
+// Which manufactured revision this build targets. 0 = tags v0.1 and v0.2 only,
+// the boards sent for assembly as rev 0. 1 = tag v0.3 and later, including
+// HEAD, with the angle-output DAC fitted. Only the spare-pad set differs; no
+// connected pin moves.
+//
+// The default below is 0, so an env that forgets to define this silently
+// targets rev 0 -- which is wrong for every board fabricated since v0.2.
 #ifndef MJ_BOARD_REV
 #define MJ_BOARD_REV 0
 #endif
@@ -91,9 +101,13 @@ constexpr uint8_t kBusSwEnN = 9; // ~{BUS_SW_EN}, bypasses the switch itself
 // -----------------------------------------------------------------------------
 // Analog angle output DAC80501. Rev 1 only. SPI1, behind the bus switch.
 // -----------------------------------------------------------------------------
-// Reserved at fixed numbers so rev 1 populates them without moving anything.
-// On v0.1 and v0.2 these three pads are routed nowhere at all, which is why
-// MJ_BOARD_REV 0 folds them into the spare-pad test below.
+// Fitted from v0.3 onward, and reserved at fixed numbers on v0.1/v0.2 so that
+// populating them moved nothing. On v0.1 and v0.2 these three pads are routed
+// nowhere at all, which is why MJ_BOARD_REV 0 folds them into the spare-pad
+// test below; on v0.3 they are a live SPI bus and a live chip select.
+//
+// The DAC80501 and its OPA197 output stage run from +5V_SW, not +5V_MCU, so
+// nothing in this chain can be reached on USB power alone. It needs 36 V.
 constexpr uint8_t kDacSpiSck = 10;  // DAC_SPI_SCK_, SPI1 SCK  (rev 1)
 constexpr uint8_t kDacSpiCopi = 11; // DAC_SPI_COPI_, SPI1 TX  (rev 1)
 constexpr uint8_t kDacCsN = 13;     // ~{DAC_CS_}, DAC ~SYNC   (rev 1)
@@ -115,7 +129,9 @@ constexpr uint8_t kDacCsN = 13;     // ~{DAC_CS_}, DAC ~SYNC   (rev 1)
 // corrupts the rail sense. Protection is unaffected by DIAG_EN -- only
 // reporting is gated -- so raise it *only* while reading kHvSns or kHvFaultN.
 // The TPS1HTC100-Q1's LATCH pin is NOT on a GPIO on pcb v0.1, v0.2 or v0.3.
-// `R203` (0402, 1 kohm) straps it to `+3.3V_MCU`, which selects latch-off over
+// A 1 kohm 0402 straps it to `+3.3V_MCU` -- `R203` on v0.1/v0.2, and `R1903` on
+// v0.3, where the whole block moved into the R19xx range. That strap selects
+// latch-off over
 // the device's own 2 ms auto-retry -- and auto-retry is the only thing that can
 // charge this board's 208 uF of `+36V_SW` bulk, because the switch trips its
 // relative thermal shutdown 1-2 ms in, at only ~10-12 V. Measured 2026-09-02 on
@@ -148,9 +164,10 @@ constexpr uint8_t kHvFaultN = 29; // ~{HV_FAULT}, open drain, `R205` 10k pull-up
 // -----------------------------------------------------------------------------
 // Instrumentation. InstrumentPort-40, `J1501`.
 // -----------------------------------------------------------------------------
-// The three rev 0 SN74LVC125A buffer packages `U1601`, `U1701` and `U1801` all
-// run from +3.3V_MCU, so they work with the switched domain off. Their shared
-// active-low OE has a 10 kohm pull-up per package (`R1601`/`R1701`/`R1801`), so
+// The SN74LVC125A buffer packages all run from +3.3V_MCU, so they work with the
+// switched domain off. There are three on rev 0 -- `U1601`, `U1701`, `U1801` --
+// and four on v0.3, which adds `U2101`. Their shared active-low OE has a 10
+// kohm pull-up per package (`R1601`/`R1701`/`R1801`, plus `R2101` on v0.3), so
 // the port is silent from reset. Every buffer input is either driven or held by
 // a resistor, so enabling the port never floats an LVC input.
 //
@@ -197,8 +214,10 @@ constexpr uint8_t kSwRailSenseDiv2 = 26; // SW_RAIL_SENSE_DIV_2, ADC0
 // Safe to exercise with internal pulls, which is exactly what the self test
 // does with them: a pad that cannot be pulled both ways has a solder defect.
 //
-// On rev 0 the three rev 1 DAC pads are unrouted too, so they get tested as
-// spares. On rev 1 they carry the DAC bus and are left alone.
+// On rev 0 the three DAC pads are unrouted too, so they get tested as spares:
+// 12 pads, and stage 1 reports 27 checks. On rev 1 -- v0.3 and later -- they
+// carry the DAC bus and are left alone: 9 pads, 24 checks. A v0.3 board that
+// reports 27 checks was built with the wrong env.
 #if MJ_BOARD_REV == 0
 constexpr uint8_t kSpares[] = {10, 11, 12, 13, 15, 16, 17, 18, 20, 22, 23, 27};
 #else
@@ -209,10 +228,16 @@ constexpr uint8_t kSpareCount = sizeof(kSpares) / sizeof(kSpares[0]);
 // -----------------------------------------------------------------------------
 // Pins that are NOT on this board.
 // -----------------------------------------------------------------------------
-// Rev 0 has no SWD header and no RUN connection: SWCLK, SWD and RUN are all
-// no-connect. There is no debugger during bring-up, and no reset button -- only
-// a power cycle. BOOTSEL recovery needs USB *and* pyControl unplugged, because
-// the MCU domain is ORed from both through `D301` and `D1901`.
+// Neither rev 0 nor v0.3 has an SWD header or a RUN connection: on both,
+// `U501` pads 24, 25 and 26 -- SWCLK, SWD and RUN -- are no-connect. There is
+// no debugger during bring-up, and no reset button, only a power cycle. BOOTSEL
+// recovery by button needs USB *and* pyControl unplugged, because the MCU domain
+// is ORed from both through `D301` and `D1901`.
+//
+// The 1200 baud touch and the self test's `B` command are therefore the only
+// routes into BOOTSEL that do not involve the button. The touch was verified on
+// v0.3 board E4654C159F171E34 on 2026-09-09: a reflash over the running
+// application, no `SW501`, no unplugging.
 //
 // BOOTSEL itself is the standard circuit: `SW501` shorts ~{USB_BOOT} to GND,
 // `R505` 1 kohm ties that to QSPI_SS, and `R504` 10 kohm pulls QSPI_SS up to

@@ -146,13 +146,19 @@ void SelfTest::reportIdentity(Print &out) {
   out.print(F("    targets board revision: rev "));
   out.print(MJ_BOARD_REV);
 #if MJ_BOARD_REV == 0
-  out.println(F("  (pcb tags v0.1 and v0.2)"));
+  out.println(F("  (pcb tags v0.1 and v0.2 ONLY)"));
   out.println(
       F("    GP10, GP11 and GP13 are unrouted on this revision, so they"));
   out.println(
-      F("      are tested as spare pads. On rev 1 they carry the DAC."));
+      F("      are tested as spare pads. From v0.3 they carry the DAC,"));
+  out.println(
+      F("      so a v0.3 board needs env:mouse_joystick_rev1 instead."));
 #else
-  out.println(F("  (pcb HEAD, angle output DAC fitted)"));
+  out.println(F("  (pcb v0.3 or HEAD, angle output DAC fitted)"));
+  out.println(
+      F("    GP10, GP11 and GP13 carry the DAC bus, so they are NOT"));
+  out.println(F("      exercised as spare pads: 9 pads here against 12 on"));
+  out.println(F("      rev 0, and 24 checks against 27."));
 #endif
 }
 
@@ -294,7 +300,11 @@ void SelfTest::reportStraps(Print &out, const ResetStateReads &reads,
       F("    Captured at boot, internal pulls off, before anything drove"));
   out.println(
       F("      a pin, so each level comes from a board resistor. A failure"));
+#if MJ_BOARD_REV == 0
   out.println(F("      here is a missing part, not firmware. v0.1 refdes."));
+#else
+  out.println(F("      here is a missing part, not firmware. v0.3 refdes."));
+#endif
 
   if (!reads.valid) {
     report(out, "reset state was captured at boot", false, checks, failures);
@@ -318,8 +328,16 @@ void SelfTest::reportStraps(Print &out, const ResetStateReads &reads,
 
   out.print(F("    GP29 ~{HV_FAULT}     = "));
   out.println(reads.hv_fault_n ? F("high") : F("low"));
+  // The 36 V block moved from the R2xx range to R19xx between v0.2 and v0.3,
+  // so this pull-up has two names. Naming the wrong one sends whoever is
+  // probing to a part that does not exist on the board in front of them.
+#if MJ_BOARD_REV == 0
   report(out, "R205 10k present and no latched 36 V fault", reads.hv_fault_n,
          checks, failures);
+#else
+  report(out, "R1905 10k present and no latched 36 V fault", reads.hv_fault_n,
+         checks, failures);
+#endif
 
   // Nothing to restore: these levels were captured at boot and this section
   // reads no pin.
@@ -384,7 +402,11 @@ void SelfTest::reportAdc(Print &out, uint16_t &checks, uint16_t &failures) {
   out.print(hv_counts);
   out.print(F(" counts = "));
   out.print(hv_volts, 4);
+#if MJ_BOARD_REV == 0
   out.println(F(" V across R207 249R"));
+#else
+  out.println(F(" V across R1907 249R"));
+#endif
   report(out, "no 36 V load current (HV_SNS below 0.10 V)",
          hv_volts <= kHvSenseOffMaxVolts, checks, failures);
   out.println(

@@ -60,9 +60,9 @@ constexpr uint32_t kJogTimeoutMs = 4000;
 constexpr uint32_t kHomeTimeoutMs = 60000;
 constexpr uint32_t kWitnessWindowMs = 12000;
 
-// How long to allow +36V_SW's bulk to bleed down before insisting the switched
-// rail is dead. Measured at a few seconds; this is a give-up point.
-constexpr uint32_t kRailOffTimeoutMs = 10000;
+// PowerSequence::kRailOffTimeoutMs is the same figure, kept there so the
+// power-sequence code and this example cannot drift apart.
+constexpr uint32_t kRailOffTimeoutMs = PowerSequence::kRailOffTimeoutMs;
 
 TMC51X0 stepper;
 
@@ -795,6 +795,9 @@ void encoderCheck(Print &out) {
   out.print(switch_end == mouse_joystick::HomeEnd::kPositive ? F("positive")
                                                              : F("negative"));
   out.println(F(" end), then back."));
+  out.println(F("  Run this from mid-travel, or straight after 'h'. It jogs"));
+  out.println(F("    toward the FAR hard stop first, so from rest against"));
+  out.println(F("    that stop it fails on the mechanism, not the encoder."));
   out.print(F("  Expecting "));
   out.print(static_cast<float>(distance < 0 ? -distance : distance) /
                 conv::kMicrostepsPerEncoderCount,
@@ -882,13 +885,77 @@ void encoderCheck(Print &out) {
     out.println(F("    pin 4 +5V_SW, pin 5 ENC_B? Does +5V_SW reach it? Are"));
     out.println(F("    ENCA/ENCB moving in IOIN while the shaft turns?"));
   } else {
+    // Distinguish a hard stop from an encoder problem before blaming the
+    // encoder. The `legs_clean` guard above does NOT catch a stall: driving
+    // into an end stop open-loop still "reaches target" as far as the ramp
+    // generator is concerned, because it only counts the steps it issued. The
+    // encoder is the sole witness, and the signature is asymmetry -- both legs
+    // cover the same commanded distance, so if the encoder saw substantially
+    // less on one of them the mechanism was obstructed in that direction and
+    // nothing here measures the encoder.
+    //
+    // Measured on board E4654C159F171E34, 2026-09-09, starting against the far
+    // stop: outbound ratio 0.550 with 704 usteps seen, return ratio 0.920 with
+    // 1177 seen, residual +473 = exactly the difference. The old text sent the
+    // reader to the CPR, the RC corner and the coupling; all three were fine,
+    // and two plain jogs the other way returned 1.0000.
+    const int32_t out_travel = out_report.end_encoder - out_report.start_encoder;
+    const int32_t back_travel =
+        back_report.end_encoder - back_report.start_encoder;
+    const int32_t out_abs = out_travel < 0 ? -out_travel : out_travel;
+    const int32_t back_abs = back_travel < 0 ? -back_travel : back_travel;
+    const mouse_joystick::RoundTripVerdict verdict =
+        mouse_joystick::classifyRoundTrip(out_travel, back_travel);
+
     out.println();
-    out.print(F("  [FAIL] follow ratio "));
-    out.print(magnitude, 3);
-    out.println(F(" is neither ~1 nor ~0."));
-    out.println(F("    A clean 2.0 or 0.5 means the CPR is wrong. Anything"));
-    out.println(F("    else means lost counts: check the RC corner against"));
-    out.println(F("    the edge rate, and the coupling for slip."));
+    if (verdict != mouse_joystick::RoundTripVerdict::kSymmetric) {
+      const bool outbound_short =
+          verdict == mouse_joystick::RoundTripVerdict::kOutboundObstructed;
+      out.println(F("  [FAIL] the two legs disagree, so this is the"));
+      out.println(F("    MECHANISM and not the encoder."));
+      out.print(F("    outbound saw "));
+      out.print(out_abs);
+      out.print(F(" usteps, return saw "));
+      out.print(back_abs);
+      out.println(F(" usteps, for the"));
+      out.println(F("    same commanded distance. A leg that comes up short"));
+      out.println(F("    while the other runs clean means the mechanism hit"));
+      out.println(F("    an END STOP -- and driving into one open-loop still"));
+      out.println(F("    reports 'target reached', because the ramp generator"));
+      out.println(F("    only counts the steps it issued."));
+      out.print(F("    The obstruction is in the "));
+      if (outbound_short) {
+        out.print(switch_end == mouse_joystick::HomeEnd::kPositive
+                      ? F("NEGATIVE")
+                      : F("POSITIVE"));
+        out.println(F(" direction,"));
+        out.println(F("    away from the switch: the far hard stop. 'g' jogs"));
+        out.println(F("    that way first, so running it from rest near that"));
+        out.println(F("    stop fails exactly like this."));
+      } else {
+        out.print(switch_end == mouse_joystick::HomeEnd::kPositive
+                      ? F("POSITIVE")
+                      : F("NEGATIVE"));
+        out.println(F(" direction,"));
+        out.println(F("    toward the switch."));
+      }
+      out.println(F("    The residual above is that difference, not lost"));
+      out.println(F("    motion: the motor gained open-loop position while"));
+      out.println(F("    the mechanism was blocked."));
+      out.println();
+      out.println(F("    Do this: 'h' to home, or jog clear with 'j'/'k',"));
+      out.println(F("    then run 'g' again from mid-travel. Only if it"));
+      out.println(F("    still fails SYMMETRICALLY is the encoder implicated."));
+    } else {
+      out.print(F("  [FAIL] follow ratio "));
+      out.print(magnitude, 3);
+      out.println(F(" is neither ~1 nor ~0, and both"));
+      out.println(F("    legs agree, so the mechanism moved freely and this"));
+      out.println(F("    really is the encoder."));
+      out.println(F("    A clean 2.0 or 0.5 means the CPR is wrong. Anything"));
+      out.println(F("    else means lost counts: check the RC corner against"));
+      out.println(F("    the edge rate, and the coupling for slip."));
+    }
   }
   out.println();
 }

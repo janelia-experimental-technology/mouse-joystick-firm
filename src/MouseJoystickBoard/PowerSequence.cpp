@@ -144,8 +144,19 @@ PowerUpResult PowerSequence::powerUp(PowerUpReport &report) {
 LatchProbe PowerSequence::probeLatchBehaviour(uint16_t window_ms) {
   LatchProbe probe{};
 
+  // Wait for the bulk to actually bleed down, do not just pause. A fixed 50 ms
+  // delay used to stand here, and it is not enough: +36V_SW's ~208 uF keeps the
+  // buck alive for on the order of a second with no load, so a probe run soon
+  // after the rail was last up finds the bulk still charged, presents the
+  // switch with no inrush, and reports the LATCH fix as present on a board that
+  // does not have it. That is a false PASS on the one command whose entire
+  // purpose is to answer this question for a new revision.
   powerDown();
-  delay(50);
+  const uint32_t discharge_start_ms = millis();
+  probe.started_cold = waitForRailOff(kRailOffTimeoutMs);
+  probe.discharge_ms = static_cast<uint16_t>(millis() - discharge_start_ms);
+  delay(kBulkBleedMarginMs);
+
   analogReadResolution(conversions::kAdcResolutionBits);
   pinMode(pins::kSwRailSenseDiv2, INPUT);
   pinMode(pins::kHvSns, INPUT);
@@ -188,7 +199,9 @@ LatchProbe PowerSequence::probeLatchBehaviour(uint16_t window_ms) {
   probe.fault_n = digitalRead(pins::kHvFaultN) == HIGH;
   digitalWrite(pins::kHvDiagEn, LOW);
 
-  probe.fix_present = probe.rail_held && probe.fault_n;
+  // A run that could not reach a discharged rail proves nothing, so it must not
+  // be allowed to claim the fix is present.
+  probe.fix_present = probe.rail_held && probe.fault_n && probe.started_cold;
 
   // Nothing at all happened: no rail, and the switch never even reported. Below
   // its UVLO the device does not operate, so this is an absent input supply
@@ -205,8 +218,11 @@ uint16_t PowerSequence::profilePowerUp(ProfileSample *samples,
     return 0;
   }
 
+  // Same precondition as probeLatchBehaviour: profiling a power-up that starts
+  // with the bulk already charged profiles nothing.
   powerDown();
-  delay(50);
+  waitForRailOff(kRailOffTimeoutMs);
+  delay(kBulkBleedMarginMs);
 
   analogReadResolution(conversions::kAdcResolutionBits);
   pinMode(pins::kSwRailSenseDiv2, INPUT);

@@ -71,28 +71,49 @@ constexpr bool vsenseSet(uint32_t chopconf_raw) {
   return bitIsSet(chopconf_raw, kChopconfVsenseBit);
 }
 
-// What IOIN should read on this board with the 36 V rail up, nothing plugged
-// into the motor, encoder or limit switch connectors, and ~{TMC_DRV_EN} held
-// high by firmware:
+// What IOIN can be checked against, and what it cannot.
 //
-//   bit 0 REFL_STEP      0   LIMIT_SW held low by R1405 10k to GND
-//   bit 1 REFR_DIR       0   REFR tied to GND on this board
-//   bit 2 ENCB_DCEN_CFG4 0   ENC_B held low by R806 100k to GND
-//   bit 3 ENCA_DCIN_CFG5 0   ENC_A held low by R805 100k to GND
+// REWRITTEN 2026-09-09. This used to compare the whole low byte against a
+// single expected value, 0x11000010, and that check is wrong by construction:
+// five of those eight bits are driven by whatever is plugged into the motor,
+// encoder and limit-switch connectors, so no fixed value can be right. It
+// produced a failure on every board that was actually wired up correctly, and
+// two v0.2 units "disagreeing" was chased as a possible pair of assembly
+// defects for a week before v0.3 settled it against the copper.
+//
+//   bit 0 REFL_STEP      CONNECTOR-DEPENDENT. Empty it reads 1: U1301's IN pin
+//                        has no external pull, so the MAX6816 supplies its own
+//                        pull-up, drives OUT high, and nothing can override a
+//                        driven output. There is no LIMIT_SW pull-down on v0.3.
+//                        Fitted and at rest it reads 0, because the switch is
+//                        normally closed; actuating it gives 1.
+//   bit 1 REFR_DIR       0   REFR is tied to GND. A hard tie, not a connector,
+//                            so this one IS assertable.
+//   bit 2 ENCB_DCEN_CFG4 CONNECTOR-DEPENDENT. Floating CMOS input when empty;
+//                        a real quadrature state when the encoder is fitted.
+//   bit 3 ENCA_DCIN_CFG5 CONNECTOR-DEPENDENT, same reasoning.
 //   bit 4 DRV_ENN        1   firmware holds ~{TMC_DRV_EN} high, driver disabled
-//   bit 5 ENC_N_DCO      0   ENCN terminated by R1201 10k to GND
+//   bit 5 ENC_N_DCO      CONNECTOR-DEPENDENT, same reasoning.
 //   bit 6 SD_MODE        0   tied to GND, motion-controller mode
-//   bit 7 SWCOMP_IN      ?   comparator output, not asserted here
+//   bit 7 SWCOMP_IN      comparator output, never assertable
 //   31:24 VERSION     0x11   TMC5130A
 //
-// So the expected value is 0x11000010, with bit 7 free. Bit 4 is the valuable
-// one: it is the only read-back that proves firmware's GP3 actually reaches the
-// driver through the bus switch.
-constexpr uint32_t kIoinExpectedMask = 0xFF0000FFu & ~(1u << 7);
-constexpr uint32_t kIoinExpectedValue = 0x11000010u;
+// So assert only the four board-invariant fields. Bit 4 is the valuable one: it
+// is the only read-back that proves firmware's GP3 actually reaches the driver
+// through the bus switch. The connector-dependent bits are still worth
+// PRINTING -- they are how you see a switch actuate or an encoder turn -- they
+// are just not a pass/fail.
+constexpr uint32_t kIoinInvariantMask =
+    0xFF000000u | (1u << 1) | (1u << 4) | (1u << 6);
+constexpr uint32_t kIoinInvariantValue = 0x11000010u;
 
-constexpr bool ioinMatchesExpected(uint32_t raw) {
-  return (raw & kIoinExpectedMask) == (kIoinExpectedValue & kIoinExpectedMask);
+// Bits whose value is a property of what is plugged in, not of the board.
+constexpr uint32_t kIoinConnectorMask =
+    (1u << 0) | (1u << 2) | (1u << 3) | (1u << 5) | (1u << 7);
+
+constexpr bool ioinInvariantsMatch(uint32_t raw) {
+  return (raw & kIoinInvariantMask) ==
+         (kIoinInvariantValue & kIoinInvariantMask);
 }
 
 } // namespace tmc

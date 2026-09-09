@@ -1,8 +1,10 @@
 # Stage 1: RP2040 Bring-Up
 
 **Board:** `mouse-joystick-pcb` rev 0, first assembled article received
-2026-09-01. Verified against PCB git tag **v0.1**.
+2026-09-01. Verified against PCB git tag **v0.1**. Also run on a **`v0.3`** unit
+on 2026-09-09 — see the env table below, which is not the same env.
 **Program:** `examples/RP2040SelfTest`, env `mouse_joystick` (`MJ_BOARD_REV=0`)
+for a v0.1/v0.2 board, `mouse_joystick_rev1` (`MJ_BOARD_REV=1`) for v0.3.
 **Scope:** everything on the always-on `+3.3V_MCU` domain. Nothing else.
 
 Record results in `../mouse-joystick-pcb/docs/bringup-log.md` under the board's
@@ -12,10 +14,30 @@ serial, as numbers with units.
 
 The firmware pin map was taken from footprint `U501` in the `.kicad_pcb` at tag
 **v0.1**. Tags v0.1 and v0.2 have **byte-identical RP2040 pad-to-net maps**, so
-the ambiguity between them does not matter. Current PCB HEAD differs on exactly
-three pins — `GP10`, `GP11`, `GP13` — which HEAD routes to the rev 1 angle-output
-DAC and v0.1 leaves unrouted. No connected pin moved. Build `env:mouse_joystick`
-for the board in hand; `env:mouse_joystick_rev1` exists for later.
+the ambiguity between them does not matter. Tag **v0.3** and current HEAD differ
+on exactly three pins — `GP10`, `GP11`, `GP13` — which they route to the
+angle-output DAC and v0.1/v0.2 leave unrouted. No connected pin moved.
+
+**Pick the env from the tag the board was fabricated at, not from "is this the
+newest board".**
+
+| PCB | env | `MJ_BOARD_REV` | spare pads | stage 1 checks |
+| --- | --- | --- | --- | --- |
+| `v0.1`, `v0.2` | `mouse_joystick` | 0 | 12 | 27 |
+| `v0.3`, HEAD | `mouse_joystick_rev1` | 1 | 9 | 24 |
+
+`env:mouse_joystick_rev1` is **not** a future-only env — a `v0.3` board needs
+it. Build `env:mouse_joystick` against `v0.3` and the spare-pad test drives
+internal pull-ups and pull-downs onto the DAC's SPI bus and its chip select.
+The bus switch is isolated at reset so it does no damage, but that is luck
+rather than intent. **The check-count is the tell: a `v0.3` board reporting 27
+checks was built with the wrong env.**
+
+Section `[6]` prints the designators for whichever revision was built, and they
+differ: the `~{HV_FAULT}` pull-up is `R205` on v0.1/v0.2 and **`R1905`** on
+v0.3, and the `HV_SNS` bottom leg is `R207` against **`R1907`**. `R601` and
+`R403` are unchanged. The full v0.2→v0.3 mapping is in
+`../mouse-joystick-pcb/docs/bringup-log.md` → *Board 4*.
 
 **Reference designators in this document are v0.1 designators, and they are not
 stable.** Automatic annotation orders by sheet position, so inserting a part

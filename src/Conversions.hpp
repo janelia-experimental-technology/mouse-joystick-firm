@@ -362,4 +362,66 @@ constexpr float kFollowFractionMin = 0.25f;
 constexpr int32_t kFollowWindowMicrosteps = 200;
 
 } // namespace conversions
+
+// What an out-and-back round trip says about the mechanism, from the encoder
+// travel on each leg alone. Lives here rather than beside MoveReport in
+// MotionSetup.hpp because that header needs Arduino.h and TMC51X0.hpp, and
+// this is arithmetic that host tests must be able to reach.
+//
+// Both legs command the same distance, so unequal encoder travel means the
+// mechanism was obstructed on the shorter one. This is a separate check from
+// MoveOutcome, and it has to be: driving into an end stop open-loop still
+// reports kTargetReached whenever the follow window does not happen to trip,
+// because the ramp generator only counts the steps it issued. Two real cases,
+// both measured on board E4654C159F171E34 on 2026-09-09:
+//
+//   hard against the stop from the start -> the follow check trips mid-move and
+//     MoveOutcome says so. Already handled by the caller.
+//   PARTIAL clearance -> the move completes, reports kTargetReached, and the
+//     asymmetry is the only remaining witness. Outbound saw 704 usteps against
+//     the return's 1177, and the whole 473-ustep residual was that difference.
+//     That case was misread as an encoder CPR fault.
+enum class RoundTripVerdict {
+  kSymmetric,          // both legs agree; any ratio error is really the encoder
+  kOutboundObstructed, // the outbound leg came up short
+  kReturnObstructed,   // the return leg came up short
+};
+
+// `tolerance_percent` is how far apart the two legs may be before the mechanism
+// is implicated.
+//
+// Backlash is what sets the floor, and it is NOT negligible. It costs a fixed
+// amount on each reversal, and whether the outbound or the return pays it
+// depends on which way the mechanism was last moving -- homing ends with a
+// back-off, so the first leg of a round trip may already be taken up. That
+// makes legitimate asymmetry one-sided rather than symmetric. Measured on
+// board E4654C159F171E34, 2026-09-09, both from mid-travel after homing:
+//
+//   1203 out / 1190 back   1.1% apart   free mechanism
+//   1280 out / 1191 back   7.0% apart   free mechanism, one backlash-worth
+//    704 out / 1177 back  40.2% apart   OUTBOUND AGAINST THE FAR HARD STOP
+//
+// So the real envelope is "up to ~7% is backlash, ~40% is a stop", and the
+// threshold sits between them. 20% is roughly the geometric middle and is what
+// this defaults to. An earlier draft used 10%, which is only 1.4x above the
+// measured backlash figure and would have called a free mechanism obstructed on
+// a slightly stiffer gear pair.
+//
+// A genuine CPR error lowers both legs equally, so it stays symmetric and its
+// diagnosis stays reachable -- that is deliberate.
+constexpr RoundTripVerdict classifyRoundTrip(int32_t out_travel,
+                                             int32_t back_travel,
+                                             int32_t tolerance_percent = 20) {
+  const int32_t out_abs = out_travel < 0 ? -out_travel : out_travel;
+  const int32_t back_abs = back_travel < 0 ? -back_travel : back_travel;
+  const int32_t larger = out_abs > back_abs ? out_abs : back_abs;
+  const int32_t gap =
+      out_abs > back_abs ? out_abs - back_abs : back_abs - out_abs;
+  if (larger == 0 || gap * 100 <= larger * tolerance_percent) {
+    return RoundTripVerdict::kSymmetric;
+  }
+  return out_abs < back_abs ? RoundTripVerdict::kOutboundObstructed
+                            : RoundTripVerdict::kReturnObstructed;
+}
+
 } // namespace mouse_joystick

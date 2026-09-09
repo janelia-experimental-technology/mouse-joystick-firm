@@ -57,28 +57,59 @@ void test_decode_bit_positions_are_distinct(void) {
   TEST_ASSERT_EQUAL_HEX8(0x00, decodeIoin(0x00FFFFFFu).version);
 }
 
-void test_expected_ioin_matcher_accepts_the_right_value(void) {
-  TEST_ASSERT_TRUE(ioinMatchesExpected(0x11000010u));
+void test_ioin_invariants_accept_the_bare_board_reading(void) {
+  TEST_ASSERT_TRUE(ioinInvariantsMatch(0x11000010u));
 }
 
-void test_expected_ioin_matcher_ignores_swcomp(void) {
+void test_ioin_invariants_ignore_swcomp(void) {
   // SWCOMP_IN is a comparator output and must not affect the verdict.
-  TEST_ASSERT_TRUE(ioinMatchesExpected(0x11000010u | (1u << 7)));
+  TEST_ASSERT_TRUE(ioinInvariantsMatch(0x11000010u | (1u << 7)));
 }
 
-void test_expected_ioin_matcher_rejects_real_faults(void) {
+void test_ioin_invariants_accept_real_measured_boards(void) {
+  // These are readings taken off real hardware, and the old whole-byte matcher
+  // rejected every one of them. They must all pass: five IOIN bits are driven
+  // by what is plugged into the motor, encoder and limit-switch connectors, so
+  // no fixed expectation can be right.
+  //
+  // Limit switch UNPLUGGED. The MAX6816 drives its own pull-up high and there
+  // is no LIMIT_SW pull-down on v0.3, so REFL_STEP = 1 is the only reading the
+  // board can give. Measured on boards E4654C159F2C2534 and E4654C159F171E34.
+  TEST_ASSERT_TRUE(ioinInvariantsMatch(0x11000011u));
+  // Encoder connected, a legitimate quadrature state. Measured on board
+  // E4654C159F4D1334.
+  TEST_ASSERT_TRUE(ioinInvariantsMatch(0x11000014u));
+  // Everything connected, switch at rest (normally closed, so REFL_STEP = 0)
+  // and the encoder mid-count. Measured on board E4654C159F171E34, 2026-09-09.
+  TEST_ASSERT_TRUE(ioinInvariantsMatch(0x11000018u));
+  // Every connector-dependent bit high at once is still not a fault.
+  TEST_ASSERT_TRUE(ioinInvariantsMatch(0x11000010u | kIoinConnectorMask));
+}
+
+void test_ioin_invariants_reject_real_faults(void) {
   // Wrong chip.
-  TEST_ASSERT_FALSE(ioinMatchesExpected(0x30000010u));
-  // Driver reads enabled -- the case that must never pass silently.
-  TEST_ASSERT_FALSE(ioinMatchesExpected(0x11000000u));
+  TEST_ASSERT_FALSE(ioinInvariantsMatch(0x30000010u));
+  // Driver reads enabled -- the case that must never pass silently, and the
+  // reason bit 4 is asserted at all: it is the only read-back proving GP3
+  // reaches the driver through the bus switch.
+  TEST_ASSERT_FALSE(ioinInvariantsMatch(0x11000000u));
   // SD_MODE strapped high instead of to GND.
-  TEST_ASSERT_FALSE(ioinMatchesExpected(0x11000050u));
-  // A limit switch or encoder input stuck high.
-  TEST_ASSERT_FALSE(ioinMatchesExpected(0x11000011u));
-  TEST_ASSERT_FALSE(ioinMatchesExpected(0x11000018u));
+  TEST_ASSERT_FALSE(ioinInvariantsMatch(0x11000050u));
+  // REFR_DIR high. That pin is tied to GND, so this is a real defect and not a
+  // connector state.
+  TEST_ASSERT_FALSE(ioinInvariantsMatch(0x11000012u));
   // All zeros and all ones, the two dead-bus signatures.
-  TEST_ASSERT_FALSE(ioinMatchesExpected(0x00000000u));
-  TEST_ASSERT_FALSE(ioinMatchesExpected(0xFFFFFFFFu));
+  TEST_ASSERT_FALSE(ioinInvariantsMatch(0x00000000u));
+  TEST_ASSERT_FALSE(ioinInvariantsMatch(0xFFFFFFFFu));
+}
+
+void test_ioin_masks_do_not_overlap(void) {
+  // Every low-byte bit is either asserted or explicitly connector-dependent,
+  // and none is both. This is what stops a bit quietly slipping out of both
+  // sets during a future edit.
+  TEST_ASSERT_EQUAL_HEX32(0u, kIoinInvariantMask & kIoinConnectorMask);
+  TEST_ASSERT_EQUAL_HEX32(
+      0xFFu, (kIoinInvariantMask | kIoinConnectorMask) & 0xFFu);
 }
 
 void test_vsense(void) {
@@ -98,9 +129,11 @@ int main(int, char **) {
   RUN_TEST(test_version_constants);
   RUN_TEST(test_decode_expected_board_ioin);
   RUN_TEST(test_decode_bit_positions_are_distinct);
-  RUN_TEST(test_expected_ioin_matcher_accepts_the_right_value);
-  RUN_TEST(test_expected_ioin_matcher_ignores_swcomp);
-  RUN_TEST(test_expected_ioin_matcher_rejects_real_faults);
+  RUN_TEST(test_ioin_invariants_accept_the_bare_board_reading);
+  RUN_TEST(test_ioin_invariants_ignore_swcomp);
+  RUN_TEST(test_ioin_invariants_accept_real_measured_boards);
+  RUN_TEST(test_ioin_invariants_reject_real_faults);
+  RUN_TEST(test_ioin_masks_do_not_overlap);
   RUN_TEST(test_vsense);
   return UNITY_END();
 }

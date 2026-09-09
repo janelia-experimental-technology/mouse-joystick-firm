@@ -274,6 +274,73 @@ void test_follow_threshold_is_a_fraction(void) {
   TEST_ASSERT_TRUE(kFollowFractionMin < 1.0f);
 }
 
+// ---------------------------------------------------------------------------
+// Round-trip classification: mechanism versus encoder
+// ---------------------------------------------------------------------------
+
+void test_round_trip_symmetric_legs_are_not_the_mechanism(void) {
+  using mouse_joystick::classifyRoundTrip;
+  using mouse_joystick::RoundTripVerdict;
+  // Measured from mid-travel on board E4654C159F171E34, 2026-09-09, after
+  // homing: 1203 out against 1190 back. Both ratios sat near 0.94 because a
+  // reversal costs backlash, but the legs agree to 1.1% so the mechanism was
+  // free and any error left is genuinely the encoder's.
+  TEST_ASSERT_EQUAL(RoundTripVerdict::kSymmetric,
+                    classifyRoundTrip(-1203, 1190));
+  // Exactly equal legs.
+  TEST_ASSERT_EQUAL(RoundTripVerdict::kSymmetric,
+                    classifyRoundTrip(-1280, 1280));
+  // A genuine 2:1 CPR error lowers BOTH legs equally and must stay symmetric,
+  // or the CPR diagnosis becomes unreachable.
+  TEST_ASSERT_EQUAL(RoundTripVerdict::kSymmetric, classifyRoundTrip(-640, 640));
+  // One backlash-worth of one-sided loss. Measured on the same board and the
+  // same day as the obstructed case, also from mid-travel after homing, with
+  // the mechanism demonstrably free: 1280 out against 1191 back, 7.0% apart.
+  // This is the case that makes a 10% threshold too tight.
+  TEST_ASSERT_EQUAL(RoundTripVerdict::kSymmetric,
+                    classifyRoundTrip(-1280, 1191));
+  // Neither leg moved: a dead encoder, not an obstruction.
+  TEST_ASSERT_EQUAL(RoundTripVerdict::kSymmetric, classifyRoundTrip(0, 0));
+}
+
+void test_round_trip_detects_the_obstructed_leg(void) {
+  using mouse_joystick::classifyRoundTrip;
+  using mouse_joystick::RoundTripVerdict;
+  // The case that was misdiagnosed. Measured on board E4654C159F171E34 starting
+  // against the far stop: outbound saw 704 usteps, the return ran clear at
+  // 1177, and the old code blamed the encoder's CPR.
+  TEST_ASSERT_EQUAL(RoundTripVerdict::kOutboundObstructed,
+                    classifyRoundTrip(-704, 1177));
+  // Mirrored: obstructed on the way back instead.
+  TEST_ASSERT_EQUAL(RoundTripVerdict::kReturnObstructed,
+                    classifyRoundTrip(-1177, 704));
+  // Sign of the travel must not change the verdict -- only magnitude matters,
+  // so an encoder mounted the other way round still classifies correctly.
+  TEST_ASSERT_EQUAL(RoundTripVerdict::kOutboundObstructed,
+                    classifyRoundTrip(704, -1177));
+  // One leg fully blocked.
+  TEST_ASSERT_EQUAL(RoundTripVerdict::kOutboundObstructed,
+                    classifyRoundTrip(0, 1280));
+}
+
+void test_round_trip_threshold_boundary(void) {
+  using mouse_joystick::classifyRoundTrip;
+  using mouse_joystick::RoundTripVerdict;
+  // Exactly at the default 20% tolerance is still symmetric; just past it is
+  // not. 1280 * 0.8 = 1024.
+  TEST_ASSERT_EQUAL(RoundTripVerdict::kSymmetric,
+                    classifyRoundTrip(-1024, 1280));
+  TEST_ASSERT_EQUAL(RoundTripVerdict::kOutboundObstructed,
+                    classifyRoundTrip(-1023, 1280));
+  // The threshold has to sit above the measured backlash figure and below the
+  // measured obstructed one, for every tolerance a caller might reasonably
+  // pass. Both bounds, explicitly.
+  TEST_ASSERT_EQUAL(RoundTripVerdict::kSymmetric,
+                    classifyRoundTrip(-1191, 1280, 10));
+  TEST_ASSERT_EQUAL(RoundTripVerdict::kOutboundObstructed,
+                    classifyRoundTrip(-704, 1177, 30));
+}
+
 int main(int, char **) {
   UNITY_BEGIN();
   RUN_TEST(test_fitted_parts);
@@ -293,5 +360,8 @@ int main(int, char **) {
   RUN_TEST(test_non_zero_ramp_parameter_guard);
   RUN_TEST(test_the_chip_acceleration_quantum_is_the_trap);
   RUN_TEST(test_follow_threshold_is_a_fraction);
+  RUN_TEST(test_round_trip_symmetric_legs_are_not_the_mechanism);
+  RUN_TEST(test_round_trip_detects_the_obstructed_leg);
+  RUN_TEST(test_round_trip_threshold_boundary);
   return UNITY_END();
 }
