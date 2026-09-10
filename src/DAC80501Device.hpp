@@ -216,6 +216,26 @@ public:
     return ok;
   }
 
+  // Forget the configuration WITHOUT touching the bus.
+  //
+  // Call this whenever the DAC loses power. Cycling the rail resets its
+  // registers -- GAIN goes back to its 5.0 V full scale -- but nothing tells
+  // this object that, so it would keep reporting configured() and keep
+  // accepting data writes against a span that no longer exists. On
+  // mouse-joystick-pcb that is a full-scale code asking for 6.6 V at the BNC.
+  //
+  // It must not write anything: driving SYNC or SCLK into a DAC whose VDD is
+  // dead pushes current through its input clamps and back-powers +5V_SW, which
+  // is the hazard the rail-first ordering exists to avoid. So this is
+  // deliberately not softReset() -- that sends a frame.
+  //
+  // Found on 2026-09-10, on board E4654C159F171E34: after the example's `x`
+  // powered the rail down, `q` still reported `configured: yes`.
+  void invalidate() {
+    configured_ = false;
+    last_code_ = 0;
+  }
+
   // Power the output stage down (output tied to AGND through an internal 1 k)
   // or the internal reference, or both.
   bool setPowerDown(bool dac_powered_down, bool reference_powered_down) {

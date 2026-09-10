@@ -34,6 +34,15 @@
 #include <MouseJoystickBoard.hpp>
 #include <TMC51X0.hpp>
 
+// The angle-output DAC, rev 1 and later only. It is here rather than in
+// examples/AngleOutput because the measurement that needs both is coupling:
+// park the output at a static DC level, move the motor, and anything AC on the
+// BNC is the motor getting into the analog chain. Neither example could do that
+// alone -- AngleOutput has no motion and this one had no DAC.
+#if MJ_BOARD_REV != 0
+#include <DAC80501.hpp>
+#endif
+
 using mouse_joystick::CurrentCheck;
 using mouse_joystick::HomeOutcome;
 using mouse_joystick::HomeReport;
@@ -49,6 +58,9 @@ using mouse_joystick::SafeState;
 using mouse_joystick::SelfTest;
 
 namespace conv = mouse_joystick::conversions;
+#if MJ_BOARD_REV != 0
+namespace pins = mouse_joystick::pins;
+#endif
 
 constexpr uint32_t kSerialBaudRate = 115200;
 constexpr uint32_t kSerialWaitMs = 5000;
@@ -68,6 +80,54 @@ TMC51X0 stepper;
 
 // The gates are cumulative, so their results have to survive between commands.
 bool bus_up = false;
+
+#if MJ_BOARD_REV != 0
+// SPI1, separate from the TMC's SPI0, so the two never contend. GP12 is SPI1's
+// RX candidate that is routed nowhere on v0.3; the DAC has no SDO so nothing is
+// read, but the core wants a pin assigned.
+constexpr uint8_t kSpi1Rx = 12;
+// REF-DIV 1 with BUFF-GAIN 1: a 2.5 V DAC full scale, which the OPA197's 1.32
+// gain turns into 3.3 V at the BNC. Measured on board E4654C159F171E34 on
+// 2026-09-10 as unity gain to within 0.03%.
+constexpr uint16_t kDacGainRegister =
+    dac80501::kGainRefDiv | dac80501::kGainBuffGain;
+constexpr float kDacOutputStageGain = 1.32f;
+
+// The live angle output loop.
+//
+// RATE: 1 kHz. docs/encoder-analog-output.md calls the update rate "an open
+// decision" and asks for the achieved rate to be documented as a MEASURED
+// claim, not a target -- so this loop measures itself and reports. 1 kHz is the
+// rate the circuit was designed around: the 2-pole Sallen-Key corner is 987 Hz,
+// and that same doc puts "roughly 1 kHz of real angle bandwidth" as what the
+// loop can sustain alongside motor control. Going faster puts steps into a
+// filter that cannot pass them.
+//
+// Note what this loop IS: a sampling operation. The 987 Hz filter sits AFTER
+// the DAC, so it smooths the output steps but cannot undo aliasing from
+// sampling the angle at 1 kHz. Mechanical content above ~500 Hz folds into the
+// record and nothing downstream removes it. Mouse limb motion should be far
+// below that, but it is a distinct issue from the OneBox aliasing the design
+// notes already cover.
+constexpr uint32_t kAngleUpdateIntervalUs = 1000; // 1 kHz
+
+// Angle-to-volts mapping. The valid output range starts at 50 mV, which
+// reserves everything below it as out-of-band -- see the floor discussion in
+// docs/encoder-analog-output.md, and note the floor measured 4.5 mV on this
+// board rather than the ~25 mV the doc assumes.
+//
+// Span is deliberately 90 deg at the motor against a mechanism of roughly
+// 60 deg. The hard stops are movable and the travel is NOT settled, so a span
+// that comfortably exceeds the mechanism is honest; a span fitted to one
+// measured swing would silently misreport a re-adjusted stop. Gearing is 1:1,
+// so motor degrees and joystick degrees are the same number.
+constexpr float kAngleSpanDegrees = 90.0f;
+constexpr float kAngleOutMinVolts = 0.050f;
+constexpr float kAngleOutMaxVolts = 3.300f;
+
+dac80501::SpiTransport dac_transport(SPI1, pins::kDacCsN);
+dac80501::Dac80501 dac(dac_transport);
+#endif
 bool configured = false;
 CurrentCheck current_check;
 bool polarity_measured = false;
@@ -153,6 +213,18 @@ void printMenu(Print &out) {
   out.println(F("  o  flip the encoder counting sense"));
   out.println(F("  m  flip the motor direction (GCONF.shaft)"));
   out.println(F("  y  flip which end of travel the switch is on"));
+#if MJ_BOARD_REV != 0
+  out.println();
+  out.println(F("  angle output, for the motor-coupling test"));
+  out.println(F("  A  park the DAC at midscale (a static DC level)"));
+  out.println(F("  Z  park the DAC at zero scale"));
+  out.println(F("  F  park the DAC at full scale"));
+  out.println(F("     Park it, then jog or home, and AC-couple a scope on the"));
+  out.println(F("     BNC. The setpoint is DC, so anything AC is coupling."));
+  out.println(F("  L  LIVE: drive the output from the encoder at 1 kHz until"));
+  out.println(F("     a key is pressed. Needs 'h' first. Reports the"));
+  out.println(F("     ACHIEVED rate, not the requested one."));
+#endif
   out.println();
   out.println(F("  reporting"));
   out.println(F("  p  position, velocity, encoder, switch, driver status"));
@@ -444,6 +516,33 @@ bool bringUpBus(Print &out) {
 
   bus_up = true;
   configured = true;
+
+#if MJ_BOARD_REV != 0
+  // Only now. The DAC runs from +5V_SW and sits on the MCU side of the bus
+  // switch, so driving its chip select before the rail is up pushes current
+  // through its input clamps and back-powers the switched domain.
+  out.println(F("[4] angle-output DAC"));
+  SPI1.setSCK(pins::kDacSpiSck);
+  SPI1.setTX(pins::kDacSpiCopi);
+  SPI1.setRX(kSpi1Rx);
+  SPI1.begin();
+  dac_transport.begin();
+  dac80501::Config dac_config = dac80501::arduinoConfig();
+  dac_config.gain_register = kDacGainRegister;
+  if (!dac.begin(dac_config)) {
+    out.println(F("    [FAIL] DAC configuration frame failed."));
+  } else {
+    out.print(F("    [ ok ] GAIN 0x"));
+    out.print(kDacGainRegister, HEX);
+    out.print(F(", "));
+    out.print(dac.fullScale() * kDacOutputStageGain, 4);
+    out.println(F(" V full scale at the BNC"));
+    out.println(F("      Output is at zero scale, which measures 4.5 mV on"));
+    out.println(F("      this board -- a clamp, not an offset. Park it with"));
+    out.println(F("      'A' before looking for motor coupling."));
+  }
+#endif
+
   out.println();
   return true;
 }
@@ -738,6 +837,195 @@ bool readyToMove(Print &out) {
   }
   return true;
 }
+
+#if MJ_BOARD_REV != 0
+// Park the angle output at a static level, for the motor-coupling test.
+//
+// A STATIC setpoint is the point. The intended signal is then pure DC, so any
+// AC on the BNC is the motor getting into the analog chain and a scope can be
+// AC-coupled at high sensitivity to see it. Driving a live angle while moving
+// conflates coupling with the filter's response to real motion, which is a
+// different and later question.
+//
+// What to look for: a chopper-correlated artefact. The AD7616-P's antialias
+// filter is first order at ~39 kHz against fixed 30.3 kHz sampling, so
+// out-of-band content folds in nearly unattenuated -- and anything like that
+// would be far larger than one bit, which makes the ÷2 span question academic
+// until it is fixed.
+void parkAngleOutput(Print &out, uint16_t code) {
+  if (!dac.configured()) {
+    out.println(F("Run 'b' first -- the DAC needs the rail and the bus."));
+    return;
+  }
+  if (!dac.setCode(code)) {
+    out.println(F("  [FAIL] DAC write refused or failed."));
+    return;
+  }
+  const float dac_volts = dac80501::codeToVolts(code, kDacGainRegister);
+  out.print(F("Angle output parked: code "));
+  out.print(code);
+  out.print(F(" -> DAC "));
+  out.print(dac_volts, 6);
+  out.print(F(" V -> BNC "));
+  out.print(dac_volts * kDacOutputStageGain, 6);
+  out.println(F(" V expected"));
+  if (code == 0) {
+    out.println(F("  Zero scale measures 4.5 mV on this board, not 0 V --"));
+    out.println(F("  the OPA197 clamps there. Midscale is the better"));
+    out.println(F("  setpoint for a coupling hunt: it sits mid-span, so a"));
+    out.println(F("  disturbance in either direction is visible."));
+  }
+  out.println();
+}
+#endif
+
+#if MJ_BOARD_REV != 0
+// Drive the analog output from the live encoder position at a fixed rate.
+//
+// Runs until any serial byte arrives. Reports the ACHIEVED rate and the worst
+// loop time, because that is the claim the design doc asks for and an assumed
+// rate is worth nothing.
+void liveAngleOutput(Print &out) {
+  if (!bus_up || !configured) {
+    out.println(F("Run 'b' first."));
+    return;
+  }
+  if (!dac.configured()) {
+    out.println(F("The DAC is not configured. Run 'b'."));
+    return;
+  }
+  if (!homed) {
+    // Without a datum the angle is measured from wherever the mechanism
+    // happened to be, which is exactly the out-of-band "unhomed" case the
+    // design reserves a level for. Refuse rather than emit a plausible lie.
+    out.println(F("NOT HOMED. Run 'h' first -- without a datum the angle is"));
+    out.println(F("measured from wherever the mechanism was left, and the"));
+    out.println(F("output would be a plausible-looking wrong number."));
+    return;
+  }
+
+  out.print(F("Live angle output at "));
+  out.print(1000000.0f / static_cast<float>(kAngleUpdateIntervalUs), 0);
+  out.println(F(" Hz. Any key stops it."));
+  out.print(F("  mapping: 0 to "));
+  out.print(kAngleSpanDegrees, 1);
+  out.print(F(" deg of excursion -> "));
+  out.print(kAngleOutMinVolts, 3);
+  out.print(F(" to "));
+  out.print(kAngleOutMaxVolts, 3);
+  out.println(F(" V at the BNC"));
+  out.print(F("  one encoder count = "));
+  out.print(360.0f / static_cast<float>(conv::kEncoderCountsPerRev), 4);
+  out.print(F(" deg = "));
+  out.print((kAngleOutMaxVolts - kAngleOutMinVolts) /
+                kAngleSpanDegrees * 360.0f /
+                static_cast<float>(conv::kEncoderCountsPerRev) * 1000.0f,
+            2);
+  out.println(F(" mV at the BNC"));
+  if (dac80501::kCodeMax > 0) {
+    out.println(F("  With the driver DISABLED ('E') the motor freewheels and"));
+    out.println(F("  the joystick can be moved by hand -- the encoder still"));
+    out.println(F("  counts, because it is read by the TMC5130A and does not"));
+    out.println(F("  depend on the output stage."));
+  }
+  out.println();
+
+  while (Serial.available()) {
+    Serial.read();
+  }
+
+  const float volts_per_degree =
+      (kAngleOutMaxVolts - kAngleOutMinVolts) / kAngleSpanDegrees;
+  uint32_t updates = 0;
+  uint32_t worst_loop_us = 0;
+  int32_t min_code = dac80501::kCodeMax;
+  int32_t max_code = 0;
+  const uint32_t started_us = micros();
+  uint32_t next_us = started_us;
+
+  SafeState::setInstrumentationEnabled(true);
+  SafeState::setTrigger1(true);
+
+  while (!Serial.available()) {
+    // Absolute scheduling, not a delay, so a slow iteration does not push the
+    // whole schedule out.
+    while (static_cast<int32_t>(micros() - next_us) < 0) {
+    }
+    const uint32_t loop_start_us = micros();
+    next_us += kAngleUpdateIntervalUs;
+
+    const int32_t microsteps = stepper.encoder.readActualPosition();
+    // Excursion away from the datum. Position 0 is the switch release edge at
+    // the positive end, so travel into the mechanism is negative.
+    float excursion_deg = -conv::microstepsToDegrees(microsteps);
+    if (excursion_deg < 0.0f) {
+      excursion_deg = 0.0f;
+    } else if (excursion_deg > kAngleSpanDegrees) {
+      excursion_deg = kAngleSpanDegrees;
+    }
+    const float volts = kAngleOutMinVolts + excursion_deg * volts_per_degree;
+    // Divide out the output stage: the DAC has to produce the BNC voltage
+    // divided by the amplifier's gain.
+    dac.setVolts(volts / kDacOutputStageGain);
+
+    const uint16_t code = dac.lastCode();
+    if (code < min_code) {
+      min_code = code;
+    }
+    if (code > max_code) {
+      max_code = code;
+    }
+    ++updates;
+    const uint32_t elapsed_us = micros() - loop_start_us;
+    if (elapsed_us > worst_loop_us) {
+      worst_loop_us = elapsed_us;
+    }
+  }
+
+  const uint32_t total_us = micros() - started_us;
+  SafeState::setTrigger1(false);
+  while (Serial.available()) {
+    Serial.read();
+  }
+
+  out.println(F("Stopped."));
+  out.print(F("  updates:        "));
+  out.println(updates);
+  out.print(F("  elapsed:        "));
+  out.print(static_cast<float>(total_us) / 1000.0f, 1);
+  out.println(F(" ms"));
+  out.print(F("  ACHIEVED rate:  "));
+  out.print(static_cast<float>(updates) * 1000000.0f /
+                static_cast<float>(total_us),
+            1);
+  out.println(F(" Hz"));
+  out.print(F("  worst loop:     "));
+  out.print(worst_loop_us);
+  out.print(F(" us of the "));
+  out.print(kAngleUpdateIntervalUs);
+  out.println(F(" us budget"));
+  out.print(F("  code range:     "));
+  out.print(min_code);
+  out.print(F(" to "));
+  out.print(max_code);
+  out.print(F("  ("));
+  out.print(dac80501::codeToVolts(static_cast<uint16_t>(min_code),
+                                  kDacGainRegister) *
+                kDacOutputStageGain,
+            4);
+  out.print(F(" to "));
+  out.print(dac80501::codeToVolts(static_cast<uint16_t>(max_code),
+                                  kDacGainRegister) *
+                kDacOutputStageGain,
+            4);
+  out.println(F(" V at the BNC)"));
+  if (worst_loop_us > kAngleUpdateIntervalUs) {
+    out.println(F("  [!!] a loop exceeded its budget, so the schedule"));
+    out.println(F("  slipped. The achieved rate above is the real one."));
+  }
+  out.println();
+}
+#endif
 
 void jog(Print &out, int32_t microsteps) {
   if (!readyToMove(out)) {
@@ -1541,6 +1829,20 @@ void loop() {
     Serial.println(rail.up ? F("live") : (rail.off ? F("off") : F("BETWEEN")));
     break;
   }
+#if MJ_BOARD_REV != 0
+  case 'A':
+    parkAngleOutput(Serial, 0x8000);
+    break;
+  case 'Z':
+    parkAngleOutput(Serial, 0x0000);
+    break;
+  case 'F':
+    parkAngleOutput(Serial, 0xFFFF);
+    break;
+  case 'L':
+    liveAngleOutput(Serial);
+    break;
+#endif
   case 'x':
     MotionSetup::endSpi(stepper);
     PowerSequence::powerDown();
@@ -1548,6 +1850,13 @@ void loop() {
     configured = false;
     homed = false;
     current_check.safe = false;
+#if MJ_BOARD_REV != 0
+    // The DAC just lost VDD, so its GAIN is back to a 5.0 V full scale. Tell
+    // the driver, or it keeps accepting data writes against a span that no
+    // longer exists. invalidate() rather than softReset() because the latter
+    // would send a frame into an unpowered part.
+    dac.invalidate();
+#endif
     Serial.println(F("Powered down: driver disabled, bus open, HV_EN low."));
     break;
   case 'I':

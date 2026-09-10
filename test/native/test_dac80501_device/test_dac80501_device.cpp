@@ -192,6 +192,26 @@ void test_soft_reset_reblocks_even_when_the_frame_fails(void) {
   TEST_ASSERT_FALSE(dac.configured());
 }
 
+void test_invalidate_reblocks_writes_without_touching_the_bus(void) {
+  FakeTransport transport(false);
+  Dac80501 dac(transport);
+  TEST_ASSERT_TRUE(dac.begin(testConfig()));
+  TEST_ASSERT_TRUE(dac.setCode(0x4321));
+  transport.writes.clear();
+
+  dac.invalidate();
+
+  // Blocked, exactly as after a soft reset...
+  TEST_ASSERT_FALSE(dac.configured());
+  TEST_ASSERT_FALSE(dac.setCode(0xFFFF));
+  TEST_ASSERT_EQUAL_UINT16(0, dac.lastCode());
+  // ...but with NOTHING written. This is called when the DAC has lost VDD, and
+  // driving SYNC or SCLK into an unpowered part back-powers its supply through
+  // the input clamps. A softReset() here would send a frame and do exactly
+  // that, which is why invalidate() exists separately.
+  TEST_ASSERT_EQUAL_UINT32(0, transport.writes.size());
+}
+
 void test_soft_reset_uses_the_reserved_code(void) {
   FakeTransport transport(false);
   Dac80501 dac(transport);
@@ -428,6 +448,7 @@ int main(int, char **) {
   RUN_TEST(test_a_failed_gain_write_leaves_data_writes_blocked);
   RUN_TEST(test_soft_reset_reblocks_data_writes);
   RUN_TEST(test_soft_reset_reblocks_even_when_the_frame_fails);
+  RUN_TEST(test_invalidate_reblocks_writes_without_touching_the_bus);
   RUN_TEST(test_soft_reset_uses_the_reserved_code);
   RUN_TEST(test_begin_honours_the_soft_reset_option);
   RUN_TEST(test_begin_skips_the_delay_when_none_is_injected);

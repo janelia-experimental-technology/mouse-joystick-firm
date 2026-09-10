@@ -354,8 +354,15 @@ void powerDown(Print &out) {
   PowerSequence::powerDown();
   rail_up = false;
   bus_closed = false;
+  // The DAC just lost VDD, so its registers are back to reset values and GAIN
+  // is a 5.0 V full scale again. Tell the driver, or it keeps accepting data
+  // writes against a span that no longer exists -- which on this board is a
+  // full-scale code asking for 6.6 V at the BNC.
+  dac.invalidate();
   out.println(F("Powered down: DAC at zero scale, bus open, HV_EN low."));
   out.println(F("+36V_SW takes about 700 ms to bleed down."));
+  out.println(F("The DAC lost VDD, so its GAIN is back to a 5.0 V full"));
+  out.println(F("scale. Data writes are blocked again until 'b'."));
   out.println();
 }
 
