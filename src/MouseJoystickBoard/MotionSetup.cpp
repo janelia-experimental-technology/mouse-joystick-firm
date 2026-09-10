@@ -464,10 +464,11 @@ void MotionSetup::armStop(TMC51X0 &stepper, bool armed, bool switch_active_high,
   stepper.controller.writeStopMode(tmc51x0::HardMode);
 }
 
-MotionSetup::SwitchWitness MotionSetup::witnessByMotion(TMC51X0 &stepper,
-                                                        HomeEnd end,
-                                                        uint32_t timeout_ms) {
+MotionSetup::SwitchWitness MotionSetup::witnessByMotion(
+    TMC51X0 &stepper, HomeEnd end, uint32_t move_timeout_ms,
+    uint32_t sweep_timeout_ms) {
   SwitchWitness w;
+  w.stop_reason = SwitchWitness::StopReason::kBudgetExpired;
   w.transition_seen = false;
   w.released_again = false;
   w.engage_position = 0;
@@ -491,16 +492,17 @@ MotionSetup::SwitchWitness MotionSetup::witnessByMotion(TMC51X0 &stepper,
   const int32_t toward = (end == HomeEnd::kPositive) ? 1 : -1;
   const int32_t step = conv::kWitnessStepMicrosteps;
   const int32_t start = stepper.controller.readActualPosition();
-  const uint32_t deadline = millis() + timeout_ms;
+  const uint32_t deadline = millis() + sweep_timeout_ms;
 
   while (millis() < deadline) {
-    const MoveReport r = moveBy(stepper, toward * step, timeout_ms);
+    const MoveReport r = moveBy(stepper, toward * step, move_timeout_ms);
     w.travel_used = r.end_position - start;
     w.approach_outcome = r.outcome;
 
     ioin.raw = stepper.registers.read(Regs::IoinAddress);
     if (ioin.refl_step() != w.resting_level) {
       w.transition_seen = true;
+      w.stop_reason = SwitchWitness::StopReason::kTransitionSeen;
       w.engage_position = r.end_position;
       break;
     }
@@ -508,10 +510,12 @@ MotionSetup::SwitchWitness MotionSetup::witnessByMotion(TMC51X0 &stepper,
     // target, and the switch has not changed: an end stop before the switch,
     // or a switch that does not report. Either way, stop sweeping.
     if (r.outcome != MoveOutcome::kTargetReached) {
+      w.stop_reason = SwitchWitness::StopReason::kMoveBlocked;
       break;
     }
     if ((w.travel_used > conv::kHomeTravelBoundMicrosteps) ||
         (w.travel_used < -conv::kHomeTravelBoundMicrosteps)) {
+      w.stop_reason = SwitchWitness::StopReason::kTravelBound;
       break;
     }
   }
@@ -523,9 +527,12 @@ MotionSetup::SwitchWitness MotionSetup::witnessByMotion(TMC51X0 &stepper,
 
   // And back off until it lets go, which confirms the transition was the switch
   // rather than a one-way glitch.
-  const uint32_t release_deadline = millis() + timeout_ms;
+  // The release sweep only has to back off a few steps, but give it the same
+  // budget rather than a second borrowed constant -- that reuse is what caused
+  // the bug this function was just fixed for.
+  const uint32_t release_deadline = millis() + sweep_timeout_ms;
   while (millis() < release_deadline) {
-    const MoveReport r = moveBy(stepper, -toward * step, timeout_ms);
+    const MoveReport r = moveBy(stepper, -toward * step, move_timeout_ms);
     ioin.raw = stepper.registers.read(Regs::IoinAddress);
     if (ioin.refl_step() == w.resting_level) {
       w.released_again = true;

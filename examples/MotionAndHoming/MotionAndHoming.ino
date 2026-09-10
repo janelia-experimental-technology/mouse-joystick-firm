@@ -125,7 +125,35 @@ constexpr float kAngleSpanDegrees = 90.0f;
 constexpr float kAngleOutMinVolts = 0.050f;
 constexpr float kAngleOutMaxVolts = 3.300f;
 
+// TRANSPORT SELECTION. Build with -DMJ_DAC_I2C=1 for the I2C path.
+//
+// Defaults to SPI because that is what pcb v0.3 IS: `SPI2C` (U2001 pad 5) is
+// tied DIRECTLY TO GND in copper -- no strap resistor -- so v0.3 cannot run I2C
+// without cutting a trace. The I2C path is here and compiled so it is ready for
+// v1.0, but it CANNOT be tested on any board that exists today.
+//
+// v1.0 is expected to strap I2C, for two reasons that have nothing to do with
+// speed: STATUS.REF-ALARM is unreadable over SPI, and the 4.5 mV output floor
+// measured on 2026-09-10 makes the analog level a weaker fault discriminator
+// than the design assumed. Bandwidth is not a factor -- I2C at 1 MHz adds ~33 us
+// to a measured 527 us worst-case loop, about 6%.
+#ifndef MJ_DAC_I2C
+#define MJ_DAC_I2C 0
+#endif
+
+#if MJ_DAC_I2C
+// A0 selects one of FOUR addresses by what it is tied to: AGND 0x48, VDD 0x49,
+// SDA 0x4A, SCL 0x4B. So the angle DAC and the brake DAC share one bus with
+// unique addresses and two spare -- no second bus, and 2 GPIOs instead of the
+// 4 that SPI needs for two chip selects.
+//
+// The angle output takes 0x48. Whichever address a board straps has to match
+// here; there is no way to discover it, because a wrong address simply NAKs.
+constexpr uint8_t kDacI2cAddress = dac80501::kI2cAddrA0Agnd;
+dac80501::I2cTransport dac_transport(Wire, kDacI2cAddress);
+#else
 dac80501::SpiTransport dac_transport(SPI1, pins::kDacCsN);
+#endif
 dac80501::Dac80501 dac(dac_transport);
 #endif
 bool configured = false;
@@ -522,15 +550,36 @@ bool bringUpBus(Print &out) {
   // switch, so driving its chip select before the rail is up pushes current
   // through its input clamps and back-powers the switched domain.
   out.println(F("[4] angle-output DAC"));
+#if MJ_DAC_I2C
+  // Pin roles change with the strap: SCLK becomes SCL and SDIN becomes SDA, and
+  // SYNC stops being a chip select and becomes the static A0 address strap.
+  Wire.setSCL(pins::kDacSpiSck);
+  Wire.setSDA(pins::kDacSpiCopi);
+  dac_transport.begin();
+  out.print(F("    transport: I2C at 0x"));
+  out.println(kDacI2cAddress, HEX);
+  out.println(F("    Pull-ups must be BOARD-level, not per instance -- two"));
+  out.println(F("    DACs each carrying them would halve the resistance."));
+#else
   SPI1.setSCK(pins::kDacSpiSck);
   SPI1.setTX(pins::kDacSpiCopi);
   SPI1.setRX(kSpi1Rx);
   SPI1.begin();
   dac_transport.begin();
+  out.println(F("    transport: SPI1, write-only"));
+#endif
   dac80501::Config dac_config = dac80501::arduinoConfig();
   dac_config.gain_register = kDacGainRegister;
   if (!dac.begin(dac_config)) {
-    out.println(F("    [FAIL] DAC configuration frame failed."));
+#if MJ_DAC_I2C
+    out.println(F("    [FAIL] no ACK. Over I2C that is real information:"));
+    out.println(F("    wrong address strap, absent part, or missing"));
+    out.println(F("    pull-ups. Unlike SPI, this failure is detectable."));
+#else
+    out.println(F("    [FAIL] DAC configuration frame failed. Over SPI the"));
+    out.println(F("    transport can barely report anything -- suspect the"));
+    out.println(F("    bus switch."));
+#endif
   } else {
     out.print(F("    [ ok ] GAIN 0x"));
     out.print(kDacGainRegister, HEX);
@@ -767,7 +816,8 @@ void witnessByMotion(Print &out) {
   SafeState::setInstrumentationEnabled(true);
   SafeState::setTrigger1(true);
   const MotionSetup::SwitchWitness w =
-      MotionSetup::witnessByMotion(stepper, switch_end, kJogTimeoutMs);
+      MotionSetup::witnessByMotion(stepper, switch_end, kJogTimeoutMs,
+                                   conv::kWitnessSweepTimeoutMs);
   SafeState::setTrigger1(false);
 
   out.print(F("  resting REFL_STEP: "));
@@ -779,19 +829,44 @@ void witnessByMotion(Print &out) {
   out.println(F(" deg)"));
 
   if (!w.transition_seen) {
-    out.println(
-        F("  [FAIL] REFL_STEP never changed while the mechanism moved"));
-    out.print(F("    to its limit. Last approach outcome: "));
+    out.println(F("  [FAIL] REFL_STEP never changed during the sweep."));
+    out.print(F("    last approach outcome: "));
     out.println(outcomeName(w.approach_outcome));
-    out.println(
-        F("    If the mechanism reached an end stop, the switch is not"));
-    out.println(
-        F("    at this end -- send 'y' and sweep the other way. If it"));
-    out.println(F("    swept the whole bound, the switch is not reporting:"));
-    out.println(F("    short J1301 pin 1 to pin 2 by hand (pin 1 GND, pin 2"));
-    out.println(F("    IN) and watch 'i'. No change there means U1301's OUT"));
-    out.println(F("    joint, which is the open question the two rig boards"));
-    out.println(F("    left behind."));
+
+    // Name the sweep's OWN limits before naming a component. The previous
+    // version of this text went straight to "U1301's OUT joint" and was wrong
+    // all three times it fired -- the sweep had simply run out of budget with
+    // the mechanism parked far from the switch.
+    switch (w.stop_reason) {
+    case MotionSetup::SwitchWitness::StopReason::kBudgetExpired:
+      out.println(F("    reason: THE SWEEP RAN OUT OF TIME, not the switch."));
+      out.print(F("    It covered "));
+      out.print(conv::microstepsToDegrees(w.travel_used), 1);
+      out.print(F(" deg in "));
+      out.print(conv::kWitnessSweepTimeoutMs / 1000);
+      out.println(F(" s and never got there."));
+      out.println(F("    Almost certainly the mechanism is parked too far"));
+      out.println(F("    from the switch. Jog toward it with 'j'/'k' while"));
+      out.println(F("    watching 'i' for REFL_STEP, then re-run 'W'."));
+      out.println(F("    Suspect the board only after that."));
+      break;
+    case MotionSetup::SwitchWitness::StopReason::kMoveBlocked:
+      out.println(F("    reason: a step ended on something other than its"));
+      out.println(F("    target, so the mechanism hit an END STOP before the"));
+      out.println(F("    switch. The switch is not at this end -- send 'y' to"));
+      out.println(F("    sweep the other way."));
+      break;
+    case MotionSetup::SwitchWitness::StopReason::kTravelBound:
+      out.println(F("    reason: the full distance bound was swept without"));
+      out.println(F("    the switch reporting. THIS is the case that"));
+      out.println(F("    implicates the board:"));
+      out.println(F("    short J1301 pin 1 to pin 2 by hand (pin 1 GND,"));
+      out.println(F("    pin 2 IN) and watch 'i'. No change there means"));
+      out.println(F("    U1301's OUT joint or its harness."));
+      break;
+    case MotionSetup::SwitchWitness::StopReason::kTransitionSeen:
+      break;
+    }
     polarity_measured = false;
     return;
   }

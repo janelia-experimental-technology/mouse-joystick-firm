@@ -270,9 +270,10 @@ between them does not invalidate a cache. Same arrangement as `TMC51X0`.
 | `mouse_joystick` | `MJ_BOARD_REV=0`, for pcb **v0.1 and v0.2 only**. Universal `boot2_generic_03h` stage 2 — slower XIP, but boots regardless of the flash's quad-enable bit, which is what a first-article board wants. |
 | `mouse_joystick_fastflash` | same board, quad-lane stage 2 matched to the W25Q128JV. Use once stage 1 has passed. |
 | `mouse_joystick_rev1` | `MJ_BOARD_REV=1`, for pcb **v0.3 and later, including HEAD**, where GP10/GP11/GP13 carry the angle DAC. **This is not a future-only env — a v0.3 board needs it.** Building rev 0 against v0.3 drives the spare-pad test onto the DAC's SPI bus and chip select. The check count is the tell: a v0.3 board reporting 27 checks in stage 1 was built with the wrong env; rev 1 reports 24. |
+| `mouse_joystick_rev1_i2c` | Same, but the DAC on **I²C** (`MJ_DAC_I2C=1`). **No board can run this yet** — v0.3 ties `SPI2C` directly to GND in copper. It exists so the I²C path stays compiled and honest ahead of v1.0, which is strapping it. |
 | `native` | host tests. |
 
-### Three Build-System Traps
+### Five Build-System Traps
 
 - **The board support library is declared as `symlink://src/MouseJoystickBoard`,
   not as a bare path.** A bare local path makes PlatformIO *copy* the directory
@@ -285,6 +286,18 @@ between them does not invalidate a cache. Same arrangement as `TMC51X0`.
 - **`make test` wipes the firmware build directories.** The native test run uses
   the default build dir and prunes the per-example ones. Harmless, but do not
   read it as a failed build.
+- **`pixi run test` deletes the firmware UF2s, so flash BEFORE you test.** This
+  is the same trap as the note above, but it bites harder than it reads: the
+  artifact is simply gone, and `picotool load` then reports
+  `Could not open ...firmware.uf2` — which looks like a tooling failure rather
+  than a missing file. Rebuild, then flash.
+- **When `picotool` will not write, copy the UF2 to the bootloader drive
+  instead.** With the board in BOOTSEL, `cp firmware.uf2 /media/$USER/RPI-RP2/`
+  and `sync` works through the bootrom's mass storage and bypasses picotool
+  entirely. On 2026-09-10 picotool failed six consecutive writes with
+  `The RP2040 device returned an error: <unknown>` while `lsblk` showed the
+  `RPI-RP2` drive present at its correct 128 M — the copy succeeded first try.
+  **This is a more reliable recovery than retrying picotool.**
 - **`lib_ldf_mode = off`, so nothing is discovered by scanning includes.** A
   library that is not named in `lib_deps` is simply not on the include path,
   even a built-in one. The symptom is a `No such file or directory` for a header

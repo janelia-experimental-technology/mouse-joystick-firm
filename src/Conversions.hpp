@@ -306,6 +306,21 @@ constexpr int32_t kHomeTravelBoundMicrosteps = 2 * kMicrostepsPerRev;
 // travel in about a dozen steps.
 constexpr int32_t kWitnessStepMicrosteps = 128; // 0.9 deg at the motor
 
+// How long the whole witness sweep may take, as distinct from the per-step
+// move timeout. Sized from the mechanism, not borrowed from the jog timeout.
+//
+// The rig's swing is about 60 deg = 8533 microsteps = 67 steps of 128. Measured
+// on 2026-09-10, a 128-microstep step costs ~150 ms including moveBy overhead,
+// so a full-length sweep is ~10 s. 25 s leaves margin for a sweep that starts
+// at the far stop and for a slower step.
+//
+// This constant exists because kJogTimeoutMs (4000) was serving as both the
+// per-step timeout and the sweep budget, and 4 s only buys ~27 steps = 24 deg.
+// A sweep starting further than that from the switch could never reach it, and
+// the failure text blamed the debouncer's output joint instead. Three sessions
+// lost time to it.
+constexpr uint32_t kWitnessSweepTimeoutMs = 25000;
+
 // The rig's actual travel, measured on 2026-09-02 on board E4654C159F4D1334:
 // the limit switch bounds the positive end and a mechanical stop bounds the
 // negative end, about 4000 microsteps apart -- 28 degrees at the motor shaft,

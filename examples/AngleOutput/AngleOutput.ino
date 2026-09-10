@@ -80,7 +80,24 @@ constexpr float kOutputStageGain = 1.32f;
 // SDO on this same bus.
 constexpr uint8_t kSpi1Rx = 12;
 
+// Transport selection, same shape as examples/MotionAndHoming -- deliberately
+// duplicated rather than shared, because each example is meant to read on its
+// own. Build with -DMJ_DAC_I2C=1, or use env:mouse_joystick_rev1_i2c.
+//
+// NO BOARD CAN RUN THE I2C PATH YET: pcb v0.3 ties `SPI2C` (U2001 pad 5)
+// directly to GND in copper.
+#ifndef MJ_DAC_I2C
+#define MJ_DAC_I2C 0
+#endif
+
+#if MJ_DAC_I2C
+// A0 gives four addresses by what it is tied to -- AGND 0x48, VDD 0x49,
+// SDA 0x4A, SCL 0x4B -- so v1.0's two DACs share one bus. Angle output is 0x48.
+constexpr uint8_t kDacI2cAddress = dac80501::kI2cAddrA0Agnd;
+dac80501::I2cTransport transport(Wire, kDacI2cAddress);
+#else
 dac80501::SpiTransport transport(SPI1, pins::kDacCsN);
+#endif
 dac80501::Dac80501 dac(transport);
 
 bool rail_up = false;
@@ -147,6 +164,20 @@ bool bringUp(Print &out) {
   out.println(F("    [ ok ] closed. GP10/GP11/GP13 now reach the DAC."));
 
   // Only now. See the back-power note in the header.
+#if MJ_DAC_I2C
+  out.println(F("[3] I2C"));
+  // The strap changes what the pins are: SCLK becomes SCL, SDIN becomes SDA,
+  // and SYNC stops being a chip select and becomes the static A0 strap.
+  Wire.setSCL(pins::kDacSpiSck);
+  Wire.setSDA(pins::kDacSpiCopi);
+  transport.begin();
+  out.print(F("    [ ok ] SCL GP"));
+  out.print(pins::kDacSpiSck);
+  out.print(F(", SDA GP"));
+  out.print(pins::kDacSpiCopi);
+  out.print(F(", address 0x"));
+  out.println(kDacI2cAddress, HEX);
+#else
   out.println(F("[3] SPI1"));
   SPI1.setSCK(pins::kDacSpiSck);
   SPI1.setTX(pins::kDacSpiCopi);
@@ -159,6 +190,7 @@ bool bringUp(Print &out) {
   out.print(pins::kDacSpiCopi);
   out.print(F(", SYNC GP"));
   out.println(pins::kDacCsN);
+#endif
 
   out.println(F("[4] DAC configuration"));
   // arduinoConfig() rather than a bare Config: it fills in the injected delay

@@ -311,6 +311,18 @@ public:
     int32_t release_position; // XACTUAL where it read untriggered again
     int32_t travel_used;      // how far the approach went to find it
     MoveOutcome approach_outcome;
+
+    // Why the sweep stopped, when it stopped without seeing a transition.
+    // WITHOUT THIS the three cases are indistinguishable in the report, and
+    // the failure text blamed U1301's output joint for what was actually the
+    // sweep running out of time. That happened three times on 2026-09-10.
+    enum class StopReason : uint8_t {
+      kTransitionSeen, // the switch changed -- not a failure
+      kBudgetExpired,  // ran out of sweep time before reaching the switch
+      kTravelBound,    // hit the distance bound
+      kMoveBlocked,    // a step ended on something other than its target
+    };
+    StopReason stop_reason;
   };
 
   // Establish the switch's polarity and prove its path, using the motor.
@@ -330,8 +342,18 @@ public:
   // Safe against its own assumption being wrong: the polarity is written before
   // the sweep, so if the switch were somehow already triggered, the very first
   // step reads as blocked and the sweep reports no travel rather than driving.
+  // `move_timeout_ms` bounds each individual 128-microstep step.
+  // `sweep_timeout_ms` bounds the whole search, and it must be much larger.
+  //
+  // THESE WERE ONE PARAMETER AND THAT WAS A BUG. Both were passed
+  // kJogTimeoutMs = 4000, which is right for one jog and badly wrong for a
+  // sweep: at jog velocity a 128-microstep step costs ~150 ms including
+  // overhead, so 4 s covers only about 27 steps -- 24 degrees, less than this
+  // rig's ~60 degree mechanism. A sweep starting more than 24 degrees from the
+  // switch could never reach it, and reported the switch as not responding.
   static SwitchWitness witnessByMotion(TMC51X0 &stepper, HomeEnd end,
-                                       uint32_t timeout_ms);
+                                       uint32_t move_timeout_ms,
+                                       uint32_t sweep_timeout_ms);
 
   // The datasheet's homing procedure, section 14.4, with this board's bounds.
   //
