@@ -1,0 +1,17 @@
+{
+  "name": "DAC80501",
+  "version": "0.1.0",
+  "description": "Driver for the TI DACx0501 family (DAC80501/DAC70501/DAC60501) over either SPI or I2C. The transport is injected, so two instances can share a bus on separate chip selects. Register map and output arithmetic are Arduino-free and host tested. Public headers live one level up in src/ and are reached through the project-wide -Isrc flag. Board-specific calibration deliberately lives in the consuming firmware, not here.",
+  "keywords": "dac, dac80501, dacx0501, spi, i2c, analog-output",
+  "authors": [
+    {
+      "name": "Peter Polidoro",
+      "email": "peter@polidoro.io"
+    }
+  ],
+  "frameworks": "arduino",
+  "platforms": "raspberrypi",
+  "build": {
+    "srcDir": "."
+  }
+}

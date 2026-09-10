@@ -66,7 +66,12 @@ else. The stages follow that boundary:
 | 1 | RP2040 alone | absent | isolated | disabled | `examples/RP2040SelfTest` — **passed** |
 | 2 | TMC5130A register reads | applied | closed | disabled | `examples/TMC5130Communication` — **passed** |
 | 3 | Motion, encoder, homing | applied | closed | enabled | `examples/MotionAndHoming` — **passed** |
-| 4 | pyControl UART protocol | applied | closed | as needed | host half written (128 tests); RP2040 half not written |
+| 4 | pyControl UART protocol | applied | closed | as needed | `examples/PyControlLink` — **passed on hardware** 2026-09-03 |
+| 5 | Analog angle output | applied | closed | untouched | `examples/AngleOutput` — writes verified 2026-09-09; **output not yet measured, needs a DMM** |
+
+**Stage 5 needs a v0.3 or later board and `env:mouse_joystick_rev1`.** It also
+needs a meter: `ANGLE_OUT` reaches no RP2040 ADC, and over SPI the DAC cannot be
+read back either, so nothing on the board can see its own analog output.
 
 **Stage 1 has no way to raise `HV_EN` and no way to enable the bus switch.** That
 is deliberate, not an omission: until the MCU is proven there is no reason to put
@@ -224,10 +229,22 @@ repository are **v0.1** designators; identify parts by value and net.
 examples/RP2040SelfTest/       stage 1 program
 examples/TMC5130Communication/ stage 2: raw SPI, no driver library
 examples/MotionAndHoming/      stage 3: motion, encoder, homing, over TMC51X0
+examples/PyControlLink/        stage 4: the pyControl UART protocol
+examples/AngleOutput/          stage 5: the analog angle output. rev1 only
 src/                           board support library
   BoardPins.hpp                GPIO allocation, single source of truth
   Conversions.hpp              ADC and motion scaling, Arduino-free so the
                                host can test it; also the fitted parts' facts
+  DAC80501Registers.hpp        DACx0501 register map and output arithmetic.
+                               Arduino-free, host tested
+  DAC80501Device.hpp           DACx0501 device logic and the GAIN-before-data
+                               ordering interlock. Arduino-free, host tested
+                               against a fake transport
+  DAC80501.hpp                 DACx0501 Arduino transports, SPI and I2C
+  DAC80501/                    a SEPARATE library, not board support: this part
+                               is placed twice at pcb v1.0 and is intended to
+                               be extracted to its own repository once a second
+                               consumer exists
   SafeState.hpp                safe idle state
   PowerSequence.hpp            the switched rail; the only thing that touches
                                HV_EN
@@ -250,12 +267,12 @@ between them does not invalidate a cache. Same arrangement as `TMC51X0`.
 
 | Env | Purpose |
 |-----|---------|
-| `mouse_joystick` | **the board in hand.** `MJ_BOARD_REV=0`. Universal `boot2_generic_03h` stage 2 — slower XIP, but boots regardless of the flash's quad-enable bit, which is what a first-article board wants. |
+| `mouse_joystick` | `MJ_BOARD_REV=0`, for pcb **v0.1 and v0.2 only**. Universal `boot2_generic_03h` stage 2 — slower XIP, but boots regardless of the flash's quad-enable bit, which is what a first-article board wants. |
 | `mouse_joystick_fastflash` | same board, quad-lane stage 2 matched to the W25Q128JV. Use once stage 1 has passed. |
-| `mouse_joystick_rev1` | `MJ_BOARD_REV=1`, for PCB HEAD where GP10/GP11/GP13 carry the angle DAC. |
+| `mouse_joystick_rev1` | `MJ_BOARD_REV=1`, for pcb **v0.3 and later, including HEAD**, where GP10/GP11/GP13 carry the angle DAC. **This is not a future-only env — a v0.3 board needs it.** Building rev 0 against v0.3 drives the spare-pad test onto the DAC's SPI bus and chip select. The check count is the tell: a v0.3 board reporting 27 checks in stage 1 was built with the wrong env; rev 1 reports 24. |
 | `native` | host tests. |
 
-### Two Build-System Traps
+### Three Build-System Traps
 
 - **The board support library is declared as `symlink://src/MouseJoystickBoard`,
   not as a bare path.** A bare local path makes PlatformIO *copy* the directory
@@ -268,6 +285,13 @@ between them does not invalidate a cache. Same arrangement as `TMC51X0`.
 - **`make test` wipes the firmware build directories.** The native test run uses
   the default build dir and prunes the per-example ones. Harmless, but do not
   read it as a failed build.
+- **`lib_ldf_mode = off`, so nothing is discovered by scanning includes.** A
+  library that is not named in `lib_deps` is simply not on the include path,
+  even a built-in one. The symptom is a `No such file or directory` for a header
+  the source plainly includes — `Wire.h`, when `DAC80501` was added and only
+  `SPI` was listed. Both `SPI` and `Wire` are named now, on every env, because
+  the DAC driver supports either transport regardless of which one a given
+  board wires up.
 
 ## Recording Results
 
