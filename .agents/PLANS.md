@@ -4,6 +4,32 @@
 
 Stage 4: the pyControl UART protocol. Stages 1 to 3 have passed on hardware.
 
+## Parallel Observability Workstream — 2026-09-29
+
+[docs/observability-plan.md](../docs/observability-plan.md) is the local
+`OBS-FW` plan. The shared
+[experimental-system roadmap](../../orb-weaver-context/context/experimental-system-observability-plan.md)
+owns cross-repository dependencies and stages. This optional path runs alongside
+existing delivery, bring-up and hardware-watchdog work; it does not replace
+those tasks or commit the application to QP.
+
+- [ ] `OBS-FW-1`: define representative command/event/completion semantics;
+      ready now, coordinate interface/fixture fields with `OBS-IF`/`OBS-HOST`.
+- [ ] `OBS-FW-2`: prepare good/fault/gap baseline fixtures and expected outcomes.
+- [ ] `OBS-FW-3`: implement bounded observation only after agreeing semantics
+      and claiming affected files with the delivery/watchdog agent.
+- [ ] `OBS-FW-4`: measure the baseline on a qualified board/capture path;
+      hardware-gated, with measurements in the PCB bring-up log.
+- [ ] `OBS-FW-5`: optional QP comparison; RP2040 requires its own target gate,
+      and a Teensy validation result does not satisfy it.
+- [ ] `OBS-FW-6`: hand off correlated evidence for a supervised observation-only
+      experiment pilot.
+
+Claim step, owner and exact paths before implementation; use the local plan's
+file-ownership and evidence checklist. Planning alone closes none of these
+items. Preserve selected manufactured-tag/serial context rather than assuming
+historical firmware wiring matches current PCB development.
+
 ## Status
 
 **Stage 1 passed on hardware, 2026-09-01.** Board serial `E4654C159F2C2534`.

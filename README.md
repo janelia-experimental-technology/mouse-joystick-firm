@@ -22,6 +22,15 @@ serial. Stage 3's procedure and findings are in `docs/motion-bringup.md`.
 The pin map is verified against PCB git tag **v0.1**, the revision manufactured
 as rev 0. Tags v0.1 and v0.2 have byte-identical RP2040 pad-to-net maps.
 
+## Observability Development
+
+The [observability plan](docs/observability-plan.md) tracks `OBS-FW`: define
+application event semantics, establish a non-QP evidence baseline, and evaluate
+an optional QP/QV trace pilot. It links to the shared architecture and parallel
+workstreams. This work does not require a firmware rewrite or delay existing
+board bring-up and delivery. New debug/trace connections and an RP2040 QP port
+need their own board and target evidence; they are not current capabilities.
+
 ## Quick Start
 
 ```sh
