@@ -1,6 +1,6 @@
 # Firmware observability development plan
 
-Status: planned work, 2026-09-29. This repository owns `OBS-FW`: application
+Status: revised development intent, 2026-09-30. This repository owns `OBS-FW`: application
 semantics, a non-QP baseline, and a possible later QP trace comparison.
 The shared [architecture](../../orb-weaver-context/context/experimental-system-observability.md)
 records the intent and the shared
@@ -22,6 +22,21 @@ protocol state machine and `MotionBackend` boundary are the baseline. Structured
 application events from this implementation are valid inputs to the observation
 system even if QP is never adopted.
 
+The [QP port plan](../../qp-arduino/docs/observability-plan.md) now makes
+RP2040 the primary QP `v7.3.4`/QV qualification target, using the Earle
+Philhower Arduino core family already selected in this repository's
+`platformio.ini`. That effort starts on a simple non-actuating fixture in
+`qp-arduino`, not by replacing firmware on a working joystick. Exact fixture,
+core and toolchain versions are still open. Teensy builds remain reference
+regressions; its deferred hardware gates are not prerequisites. STM32G0B1CEU6
+is a later second target with its own evidence requirements.
+
+Initial RP2040 QP work keeps QP/QS and application drivers on core 0, with no
+application core-1 work, QP calls or shared drivers. The imported ARMv6-M path
+requires actual integration and measurement; Cortex-M0+ PRIMASK masking does
+not protect against another core. Port qualification does not by itself qualify
+this application's protocol, motion, power sequencing or board revision.
+
 The [PCB interface map](../../mouse-joystick-pcb/docs/interface-map.md),
 [power notes](../../mouse-joystick-pcb/docs/power.md),
 [protocol specification](../../mouse-joystick-pcb/docs/uart-protocol.md), and
@@ -32,6 +47,12 @@ historical firmware examples describe different revisions. Reconcile the
 selected tag's pad-to-net map with firmware before any hardware pilot. Do not
 allocate extra UARTs, marker pins, SWD, or trace connections from this document.
 New debug/trace access is an `OBS-IF` contract plus `OBS-HW` board decision.
+The selected direction keeps passive Digital-50 and adds a separate optional
+debug/trace connector using a reusable external RP2040 probe. Combined 60-pin
+observation/debug wiring and an onboard second MCU are deferred. Both RP2040
+and STM32G0B1CEU6 lack SWO/ITM: UART QS output must be explicitly provisioned
+and qualified. These intents do not change pin assignments or imply that
+current boards expose any extra UART or debug connection.
 
 ## Steps and dependencies
 
@@ -43,14 +64,16 @@ All steps below are open; historical bring-up passes do not complete them.
 | `OBS-FW-2` | Produce replayable good/fault/gap fixtures for the non-QP baseline, including late heartbeat ordering, duplicate command, reset, timeout and missing evidence. | `OBS-FW-1`; shared versioned evidence contract before exchange. | G2 contribution: host checks detect each intended defect and distinguish an observation gap from a DUT failure; synthetic and captured fixtures are labeled separately. |
 | `OBS-FW-3` | Add the smallest bounded application-record adapter needed for the agreed pilot; preserve existing protocol behavior and portable device/application boundaries. | `OBS-FW-1`; `OBS-IF` for any changed transport/marker use. | Relevant existing native/pyControl tests and target build pass; record dictionary is decodable; overload/disconnected-reader policy and timing budgets are explicit. |
 | `OBS-FW-4` | Measure the non-QP implementation with and without the selected observation profile under representative load and observer backpressure. | `OBS-FW-2`, `OBS-FW-3`, matching qualified board/cable/map (G1, `OBS-HW`), supervised bench access. | Response/loop/motion-poll timing, resource use, trace loss and local fault response measured; captures/units and board serial recorded in PCB bring-up evidence. |
-| `OBS-FW-5` | Evaluate a QP/QV version of the same slice only if the baseline leaves a useful question or demonstrates a reason to compare. Preserve driver interfaces and behavior. | Design can proceed now with `OBS-QP`; on RP2040, execution requires an explicit RP2040 port/BSP/target acceptance plan, not just a Teensy pass. | G3 contribution: comparable fixtures and measured overhead/diagnostic value; record an adoption/defer/reject decision. Continuing with non-QP is a valid outcome. |
+| `OBS-FW-5` | Evaluate a QP/QV version of the same slice only if the baseline leaves a useful question or demonstrates a reason to compare. Preserve driver interfaces and behavior. | Design can proceed now with `OBS-QP`; execution waits for its active RP2040 port/core/BSP/target gates and this application's selected-board checks. Deferred Teensy hardware work is not a dependency. | G3 contribution: comparable fixtures and measured overhead/diagnostic value; record an adoption/defer/reject decision. Continuing with non-QP is a valid outcome. |
 | `OBS-FW-6` | Supply matched command, event and physical-response evidence for correlation and the supervised experiment pilot. | Baseline `OBS-FW-4` or qualified QP comparison; `OBS-HOST` correlation, `OBS-IF` timing contract and `OBS-HW` evidence. | G4/G5 contribution: a replayable operation with timing uncertainty and coverage limits, followed by an observation-only run reviewed with the lab (`OBS-RUN`). |
 
 `OBS-FW-1` and fixture design can run alongside QP port validation, host replay
 implementation and interface design. New electrical access is hardware-gated;
 it is not a prerequisite to documenting semantics or exercising host fixtures.
 The overall QP evaluation at G3 does not force this RP2040 application to adopt
-QP before G4 correlation can use its non-QP baseline.
+QP before G4 correlation can use its non-QP baseline. Standalone RP2040 port
+qualification, Digital-50 board development and debug/probe qualification are
+separate paths; none should force a rewrite of the working joystick delivery.
 
 ## Evidence semantics
 

@@ -27,9 +27,21 @@ as rev 0. Tags v0.1 and v0.2 have byte-identical RP2040 pad-to-net maps.
 The [observability plan](docs/observability-plan.md) tracks `OBS-FW`: define
 application event semantics, establish a non-QP evidence baseline, and evaluate
 an optional QP/QV trace pilot. It links to the shared architecture and parallel
-workstreams. This work does not require a firmware rewrite or delay existing
-board bring-up and delivery. New debug/trace connections and an RP2040 QP port
-need their own board and target evidence; they are not current capabilities.
+workstreams. Current delivery remains non-QP; this work does not require a
+firmware rewrite or delay existing board bring-up and delivery.
+
+The [QP port plan](../qp-arduino/docs/observability-plan.md) now targets RP2040
+first with the same Earle Philhower Arduino core family, on a separate simple
+non-actuating fixture. Exact core/fixture versions and qualification gates are
+open. Teensy hardware work is deferred and does not block this path;
+STM32G0B1CEU6 is the later second target. Port qualification remains separate
+from a decision to adopt QP in this application.
+
+The hardware direction keeps passive Digital-50 plus a separate optional
+debug/trace connector and reusable external RP2040 probe. New connections and
+trace throughput need their own board/probe evidence; they are not present
+capabilities or new pin allocations. Combined 60-pin wiring and an onboard
+second MCU are deferred.
 
 ## Quick Start
 

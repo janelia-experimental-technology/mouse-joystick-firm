@@ -4,7 +4,7 @@
 
 Stage 4: the pyControl UART protocol. Stages 1 to 3 have passed on hardware.
 
-## Parallel Observability Workstream — 2026-09-29
+## Parallel Observability Workstream — Updated 2026-09-30
 
 [docs/observability-plan.md](../docs/observability-plan.md) is the local
 `OBS-FW` plan. The shared
@@ -13,6 +13,18 @@ owns cross-repository dependencies and stages. This optional path runs alongside
 existing delivery, bring-up and hardware-watchdog work; it does not replace
 those tasks or commit the application to QP.
 
+The [QP plan](../../qp-arduino/docs/observability-plan.md) now qualifies
+RP2040 first, using the Earle Philhower core family already used here, on a
+separate simple non-actuating fixture. Exact core/fixture versions and all
+RP2040 qualification gates remain open. Teensy hardware work is deferred and
+nonblocking; retained build regressions remain useful. STM32G0B1CEU6 is a
+later second target. Current joystick delivery remains non-QP.
+
+Hardware intent is passive Digital-50 plus a separate optional debug/trace
+connector and reusable external RP2040 probe. Combined 60-pin wiring and an
+onboard second MCU are deferred. This does not allocate pins or change present
+board capabilities; `OBS-IF` and the selected PCB revision own those decisions.
+
 - [ ] `OBS-FW-1`: define representative command/event/completion semantics;
       ready now, coordinate interface/fixture fields with `OBS-IF`/`OBS-HOST`.
 - [ ] `OBS-FW-2`: prepare good/fault/gap baseline fixtures and expected outcomes.
@@ -20,8 +32,9 @@ those tasks or commit the application to QP.
       and claiming affected files with the delivery/watchdog agent.
 - [ ] `OBS-FW-4`: measure the baseline on a qualified board/capture path;
       hardware-gated, with measurements in the PCB bring-up log.
-- [ ] `OBS-FW-5`: optional QP comparison; RP2040 requires its own target gate,
-      and a Teensy validation result does not satisfy it.
+- [ ] `OBS-FW-5`: optional QP application comparison after the active RP2040
+      port/core/BSP/target gates and selected-board checks. Teensy hardware
+      acceptance is not a prerequisite; the non-QP delivery continues.
 - [ ] `OBS-FW-6`: hand off correlated evidence for a supervised observation-only
       experiment pilot.
 
