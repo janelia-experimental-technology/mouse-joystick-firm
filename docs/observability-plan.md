@@ -88,7 +88,11 @@ with the real `TmcMotion` behind the AO and UART0 as the pyControl port, plus
 a simulated-motion USB bench build that ran the pilot sequence on the fixture.
 The non-QP `PyControlLink` is untouched. What remains is listed in the
 example's README and in `.agents/PLANS.md`; the adopt/defer decision is still
-open and belongs there.
+open and belongs there. Later the same day the QP build's tick became the
+protocol's 1 kHz sampler, coalesced so a long step loses samples rather than
+events, with a per-second `SAMPLE_STAT` record (handled, coalesced, dropped,
+max and last cost) next to `LINK_WORK`; the 400 us budget is declared, and
+remains unmeasured until the next fixture run.
 
 ## Evidence semantics
 

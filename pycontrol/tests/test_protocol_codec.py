@@ -142,5 +142,5 @@ def test_nak_for_an_unknown_sequence_number_is_legal(protocol):
 
 def test_protocol_version_and_axis_count_are_declared(protocol):
     """Both are reported by ID, and neither may be inferred by a peer."""
-    assert protocol.PROTOCOL_VERSION == 1
+    assert protocol.PROTOCOL_VERSION == 2  # v1 proposal of 2026-10-01
     assert protocol.AXIS_COUNT == 1

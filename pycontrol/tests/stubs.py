@@ -47,14 +47,16 @@ class SimLink:
         self._absorb(self.sim.feed(text))
         return len(text)
 
-    def read(self):
+    def read(self, nbytes=None):
         if not self._pending:
             return None
-        if self.chunk_size is None:
-            data, self._pending = self._pending, ""
-        else:
-            data = self._pending[: self.chunk_size]
-            self._pending = self._pending[self.chunk_size :]
+        limit = len(self._pending)
+        if self.chunk_size is not None:
+            limit = min(limit, self.chunk_size)
+        if nbytes is not None:
+            limit = min(limit, int(nbytes))
+        data = self._pending[:limit]
+        self._pending = self._pending[limit:]
         return data.encode("utf-8")
 
     def any(self):

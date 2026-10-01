@@ -85,7 +85,7 @@ bool bus_up = false;
 // SPI1, separate from the TMC's SPI0, so the two never contend. GP12 is SPI1's
 // RX candidate that is routed nowhere on v0.3; the DAC has no SDO so nothing is
 // read, but the core wants a pin assigned.
-constexpr uint8_t kSpi1Rx = 12;
+constexpr uint8_t kSpi1Rx = pins::kSpi1RxUnused; // BoardPins owns the number
 // REF-DIV 1 with BUFF-GAIN 1: a 2.5 V DAC full scale, which the OPA197's 1.32
 // gain turns into 3.3 V at the BNC. Measured on board E4654C159F171E34 on
 // 2026-09-10 as unity gain to within 0.03%.

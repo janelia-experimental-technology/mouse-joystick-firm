@@ -67,6 +67,10 @@ def parse_corpus(text):
                 current.steps.append(("send", rest.replace("\\r", "\r")))
             elif keyword == "ADVANCE":
                 current.steps.append(("advance", int(rest)))
+            elif keyword == "ANGLE":
+                current.steps.append(("angle", float(rest)))
+            elif keyword == "TORQUE":
+                current.steps.append(("torque", float(rest)))  # reserved
             elif keyword == "EXPECT":
                 current.steps.append(("expect", rest))
             else:
@@ -109,6 +113,13 @@ def test_simulator_reproduces_corpus_case(case):
             pending += board.feed(payload + "\n")
         elif kind == "advance":
             pending += board.advance(payload)
+        elif kind == "angle":
+            # The animal moves the joystick; one service step at the current
+            # time so the classifier sees the sample.
+            board.set_encoder_angle(payload)
+            pending += board.advance(0)
+        elif kind == "torque":
+            pass  # reserved: no board reports torque yet
         elif kind == "expect":
             assert pending, "%s step %d: expected %r but no output was pending" % (
                 case.name,

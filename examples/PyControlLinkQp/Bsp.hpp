@@ -8,7 +8,9 @@
 
 class BSP {
 public:
-  enum { TICKS_PER_SEC = 100 };
+  // 1 kHz: the sampler rate. TICK_SIG is posted by the alarm interrupt,
+  // coalesced to one in flight; the AO acknowledges each with tickHandled().
+  enum { TICKS_PER_SEC = 1000 };
 
   // Safe state first, then the ports, the boot signature, the identity beacon
   // and the trace.
@@ -30,4 +32,21 @@ public:
 
   // "Operation in progress" on FW_TRIG0, visible at the InstrumentPort.
   static void opMarker(bool on);
+
+  // The InstrumentPort buffers, driven by the protocol's INSTR verb. Off also
+  // silences the trace, which leaves on FW_TRIG1 through the same buffers.
+  static void instrumentation(bool on);
+  static bool instrumentationEnabled();
+
+  // The 1 kHz sampler's bookkeeping: the AO acknowledges a tick so the next
+  // one may be posted, and reports what the tick cost (SAMPLE_STAT).
+  static void tickHandled();
+  static void reportTickCost(uint32_t us);
+
+  // The angle output (rev 1): map `angle_deg` from [lo, hi] onto the BNC's
+  // 0.050-3.300 V while `valid`, park at the fault level otherwise. The DAC
+  // sits on the switched domain, so it is configured after the rail is up
+  // (`hv_on`) and forgotten when it goes down. No-op on rev 0.
+  static void angleOutput(bool valid, float angle_deg, float lo, float hi,
+                          bool hv_on);
 };

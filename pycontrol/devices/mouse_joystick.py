@@ -64,7 +64,9 @@ class MouseJoystick:
 
     # rxbuf sized as the draft requires: at least the longest line plus margin.
     # 130 is the syringe pump's value and exceeds MAX_LINE (120).
-    RX_BUFFER = 130
+    # 2048: a 32-line FETCH chunk at 115200 lasts ~70 ms and IRQ_RXIDLE may
+    # not fire until it ends (protocol v1, 2026-10-01; was 130).
+    RX_BUFFER = 2048
 
     def __init__(self, port, event_name, baudrate=115200):
         assert port.UART is not None, "! MouseJoystick needs a port with a UART."
@@ -76,7 +78,11 @@ class MouseJoystick:
 
         self.event_name = event_name
         self.uart = UART(port.UART)
-        self.uart.init(baudrate, bits=8, parity=None, stop=1, timeout=100, rxbuf=self.RX_BUFFER)
+        # timeout=0: a read must never wait. With timeout=100 an empty buffer
+        # held the pyControl main loop for the whole timeout (a 20 ms poll
+        # measured at 72 ms, 2026-10-01 review). poll() reads only what any()
+        # reports and reassembles partial lines itself.
+        self.uart.init(baudrate, bits=8, parity=None, stop=1, timeout=0, rxbuf=self.RX_BUFFER)
 
         handler = UART_handler(event_name)
         self.uart.irq(trigger=UART.IRQ_RXIDLE, handler=handler.ISR)
@@ -84,6 +90,12 @@ class MouseJoystick:
         self._rx = ""
         self._seq = 0
         self._pending = {}
+
+        # Where `ev;S` stream samples go: an object with put(t_us, angle, torque),
+        # for the AnalogChannels of the run bundle. They are never returned by
+        # poll() as messages and must never become framework events (spec v1).
+        self.stream_sink = None
+        self.caps = frozenset()
 
         # Filled in by identify(). Left None until then on purpose: a task that
         # reads self.serial before identifying should get None rather than a
@@ -93,9 +105,16 @@ class MouseJoystick:
         self.protocol_version = None
         self.axis_count = None
 
-        self.uart.read()  # discard anything buffered from before this object existed
+        self._read_available()  # discard anything buffered from before this object existed
 
     # ------------------------------------------------------------------ link
+
+    def _read_available(self):
+        """Return the bytes already received, or None, without ever waiting."""
+        pending = self.uart.any()
+        if not pending:
+            return None
+        return self.uart.read(pending)
 
     def _next_seq(self):
         self._seq = (self._seq + 1) % MouseJoystickProtocol.SEQ_MODULUS
@@ -123,7 +142,7 @@ class MouseJoystick:
         parser that assumes whole lines is a parser that works on the bench and
         fails under load.
         """
-        data = self.uart.read()
+        data = self._read_available()
         if data:
             if isinstance(data, (bytes, bytearray)):
                 data = data.decode("utf-8")
@@ -138,6 +157,12 @@ class MouseJoystick:
             kind = message[0]
             if kind in (MouseJoystickProtocol.KIND_ACK, MouseJoystickProtocol.KIND_NAK):
                 self._pending.pop(message[1], None)
+            if kind == MouseJoystickProtocol.KIND_EVENT and message[1] == "S":
+                # Telemetry, not an event: route to the analog sink and drop.
+                t_us, data = message[2]
+                if self.stream_sink is not None:
+                    self.stream_sink.put(t_us, data.get("angle"), data.get("torque"))
+                continue
             messages.append(message)
 
         # A partial line longer than any legal line means the link is desynced;
@@ -168,6 +193,9 @@ class MouseJoystick:
         proto = int(data["proto"])
         axes = int(data["axes"])
 
+        # v2 is the protocol v1 proposal of 2026-10-01 (BRAKE/WATCH/CFG/FETCH;
+        # FREEWHEEL/ARMPULL gone). Earlier boards are refused rather than driven
+        # with verbs they do not have.
         assert proto == MouseJoystickProtocol.PROTOCOL_VERSION, (
             "! MouseJoystick: board speaks protocol v%d, this class speaks v%d."
             % (proto, MouseJoystickProtocol.PROTOCOL_VERSION)
@@ -181,7 +209,12 @@ class MouseJoystick:
         self.axis_count = axes
         self.serial = data.get("serial")
         self.firmware_version = data.get("fw")
+        # Features are gated on capabilities, never on the firmware version.
+        self.caps = frozenset((data.get("caps") or "").split("+")) - {""}
         return self.serial
+
+    def has(self, capability):
+        return capability in self.caps
 
     # ------------------------------------------------------------- commands
 
@@ -224,28 +257,76 @@ class MouseJoystick:
         """Controlled stop. Always permitted."""
         return self._send("stop")
 
-    def arm_pull(self, threshold):
-        """Report a `PULL` event when the joystick passes `threshold` degrees.
+    # --------------------------------------------------- protocol v1 verbs
 
-        Only meaningful while freewheeling: with the driver enabled the motor
-        holds the joystick and there is nothing to detect.
+    def brake(self, torque_ncm):
+        """Engage the brake at `torque_ncm` and release the drive, as one board
+        operation; `ev;RELEASED` follows the ack. On a board whose caps lack
+        `brake` the torque is ignored and only the release happens.
+
+        A subsequent `move_to`, `home` or `stop` re-engages the driver
+        implicitly (resyncing position from the encoder first) and emits
+        `ev;TRIAL` if a `watch` was armed.
         """
-        return self._send("armpull", threshold)
+        return self._send("brake", torque_ncm)
 
-    def freewheel(self):
-        """Release the driver so the animal can move the joystick.
+    def watch(self, pull_deg, push_deg, timeout_ms, hold_ms=None, touch_ncm=None, maxdur_ms=None):
+        """Arm the one-shot classifier (RELEASED only). Exactly one of
+        `ev;PULL`, `ev;PUSH`, `ev;NOMOVE`, `ev;ABORT` follows; thresholds are
+        relative to the angle at release, pull-positive."""
+        args = ["pull=" + self._num(pull_deg), "push=" + self._num(push_deg), "timeout=" + self._num(timeout_ms)]
+        if hold_ms is not None:
+            args.append("hold=" + self._num(hold_ms))
+        if touch_ncm is not None:
+            args.append("touch=" + self._num(touch_ncm))
+        if maxdur_ms is not None:
+            args.append("maxdur=" + self._num(maxdur_ms))
+        return self._send("watch", *args)
 
-        REV 0 ONLY. On a board with the electronic brake this must not be a
-        separate command: the brake has to engage before motor drive is
-        released, and two host commands cannot guarantee that ordering across a
-        link with latency. It becomes part of `BRAKE <torque>`.
+    def cfg(self, **values):
+        """`cfg;s;key=value;...`: wdt_ms, deadband_deg, stream_hz, and the
+        capture window around the WATCH outcome, pre_ms and post_ms (each
+        0-2047, together at most 2047; defaults 500 and 500). All or nothing:
+        one value out of range and the board applies none of them."""
+        args = [key + "=" + self._num(value) for key, value in values.items()]
+        return self._send("cfg", *args)
 
-        A subsequent `move_to`, `move`, `home` or `stop` re-engages the driver
-        implicitly, reloading position from the encoder first. Do not add a
-        separate "stop freewheeling" verb - the implicit form is one command
-        where an explicit one would be two, with a window in between.
-        """
-        return self._send("freewheel")
+    def cfg_get(self):
+        return self._send("cfg", "get")
+
+    def fetch(self, k0=0, n=32):
+        """One chunk of the frozen capture window of the last WATCH: the ack
+        carries n, k0, t0, dt_us and pre; `cap` lines follow through poll(),
+        then `cap;end`. The window is the last pre_ms samples before the
+        outcome sample, that sample (k == pre) and post_ms after it; after a
+        TRIAL with outcome=NONE there is no outcome sample and the window
+        holds pre lines. Page with k0 += n until a chunk has fewer than n
+        lines; `nak;busy` while the window is still filling. Fetch before the
+        next BRAKE, which restarts the ring."""
+        return self._send("fetch", k0, n)
+
+    def stream(self, on, rate_hz=None):
+        if not on:
+            return self._send("stream", "OFF")
+        if rate_hz is None:
+            return self._send("stream", "ON")
+        return self._send("stream", "ON", rate_hz)
+
+    def angle_output(self, on):
+        assert self.has("angout"), "! MouseJoystick: this board has no angle output."
+        return self._send("angout", "ON" if on else "OFF")
+
+    def angle_scale(self, deg_lo, deg_hi):
+        assert self.has("angout"), "! MouseJoystick: this board has no angle output."
+        return self._send("angscale", deg_lo, deg_hi)
+
+    def torque_zero(self):
+        assert self.has("torque"), "! MouseJoystick: this board has no torque sensor."
+        return self._send("tq", "zero")
+
+    @staticmethod
+    def _num(value):
+        return MouseJoystickProtocol.format_number(value) if not isinstance(value, str) else value
 
     def faults(self):
         return self._send("faults")

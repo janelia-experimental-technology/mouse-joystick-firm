@@ -111,6 +111,9 @@ constexpr uint8_t kBusSwEnN = 9; // ~{BUS_SW_EN}, bypasses the switch itself
 constexpr uint8_t kDacSpiSck = 10;  // DAC_SPI_SCK_, SPI1 SCK  (rev 1)
 constexpr uint8_t kDacSpiCopi = 11; // DAC_SPI_COPI_, SPI1 TX  (rev 1)
 constexpr uint8_t kDacCsN = 13;     // ~{DAC_CS_}, DAC ~SYNC   (rev 1)
+// SPI1 needs an RX pin assigned even though the DAC has no SDO; GP12 is routed
+// nowhere on v0.3 (MotionAndHoming used the same choice).
+constexpr uint8_t kSpi1RxUnused = 12; // (rev 1)
 
 // -----------------------------------------------------------------------------
 // 36 V input switch, TPS1HTC100-Q1 (`U201` at v0.1). All four bypass the bus
@@ -255,4 +258,15 @@ constexpr uint8_t kSpareCount = sizeof(kSpares) / sizeof(kSpares[0]);
 //     spare pad. Never call Wire1 on this board.
 
 } // namespace pins
+
+// The revision name `ID` reports as `hw`, from the same selector that chooses
+// the pad map above. The two cannot disagree.
+#if MJ_BOARD_REV == 0
+constexpr char kHwRevName[] = "rev0";
+#elif MJ_BOARD_REV == 1
+constexpr char kHwRevName[] = "rev1";
+#else
+#error "MJ_BOARD_REV must be 0 (pcb v0.1/v0.2) or 1 (pcb v0.3 and later)"
+#endif
+
 } // namespace mouse_joystick

@@ -51,23 +51,25 @@
 // the implementation stage 3 proved -- and weaker in exactly the wrong place.
 //
 // The homing approach commands `kHomeTravelBoundMicrosteps` = 102400 microsteps
-// = 720 deg at the motor shaft, against a mechanism with about 28 deg of travel.
-// The chip's reference-switch stop is what normally ends it. If the switch does
-// not assert -- a stuck switch, an open `U1301` output, a harness fault -- then
-// without a follow check nothing notices the mechanism has stopped, and the
-// motor pushes against it until the 8 s timeout.
+// = 720 deg at the motor shaft, against a mechanism with about 28 deg of
+// travel. The chip's reference-switch stop is what normally ends it. If the
+// switch does not assert -- a stuck switch, an open `U1301` output, a harness
+// fault -- then without a follow check nothing notices the mechanism has
+// stopped, and the motor pushes against it until the 8 s timeout.
 //
 // `XACTUAL` advancing while `X_ENC` does not is the board's only detector for
 // that, and it is the same divergence the protocol layer must NOT resync away.
 // Thresholds are taken from `Conversions.hpp` rather than chosen here, so this
 // and `MotionSetup::moveTo()` agree.
 //
-// !! NOT YET RUN ON HARDWARE. Stage 3 validated the *blocking* implementations
-//    in `MotionSetup`; this is a faithful non-blocking rearrangement of the same
-//    calls, and "faithful" is an argument, not a measurement. Its first run
-//    belongs on the bench with a hand on the supply, not in a session with an
-//    animal. What is deliberately NOT reimplemented here is the second homing
-//    stage -- see `startHome()`.
+// RAN ON HARDWARE 2026-09-03, over the protocol (`hv on`, `home`, `arm`,
+// `moveto`, `disarm`, `clrfault` on the RJ-45 with the motor moving): homing
+// repeats to about one encoder count and the commanded-move follow ratio is
+// 0.991. Record in `.agents/PLANS.md` ("Stage 4 ran the full motion path on
+// hardware") and `../mouse-joystick-pcb/docs/bringup-log.md` under board 3.
+// Stage 3 had validated the *blocking* implementations in `MotionSetup`; this
+// is the non-blocking rearrangement of the same calls. What is deliberately NOT
+// reimplemented here is the second homing stage -- see `startHome()`.
 
 #pragma once
 
@@ -369,6 +371,7 @@ public:
   uint32_t expectedHomeDurationUs() const override {
     return cfg_.home_timeout_us;
   }
+  uint32_t homeTimeoutMaxUs() const override { return cfg_.home_timeout_us; }
 
 private:
   enum class Phase : uint8_t {

@@ -105,6 +105,9 @@ def test_uart_is_configured_as_the_protocol_requires(device, link):
     # "Keep the device's receive buffer at least as large as the longest command
     # plus margin."
     assert link.init_kwargs["rxbuf"] >= P.MAX_LINE
+    # A read must never block the pyControl main loop: timeout 0, and poll()
+    # reads only what any() reports (2026-10-01 review, bug 7).
+    assert link.init_kwargs["timeout"] == 0
 
 
 def test_registers_an_rxidle_interrupt_handler(device, link):
@@ -151,7 +154,7 @@ def test_identify_records_serial_and_versions(device):
 
     serial = device.apply_identity(data)
     assert serial == "0000000000000000"
-    assert device.protocol_version == 1
+    assert device.protocol_version == 2
     assert device.axis_count == 1
     assert device.firmware_version == "0.0.0"
 
@@ -164,15 +167,15 @@ def test_serial_is_none_before_identify(device):
 
 def test_refuses_an_incompatible_protocol_major_version(device):
     """The draft: refuse rather than guess."""
-    with pytest.raises(AssertionError, match="protocol v2"):
-        device.apply_identity({"proto": "2", "axes": "1", "serial": "X", "fw": "9.9.9"})
+    with pytest.raises(AssertionError, match="protocol v3"):
+        device.apply_identity({"proto": "3", "axes": "1", "serial": "X", "fw": "9.9.9"})
     assert device.serial is None, "a refused board must not leave state behind"
 
 
 def test_refuses_a_twin_axis_board(device):
     """The axis count distinguishes the boards; a product name must not."""
     with pytest.raises(AssertionError, match="2 axes"):
-        device.apply_identity({"proto": "1", "axes": "2", "serial": "X", "fw": "0.0.0"})
+        device.apply_identity({"proto": "2", "axes": "2", "serial": "X", "fw": "0.0.0"})
 
 
 # ------------------------------------------------------------ command flow
@@ -231,14 +234,16 @@ def test_the_trial_shape_end_to_end(device, link):
     link.advance(50_000)
     assert events(device)[-1][1] == "TARGET"
 
-    device.arm_pull(-12.0)
-    device.freewheel()
+    device.cfg(wdt_ms=500)
+    device.brake(0)  # no brake on this board: release only
+    device.poll()
+    device.watch(3.0, 3.0, 300)  # pull/push 3 deg from the release angle
     device.poll()
 
-    link._absorb(link.sim.move_joystick(-14.0))  # the animal pulls
+    link._absorb(link.sim.move_joystick(-5.0))  # the animal pulls 4 deg
     pull = events(device)
     assert pull[0][1] == "PULL"
-    assert pull[0][2][1] == {"angle": "-14.0"}
+    assert pull[0][2][1] == {"angle": "-5.0", "torque": ""}
 
     # Presenting again must land where it was told, not offset by the pull.
     device.move_to(-9.0)
@@ -250,8 +255,8 @@ def test_the_trial_shape_end_to_end(device, link):
     assert link.sim.xactual == pytest.approx(-9.0)
 
 
-def test_freewheel_before_arming_is_refused(device):
-    device.freewheel()
+def test_brake_before_arming_is_refused(device):
+    device.brake(0)
     kind, seq, reason = replies(device)[0]
     assert kind == P.KIND_NAK
     assert reason == P.NAK_NOTARMED
@@ -264,12 +269,24 @@ def test_move_before_arming_is_nakked_not_silently_dropped(device):
     assert reason == P.NAK_NOTARMED
 
 
+def test_the_capture_window_keys_go_through_cfg(device, link):
+    """pre_ms/post_ms are ordinary CFG keys; the board bounds them, the class
+    only encodes them."""
+    device.cfg(pre_ms=200, post_ms=300)
+    assert link.written[-1] == "cfg;1;pre_ms=200;post_ms=300\n"
+    device.poll()
+    device.cfg_get()
+    kind, seq, data = replies(device)[-1]
+    assert kind == P.KIND_ACK
+    assert data["pre_ms"] == "200" and data["post_ms"] == "300"
+
+
 def test_float_arguments_are_encoded_stably(device, link):
     """MicroPython and CPython do not agree on str(float); the codec must."""
     device.move_to(-12.5)
     assert link.written[-1] == "moveto;1;-12.5\n"
-    device.arm_pull(-10.0)
-    assert link.written[-1] == "armpull;2;-10.0\n"
+    device.watch(-10.0, 5, 300)
+    assert link.written[-1] == "watch;2;pull=-10.0;push=5;timeout=300\n"
     device.move(0.0)
     assert link.written[-1] == "move;3;0.0\n"
 

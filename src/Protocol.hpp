@@ -39,8 +39,10 @@ namespace protocol {
 
 // ------------------------------------------------------------------ constants
 
-constexpr uint8_t kMaxLine = 120;      // MAX_LINE; also reported as `rxbuf`
-constexpr uint16_t kProtocolVersion = 1;
+constexpr uint8_t kMaxLine =
+    200; // MAX_LINE; also reported as `rxbuf` (v1, 2026-10-01: was 120)
+constexpr uint16_t kProtocolVersion =
+    2; // v1 proposal of 2026-10-01: FREEWHEEL/ARMPULL removed
 constexpr uint8_t kAxisCount = 1;
 constexpr uint32_t kSeqModulus = 65536u;
 constexpr char kDelimiter = ';';
@@ -67,6 +69,7 @@ constexpr char kNakNotHomed[] = "nothomed";
 constexpr char kNakFaulted[] = "faulted";
 constexpr char kNakBusy[] = "busy";
 constexpr char kNakNoHv[] = "nohv";
+constexpr char kNakNotReleased[] = "notreleased"; // WATCH outside RELEASED
 
 // -------------------------------------------------------------- number format
 //
@@ -76,6 +79,27 @@ constexpr char kNakNoHv[] = "nohv";
 // The `-0.0` case is not hypothetical. Any move that lands on zero from the
 // negative side produces it, and it is a valid float that reads as a different
 // value to a human and to a naive parser.
+
+// Unsigned 64-bit decimal, for event timestamps. `long` is 32 bits on the
+// RP2040, so the board clock (microseconds, 64-bit) must not pass through
+// `formatInt`: it wrapped at 71.6 minutes, inside a normal session (found in
+// the 2026-10-01 review).
+inline void formatU64(uint64_t value, char *out, size_t n) {
+  if (n == 0) {
+    return;
+  }
+  char tmp[21];
+  size_t len = 0;
+  do {
+    tmp[len++] = static_cast<char>('0' + (value % 10u));
+    value /= 10u;
+  } while (value != 0 && len < sizeof(tmp));
+  size_t i = 0;
+  while (len > 0 && i + 1 < n) {
+    out[i++] = tmp[--len];
+  }
+  out[i] = '\0';
+}
 
 inline void formatNumber(double value, char *out, size_t n) {
   if (n == 0) {
@@ -323,8 +347,11 @@ inline bool changesState(const char *verb, const char *first_arg) {
     const char *verb;
     const char *read_arg;
   };
-  static const DualMode kDualMode[] = {
-      {"cal", "get"}, {"instr", "state"}, {"hv", "state"}};
+  static const DualMode kDualMode[] = {{"cal", "get"},
+                                       {"instr", "state"},
+                                       {"hv", "state"},
+                                       {"cfg", "get"},
+                                       {"tq", "get"}};
 
   for (const DualMode &entry : kDualMode) {
     if (strcmp(verb, entry.verb) == 0) {
@@ -342,8 +369,8 @@ inline bool changesState(const char *verb, const char *first_arg) {
     }
   }
 
-  static const char *const kReadVerbs[] = {"id", "ping", "status", "limits",
-                                           "faults"};
+  static const char *const kReadVerbs[] = {"id",     "ping",   "status",
+                                           "limits", "faults", "fetch"};
   for (const char *read : kReadVerbs) {
     if (strcmp(verb, read) == 0) {
       return false;
@@ -408,6 +435,12 @@ public:
     append(scratch);
   }
 
+  void appendU64(uint64_t value) {
+    char scratch[24];
+    formatU64(value, scratch, sizeof(scratch));
+    append(scratch);
+  }
+
   // key=value fields. The draft shows one data-carrying ack and it is
   // `key=value`, so every data-carrying reply here is.
   void kvStr(const char *key, const char *value) {
@@ -429,6 +462,13 @@ public:
     append(key);
     appendChar('=');
     appendNumber(value);
+  }
+
+  void kvU64(const char *key, uint64_t value) {
+    appendChar(kDelimiter);
+    append(key);
+    appendChar('=');
+    appendU64(value);
   }
 
   void kvBool(const char *key, bool value) {
@@ -465,7 +505,9 @@ public:
     append(reason);
   }
 
-  void beginEvent(const char *name, uint32_t t_us) {
+  // `t_us` is the board's 64-bit microsecond clock, carried whole: a 32-bit
+  // `t` wraps at 71.6 minutes, which is shorter than a session.
+  void beginEvent(const char *name, uint64_t t_us) {
     clear();
     append(kEvent);
     appendChar(kDelimiter);
@@ -473,7 +515,7 @@ public:
       appendChar(upperAscii(*p));  // uppercase on the wire, in every example
     }
     appendChar(kDelimiter);
-    appendInt(static_cast<long>(t_us));
+    appendU64(t_us);
   }
 
 private:

@@ -296,7 +296,7 @@ together, not separately.**
 | `ID`/`STATUS`/`LIMITS` fields | Prose lists | Named keys, pinned byte-exact in the corpus |
 | Max line length | Only "rxbuf=130" as a hint | `MAX_LINE = 120`, leaving room to answer `badframe` inside a 130-byte buffer |
 | `nak` reasons | Names 4: `badverb`, `outofrange`, `badframe`, `latched` | Added `badargs`, `notarmed`, `nothomed`, `faulted`, `busy`, `nohv` |
-| Retransmit cache size | Unbounded | 16. Unbounded is a slow leak on a device with no way to report one |
+| Retransmit cache size | Unbounded | 2 (`kRetransmitCacheSize`; the 2026-09-03 resolution of open question 1). Unbounded is a slow leak on a device with no way to report one |
 | When the watchdog is armed | Unstated | At `ARM`, released at `DISARM`. Faulting an idle unarmed board before the host has connected would be absurd |
 | `HV` as a motion precondition | Unstated | `HOME` and motion require it; new reason `nohv` |
 | `\r` handling | "A leading `\r` is tolerated" | Stripped from both ends — a CRLF peer produces a *trailing* one, so the literal reading leaves the common case broken |

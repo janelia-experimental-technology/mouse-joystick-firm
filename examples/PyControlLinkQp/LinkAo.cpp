@@ -18,6 +18,7 @@
 #include "LinkAo.hpp"
 
 #include <Arduino.h> // micros()
+#include <stdio.h>   // snprintf, for the bench stimulus reply
 #include <stdlib.h>
 #include <string.h>
 
@@ -39,7 +40,6 @@ mouse_joystick::TmcMotion l_motion(l_stepper, app::motionConfig(),
 
 class Link : public QActive {
 private:
-  QTimeEvt m_tick;
   mouse_joystick::ProtocolBoard m_board;
   const char *m_lastState;
   bool m_moving;   // an operation is in progress
@@ -60,20 +60,22 @@ protected:
 
 private:
   void afterService();
+#if MJ_SIM_MOTION
+  void simStimulus(const char *rest);
+#endif
   void recordRx(const LineEvt *e);
 };
 
 Link Link::instance;
 
 Link::Link()
-    : QActive(Q_STATE_CAST(&Link::initial)), m_tick(this, TICK_SIG, 0U),
+    : QActive(Q_STATE_CAST(&Link::initial)),
       m_board(l_motion, app::boardConfig()), m_lastState(nullptr),
       m_moving(false), m_home(false), m_lastHome(false) {}
 
 void Link::dictionaries() {
 #ifdef QS_ON
   QS_OBJ_DICTIONARY(&Link::instance);
-  QS_OBJ_DICTIONARY(&Link::instance.m_tick);
   QS_SIG_DICTIONARY(LINE_SIG, &Link::instance);
   QS_SIG_DICTIONARY(TICK_SIG, &Link::instance);
   QS_FUN_DICTIONARY(&Link::running);
@@ -112,6 +114,29 @@ void Link::recordRx(const LineEvt *e) {
   QS_END()
 }
 
+#if MJ_SIM_MOTION
+// `<seq>;angle;<deg>`: answer ack;<seq> or nak;<seq>;badargs on the port.
+void Link::simStimulus(const char *rest) {
+  char *end = nullptr;
+  const unsigned long seq = strtoul(rest, &end, 10);
+  char reply[32];
+  if (end != rest && strncmp(end, ";angle;", 7U) == 0) {
+    char *num_end = nullptr;
+    const double deg = strtod(end + 7, &num_end);
+    if (num_end != end + 7) {
+      m_board.advanceTo(BSP::nowUs64());
+      l_motion.setEncoderAngleDeg(deg);
+      m_board.advanceTo(BSP::nowUs64()); // the classifier sees it now
+      snprintf(reply, sizeof(reply), "ack;%lu", seq);
+      static_cast<void>(BSP::linkWrite(reply));
+      return;
+    }
+  }
+  snprintf(reply, sizeof(reply), "nak;%lu;badargs", seq);
+  static_cast<void>(BSP::linkWrite(reply));
+}
+#endif
+
 // After every feed or clock advance: queue the replies and record what
 // changed.
 void Link::afterService() {
@@ -133,6 +158,11 @@ void Link::afterService() {
 #endif
   }
   m_board.clearOutput();
+
+  // `instr on/off` drives the InstrumentPort buffers (review bug 3).
+  if (m_board.instrumentationOn() != BSP::instrumentationEnabled()) {
+    BSP::instrumentation(m_board.instrumentationOn());
+  }
 
   const char *state = m_board.state();
   if (state != m_lastState) {
@@ -164,10 +194,14 @@ Q_STATE_DEF(Link, initial) {
   (void)e;
   dictionaries();
   m_board.setSerial(BSP::boardSerial());
+  m_board.setInstrumentationOn(
+      BSP::instrumentationEnabled()); // enabled at boot
   m_board.advanceTo(BSP::nowUs64());
   m_board.boot(); // READY, once
   afterService();
-  m_tick.armX(1U, 1U); // every tick: watchdog and the motion poll
+  // The 1 kHz tick arrives as TICK_SIG from the BSP's alarm, coalesced (one
+  // in flight at a time), not from a QTimeEvt that would queue up behind a
+  // long step such as the rail's soft start.
   return tran(&running);
 }
 
@@ -175,14 +209,37 @@ Q_STATE_DEF(Link, running) {
   QState status_;
   switch (e->sig) {
   case TICK_SIG: {
+    // The sampler: one backend poll (encoder, status) at 1 kHz, the classifier
+    // and capture inside advanceTo(), then the analog output. Its cost is
+    // reported per second as SAMPLE_STAT; the budget is 400 us.
+    BSP::tickHandled();
+    const uint32_t t0 = micros();
     m_board.advanceTo(BSP::nowUs64());
     afterService();
+    BSP::angleOutput(
+        m_board.angleOutputValid(), static_cast<float>(l_motion.angleDeg()),
+        static_cast<float>(m_board.angleScaleLo()),
+        static_cast<float>(m_board.angleScaleHi()), m_board.hvOn());
+    BSP::reportTickCost(micros() - t0);
     status_ = Q_RET_HANDLED;
     break;
   }
   case LINE_SIG: {
     const LineEvt *const le = static_cast<const LineEvt *>(e);
     recordRx(le);
+#if MJ_SIM_MOTION
+    // Bench stimulus, simulated-motion builds only: `sim;<seq>;angle;<deg>`
+    // sets the simulated encoder, as the corpus's ANGLE step does, so a WATCH
+    // outcome can be driven by hand on a fixture with no joystick. It never
+    // reaches ProtocolBoard, is not a protocol verb, and the delivery build
+    // answers it `badverb` like any unknown verb.
+    if (strncmp(le->text, "sim;", 4U) == 0) {
+      simStimulus(le->text + 4);
+      afterService();
+      status_ = Q_RET_HANDLED;
+      break;
+    }
+#endif
     const uint32_t t0 = micros();
     m_board.advanceTo(BSP::nowUs64());
     const uint32_t t1 = micros();

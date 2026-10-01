@@ -67,7 +67,7 @@ def test_boot_emits_ready_with_rail_off_and_driver_disabled():
     sim = BoardSim(serial="0000000000000000")
     assert sim.hv_on is False
     out = sim.boot()
-    assert out == ["ev;READY;0;fw=0.0.0;proto=1;serial=0000000000000000"]
+    assert out == ["ev;READY;0;fw=0.0.0;proto=2;serial=0000000000000000"]
     assert sim.state == State.IDLE
     assert sim.hv_on is False
 
@@ -84,7 +84,7 @@ def test_capability_discovery_reports_axis_count_and_board_serial(sim):
     fields = dict(f.split("=", 1) for f in reply.split(";")[2:])
     assert fields["serial"] == "0000000000000000"
     assert fields["axes"] == "1"
-    assert fields["proto"] == "1"
+    assert fields["proto"] == "2"
     assert "rxbuf" in fields
 
 
@@ -380,37 +380,34 @@ def test_malformed_frames_do_not_hold_the_watchdog_open(armed):
     )
 
 
-def test_a_pull_is_a_crossing_not_a_magnitude(armed):
-    """The rule has to work on travel that spans zero.
+def test_watch_thresholds_are_relative_to_the_release_angle(armed):
+    """WATCH (protocol v1): pull and push are excursions from the angle at
+    RELEASED, pull-positive, not absolute angles; a push past the pull
+    magnitude is a PUSH, and the classifier fires once."""
+    reply_to(armed, "cfg;1;wdt_ms=500")
+    reply_to(armed, "moveto;2;-9.0")
+    armed.advance(50_000)
+    assert reply_to(armed, "brake;3;0") == "ack;3"
+    assert reply_to(armed, "watch;4;pull=5;push=5;timeout=300") == "ack;4"
 
-    This simulator's default travel is -20..20. Under the old
-    `abs(angle) >= abs(threshold)` rule a threshold of -5.0 also fired at +5.0,
-    and the firmware -- which records the side at arm time -- disagreed. The
-    corpus could not catch that: no corpus case can move the encoder.
-    """
-    reply_to(armed, "armpull;1;-5.0")
-    assert reply_to(armed, "freewheel;2") == "ack;2"
-
-    # The wrong side of zero, past the threshold in magnitude only.
-    events = armed.move_joystick(6.0)
-    assert not [e for e in events if "PULL" in e], "a magnitude match fired"
-
-    # Genuinely across it.
-    events = armed.move_joystick(-6.0)
-    assert any("ev;PULL;" in e and "angle=-6.0" in e for e in events)
-
-    # Latched: one ARMPULL, one PULL.
-    assert not [e for e in armed.move_joystick(-7.0) if "PULL" in e]
+    # Towards the push side by more than the pull magnitude: PUSH, not PULL.
+    events = armed.move_joystick(-15.0)
+    assert any(e.startswith("ev;PUSH;") and "angle=-15.0" in e for e in events)
+    # Latched: one WATCH, one outcome.
+    assert armed.move_joystick(-3.0) == []
 
 
-def test_arming_from_below_detects_an_upward_crossing(armed):
-    """Mirrored joysticks would otherwise need side-specific state."""
-    reply_to(armed, "freewheel;1")
-    armed.move_joystick(-8.0)
-    reply_to(armed, "armpull;2;-5.0")  # armed from below
+def test_watch_pull_is_relative_and_pull_positive(armed):
+    """The same thresholds from a different release angle detect the pull."""
+    reply_to(armed, "cfg;1;wdt_ms=500")
+    reply_to(armed, "moveto;2;-9.0")
+    armed.advance(50_000)
+    reply_to(armed, "brake;3;0")
+    reply_to(armed, "watch;4;pull=5;push=5;timeout=300")
 
-    assert not [e for e in armed.move_joystick(-9.0) if "PULL" in e]
-    assert any("PULL" in e for e in armed.move_joystick(-2.0))
+    assert armed.move_joystick(-5.0) == [], "4 deg of pull is under the 5 deg threshold"
+    events = armed.move_joystick(-3.0)
+    assert any(e.startswith("ev;PULL;") and "angle=-3.0" in e for e in events)
 
 
 def test_delayed_command_after_a_timeout_is_refused_not_executed(armed):
@@ -520,19 +517,21 @@ def test_analog_output_verbs_are_absent_not_stubbed(sim):
 # -------------------------------------------------------------- compliance
 
 
-def test_freewheel_requires_arming_first(sim):
+def test_brake_requires_arming_first(sim):
     """A joystick held by an energised motor cannot go compliant by accident."""
-    assert reply_to(sim, "freewheel;1") == "nak;1;notarmed"
+    assert reply_to(sim, "brake;1;0") == "nak;1;notarmed"
 
 
-def test_freewheel_releases_the_driver(armed):
-    assert reply_to(armed, "freewheel;1") == "ack;1"
-    assert armed.state == State.FREEWHEEL
+def test_brake_releases_the_driver(armed):
+    reply, events = send(armed, "brake;1;0")
+    assert reply == "ack;1"
+    assert events == ["ev;RELEASED;50000;angle=0.0;torque=;brake="]
+    assert armed.state == State.RELEASED
 
 
-def test_freewheel_is_refused_during_motion(armed):
+def test_brake_is_refused_during_motion(armed):
     reply_to(armed, "moveto;1;9.0")
-    assert reply_to(armed, "freewheel;2") == "nak;2;busy"
+    assert reply_to(armed, "brake;2;0") == "nak;2;busy"
 
 
 def test_the_animal_can_only_move_a_released_joystick(armed):
@@ -548,7 +547,7 @@ def test_a_pull_moves_the_encoder_and_strands_the_ramp_generator(armed):
     rig homed every trial. Here the encoder keeps it - and the ramp generator
     does not, because nothing turns it while the driver is released.
     """
-    reply_to(armed, "freewheel;1")
+    reply_to(armed, "brake;1;0")
     armed.move_joystick(-7.5)
 
     assert armed.angle == pytest.approx(-7.5), "the encoder must follow the joystick"
@@ -563,7 +562,7 @@ def test_leaving_compliance_reloads_position_from_the_encoder(armed):
     slipping coupling or a dead encoder are detected. The two cases are told
     apart by state and by nothing else.
     """
-    reply_to(armed, "freewheel;1")
+    reply_to(armed, "brake;1;0")
     armed.move_joystick(-7.5)
     assert armed.xactual == pytest.approx(0.0)
 
@@ -579,7 +578,7 @@ def test_a_move_after_a_pull_lands_where_it_was_told(armed):
     An absolute move must reach the absolute position, whatever the animal did
     in between. Skipping the resync would offset every trial by the last pull.
     """
-    reply_to(armed, "freewheel;1")
+    reply_to(armed, "brake;1;0")
     armed.move_joystick(-15.0)
 
     assert reply_to(armed, "moveto;2;5.0") == "ack;2"
@@ -590,7 +589,7 @@ def test_a_move_after_a_pull_lands_where_it_was_told(armed):
 
 def test_a_relative_move_after_a_pull_is_relative_to_the_joystick(armed):
     """Relative to where the joystick IS, not where the ramp generator believes."""
-    reply_to(armed, "freewheel;1")
+    reply_to(armed, "brake;1;0")
     armed.move_joystick(-10.0)
 
     assert reply_to(armed, "move;2;2.5") == "ack;2"
@@ -607,7 +606,7 @@ def test_home_still_works_after_a_pull(armed):
     test silently assert nothing. A real host increments monotonically, as the
     device class does.
     """
-    reply_to(armed, "freewheel;10")
+    reply_to(armed, "brake;10;0")
     armed.move_joystick(12.0)
 
     assert reply_to(armed, "home;11") == "ack;11"
@@ -617,27 +616,24 @@ def test_home_still_works_after_a_pull(armed):
     assert armed.homed is True
 
 
-def test_armpull_reports_one_pull_per_arming(armed):
-    """One ARMPULL, one PULL - not a stream while the joystick sits past threshold.
-
-    Note the re-arm PRESENTS the joystick back below the threshold first. Under
-    the crossing rule, re-arming while it still sits past arms from the far side,
-    so the next pull would have to be in the other direction. That is the rule
-    behaving, and it matches the trial: present, arm, wait for the pull, present
-    again. This test used to re-arm in place, which only worked under the old
-    magnitude comparison.
-    """
-    reply_to(armed, "armpull;1;5.0")
-    reply_to(armed, "freewheel;2")
+def test_watch_reports_one_outcome_per_arming(armed):
+    """One WATCH, one outcome - not a stream while the joystick sits past the
+    threshold - and a new WATCH re-arms for the next trial, relative to the
+    angle at RELEASED."""
+    reply_to(armed, "cfg;1;wdt_ms=500")
+    reply_to(armed, "brake;2;0")
+    reply_to(armed, "watch;3;pull=5;push=5;timeout=300")
 
     assert armed.move_joystick(2.0) == [], "below threshold"
     out = armed.move_joystick(6.0)
     assert len(out) == 1 and out[0].startswith("ev;PULL;")
     assert armed.move_joystick(7.0) == [], "already reported"
 
-    armed.move_joystick(2.0)  # present it back
-    reply_to(armed, "armpull;3;5.0")
-    assert len(armed.move_joystick(8.0)) == 1, "re-arming must allow the next pull"
+    armed.move_joystick(2.0)  # the joystick comes back
+    reply_to(armed, "watch;4;pull=5;push=5;timeout=300")
+    assert armed.move_joystick(4.9) == [], "4.9 deg from the release angle is under the threshold"
+    out = armed.move_joystick(8.0)
+    assert len(out) == 1 and out[0].startswith("ev;PULL;"), "re-arming must allow the next pull"
 
 
 # ------------------------------------------------------------------ two boards
@@ -665,3 +661,39 @@ def test_two_simulator_instances_on_two_links_do_not_interfere():
 
     left.advance(1_000_000)
     assert right.now_us == 0, "the two clocks are independent"
+
+
+# ------------------------------------------------- 2026-10-01 review bugs
+
+
+def test_event_timestamps_do_not_wrap_at_32_bits(sim):
+    """Bug 1: the firmware cast `t` to 32 bits and wrapped at 71.6 minutes."""
+    send(sim, "hv;1;on")
+    sim.advance(4294967296)  # 2^32 us into the session
+    send(sim, "home;2")
+    out = sim.advance(50000)
+    assert out == ["ev;HOMED;4295017296;angle=0.0"]
+
+
+def test_a_home_timeout_shorter_than_the_home_faults_when_it_expires(sim):
+    """Bug 2: the timeout is a deadline on the running home, not an up-front
+    comparison with the expected duration."""
+    send(sim, "hv;1;on")
+    assert send(sim, "home;2;30") == ("ack;2", [])
+    assert sim.advance(29999) == []
+    assert sim.advance(1) == ["ev;FAULT;30000;code=3;detail=home_timeout"]
+    assert sim.state == State.FAULTED
+
+
+def test_a_home_timeout_longer_than_the_home_is_not_a_fault(sim):
+    send(sim, "hv;1;on")
+    assert send(sim, "home;2;2000") == ("ack;2", [])
+    assert sim.advance(50000) == ["ev;HOMED;50000;angle=0.0"]
+    assert sim.advance(2000000) == []
+    assert sim.state == State.HOMED
+
+
+def test_a_home_timeout_is_clipped_to_the_firmware_maximum(sim):
+    send(sim, "hv;1;on")
+    assert send(sim, "home;2;999999") == ("ack;2", [])
+    assert sim._home_deadline == sim.now_us + sim.home_timeout_max_us

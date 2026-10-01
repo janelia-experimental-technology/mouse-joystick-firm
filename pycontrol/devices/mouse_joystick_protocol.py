@@ -40,7 +40,7 @@ class MouseJoystickProtocol:
     # Bumped when a change would make an older peer misbehave rather than fail.
     # `ID` reports this, and the device class refuses a mismatched major version
     # rather than guessing - see the draft's "Versioning" section.
-    PROTOCOL_VERSION = 1
+    PROTOCOL_VERSION = 2  # v1 proposal of 2026-10-01: FREEWHEEL/ARMPULL removed
 
     # This board is single-axis. The twin-axis board carries an axis field after
     # the verb; a peer distinguishes the two by this number, never by a product
@@ -52,7 +52,7 @@ class MouseJoystickProtocol:
     # and notes the syringe pump host uses rxbuf=130. 120 leaves the device room
     # to answer `nak;<seq>;badframe` for an over-length line inside a 130-byte
     # buffer instead of overflowing while trying to complain.
-    MAX_LINE = 120
+    MAX_LINE = 200  # v1 (2026-10-01): was 120; a full STATUS is ~125 bytes
 
     # `seq` is decimal and wraps at 65535, so the valid range is 0..65535 and
     # 65535 + 1 is 0.
@@ -66,6 +66,7 @@ class MouseJoystickProtocol:
     ACK = "ack"
     NAK = "nak"
     EVENT = "ev"
+    CAP = "cap"
 
     # Parse-result kinds. Returned as the first element of every decode tuple so
     # a caller can dispatch without exceptions - MicroPython exception handling
@@ -75,6 +76,7 @@ class MouseJoystickProtocol:
     KIND_EVENT = "event"
     KIND_COMMAND = "command"
     KIND_BAD = "bad"
+    KIND_CAP = "cap"  # FETCH capture line: cap;k;angle;torque or cap;end
 
     # nak reasons. `badverb`, `outofrange`, `badframe` and `latched` are named in
     # the draft.
@@ -95,6 +97,7 @@ class MouseJoystickProtocol:
     # pulled low - so refusing motion for want of it is a distinct, common case
     # and deserves its own reason rather than being folded into `notarmed`.
     NAK_NOHV = "nohv"
+    NAK_NOTRELEASED = "notreleased"  # WATCH outside RELEASED (v1)
 
     # Used where a malformed line did not yield a usable sequence number. The
     # draft writes this position as `<seq or ?>`.
@@ -115,12 +118,12 @@ class MouseJoystickProtocol:
     # so a cache hit is irrelevant to it.
 
     # Reads and heartbeats. Never cached; always re-executed.
-    READ_VERBS = frozenset({"id", "ping", "status", "limits", "faults"})
+    READ_VERBS = frozenset({"id", "ping", "status", "limits", "faults", "fetch"})
 
     # Verbs that are a read or a write depending on their first argument, which
     # is why classification must happen on the PARSED command and not on the
     # verb name. A verb-name table gets all three of these wrong.
-    DUAL_MODE_READ_ARG = {"cal": "get", "instr": "state", "hv": "state"}
+    DUAL_MODE_READ_ARG = {"cal": "get", "instr": "state", "hv": "state", "cfg": "get", "tq": "get"}
 
     @classmethod
     def changes_state(cls, verb, args=()):
@@ -368,5 +371,19 @@ class MouseJoystickProtocol:
             seq = MouseJoystickProtocol.normalize_seq(fields[1])
             # `nak;?;badframe` is legal and carries no seq, which is not an error.
             return (MouseJoystickProtocol.KIND_NAK, seq, fields[2])
+
+        if head == MouseJoystickProtocol.CAP:
+            # `cap;end` closes a FETCH chunk; `cap;k;angle;torque` is one sample
+            # (torque empty on a board without the sensor). Returned as
+            # (KIND_CAP, k_or_None, (angle_text, torque_text)).
+            if len(fields) == 2 and fields[1] == "end":
+                return (MouseJoystickProtocol.KIND_CAP, None, None)
+            if len(fields) != 4:
+                return (MouseJoystickProtocol.KIND_BAD, None, MouseJoystickProtocol.NAK_BADFRAME)
+            try:
+                k = int(fields[1])
+            except ValueError:
+                return (MouseJoystickProtocol.KIND_BAD, None, MouseJoystickProtocol.NAK_BADFRAME)
+            return (MouseJoystickProtocol.KIND_CAP, k, (fields[2], fields[3]))
 
         return (MouseJoystickProtocol.KIND_BAD, None, MouseJoystickProtocol.NAK_BADFRAME)

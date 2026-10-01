@@ -24,15 +24,32 @@
 #                     clock at 0, serial 0000000000000000, defaults otherwise
 #   SEND <line>       feed one command line (the \n is implied)
 #   ADVANCE <us>      advance simulated time by <us> microseconds
+#   ANGLE <deg>       the animal moves the joystick: the encoder reads <deg>
+#                     from now on, with no driver involvement, and the board
+#                     services once at the current time so the classifier sees
+#                     the sample. Added 2026-10-01 for the WATCH outcomes; the
+#                     stimulus takes effect in any state (the simulator and the
+#                     firmware's simulated backend simply set the encoder), but
+#                     only RELEASED gives it a meaning.
+#   TORQUE <Ncm>      reserved for the torque stimulus; no case uses it until a
+#                     board reports `torque` in its caps.
 #   EXPECT <line>     the next output line, in order
 #   END               end of case; no further output may be pending
 #
 # Every EXPECT is exact bytes. Blank lines and # lines are ignored.
 #
 # Board defaults these cases assume, from BoardSim's constructor:
-#   serial 0000000000000000   fw 0.0.0   hw rev0   proto 1   axes 1
+#   serial 0000000000000000   fw 0.0.0   hw rev0   proto 2   axes 1
 #   travel -20.0..20.0 deg    v_max 180.0 deg/s    home takes 50000 us
-#   host timeout 100000 us
+#   host timeout 100000 us    home timeout maximum 8000000 us
+#   caps motion+home+instr+hv+watch+fetch+stream+cfg (no brake, torque, angout)
+#   deadband 0.5 deg          stream_hz 10          instrumentation on at boot
+#   pull direction = +angle   capture ring 1 kHz from RELEASED; pre_ms 500, post_ms 500
+#
+# Timestamps and durations are exact: `t` is the board's 64-bit microsecond
+# clock, and every deadline (watchdog, home bound, hold, timeout, maxdur, the
+# one-second TRIAL rule, stream and capture samples) is stepped to exactly, so
+# an event lands on the microsecond its rule names.
 #
 # Move distances here are chosen to divide evenly at v_max (9 deg = 50000 us) so
 # no case depends on how a duration is rounded. The firmware and the simulator
@@ -48,13 +65,13 @@
 # twin-axis board on the same link.
 CASE id-reports-version-serial-and-axis-count
   SEND id;1
-  EXPECT ack;1;hw=rev0;serial=0000000000000000;fw=0.0.0;proto=1;axes=1;caps=motion+home+freewheel+instr+hv;rxbuf=120
+  EXPECT ack;1;hw=rev0;serial=0000000000000000;fw=0.0.0;proto=2;axes=1;caps=motion+home+instr+hv+watch+fetch+stream+cfg;rxbuf=200
 END
 
 # "Must work before ARM and must never fail" - including before HV is on.
 CASE id-answers-before-arm
   SEND id;7
-  EXPECT ack;7;hw=rev0;serial=0000000000000000;fw=0.0.0;proto=1;axes=1;caps=motion+home+freewheel+instr+hv;rxbuf=120
+  EXPECT ack;7;hw=rev0;serial=0000000000000000;fw=0.0.0;proto=2;axes=1;caps=motion+home+instr+hv+watch+fetch+stream+cfg;rxbuf=200
 END
 
 
@@ -198,7 +215,7 @@ CASE heartbeat-loss-faults-the-board
   ADVANCE 100000
   EXPECT ev;FAULT;150000;code=0;detail=host_timeout
   SEND status;4
-  EXPECT ack;4;state=FAULTED;angle=0.0;xactual=0.0;homed=1;limit=0;faults=1;hv=0
+  EXPECT ack;4;state=FAULTED;angle=0.0;xactual=0.0;torque=;brake=;homed=1;limit=0;faults=1;hv=0;t=150000
 END
 
 
@@ -206,7 +223,7 @@ END
 
 CASE status-is-safe-before-anything-is-configured
   SEND status;1
-  EXPECT ack;1;state=IDLE;angle=0.0;xactual=0.0;homed=0;limit=0;faults=0;hv=0
+  EXPECT ack;1;state=IDLE;angle=0.0;xactual=0.0;torque=;brake=;homed=0;limit=0;faults=0;hv=0;t=0
 END
 
 CASE limits-reports-what-the-board-will-enforce
@@ -226,15 +243,12 @@ END
 
 # ------------------------------------------------------------- compliance
 
-# The trial shape the rig actually needs: park, present, then let the animal
-# move the joystick.
-#
-# Rev 0 has no electronic brake, so `freewheel` is its own verb. On a board with
-# the brake it must not be: the brake has to engage BEFORE motor drive is
-# released, and two host commands cannot guarantee that ordering across a link
-# with latency. This case is expected to be REPLACED by a `brake` case, not
-# extended.
-CASE freewheel-releases-the-driver
+# The trial shape the rig needs: park, present, then let the animal move the
+# joystick. `BRAKE <torque>` is the one verb for "engage the brake, then release
+# the drive"; on a board whose caps lack `brake` it is accepted, the torque is
+# ignored and only the release happens. It replaced `FREEWHEEL` on 2026-10-01.
+# The ack comes first and RELEASED when the release has happened.
+CASE brake-releases-the-driver
   SEND hv;1;on
   EXPECT ack;1
   SEND home;2
@@ -243,17 +257,39 @@ CASE freewheel-releases-the-driver
   EXPECT ev;HOMED;50000;angle=0.0
   SEND arm;3
   EXPECT ack;3
-  SEND freewheel;4
+  SEND brake;4;0
   EXPECT ack;4
+  EXPECT ev;RELEASED;50000;angle=0.0;torque=;brake=
   SEND status;5
-  EXPECT ack;5;state=FREEWHEEL;angle=0.0;xactual=0.0;homed=1;limit=0;faults=0;hv=1
+  EXPECT ack;5;state=RELEASED;angle=0.0;xactual=0.0;torque=;brake=;homed=1;limit=0;faults=0;hv=1;t=50000
 END
 
-# Freewheeling is only reachable from ARMED. A joystick held by an energised
-# motor cannot go compliant by accident.
-CASE freewheel-is-refused-before-arming
-  SEND freewheel;1
+# Release is only reachable from ARMED. A joystick held by an energised motor
+# cannot go compliant by accident.
+CASE brake-is-refused-before-arming
+  SEND brake;1;0
   EXPECT nak;1;notarmed
+END
+
+CASE brake-needs-a-torque-argument
+  SEND hv;1;on
+  EXPECT ack;1
+  SEND home;2
+  EXPECT ack;2
+  ADVANCE 50000
+  EXPECT ev;HOMED;50000;angle=0.0
+  SEND arm;3
+  EXPECT ack;3
+  SEND brake;4
+  EXPECT nak;4;badargs
+END
+
+# The two bring-up verbs are gone, not aliased.
+CASE freewheel-and-armpull-are-no-longer-verbs
+  SEND freewheel;1
+  EXPECT nak;1;badverb
+  SEND armpull;2;5.0
+  EXPECT nak;2;badverb
 END
 
 # Moving to a bounded position is what presents the joystick to the animal.
@@ -270,4 +306,514 @@ CASE move-to-the-pull-position
   EXPECT ack;4
   ADVANCE 50000
   EXPECT ev;TARGET;100000;angle=-9.0
+END
+
+
+# ------------------------------------------------------ 2026-10-01 review
+
+# `t` is the board's 64-bit microsecond clock. 2^32 us is 71.6 minutes, inside
+# a normal session; the firmware used to wrap there.
+CASE event-time-is-64-bit
+  SEND hv;1;on
+  EXPECT ack;1
+  ADVANCE 4294967296
+  SEND home;2
+  EXPECT ack;2
+  ADVANCE 50000
+  EXPECT ev;HOMED;4295017296;angle=0.0
+END
+
+# `home;<s>;<timeout_ms>` is a deadline on the running home, not a comparison
+# with the expected duration up front (which faulted every request under the
+# real backend's 8 s bound immediately).
+CASE home-timeout-faults-when-it-expires
+  SEND hv;1;on
+  EXPECT ack;1
+  SEND home;2;30
+  EXPECT ack;2
+  ADVANCE 29999
+  ADVANCE 1
+  EXPECT ev;FAULT;30000;code=3;detail=home_timeout
+END
+
+# A timeout above the firmware maximum is clipped to it. With the simulated
+# 50 ms home the clip itself is not observable here (both halves pin it in
+# their unit tests); what this case pins is that a long bound does not fault a
+# home that completed, however far the clock then runs.
+CASE home-timeout-above-the-maximum-is-clipped-not-refused
+  SEND hv;1;on
+  EXPECT ack;1
+  SEND home;2;999999
+  EXPECT ack;2
+  ADVANCE 50000
+  EXPECT ev;HOMED;50000;angle=0.0
+  ADVANCE 8000000
+END
+
+# The board enables the InstrumentPort buffers at boot for its proof of life,
+# so STATE reports them on; the verb drives them from then on.
+CASE instrumentation-is-on-at-boot
+  SEND instr;1;state
+  EXPECT ack;1;instr=1
+  SEND instr;2;off
+  EXPECT ack;2
+  SEND instr;3;state
+  EXPECT ack;3;instr=0
+END
+
+
+# ------------------------------------------------------ configuration (v1)
+
+CASE cfg-reports-and-bounds-its-keys
+  SEND cfg;1;get
+  EXPECT ack;1;wdt_ms=100;deadband_deg=0.5;stream_hz=10;pre_ms=500;post_ms=500
+  SEND cfg;2;wdt_ms=10
+  EXPECT nak;2;outofrange
+  SEND cfg;3;bogus=1
+  EXPECT nak;3;badargs
+  SEND cfg;4;wdt_ms=200;deadband_deg=1
+  EXPECT ack;4
+  SEND cfg;5;get
+  EXPECT ack;5;wdt_ms=200;deadband_deg=1.0;stream_hz=10;pre_ms=500;post_ms=500
+  SEND cfg;6;pre_ms=1500;post_ms=600
+  EXPECT nak;6;outofrange
+  SEND cfg;7;pre_ms=2047;post_ms=0
+  EXPECT ack;7
+  SEND cfg;8;post_ms=1
+  EXPECT nak;8;outofrange
+  SEND cfg;9;get
+  EXPECT ack;9;wdt_ms=200;deadband_deg=1.0;stream_hz=10;pre_ms=2047;post_ms=0
+END
+
+# A value outside its bounds applies nothing in the line, not even the valid
+# pairs before it.
+CASE cfg-applies-all-or-nothing
+  SEND cfg;1;deadband_deg=2;wdt_ms=9999
+  EXPECT nak;1;outofrange
+  SEND cfg;2;get
+  EXPECT ack;2;wdt_ms=100;deadband_deg=0.5;stream_hz=10;pre_ms=500;post_ms=500
+END
+
+CASE cfg-wdt-ms-is-the-host-loss-timeout
+  SEND cfg;1;wdt_ms=200
+  EXPECT ack;1
+  SEND hv;2;on
+  EXPECT ack;2
+  SEND home;3
+  EXPECT ack;3
+  ADVANCE 50000
+  EXPECT ev;HOMED;50000;angle=0.0
+  SEND arm;4
+  EXPECT ack;4
+  ADVANCE 199999
+  ADVANCE 1
+  EXPECT ev;FAULT;250000;code=0;detail=host_timeout
+END
+
+
+# --------------------------------------------------------- named profiles
+
+CASE moveto-accepts-a-named-profile
+  SEND hv;1;on
+  EXPECT ack;1
+  SEND home;2
+  EXPECT ack;2
+  ADVANCE 50000
+  EXPECT ev;HOMED;50000;angle=0.0
+  SEND arm;3
+  EXPECT ack;3
+  SEND moveto;4;9.0;present
+  EXPECT ack;4
+  ADVANCE 50000
+  EXPECT ev;TARGET;100000;angle=9.0
+  SEND moveto;5;0.0;fast
+  EXPECT nak;5;badargs
+END
+
+
+# ----------------------------------------------------------- watch (v1)
+
+CASE watch-outside-released-is-notreleased
+  SEND watch;1;pull=5;push=5;timeout=300
+  EXPECT nak;1;notreleased
+END
+
+# Each outcome, driven by the ANGLE stimulus. The watchdog is widened to 500 ms
+# with CFG so the windows below can run without heartbeats; thresholds are
+# relative to the angle at RELEASED, pull-positive.
+
+CASE watch-pull-with-hold
+  SEND cfg;1;wdt_ms=500
+  EXPECT ack;1
+  SEND hv;2;on
+  EXPECT ack;2
+  SEND home;3
+  EXPECT ack;3
+  ADVANCE 50000
+  EXPECT ev;HOMED;50000;angle=0.0
+  SEND arm;4
+  EXPECT ack;4
+  SEND brake;5;0
+  EXPECT ack;5
+  EXPECT ev;RELEASED;50000;angle=0.0;torque=;brake=
+  SEND watch;6;pull=5;push=5;timeout=300;hold=100
+  EXPECT ack;6
+  ANGLE 6.0
+  ADVANCE 99999
+  ADVANCE 1
+  EXPECT ev;PULL;150000;angle=6.0;torque=
+  SEND moveto;7;0.0
+  EXPECT ev;TRIAL;150000;outcome=PULL;t_rel=50000;t_touch=;t_move=50000;t_out=150000;a0=0.0;a_peak=6.0;a_end=6.0;tq_peak=;tq_out=;dur_thr=100
+  EXPECT ack;7
+  ADVANCE 33333
+  EXPECT ev;TARGET;183333;angle=0.0
+END
+
+# A pull that drops below the threshold before `hold` restarts the hold.
+CASE watch-hold-restarts-when-the-pull-is-released
+  SEND cfg;1;wdt_ms=500
+  EXPECT ack;1
+  SEND hv;2;on
+  EXPECT ack;2
+  SEND home;3
+  EXPECT ack;3
+  ADVANCE 50000
+  EXPECT ev;HOMED;50000;angle=0.0
+  SEND arm;4
+  EXPECT ack;4
+  SEND brake;5;0
+  EXPECT ack;5
+  EXPECT ev;RELEASED;50000;angle=0.0;torque=;brake=
+  SEND watch;6;pull=5;push=5;timeout=300;hold=100
+  EXPECT ack;6
+  ANGLE 6.0
+  ADVANCE 50000
+  ANGLE 4.0
+  ADVANCE 50000
+  ANGLE 6.0
+  ADVANCE 99999
+  ADVANCE 1
+  EXPECT ev;PULL;250000;angle=6.0;torque=
+END
+
+CASE watch-push
+  SEND cfg;1;wdt_ms=500
+  EXPECT ack;1
+  SEND hv;2;on
+  EXPECT ack;2
+  SEND home;3
+  EXPECT ack;3
+  ADVANCE 50000
+  EXPECT ev;HOMED;50000;angle=0.0
+  SEND arm;4
+  EXPECT ack;4
+  SEND brake;5;0
+  EXPECT ack;5
+  EXPECT ev;RELEASED;50000;angle=0.0;torque=;brake=
+  SEND watch;6;pull=5;push=5;timeout=300
+  EXPECT ack;6
+  ANGLE -6.0
+  EXPECT ev;PUSH;50000;angle=-6.0;torque=
+  SEND stop;7
+  EXPECT ev;TRIAL;50000;outcome=PUSH;t_rel=50000;t_touch=;t_move=50000;t_out=50000;a0=0.0;a_peak=-6.0;a_end=-6.0;tq_peak=;tq_out=;dur_thr=0
+  EXPECT ack;7
+  SEND status;8
+  EXPECT ack;8;state=ARMED;angle=-6.0;xactual=-6.0;torque=;brake=;homed=1;limit=0;faults=0;hv=1;t=50000
+END
+
+CASE watch-nomove
+  SEND cfg;1;wdt_ms=500
+  EXPECT ack;1
+  SEND hv;2;on
+  EXPECT ack;2
+  SEND home;3
+  EXPECT ack;3
+  ADVANCE 50000
+  EXPECT ev;HOMED;50000;angle=0.0
+  SEND arm;4
+  EXPECT ack;4
+  SEND brake;5;0
+  EXPECT ack;5
+  EXPECT ev;RELEASED;50000;angle=0.0;torque=;brake=
+  SEND watch;6;pull=5;push=5;timeout=300
+  EXPECT ack;6
+  ANGLE 0.2
+  ADVANCE 300000
+  EXPECT ev;NOMOVE;350000;angle=0.2;torque=
+  SEND moveto;7;0.0
+  EXPECT ev;TRIAL;350000;outcome=NOMOVE;t_rel=50000;t_touch=;t_move=;t_out=350000;a0=0.0;a_peak=0.2;a_end=0.2;tq_peak=;tq_out=;dur_thr=0
+  EXPECT ack;7
+  ADVANCE 1111
+  EXPECT ev;TARGET;351111;angle=0.0
+END
+
+CASE watch-abort
+  SEND cfg;1;wdt_ms=500
+  EXPECT ack;1
+  SEND hv;2;on
+  EXPECT ack;2
+  SEND home;3
+  EXPECT ack;3
+  ADVANCE 50000
+  EXPECT ev;HOMED;50000;angle=0.0
+  SEND arm;4
+  EXPECT ack;4
+  SEND brake;5;0
+  EXPECT ack;5
+  EXPECT ev;RELEASED;50000;angle=0.0;torque=;brake=
+  SEND watch;6;pull=5;push=5;timeout=300;maxdur=200
+  EXPECT ack;6
+  ANGLE 2.0
+  ADVANCE 200000
+  EXPECT ev;ABORT;250000;angle=2.0;torque=
+  SEND disarm;7
+  EXPECT ev;TRIAL;250000;outcome=ABORT;t_rel=50000;t_touch=;t_move=50000;t_out=250000;a0=0.0;a_peak=2.0;a_end=2.0;tq_peak=;tq_out=;dur_thr=0
+  EXPECT ack;7
+END
+
+CASE watch-none-when-the-host-leaves-first
+  SEND cfg;1;wdt_ms=500
+  EXPECT ack;1
+  SEND hv;2;on
+  EXPECT ack;2
+  SEND home;3
+  EXPECT ack;3
+  ADVANCE 50000
+  EXPECT ev;HOMED;50000;angle=0.0
+  SEND arm;4
+  EXPECT ack;4
+  SEND brake;5;0
+  EXPECT ack;5
+  EXPECT ev;RELEASED;50000;angle=0.0;torque=;brake=
+  SEND watch;6;pull=5;push=5;timeout=300
+  EXPECT ack;6
+  SEND moveto;7;0.0
+  EXPECT ev;TRIAL;50000;outcome=NONE;t_rel=50000;t_touch=;t_move=;t_out=;a0=0.0;a_peak=0.0;a_end=0.0;tq_peak=;tq_out=;dur_thr=0
+  EXPECT ack;7
+  ADVANCE 1
+  EXPECT ev;TARGET;50001;angle=0.0
+END
+
+# One TRIAL per WATCH: if the host stays RELEASED for a second after the
+# outcome the summary comes anyway, and leaving later adds nothing.
+CASE trial-comes-after-one-second-if-the-host-stays-released
+  SEND cfg;1;wdt_ms=500
+  EXPECT ack;1
+  SEND hv;2;on
+  EXPECT ack;2
+  SEND home;3
+  EXPECT ack;3
+  ADVANCE 50000
+  EXPECT ev;HOMED;50000;angle=0.0
+  SEND arm;4
+  EXPECT ack;4
+  SEND brake;5;0
+  EXPECT ack;5
+  EXPECT ev;RELEASED;50000;angle=0.0;torque=;brake=
+  SEND watch;6;pull=5;push=5;timeout=300
+  EXPECT ack;6
+  ANGLE -6.0
+  EXPECT ev;PUSH;50000;angle=-6.0;torque=
+  ADVANCE 400000
+  SEND ping;7
+  EXPECT ack;7
+  ADVANCE 400000
+  SEND ping;8
+  EXPECT ack;8
+  ADVANCE 200000
+  EXPECT ev;TRIAL;1050000;outcome=PUSH;t_rel=50000;t_touch=;t_move=50000;t_out=50000;a0=0.0;a_peak=-6.0;a_end=-6.0;tq_peak=;tq_out=;dur_thr=0
+  SEND stop;9
+  EXPECT ack;9
+END
+
+# A RELEASED period without a WATCH produces no TRIAL.
+CASE no-watch-no-trial
+  SEND hv;1;on
+  EXPECT ack;1
+  SEND home;2
+  EXPECT ack;2
+  ADVANCE 50000
+  EXPECT ev;HOMED;50000;angle=0.0
+  SEND arm;3
+  EXPECT ack;3
+  SEND brake;4;0
+  EXPECT ack;4
+  EXPECT ev;RELEASED;50000;angle=0.0;torque=;brake=
+  SEND stop;5
+  EXPECT ack;5
+END
+
+
+# ----------------------------------------------------------- fetch (v1)
+
+# The capture is a ring at 1 kHz that runs from RELEASED on, however long the
+# trial takes. When the outcome is decided the window freezes post_ms samples
+# later: the last pre_ms samples before the outcome sample, the outcome sample
+# (k = pre) and the post_ms after it. FETCH is busy until then and returns the
+# window in chunks of at most 32 lines. pre reports what the ring holds: here
+# RELEASED is 5 ms old at the outcome and pre_ms is 3, so pre is 3.
+CASE fetch-returns-the-capture-in-chunks
+  SEND cfg;1;wdt_ms=500;pre_ms=3;post_ms=2
+  EXPECT ack;1
+  SEND hv;2;on
+  EXPECT ack;2
+  SEND home;3
+  EXPECT ack;3
+  ADVANCE 50000
+  EXPECT ev;HOMED;50000;angle=0.0
+  SEND arm;4
+  EXPECT ack;4
+  SEND brake;5;0
+  EXPECT ack;5
+  EXPECT ev;RELEASED;50000;angle=0.0;torque=;brake=
+  SEND watch;6;pull=5;push=5;timeout=5
+  EXPECT ack;6
+  SEND fetch;7
+  EXPECT nak;7;busy
+  ADVANCE 5000
+  EXPECT ev;NOMOVE;55000;angle=0.0;torque=
+  SEND fetch;8
+  EXPECT nak;8;busy
+  ADVANCE 2000
+  SEND fetch;9
+  EXPECT ack;9;n=6;k0=0;t0=52000;dt_us=1000;pre=3
+  EXPECT cap;0;0.0;
+  EXPECT cap;1;0.0;
+  EXPECT cap;2;0.0;
+  EXPECT cap;3;0.0;
+  EXPECT cap;4;0.0;
+  EXPECT cap;5;0.0;
+  EXPECT cap;end
+  SEND fetch;10;4;2
+  EXPECT ack;10;n=2;k0=4;t0=56000;dt_us=1000;pre=3
+  EXPECT cap;4;0.0;
+  EXPECT cap;5;0.0;
+  EXPECT cap;end
+  SEND fetch;11;6;2
+  EXPECT ack;11;n=0;k0=6;t0=58000;dt_us=1000;pre=3
+  EXPECT cap;end
+END
+
+# The reason it is a ring: a pull 2.4 s into a 10 s trial is 2401 samples
+# after RELEASED, past a 2048-sample linear buffer, and the window still lands
+# on it. The host keeps the watchdog fed meanwhile, as a task would.
+CASE fetch-window-follows-a-late-outcome-past-the-ring
+  SEND cfg;1;wdt_ms=500;pre_ms=2;post_ms=2
+  EXPECT ack;1
+  SEND hv;2;on
+  EXPECT ack;2
+  SEND home;3
+  EXPECT ack;3
+  ADVANCE 50000
+  EXPECT ev;HOMED;50000;angle=0.0
+  SEND arm;4
+  EXPECT ack;4
+  SEND brake;5;0
+  EXPECT ack;5
+  EXPECT ev;RELEASED;50000;angle=0.0;torque=;brake=
+  SEND watch;6;pull=5;push=5;timeout=10000;hold=1
+  EXPECT ack;6
+  ADVANCE 400000
+  SEND ping;7
+  EXPECT ack;7
+  ADVANCE 400000
+  SEND ping;8
+  EXPECT ack;8
+  ADVANCE 400000
+  SEND ping;9
+  EXPECT ack;9
+  ADVANCE 400000
+  SEND ping;10
+  EXPECT ack;10
+  ADVANCE 400000
+  SEND ping;11
+  EXPECT ack;11
+  ADVANCE 400000
+  SEND ping;12
+  EXPECT ack;12
+  ANGLE 6.0
+  ADVANCE 1000
+  EXPECT ev;PULL;2451000;angle=6.0;torque=
+  ADVANCE 2000
+  SEND fetch;13
+  EXPECT ack;13;n=5;k0=0;t0=2449000;dt_us=1000;pre=2
+  EXPECT cap;0;0.0;
+  EXPECT cap;1;0.0;
+  EXPECT cap;2;6.0;
+  EXPECT cap;3;6.0;
+  EXPECT cap;4;6.0;
+  EXPECT cap;end
+END
+
+# The host leaves RELEASED before any outcome: the window freezes at the exit
+# with only the samples before it (no outcome sample, so the count equals
+# pre), and the history from before the WATCH counts. A new BRAKE restarts
+# the ring and the previous window is gone; a RELEASED period without a WATCH
+# leaves none.
+CASE fetch-after-none-holds-only-the-pre-window
+  SEND cfg;1;wdt_ms=500;pre_ms=3;post_ms=3
+  EXPECT ack;1
+  SEND hv;2;on
+  EXPECT ack;2
+  SEND home;3
+  EXPECT ack;3
+  ADVANCE 50000
+  EXPECT ev;HOMED;50000;angle=0.0
+  SEND arm;4
+  EXPECT ack;4
+  SEND brake;5;0
+  EXPECT ack;5
+  EXPECT ev;RELEASED;50000;angle=0.0;torque=;brake=
+  ADVANCE 5000
+  SEND watch;6;pull=5;push=5;timeout=300
+  EXPECT ack;6
+  ADVANCE 2000
+  SEND moveto;7;0.0
+  EXPECT ev;TRIAL;57000;outcome=NONE;t_rel=50000;t_touch=;t_move=;t_out=;a0=0.0;a_peak=0.0;a_end=0.0;tq_peak=;tq_out=;dur_thr=0
+  EXPECT ack;7
+  SEND fetch;8
+  EXPECT ack;8;n=3;k0=0;t0=55000;dt_us=1000;pre=3
+  EXPECT cap;0;0.0;
+  EXPECT cap;1;0.0;
+  EXPECT cap;2;0.0;
+  EXPECT cap;end
+  ADVANCE 1
+  EXPECT ev;TARGET;57001;angle=0.0
+  SEND brake;9;0
+  EXPECT ack;9
+  EXPECT ev;RELEASED;57001;angle=0.0;torque=;brake=
+  SEND fetch;10
+  EXPECT ack;10;n=0;k0=0;t0=0;dt_us=1000;pre=0
+  EXPECT cap;end
+END
+
+CASE fetch-before-any-watch-is-empty
+  SEND fetch;1
+  EXPECT ack;1;n=0;k0=0;t0=0;dt_us=1000;pre=0
+  EXPECT cap;end
+END
+
+
+# ---------------------------------------------------------- stream (v1)
+
+CASE stream-is-bounded-and-off-by-default
+  SEND stream;1;on;100
+  EXPECT nak;1;outofrange
+  SEND stream;2;on;50
+  EXPECT ack;2
+  ADVANCE 20000
+  EXPECT ev;S;20000;angle=0.0;torque=
+  ADVANCE 20000
+  EXPECT ev;S;40000;angle=0.0;torque=
+  SEND stream;3;off
+  EXPECT ack;3
+  ADVANCE 100000
+END
+
+
+# --------------------------------------------------- torque (v1.0 boards)
+
+CASE tq-is-badverb-without-torque-hardware
+  SEND tq;1;get
+  EXPECT nak;1;badverb
 END

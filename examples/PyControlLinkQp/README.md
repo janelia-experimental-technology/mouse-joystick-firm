@@ -17,10 +17,10 @@ delivery sketch; nothing here changes the protocol or the pyControl side.
 
 | Piece | Here | Notes |
 |---|---|---|
-| `ProtocolBoard`, `TmcMotion`, `SimulatedMotion` | `src/` | untouched; the corpus still holds |
+| `ProtocolBoard`, `TrialWatch`, `TmcMotion`, `SimulatedMotion` | `src/` | shared with `PyControlLink`; protocol v1 (`proto=2`) since 2026-10-01, the 48-case corpus holds in both halves |
 | `LinkAo.cpp` | the active object | 64-bit clock, lines in, lines out: what `PyControlLink.ino`'s `loop()` did, as run-to-completion steps with trace records |
-| `Bsp.cpp` | board support | `SafeState` first, boot signature and identity beacon, 100 Hz hardware-alarm tick with watchdog, non-blocking line transport, transmit-only QS on a PIO UART at `FW_TRIG1` |
-| `AppConfig.hpp` | configuration | the mechanism and protocol numbers of `PyControlLink.ino` |
+| `Bsp.cpp` | board support | `SafeState` first, boot signature and identity beacon, 1 kHz hardware-alarm tick (the sampler) with watchdog, non-blocking line transport, transmit-only QS on a PIO UART at `FW_TRIG1`, the rev 1 angle DAC |
+| `AppConfig.hpp` | configuration | the mechanism and protocol numbers of `PyControlLink.ino`; `has_angout` follows `MJ_BOARD_REV`, `pull_sign` is +1 until measured per board |
 | `PyControlLinkQp.ino` | `setup()`/`loop()` only | event pool (8 lines), queue (16 events), start |
 
 The qp-arduino library comes from the sibling checkout `../qp-arduino`
@@ -37,7 +37,7 @@ board library already documents.
 | operation marker | `kFwTrig0` | high from the start of a homing or move to its completion (`OP_START`/`OP_DONE`) |
 | USB CDC | `Serial` | a banner at boot; in the bench build, the protocol |
 
-`FW_TRIG1` therefore no longer carries the FREEWHEEL level of `PyControlLink`:
+`FW_TRIG1` therefore no longer carries the RELEASED level of `PyControlLink`:
 that state is a `LINK_STATE` record. Which marker roles the v1.0 board's
 InstrumentPort overlay finally assigns is an `OBS-IF` decision still owed
 (`../mouse-joystick-pcb/docs/observability-plan.md`); the two uses here are
@@ -52,21 +52,23 @@ one-line changes.
 | `LINK_STATE` | name | `ProtocolBoard`'s state changed |
 | `OP_START` / `OP_DONE` | homing flag, angle | an operation started / completed; `FW_TRIG0` follows |
 | `LINK_WORK` | advance µs, feed µs, output µs | where a dispatched line's time went |
+| `SAMPLE_STAT` | ticks, handled, coalesced, dropped, max µs, last µs | the 1 kHz sampler: ticks the alarm posted, ticks the AO ran, samples lost to a tick still in flight or to a full queue, and the cost of the tick handler (poll, classifier, capture, DAC write), every second |
 | `TRACE_STAT` | high-water, buffer-full count, size, ticks | QS buffer use, every second |
 | `LINK_STAT` | lines, drops (pool, queue, ring), overlong, queue min free, pool min free, ring high-water | transport and budget use, every second |
 | `TICK_LOST` | ticks, re-arms, catch-ups | the tick watchdog fired (never expected) |
 
 Plus QP's own state transitions, entry/exit and assertions. The per-event
 dispatch/post/get records are filtered out by default (`LINK_QS_FULL=1` keeps
-them, and saturates the line at a 100 Hz tick).
+them, and saturates the line at a 1 kHz tick).
 
 ## Builds
 
 | Env | For |
 |---|---|
 | `mouse_joystick_qp` | rev 0 (pcb v0.1/v0.2): `TmcMotion`, UART0, trace on `FW_TRIG1` |
-| `mouse_joystick_qp_rev1` | rev 1 (pcb v0.3 and later) |
-| `mouse_joystick_qp_sim_usb` | a board with no 36 V and no host: `SimulatedMotion`, protocol over USB CDC, tick probe on the unused UART0 TX pad (InstrumentPort `DIG8`) |
+| `mouse_joystick_qp_rev1` | rev 1 (pcb v0.3 and later): angle DAC on SPI1 |
+| `mouse_joystick_qp_rev1_i2c` | rev 1 with the DAC on I2C, v1.0's strap (compiles; no board to test it on yet) |
+| `mouse_joystick_qp_sim_usb` | a board with no 36 V and no host: `SimulatedMotion`, protocol over USB CDC, tick probe on the unused UART0 TX pad (InstrumentPort `DIG8`). Accepts the bench stimulus `sim;<seq>;angle;<deg>` (sets the simulated encoder, as the corpus's `ANGLE` step does, so a `WATCH` outcome can be driven by hand; `ack;<seq>`), which exists in no other build and is not a protocol verb |
 
 ```sh
 pixi run build examples/PyControlLinkQp mouse_joystick_qp
@@ -97,3 +99,21 @@ does (sigrok `uart` decoder on channel 17, bytes to `qspy -k -f`).
 - The RP2040 hardware watchdog task of `.agents/PLANS.md` applies here as it
   does to `PyControlLink`; `Q_onError` already drops to `SafeState` before
   rebooting.
+- 2026-10-01, later: protocol v1 (`proto=2`: BRAKE, WATCH, CFG, chunked
+  FETCH, STREAM, TRIAL, 64-bit event times) in both halves with the corpus
+  rewritten (46 cases, 120 native and 164 host tests), the tick raised to
+  1 kHz as the sampler with the tick coalesced (one TICK_SIG in flight, lost
+  samples counted in `SAMPLE_STAT` rather than overflowing the queue behind
+  the rail's soft start), and the rev 1 angle output driven from the tick:
+  bus claimed and GAIN 0x0101 written only after `hv=1`, parked at the fault
+  code while `angleOutputValid()` is false, released when the rail drops.
+  **Compiled only**, in all four environments; nothing was flashed. The
+  sampler cost is instrumented (`SAMPLE_STAT` max/last, `LINK_WORK`), not
+  measured: the 400 us budget is a declaration until a run on the fixture.
+- 2026-10-01, review: the capture became a ring (`TrialWatch`): sampled from
+  `RELEASED` on, frozen `post_ms` after the outcome around the outcome sample
+  (`CFG pre_ms`/`post_ms`, 500/500, sum ≤ 2047), so a pull late in a 10 s
+  trial is captured where the old two-second linear buffer missed it. Corpus,
+  simulator, firmware and device class changed together; the fixture run is
+  scripted in `qp-arduino-example/evidence/bench-scripts/link_run_ring.sh`
+  and not yet run.

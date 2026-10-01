@@ -25,6 +25,10 @@
 
 namespace mouse_joystick {
 
+// The firmware maximum for one homing cycle; the real backend's own bound
+// (`TmcMotion::Config::home_timeout_us`) is the same number.
+constexpr uint32_t kHomeTimeoutMaxUs = 8000000u;
+
 class MotionBackend {
 public:
   virtual ~MotionBackend() {}
@@ -82,10 +86,18 @@ public:
   // Release the driver so the animal can move the joystick.
   virtual void releaseDriver() = 0;
 
-  // A conservative upper bound on how long homing may take, used to answer a
-  // host-supplied bound before starting. Exceeding it is a fault and not a nak,
-  // because by then the motion has started.
+  // How long this backend expects homing to take (the simulator's fixed
+  // duration; the real backend reports its own bound). Informational: the
+  // protocol layer no longer refuses a home because the host's timeout is
+  // shorter than this. Found in the 2026-10-01 review: comparing the request
+  // against the real backend's 8 s bound faulted every `home;<s>;<ms>` under
+  // 8000 ms immediately.
   virtual uint32_t expectedHomeDurationUs() const = 0;
+
+  // The firmware's own maximum for a homing cycle. A host-supplied timeout is
+  // clipped to this and enforced as a deadline while homing runs; exceeding it
+  // is a fault and not a nak, because by then the motion has started.
+  virtual uint32_t homeTimeoutMaxUs() const { return kHomeTimeoutMaxUs; }
 
   // Is the limit switch asserted? One of the six fields `STATUS` must report,
   // and a host may reasonably use it to decide whether homing is safe to start.

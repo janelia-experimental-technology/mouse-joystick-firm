@@ -25,6 +25,9 @@
 //       MJ_QS_STAT_PERIOD_MS (1000). No receive side exists: nothing on the
 //       trace link can reset, command or poke the board. Without QS_ON the
 //       application runs untraced and FW_TRIG1 stays idle.
+//   MJ_DAC_I2C (default 0)
+//       Rev 1 only: the angle DAC on I2C instead of SPI1 (v1.0 straps I2C;
+//       untestable on v0.3, whose SPI2C pin is tied to ground).
 //   LINK_QS_FULL (default 0)
 //       1 keeps every QP record; 0, the observation set, drops the per-event
 //       dispatch/internal-transition/post/get records so a 100 Hz tick does not
@@ -43,8 +46,14 @@
 
 #include <Arduino.h>
 #include <BoardPins.hpp>
+#include <Conversions.hpp>
 #include <SafeState.hpp>
 #include <SelfTest.hpp>
+#if MJ_BOARD_REV != 0
+#include <DAC80501.hpp>
+#include <SPI.h>
+#include <Wire.h>
+#endif
 #include <hardware/timer.h>    // hardware_alarm_*()
 #include <hardware/watchdog.h> // watchdog_reboot()
 #include <pico/time.h>         // time_us_64(), from_us_since_boot()
@@ -107,7 +116,10 @@ Q_DEFINE_THIS_FILE
 enum BspRecords { // BSP-level QS user records (the application uses +0..+7)
   TRACE_STAT = QP::QS_USER + 8,
   TICK_LOST = QP::QS_USER + 9,
-  LINK_STAT = QP::QS_USER + 10
+  LINK_STAT = QP::QS_USER + 10,
+  SAMPLE_STAT =
+      QP::QS_USER +
+      11 // per second: ticks posted, coalesced, dropped, max/last cost
 };
 
 namespace {
@@ -128,6 +140,19 @@ SerialPIO l_qsPioSerial(pins::kFwTrig1, SerialPIO::NOPIN);
 
 QP::QSpyId const l_TICK_ID = {0U};       // QS source of the tick
 QP::QSpyId const l_linkTransport = {0U}; // QS sender of LineEvt posts
+
+// The sampler's tick event: one static immutable event, posted by the alarm
+// interrupt when none is in flight. A periodic QTimeEvt would queue one event
+// per tick behind a long run-to-completion step (the rail's 60 ms soft
+// start) and overflow the queue; coalescing loses the sample instead, and
+// counts it.
+QP::QEvt const l_tickEvt(TICK_SIG);
+bool volatile l_tickPending = false;
+uint32_t volatile l_tickCoalesced = 0U; // alarm fired with a tick still pending
+uint32_t volatile l_tickDropped = 0U;   // the AO queue refused the tick
+uint32_t l_tickCostMax_us = 0U; // from the AO, since the last SAMPLE_STAT
+uint32_t l_tickCostLast_us = 0U;
+uint32_t l_tickHandled = 0U;
 
 #if MJ_TICK_PROBE
 inline void tickProbe(PinStatus level) {
@@ -163,7 +188,17 @@ void tickAlarmCallback(uint) {
   armTick();
   ++l_tickCount;
   l_lastTick_us = micros();
-  QTimeEvt::tick(0U, &l_TICK_ID);
+  QTimeEvt::tick(
+      0U, &l_TICK_ID); // no QP time events are armed today; kept for them
+  if (l_tickPending) {
+    ++l_tickCoalesced;
+  } else {
+    l_tickPending = true;
+    if (!AO_Link->POST_X(&l_tickEvt, 0U, &l_TICK_ID)) { // queue full
+      l_tickPending = false;
+      ++l_tickDropped;
+    }
+  }
   tickProbe(LOW);
 }
 void startTick() {
@@ -365,6 +400,7 @@ void bspDictionaries() {
   QS_USR_DICTIONARY(TRACE_STAT);
   QS_USR_DICTIONARY(TICK_LOST);
   QS_USR_DICTIONARY(LINK_STAT);
+  QS_USR_DICTIONARY(SAMPLE_STAT);
 }
 
 void qsPeriodic() {
@@ -398,6 +434,15 @@ void qsPeriodic() {
     // own critical section and this port's critical sections do not nest.
     const uint16_t queueMin = Link_queueMinFree();
     const uint16_t poolMin = static_cast<uint16_t>(QF::getPoolMin(1U));
+    QS_BEGIN_ID(SAMPLE_STAT, 0U)
+    QS_U32(0U, l_tickCount);      // alarm ticks since boot
+    QS_U32(0U, l_tickHandled);    // dispatched to the AO since boot
+    QS_U32(0U, l_tickCoalesced);  // samples lost to a tick still in flight
+    QS_U32(0U, l_tickDropped);    // samples lost to a full queue
+    QS_U32(0U, l_tickCostMax_us); // worst tick handler since the last record
+    QS_U32(0U, l_tickCostLast_us);
+    QS_END()
+    l_tickCostMax_us = 0U;
     QS_BEGIN_ID(LINK_STAT, 0U)
     QS_U32(0U, l_linesRx);
     QS_U16(0U, l_linesDroppedPool);
@@ -519,6 +564,146 @@ bool BSP::linkWrite(const char *line) {
 }
 //............................................................................
 void BSP::opMarker(bool on) { SafeState::setTrigger0(on); }
+//............................................................................
+void BSP::tickHandled() {
+  l_tickPending = false;
+  ++l_tickHandled;
+}
+//............................................................................
+void BSP::reportTickCost(uint32_t us) {
+  l_tickCostLast_us = us;
+  if (us > l_tickCostMax_us) {
+    l_tickCostMax_us = us;
+  }
+}
+//............................................................................
+#if MJ_BOARD_REV != 0
+namespace {
+#ifndef MJ_DAC_I2C
+#define MJ_DAC_I2C 0
+#endif
+#if MJ_DAC_I2C
+dac80501::I2cTransport l_dacTransport(Wire, dac80501::kI2cAddrA0Agnd);
+#else
+dac80501::SpiTransport l_dacTransport(SPI1, pins::kDacCsN);
+#endif
+dac80501::Dac80501 l_dac(l_dacTransport);
+
+// The DAC runs from the switched domain (MotionAndHoming's gate [4]: driving
+// its chip select before the rail is up back-powers that domain through the
+// input clamps), so the bus is claimed only while the protocol reports the
+// rail up, and released again when it goes down. Bring-up is two ticks, not
+// one blocking call: the driver's default begin() sleeps 1 ms after the soft
+// reset, which is the whole sampler budget.
+enum class DacPhase : uint8_t { kDown, kReset, kUp };
+DacPhase l_dacPhase = DacPhase::kDown;
+uint32_t l_dacResetAt_us = 0U;
+bool l_dacParked = false;
+uint32_t l_dacBeginFailures = 0U;
+constexpr uint32_t kDacResetSettleUs = 2000U; // the driver's 1 ms, doubled
+
+void dacBusUp() {
+#if MJ_DAC_I2C
+  Wire.setSCL(pins::kDacSpiSck);
+  Wire.setSDA(pins::kDacSpiCopi);
+  l_dacTransport.begin();
+  Wire.setClock(400000U); // 100 kHz would cost ~400 us per update
+#else
+  SPI1.setSCK(pins::kDacSpiSck);
+  SPI1.setTX(pins::kDacSpiCopi);
+  SPI1.setRX(pins::kSpi1RxUnused);
+  SPI1.begin();
+  l_dacTransport.begin();
+#endif
+}
+
+void dacBusDown() {
+  l_dac.invalidate(); // its GAIN is about to reset with the domain
+#if MJ_DAC_I2C
+  Wire.end();
+#else
+  SPI1.end();
+  pinMode(pins::kDacCsN, INPUT); // nothing drives an unpowered part
+#endif
+}
+
+// Tick 1 after the rail: claim the bus and soft-reset the part. Tick N: write
+// CONFIG, GAIN 0x0101 and SYNC (begin() without its own reset and sleep), as
+// the bench console does before its first data write.
+void dacStep(uint32_t now_us) {
+  switch (l_dacPhase) {
+  case DacPhase::kDown:
+    dacBusUp();
+    static_cast<void>(l_dac.softReset());
+    l_dacResetAt_us = now_us;
+    l_dacPhase = DacPhase::kReset;
+    break;
+  case DacPhase::kReset:
+    if ((now_us - l_dacResetAt_us) >= kDacResetSettleUs) {
+      dac80501::Config cfg = dac80501::arduinoConfig();
+      cfg.gain_register = dac80501::kGainRefDiv | dac80501::kGainBuffGain;
+      cfg.soft_reset_first = false; // done, and settled, in the previous phase
+      cfg.delay_ms = nullptr;
+      if (l_dac.begin(cfg)) {
+        l_dacPhase = DacPhase::kUp;
+        l_dacParked = false;
+      } else {
+        ++l_dacBeginFailures;
+        l_dacResetAt_us = now_us; // try again after another settle
+      }
+    }
+    break;
+  case DacPhase::kUp:
+    break;
+  }
+}
+} // namespace
+
+void BSP::angleOutput(bool valid, float angle_deg, float lo, float hi,
+                      bool hv_on) {
+  namespace conv = mouse_joystick::conversions;
+  if (!hv_on) {
+    if (l_dacPhase != DacPhase::kDown) {
+      dacBusDown();
+      l_dacPhase = DacPhase::kDown;
+    }
+    return;
+  }
+  if (l_dacPhase != DacPhase::kUp) {
+    dacStep(micros());
+    return;
+  }
+  if (!valid) {
+    if (!l_dacParked) {
+      static_cast<void>(l_dac.setCode(conv::kAngleOutFaultCode));
+      l_dacParked = true;
+    }
+    return;
+  }
+  l_dacParked = false;
+  float fraction = (hi > lo) ? (angle_deg - lo) / (hi - lo) : 0.0f;
+  if (fraction < 0.0f) {
+    fraction = 0.0f;
+  } else if (fraction > 1.0f) {
+    fraction = 1.0f;
+  }
+  const float bnc_volts =
+      conv::kAngleOutMinVolts +
+      fraction * (conv::kAngleOutMaxVolts - conv::kAngleOutMinVolts);
+  // One data frame per tick, whether or not the code changed, so the cost the
+  // SAMPLE_STAT record reports is the steady one. The DAC produces the BNC
+  // voltage divided by the output stage's gain.
+  static_cast<void>(l_dac.setVolts(bnc_volts / conv::kAngleOutStageGain));
+}
+#else
+void BSP::angleOutput(bool, float, float, float, bool) {} // rev 0: no DAC
+#endif
+//............................................................................
+void BSP::instrumentation(bool on) { SafeState::setInstrumentationEnabled(on); }
+//............................................................................
+bool BSP::instrumentationEnabled() {
+  return SafeState::instrumentationEnabled();
+}
 
 //----------------------------------------------------------------------------
 // QF callbacks

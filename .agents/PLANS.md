@@ -440,6 +440,16 @@ gate Stage 4.
    fault bit the draft does not have, and bit 4 is retired for a different
    comparison.
 
+Update 2026-10-01: findings 3, 4 and 5 are closed by protocol v1 (`proto=2`,
+signed off and recorded in `../mouse-joystick-pcb/docs/uart-protocol.md`,
+"Protocol v1 Proposal"): `BRAKE <torque>` replaces `FREEWHEEL` (release-only
+until a board has the brake), `WATCH` replaces `ARMPULL` with thresholds
+relative to the release angle and one `TRIAL` summary per arming, `STATUS`
+carries `torque`, `brake` and `t`, and `CFG`, chunked `FETCH` and `STREAM`
+are new. Implemented in `src/`, `pycontrol/` and both test runners the same
+day, compiled into `PyControlLink` and `PyControlLinkQp`, not yet run on a
+board. Finding 6 stands.
+
 ## Waiting On The Researcher
 
 Not blocking Stage 4, but they change the command set when answered. Raised

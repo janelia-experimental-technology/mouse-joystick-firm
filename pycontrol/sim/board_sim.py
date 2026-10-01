@@ -92,7 +92,7 @@ class State:
     # structure: home to park, move to present, brake + release for the pull.
     # It is the state that makes the draft's single "position" field ambiguous,
     # because in it the measured and commanded positions genuinely differ.
-    FREEWHEEL = "FREEWHEEL"
+    RELEASED = "RELEASED"  # FREEWHEEL until protocol v1 (2026-10-01)
 
 
 class BoardSim:
@@ -109,6 +109,25 @@ class BoardSim:
 
     # Cited from `../../../mouse-joystick-pcb/docs/pycontrol-port-pinout.md`.
     DEFAULT_HOST_TIMEOUT_US = 100_000
+    # The firmware's maximum for one homing cycle; `home;<s>;<timeout_ms>` is
+    # clipped to it (TmcMotion::Config::home_timeout_us is the same 8 s).
+    HOME_TIMEOUT_MAX_US = 8_000_000
+
+    # Protocol v1 (2026-10-01).
+    WDT_MIN_US = 50_000
+    WDT_MAX_US = 500_000
+    DEADBAND_MIN_DEG = 0.05
+    DEADBAND_MAX_DEG = 10.0
+    STREAM_HZ_MIN = 1
+    STREAM_HZ_MAX = 50  # at 115200 baud
+    FETCH_CHUNK_MAX = 32
+    CAPTURE_MAX = 2048  # the ring, 1 kHz
+    WINDOW_MAX_MS = CAPTURE_MAX - 1  # pre_ms, post_ms and their sum
+    SAMPLE_US = 1_000
+    TRIAL_DELAY_US = 1_000_000
+    DEFAULT_PRE_MS = 500
+    DEFAULT_POST_MS = 500
+    PROFILES = ("present", "retract", "slow")
 
     def __init__(
         self,
@@ -131,6 +150,10 @@ class BoardSim:
         self.i_max = i_max_a
         self.host_timeout_us = host_timeout_us
         self.home_duration_us = home_duration_us
+        # The firmware's maximum for one homing cycle (TmcMotion's own bound).
+        # A host timeout is clipped to it and enforced as a deadline.
+        self.home_timeout_max_us = self.HOME_TIMEOUT_MAX_US
+        self._home_deadline = None
 
         self.now_us = 0
         self.state = State.BOOT
@@ -159,16 +182,24 @@ class BoardSim:
         # low and the rail is genuinely off, which is why HV is an observable
         # state rather than something the host infers.
         self.hv_on = False
-        self.instr_on = False
+        # The InstrumentPort buffers are enabled at boot for the proof of life
+        # (protocol v1: INSTR STATE reports on at boot).
+        self.instr_on = True
 
-        # Set by ARMPULL. While FREEWHEEL, the encoder crossing this emits PULL.
-        # Testable on the boards in hand by moving the joystick by hand - it does
-        # not need the brake, only a released driver.
-        self.pull_threshold = None
-        self._pull_reported = False
-        # Which side of the threshold the joystick was on when ARMPULL ran. A
-        # crossing to the other side is the pull. See `move_joystick`.
-        self._pull_armed_above = False
+        # Protocol v1: capabilities (hardware facts of the simulated revision),
+        # the pull direction, the runtime configuration, the classifier and the
+        # stream.
+        self.has_brake = False
+        self.has_torque = False
+        self.has_angout = False
+        self.pull_sign = 1.0
+        self.deadband_deg = 0.5
+        self.stream_hz = 10
+        self.stream_on = False
+        self._stream_period_us = 100_000
+        self._stream_next_us = 0
+        self.brake_level = 0.0
+        self._watch = _TrialWatch()
 
         self.cal = {"enc_offset": 1024, "angle_zero": 0.0}
 
@@ -205,6 +236,13 @@ class BoardSim:
                 next_stop = self._motion["end_us"]
             if self._watchdog_deadline is not None and self._watchdog_deadline < next_stop:
                 next_stop = self._watchdog_deadline
+            if self._home_deadline is not None and self._home_deadline < next_stop:
+                next_stop = self._home_deadline
+            watch_at = self._watch.next_stop_us(self.now_us)
+            if watch_at is not None and watch_at < next_stop:
+                next_stop = watch_at
+            if self.stream_on and self._stream_next_us < next_stop:
+                next_stop = self._stream_next_us
 
             self.now_us = next_stop
             self._service()
@@ -225,6 +263,7 @@ class BoardSim:
             # something.
             self.xactual = self.angle
             if motion["kind"] == "home":
+                self._home_deadline = None
                 self.homed = True
                 self.angle = 0.0
                 self.xactual = 0.0
@@ -233,6 +272,29 @@ class BoardSim:
             else:
                 self.state = State.ARMED
                 self._emit("TARGET", {"angle": self.angle})
+
+        # RELEASED: the classifier and the capture see every sample, in order,
+        # and the TRIAL summary follows an outcome by one second if the host has
+        # not left RELEASED by then (protocol v1).
+        if self._watch.released:
+            self._watch.sample(self.now_us, self.angle)
+            outcome = self._watch.evaluate(self.now_us, self.angle)
+            if outcome is not None:
+                self._emit_angle_event(outcome, self.angle, with_brake=False)
+            if self._watch.trial_due_now(self.now_us):
+                self._emit_trial()
+
+        # STREAM: decimated telemetry, display only.
+        if self.stream_on and self.now_us >= self._stream_next_us:
+            self._stream_next_us += self._stream_period_us
+            self._emit_angle_event("S", self.angle, with_brake=False)
+
+        # The host's homing bound, checked after completion so a home that
+        # finishes on the deadline counts as done.
+        if self._home_deadline is not None and self.now_us >= self._home_deadline:
+            self._home_deadline = None
+            self._raise_fault(Fault.HOME_TIMEOUT, "home_timeout", cause_active=False)
+            return
 
         if self._watchdog_deadline is not None and self.now_us >= self._watchdog_deadline:
             self._watchdog_deadline = None
@@ -363,7 +425,15 @@ class BoardSim:
         # analog outputs are not populated, no `brake` or `torque` because that
         # hardware does not exist yet. A host should gate on this rather than on
         # the firmware version, so a rev-1 board can simply report more.
-        caps = ["motion", "home", "freewheel", "instr", "hv"]
+        # Fixed order, absent tokens omitted (protocol v1): firmware facts
+        # first, then the hardware facts of this revision.
+        caps = ["motion", "home", "instr", "hv", "watch", "fetch", "stream", "cfg"]
+        if self.has_angout:
+            caps.append("angout")
+        if self.has_brake:
+            caps.append("brake")
+        if self.has_torque:
+            caps.append("torque")
         return "+".join(caps)
 
     def _cmd_ping(self, seq, args):
@@ -392,10 +462,15 @@ class BoardSim:
                 "state": self.state,
                 "angle": self.angle,
                 "xactual": self.xactual,
+                # Always present, empty without the hardware (protocol v1), so
+                # field positions never move between revisions.
+                "torque": "",
+                "brake": self._brake_field(),
                 "homed": self.homed,
                 "limit": self.limit_asserted,
                 "faults": self.fault_mask,
                 "hv": self.hv_on,
+                "t": self.now_us,  # the board clock, for the host's alignment
             },
         )
 
@@ -452,6 +527,7 @@ class BoardSim:
             # Always permitted: the board never requires a message in order to
             # become safe, and this is the message that makes it safer.
             self.hv_on = False
+            self._home_deadline = None
             if self.state in (State.ARMED, State.ACTIVE):
                 self._motion = None
                 self.state = State.HOMED
@@ -485,7 +561,8 @@ class BoardSim:
             return P.encode_nak(seq, P.NAK_NOHV)
         if self._motion is not None:
             return P.encode_nak(seq, P.NAK_BUSY)
-        if self.state == State.FREEWHEEL:
+        if self.state == State.RELEASED:
+            self._leave_released()
             self._resync_from_encoder()
             self.state = State.ARMED
 
@@ -498,12 +575,12 @@ class BoardSim:
             if timeout_us <= 0:
                 return P.encode_nak(seq, P.NAK_OUTOFRANGE)
 
-        if timeout_us is not None and timeout_us < self.home_duration_us:
-            # Homing is bounded locally: exceeding the bound is a fault, not a
-            # nak, because the motion did start.
-            self._motion = None
-            self._raise_fault(Fault.HOME_TIMEOUT, "home_timeout", cause_active=False)
-            return P.encode_ack(seq)
+        # The host's timeout, clipped to the firmware maximum, is a deadline on
+        # the running home (enforced in _service); it used to be compared with
+        # the expected duration up front, which on the real backend faulted
+        # every request under its 8 s bound immediately (2026-10-01, bug 2).
+        if timeout_us is not None:
+            timeout_us = min(timeout_us, self.home_timeout_max_us)
 
         self._motion = {
             "kind": "home",
@@ -512,6 +589,8 @@ class BoardSim:
             "start_us": self.now_us,
             "end_us": self.now_us + self.home_duration_us,
         }
+        if timeout_us is not None:
+            self._home_deadline = self.now_us + timeout_us
         return P.encode_ack(seq)
 
     def _cmd_arm(self, seq, args):
@@ -538,7 +617,11 @@ class BoardSim:
         # "Always permitted."
         self._motion = None
         self._watchdog_deadline = None
-        if self.state in (State.ARMED, State.ACTIVE, State.FREEWHEEL):
+        self._home_deadline = None
+        self.stream_on = False
+        if self.state == State.RELEASED:
+            self._leave_released()
+        if self.state in (State.ARMED, State.ACTIVE, State.RELEASED):
             self._resync_from_encoder()
             self.state = State.HOMED
         return P.encode_ack(seq)
@@ -551,7 +634,10 @@ class BoardSim:
             self.angle = self._interpolate()
             self.xactual = self.angle
             self._motion = None
-        if self.state in (State.ACTIVE, State.FREEWHEEL):
+        self._home_deadline = None
+        if self.state == State.RELEASED:
+            self._leave_released()
+        if self.state in (State.ACTIVE, State.RELEASED):
             self._resync_from_encoder()
             self.state = State.ARMED
         return P.encode_ack(seq)
@@ -568,7 +654,8 @@ class BoardSim:
         # "Motion verbs are refused outside ARMED" - and FREEWHEEL, which
         # re-engages implicitly. One command that resyncs, re-engages and moves
         # is better than three the host could be interrupted between.
-        if self.state == State.FREEWHEEL:
+        if self.state == State.RELEASED:
+            self._leave_released()
             self._resync_from_encoder()
             self.state = State.ARMED
         if self.state != State.ARMED:
@@ -578,6 +665,10 @@ class BoardSim:
         try:
             value = float(args[0])
         except ValueError:
+            return P.encode_nak(seq, P.NAK_BADARGS)
+        # Named profiles (protocol v1): accepted; every profile moves at this
+        # simulator's one v_max, so corpus timings do not depend on them.
+        if len(args) > 1 and args[1].lower() not in self.PROFILES:
             return P.encode_nak(seq, P.NAK_BADARGS)
 
         # Relative to where the joystick IS, which after a pull is not where the
@@ -620,46 +711,57 @@ class BoardSim:
         """
         self.xactual = self.angle
 
-    def _cmd_armpull(self, seq, args):
-        if len(args) != 1:
-            return P.encode_nak(seq, P.NAK_BADARGS)
-        try:
-            threshold = float(args[0])
-        except ValueError:
-            return P.encode_nak(seq, P.NAK_BADARGS)
-        if not (self.travel_lo <= threshold <= self.travel_hi):
-            return P.encode_nak(seq, P.NAK_OUTOFRANGE)
-        self.pull_threshold = threshold
-        # Equality counts as below, so a threshold armed exactly at the current
-        # position fires on the first movement upward rather than immediately.
-        self._pull_armed_above = self.angle > threshold
-        # Re-arming clears the latch, so one ARMPULL yields one PULL per trial
-        # rather than a stream of them while the joystick sits past threshold.
-        self._pull_reported = False
-        return P.encode_ack(seq)
+    # ------------------------------------------------------ protocol v1 verbs
 
-    # ANGOUT and ANGSCALE are deliberately NOT implemented. The analog outputs
-    # are not populated on the boards in hand, so anything here would assert what
-    # was guessed rather than what the board does - the 0.05-3.300 V window, the
-    # DAC `GAIN = 0x0101` ordering rule, and the "0 V means invalid" model
-    # included. They return when there is hardware to check them against, and
-    # with a second channel, because position AND torque stream continuously.
+    def _brake_field(self):
+        if self.has_brake and self.state == State.RELEASED:
+            return self.brake_level
+        return ""
 
-    def _cmd_freewheel(self, seq, args):
-        """Release the driver so the animal can move the joystick.
+    def _emit_angle_event(self, name, angle, with_brake):
+        data = {"angle": angle, "torque": ""}
+        if with_brake:
+            data["brake"] = self._brake_field()
+        self._emit(name, data)
 
-        SPEC: not in the draft. Added 2026-09-02 for the rev-0 boards.
+    def _emit_trial(self):
+        t = self._watch.take_summary(self.angle)
+        self._emit(
+            "TRIAL",
+            {
+                "outcome": t["outcome"],
+                "t_rel": t["t_rel"],
+                "t_touch": "",
+                "t_move": t["t_move"] if t["t_move"] is not None else "",
+                "t_out": t["t_out"] if t["t_out"] is not None else "",
+                "a0": t["a0"],
+                "a_peak": t["a_peak"],
+                "a_end": t["a_end"],
+                "tq_peak": "",
+                "tq_out": "",
+                "dur_thr": t["dur_thr_ms"],
+            },
+        )
 
-        On a board WITH a brake this verb should not exist separately. The brake
-        must engage BEFORE motor drive is released, or the joystick drops as it
-        goes compliant, and it must be released only after drive is restored, or
-        the motor fights the brake. Two host commands cannot guarantee that
-        ordering: the host can die between them, or the second message can arrive
-        late over a link whose whole point is that it has latency. The sequence
-        belongs inside one firmware operation - `BRAKE <torque>` - which is what
-        should replace this.
+    def _leave_released(self):
+        """Close the RELEASED period: TRIAL if a WATCH happened in it, then the
+        brake off (after the drive is back, which the callers order)."""
+        if self._watch.trial_pending():
+            self._emit_trial()
+        self._watch.leave()
+        self.brake_level = 0.0
 
-        So this is a bring-up primitive with a known expiry date, not a design.
+    @staticmethod
+    def _kv(arg):
+        key, sep, value = arg.partition("=")
+        if not sep or not key:
+            return None, None
+        return key.lower(), value
+
+    def _cmd_brake(self, seq, args):
+        """BRAKE <torque_Ncm>: engage the brake, then release the drive, as one
+        operation. Without a brake the torque is ignored and only the release
+        happens. The ack comes first and RELEASED when the release has happened.
         """
         if self.state == State.FAULTED:
             return P.encode_nak(seq, P.NAK_FAULTED)
@@ -667,9 +769,192 @@ class BoardSim:
             return P.encode_nak(seq, P.NAK_BUSY)
         if self.state != State.ARMED:
             return P.encode_nak(seq, P.NAK_NOTARMED)
+        if len(args) != 1:
+            return P.encode_nak(seq, P.NAK_BADARGS)
+        try:
+            torque = float(args[0])
+        except ValueError:
+            return P.encode_nak(seq, P.NAK_BADARGS)
+        if torque < 0.0:
+            return P.encode_nak(seq, P.NAK_OUTOFRANGE)
+        self.brake_level = torque if self.has_brake else 0.0
+        self.state = State.RELEASED
+        self._watch.release(self.now_us, self.angle, self.pull_sign)
+        self._out(P.encode_ack(seq))
+        self._emit_angle_event("RELEASED", self.angle, with_brake=True)
+        return None
 
-        self.state = State.FREEWHEEL
-        self._pull_reported = False
+    def _cmd_watch(self, seq, args):
+        if self.state != State.RELEASED:
+            return P.encode_nak(seq, P.NAK_NOTRELEASED)
+        params = {"pull": None, "push": None, "timeout_us": None, "hold_us": 0, "maxdur_us": None}
+        for arg in args:
+            key, value = self._kv(arg)
+            if key is None:
+                return P.encode_nak(seq, P.NAK_BADARGS)
+            try:
+                v = float(value)
+            except ValueError:
+                return P.encode_nak(seq, P.NAK_BADARGS)
+            if v < 0.0:
+                return P.encode_nak(seq, P.NAK_OUTOFRANGE)
+            if key == "pull":
+                params["pull"] = v
+            elif key == "push":
+                params["push"] = v
+            elif key == "timeout":
+                params["timeout_us"] = int(v * 1000)
+            elif key == "hold":
+                params["hold_us"] = int(v * 1000)
+            elif key == "maxdur":
+                params["maxdur_us"] = int(v * 1000)
+            elif key == "touch":
+                pass  # torque needs the v1.0 bridge; accepted and inert
+            else:
+                return P.encode_nak(seq, P.NAK_BADARGS)
+        if params["pull"] is None or params["push"] is None or params["timeout_us"] is None:
+            return P.encode_nak(seq, P.NAK_BADARGS)
+        self._watch.arm(self.now_us, params, self.deadband_deg)
+        return P.encode_ack(seq)
+
+    def _cmd_cfg(self, seq, args):
+        if not args:
+            return P.encode_nak(seq, P.NAK_BADARGS)
+        if len(args) == 1 and args[0].lower() == "get":
+            return P.encode_ack(
+                seq,
+                {
+                    "wdt_ms": self.host_timeout_us // 1000,
+                    "deadband_deg": self.deadband_deg,
+                    "stream_hz": self.stream_hz,
+                    "pre_ms": self._watch.pre_ms,
+                    "post_ms": self._watch.post_ms,
+                },
+            )
+        wdt_us, deadband, stream_hz = self.host_timeout_us, self.deadband_deg, self.stream_hz
+        pre_ms, post_ms = self._watch.pre_ms, self._watch.post_ms
+        for arg in args:
+            key, value = self._kv(arg)
+            if key is None:
+                return P.encode_nak(seq, P.NAK_BADARGS)
+            try:
+                v = float(value)
+            except ValueError:
+                return P.encode_nak(seq, P.NAK_BADARGS)
+            if key == "wdt_ms":
+                us = v * 1000.0
+                if us < self.WDT_MIN_US or us > self.WDT_MAX_US:
+                    return P.encode_nak(seq, P.NAK_OUTOFRANGE)
+                wdt_us = int(us)
+            elif key == "deadband_deg":
+                if v < self.DEADBAND_MIN_DEG or v > self.DEADBAND_MAX_DEG:
+                    return P.encode_nak(seq, P.NAK_OUTOFRANGE)
+                deadband = v
+            elif key == "stream_hz":
+                if v < self.STREAM_HZ_MIN or v > self.STREAM_HZ_MAX:
+                    return P.encode_nak(seq, P.NAK_OUTOFRANGE)
+                stream_hz = int(v)
+            elif key in ("pre_ms", "post_ms"):
+                # The capture window around the outcome: each bounded by the
+                # ring, and together (below) by the ring less the outcome sample.
+                if v < 0.0 or v > self.WINDOW_MAX_MS:
+                    return P.encode_nak(seq, P.NAK_OUTOFRANGE)
+                if key == "pre_ms":
+                    pre_ms = int(v)
+                else:
+                    post_ms = int(v)
+            else:
+                return P.encode_nak(seq, P.NAK_BADARGS)
+        if pre_ms + post_ms > self.WINDOW_MAX_MS:
+            return P.encode_nak(seq, P.NAK_OUTOFRANGE)
+        self.host_timeout_us = wdt_us  # applies from the next watchdog refresh
+        self.deadband_deg = deadband
+        self.stream_hz = stream_hz
+        self._watch.set_window(pre_ms, post_ms)
+        return P.encode_ack(seq)
+
+    def _cmd_fetch(self, seq, args):
+        """FETCH [k0;n]: the frozen window of the last WATCH in chunks of at
+        most FETCH_CHUNK_MAX lines; sample `pre` is the outcome sample."""
+        if self._watch.capture_busy():
+            return P.encode_nak(seq, P.NAK_BUSY)
+        try:
+            k0 = int(args[0]) if len(args) >= 1 else 0
+            n = int(args[1]) if len(args) >= 2 else self.FETCH_CHUNK_MAX
+        except ValueError:
+            return P.encode_nak(seq, P.NAK_BADARGS)
+        if k0 < 0 or n < 0:
+            return P.encode_nak(seq, P.NAK_OUTOFRANGE)
+        n = min(n, self.FETCH_CHUNK_MAX)
+        count = self._watch.window_count()
+        available = count - k0 if k0 < count else 0
+        n = min(n, available)
+        self._out(
+            P.encode_ack(
+                seq,
+                {
+                    "n": n,
+                    "k0": k0,
+                    "t0": self._watch.window_sample_time_us(k0) if self._watch.has_window() else 0,
+                    "dt_us": self.SAMPLE_US,
+                    "pre": self._watch.window_pre(),
+                },
+            )
+        )
+        for k in range(k0, k0 + n):
+            angle = P.format_number(self._watch.window_sample(k))
+            self._out(P.DELIMITER.join([P.CAP, str(k), angle, ""]))
+        self._out(P.DELIMITER.join([P.CAP, "end"]))
+        return None
+
+    def _cmd_stream(self, seq, args):
+        if not args:
+            return P.encode_nak(seq, P.NAK_BADARGS)
+        action = args[0].lower()
+        if action == "off":
+            self.stream_on = False
+            return P.encode_ack(seq)
+        if action != "on":
+            return P.encode_nak(seq, P.NAK_BADARGS)
+        hz = self.stream_hz
+        if len(args) >= 2:
+            try:
+                v = float(args[1])
+            except ValueError:
+                return P.encode_nak(seq, P.NAK_BADARGS)
+            if v < self.STREAM_HZ_MIN or v > self.STREAM_HZ_MAX:
+                return P.encode_nak(seq, P.NAK_OUTOFRANGE)
+            hz = int(v)
+        self._stream_period_us = 1_000_000 // hz
+        self._stream_next_us = self.now_us + self._stream_period_us
+        self.stream_on = True
+        return P.encode_ack(seq)
+
+    def _cmd_tq(self, seq, args):
+        # No board with the torque bridge exists yet; until `torque` is in the
+        # caps the honest answer is the same as for any verb the board lacks.
+        return P.encode_nak(seq, P.NAK_BADVERB)
+
+    def _cmd_angout(self, seq, args):
+        if not self.has_angout:
+            return P.encode_nak(seq, P.NAK_BADVERB)
+        if len(args) != 1 or args[0].lower() not in ("on", "off"):
+            return P.encode_nak(seq, P.NAK_BADARGS)
+        self.angout_on = args[0].lower() == "on"
+        return P.encode_ack(seq)
+
+    def _cmd_angscale(self, seq, args):
+        if not self.has_angout:
+            return P.encode_nak(seq, P.NAK_BADVERB)
+        if len(args) != 2:
+            return P.encode_nak(seq, P.NAK_BADARGS)
+        try:
+            lo, hi = float(args[0]), float(args[1])
+        except ValueError:
+            return P.encode_nak(seq, P.NAK_BADARGS)
+        if not lo < hi:
+            return P.encode_nak(seq, P.NAK_OUTOFRANGE)
+        self.angscale = (lo, hi)
         return P.encode_ack(seq)
 
     def _cmd_cal(self, seq, args):
@@ -710,6 +995,10 @@ class BoardSim:
 
         self._motion = None
         self._watchdog_deadline = None
+        self._home_deadline = None
+        self.stream_on = False
+        if self.state == State.RELEASED:
+            self._leave_released()  # the TRIAL summary precedes the FAULT event
         self.fault_mask |= 1 << bit
         self.fault_detail[bit] = detail
         self._fault_cause_active[bit] = cause_active
@@ -733,46 +1022,22 @@ class BoardSim:
         self._fault_cause_active[bit] = False
 
     def move_joystick(self, angle):
-        """The animal moves the joystick. Only possible while compliant.
+        """The animal moves the joystick. Only possible while RELEASED.
 
         Refused in any other state on purpose: with the driver enabled the motor
         holds position, so a test that "pulls" a held joystick is testing
-        something that cannot happen. Emits PULL if ARMPULL set a threshold and
-        this crosses it. On rev 1 hardware that also asserts the TTL line; on
-        these boards the UART line is the only report, with UART latency - fine
-        for exercising the interface, not fine for behavioural data.
+        something that cannot happen. The classifier (WATCH) sees the sample at
+        once; returns whatever that produced.
         """
-        if self.state != State.FREEWHEEL:
-            raise AssertionError("the joystick can only be moved by hand while FREEWHEEL, not in %s" % self.state)
+        if self.state != State.RELEASED:
+            raise AssertionError("the joystick can only be moved by hand while RELEASED")
+        self.angle = float(angle)
+        return self.advance(0)
 
-        self.angle = angle
-        # xactual deliberately NOT updated: nothing turns the ramp generator
-        # here, and that staleness is the thing _resync_from_encoder exists for.
-
-        # SPEC: a CROSSING of the threshold, from whichever side ARMPULL was
-        # armed on -- not a magnitude comparison.
-        #
-        # This used to read `abs(angle) >= abs(threshold)`, which agreed with the
-        # firmware only because this board's travel happens to be one-signed.
-        # On travel spanning zero -- which is exactly this simulator's own
-        # default of -20..20 -- a threshold of -5.0 also fired at +5.0. It also
-        # ignored where the joystick was presented, so a task that presented
-        # past the threshold got a pull for free.
-        #
-        # Recording the side at arm time instead means no sign convention is
-        # invented, mirrored left and right joysticks need no side-specific
-        # state, and the same rule holds on both ends of the link. The firmware
-        # does the same thing in `ProtocolBoard::service()`.
-        if self.pull_threshold is not None and not self._pull_reported:
-            crossed = (
-                angle < self.pull_threshold
-                if self._pull_armed_above
-                else angle > self.pull_threshold
-            )
-            if crossed:
-                self._pull_reported = True
-                self._emit("PULL", {"angle": angle})
-        return self._drain()
+    def set_encoder_angle(self, angle):
+        """The corpus's ANGLE stimulus: the encoder reads this from now on, in
+        any state; the runner services the board separately."""
+        self.angle = float(angle)
 
     def inject_limit(self):
         """Assert the limit switch outside homing: LIMIT event plus a fault."""
@@ -785,3 +1050,266 @@ class BoardSim:
         """Record an RSYNC edge. Post-hoc alignment is done from these."""
         self._emit("RSYNC", {"n": n})
         return self._drain()
+
+
+class _TrialWatch:
+    """The WATCH classifier, the 1 kHz capture ring and the TRIAL summary, mirroring
+    the firmware's `src/TrialWatch.hpp` step for step so the corpus can hold
+    both to the same bytes. Angles in are absolute encoder degrees; decisions
+    are on the pull-positive excursion `(angle - a0) * pull_sign`."""
+
+    def __init__(self):
+        self.released = False
+        self.watched = False  # a WATCH happened since RELEASED
+        self.armed = False  # classifier active, no outcome yet
+        self.summarized = False
+        self.trial_due = False
+        self.trial_due_at = 0
+        self.a0 = 0.0
+        self.pull_sign = 1.0
+        self.deadband = 0.5
+        self.params = None
+        self.t_rel = 0
+        self.t_watch = 0
+        self.first_motion = False
+        self.t_move = None
+        self.pull_valid = False
+        self.pull_since = 0
+        self.above_prev = False
+        self.last_eval = 0
+        self.dur_thr_us = 0
+        self.peak = 0.0
+        self.outcome = None
+        self.t_out = None
+        self.a_end = 0.0
+        # the ring
+        self.ring_running = False
+        self.cap_watched = False  # a WATCH armed since this ring started
+        self.ring_t0 = 0  # time of absolute sample 0
+        self.next_sample = 0
+        self.written = 0  # absolute samples written; slot = written % size
+        self.trig_set = False
+        self.trig_index = 0  # absolute index of the outcome sample
+        self.pre_ms = BoardSim.DEFAULT_PRE_MS
+        self.post_ms = BoardSim.DEFAULT_POST_MS
+        # the frozen window
+        self.win_valid = False
+        self.win_start = 0
+        self.win_count = 0
+        self.win_pre = 0
+        self.cap = [0.0] * BoardSim.CAPTURE_MAX
+
+    def excursion(self, angle):
+        return (angle - self.a0) * self.pull_sign
+
+    def release(self, now_us, a0, pull_sign):
+        """RELEASED entered: the ring starts here so a WATCH that follows has
+        history behind it; the previous window is gone from here."""
+        self.released = True
+        self.a0 = a0
+        self.pull_sign = pull_sign
+        self.t_rel = now_us
+        self.watched = False
+        self.armed = False
+        self.summarized = False
+        self.trial_due = False
+        self.outcome = None
+        self.cap_watched = False
+        self.win_valid = False
+        self._start_ring(now_us)
+
+    def leave(self):
+        """RELEASED left: the window freezes with what exists."""
+        if self.ring_running:
+            self._freeze_window()
+        self.released = False
+        self.armed = False
+        self.trial_due = False
+
+    def arm(self, now_us, params, deadband_deg):
+        self.params = params
+        self.deadband = deadband_deg
+        self.watched = True
+        self.armed = True
+        self.summarized = False
+        self.trial_due = False
+        self.outcome = None
+        self.t_watch = now_us
+        self.first_motion = False
+        self.t_move = None
+        self.pull_valid = False
+        self.above_prev = False
+        self.last_eval = now_us
+        self.dur_thr_us = 0
+        self.peak = 0.0
+        self.a_end = 0.0
+        self.t_out = None
+        self.cap_watched = True
+        self.trig_set = False
+        if not self.ring_running:  # a WATCH after a frozen window restarts the ring
+            self.win_valid = False
+            self._start_ring(now_us)
+
+    def set_window(self, pre_ms, post_ms):
+        self.pre_ms = int(pre_ms)
+        self.post_ms = int(post_ms)
+
+    def sample(self, now_us, angle):
+        """The 1 ms-grid sample into the ring while it runs; idempotent at one
+        time. A late caller fills the missed grid points with the current angle
+        so sample k stays at t0 + k*dt (the firmware's coalesced tick); a gap
+        longer than the whole ring resynchronises the grid instead."""
+        if not self.ring_running:
+            return
+        if now_us >= self.next_sample + BoardSim.CAPTURE_MAX * BoardSim.SAMPLE_US:
+            self.next_sample = now_us
+        while self.ring_running and now_us >= self.next_sample:
+            self.cap[self.written % BoardSim.CAPTURE_MAX] = float(angle)
+            self.written += 1
+            self.next_sample += BoardSim.SAMPLE_US
+            if self.trig_set and self.written >= self.trig_index + 1 + self.post_ms:
+                self._freeze_window()
+
+    def evaluate(self, now_us, angle):
+        if not self.armed:
+            return None
+        p = self.params
+        rel = self.excursion(angle)
+        if not self.first_motion and abs(rel) > self.deadband:
+            self.first_motion = True
+            self.t_move = now_us
+        if abs(rel) > abs(self.peak):
+            self.peak = rel
+        if self.above_prev:
+            self.dur_thr_us += now_us - self.last_eval
+        self.last_eval = now_us
+        above = rel >= p["pull"]
+        self.above_prev = above
+
+        result = None
+        if rel <= -p["push"]:
+            result = "PUSH"
+        elif above:
+            if not self.pull_valid:
+                self.pull_valid = True
+                self.pull_since = now_us
+            if now_us - self.pull_since >= p["hold_us"]:
+                result = "PULL"
+        else:
+            self.pull_valid = False
+        if result is None and not self.first_motion and now_us >= self.t_watch + p["timeout_us"]:
+            result = "NOMOVE"
+        if (
+            result is None
+            and self.first_motion
+            and p["maxdur_us"] is not None
+            and now_us >= self.t_watch + p["maxdur_us"]
+        ):
+            result = "ABORT"
+        if result is not None:
+            self.outcome = result
+            self.t_out = now_us
+            self.a_end = rel
+            self.armed = False
+            self.trial_due = True
+            self.trial_due_at = now_us + BoardSim.TRIAL_DELAY_US
+            # The outcome sample is the last one written (sample() runs first
+            # in the same service step); the window freezes post_ms later.
+            if self.ring_running:
+                self.trig_set = True
+                self.trig_index = self.written - 1 if self.written > 0 else 0
+                if self.written >= self.trig_index + 1 + self.post_ms:
+                    self._freeze_window()
+        return result
+
+    def next_stop_us(self, now_us):
+        candidates = []
+        if self.ring_running:
+            candidates.append(self.next_sample)
+        if self.armed:
+            p = self.params
+            if not self.first_motion:
+                candidates.append(self.t_watch + p["timeout_us"])
+            if self.pull_valid:
+                candidates.append(self.pull_since + p["hold_us"])
+            if self.first_motion and p["maxdur_us"] is not None:
+                candidates.append(self.t_watch + p["maxdur_us"])
+        if self.trial_due and not self.summarized:
+            candidates.append(self.trial_due_at)
+        if not candidates:
+            return None
+        return max(min(candidates), now_us)
+
+    def trial_pending(self):
+        return self.released and self.watched and not self.summarized
+
+    def trial_due_now(self, now_us):
+        return self.trial_pending() and self.trial_due and now_us >= self.trial_due_at
+
+    # name kept short in the board: trial_due(now) is the one-second rule
+    def trial_due_check(self, now_us):
+        return self.trial_due_now(now_us)
+
+    def take_summary(self, angle):
+        has_out = self.outcome is not None
+        summary = {
+            "outcome": self.outcome or "NONE",
+            "t_rel": self.t_rel,
+            "t_move": self.t_move if self.first_motion else None,
+            "t_out": self.t_out if has_out else None,
+            "a0": self.a0,
+            "a_peak": self.peak,
+            "a_end": self.a_end if has_out else self.excursion(angle),
+            "dur_thr_ms": self.dur_thr_us // 1000,
+        }
+        self.summarized = True
+        self.watched = False
+        self.armed = False
+        self.trial_due = False
+        return summary
+
+    # ---------------------------------------------------------------- ring
+
+    def _start_ring(self, now_us):
+        self.ring_t0 = now_us
+        self.next_sample = now_us
+        self.written = 0
+        self.trig_set = False
+        self.ring_running = True
+
+    def _freeze_window(self):
+        """The last pre_ms samples before the outcome sample, the outcome
+        sample and what follows it (post_ms when it ran to the end, fewer if
+        RELEASED was left first); without an outcome, the last pre_ms samples
+        before the exit. `pre` is what the ring actually holds."""
+        self.ring_running = False
+        oldest = self.written - BoardSim.CAPTURE_MAX if self.written > BoardSim.CAPTURE_MAX else 0
+        if self.trig_set:
+            self.win_pre = min(self.pre_ms, self.trig_index - oldest)
+            self.win_start = self.trig_index - self.win_pre
+            self.win_count = self.written - self.win_start
+        else:
+            self.win_pre = min(self.pre_ms, self.written - oldest)
+            self.win_start = self.written - self.win_pre
+            self.win_count = self.win_pre
+        self.win_valid = self.cap_watched
+
+    def capture_busy(self):
+        """FETCH is refused while the capture is live: a WATCH armed, or the
+        post window still filling after its outcome."""
+        return self.ring_running and (self.armed or self.trig_set)
+
+    def has_window(self):
+        return self.win_valid
+
+    def window_count(self):
+        return self.win_count if self.win_valid else 0
+
+    def window_pre(self):
+        return self.win_pre if self.win_valid else 0
+
+    def window_sample_time_us(self, k):
+        return self.ring_t0 + (self.win_start + k) * BoardSim.SAMPLE_US
+
+    def window_sample(self, k):
+        return self.cap[(self.win_start + k) % BoardSim.CAPTURE_MAX]

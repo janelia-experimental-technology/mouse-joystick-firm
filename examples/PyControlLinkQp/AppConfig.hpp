@@ -6,6 +6,7 @@
 #pragma once
 
 #include <Conversions.hpp>
+#include <FirmwareVersion.hpp>
 #include <MotionSetup.hpp>
 #include <MouseJoystickBoard.hpp> // pins, SafeState, PowerSequence, ProtocolBoard
 #include <ProtocolBoard.hpp>
@@ -49,19 +50,26 @@ constexpr float kTravelLoDeg = conv::microstepsToDegrees(
 
 inline mouse_joystick::ProtocolBoard::Config boardConfig() {
   mouse_joystick::ProtocolBoard::Config config;
+  config.fw_version = mouse_joystick::kFirmwareVersion; // git describe
+  config.hw_rev = mouse_joystick::kHwRevName;           // from MJ_BOARD_REV
+  // Protocol v1 capabilities of this revision: rev 1 has the angle DAC; no
+  // board yet has the brake or the torque bridge.
+  config.has_angout = (MJ_BOARD_REV != 0);
+  config.has_brake = false;
+  config.has_torque = false;
+  // Which encoder direction is "pull". +1 = increasing angle. A board-and-
+  // harness fact to be recorded per board in bringup-log.md; unmeasured.
+  config.pull_sign = 1.0;
 #if MJ_SIM_MOTION
   // The simulator's placeholder limits, so expected durations are the
   // corpus's: 9 deg at 180 deg/s is 50,000 us, homing is 50,000 us.
-  config.fw_version = "qp-link-sim";
 #else
-  config.fw_version = "qp-link-0.1";
   config.travel_lo = kTravelLoDeg;
   config.travel_hi = kTravelHiDeg;
   config.v_max = conv::kJogRevsPerSecond * 360.0f;
   config.a_max = 3600.0;
   config.i_max = 0.421; // IRUN 17, the conservative reading of the 0.6 A spec
 #endif
-  config.hw_rev = "rev0";
   return config;
 }
 

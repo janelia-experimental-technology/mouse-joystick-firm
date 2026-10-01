@@ -31,6 +31,7 @@
 
 #include "MotionBackend.hpp"
 #include "Protocol.hpp"
+#include "TrialWatch.hpp"
 
 namespace mouse_joystick {
 
@@ -41,10 +42,12 @@ constexpr char kHomed[] = "HOMED";
 constexpr char kArmed[] = "ARMED";
 constexpr char kActive[] = "ACTIVE";
 constexpr char kFaulted[] = "FAULTED";
-// The state in which the ANIMAL drives the joystick. The driver is released so
-// motor torque does not add to the brake's, and the ramp generator's position
-// stops meaning anything -- only the encoder knows where the joystick is.
-constexpr char kFreewheel[] = "FREEWHEEL";
+// The state in which the ANIMAL drives the joystick: the brake is engaged
+// (where there is one) and the driver released, so motor torque does not add
+// to the brake's and the ramp generator's position stops meaning anything --
+// only the encoder knows where the joystick is. Called FREEWHEEL until
+// protocol v1 (2026-10-01), when BRAKE replaced the FREEWHEEL verb.
+constexpr char kReleased[] = "RELEASED";
 }  // namespace state_name
 
 // Fault bits. Bit 4 is retired and permanently reserved: it was a driver-encoder
@@ -64,7 +67,8 @@ constexpr uint8_t kExtStop = 8;
 
 class ProtocolBoard {
 public:
-  static constexpr uint8_t kMaxPendingLines = 8;
+  static constexpr uint8_t kMaxPendingLines =
+      36; // a FETCH chunk: ack + 32 cap lines + cap;end
   static constexpr uint8_t kRetransmitCacheSize = 2;
   static constexpr uint32_t kDefaultHostTimeoutUs = 100000u;
   static constexpr uint32_t kDefaultHomeDurationUs = 50000u;
@@ -87,7 +91,25 @@ public:
     double a_max = 3600.0;
     double i_max = 0.421;
     uint32_t host_timeout_us = kDefaultHostTimeoutUs;
+    // Protocol v1 capabilities, reported in `caps` and gated on: hardware facts
+    // of the board revision, set by the application.
+    bool has_brake = false;
+    bool has_torque = false;
+    bool has_angout = false;
+    // Which encoder direction is "pull": +1 if increasing angle is a pull.
+    // A board-and-harness fact (bringup-log.md); WATCH thresholds and the
+    // TRIAL excursions are expressed pull-positive through it.
+    double pull_sign = 1.0;
   };
+
+  // CFG bounds (protocol v1).
+  static constexpr uint32_t kWdtMinUs = 50000u;
+  static constexpr uint32_t kWdtMaxUs = 500000u;
+  static constexpr double kDeadbandMinDeg = 0.05;
+  static constexpr double kDeadbandMaxDeg = 10.0;
+  static constexpr uint16_t kStreamHzMin = 1;
+  static constexpr uint16_t kStreamHzMax = 50; // at 115200 baud
+  static constexpr uint16_t kFetchChunkMax = 32;
   // `home_duration_us` and the vsense read-back used to live here. They are
   // properties of the thing that moves, so they belong to the backend:
   // `SimulatedMotion::Config` for the host, a CHOPCONF read-back for the real
@@ -116,7 +138,7 @@ public:
   void boot() {
     state_ = state_name::kIdle;
     protocol::Line line;
-    line.beginEvent("READY", static_cast<uint32_t>(now_us_));
+    line.beginEvent("READY", now_us_);
     line.kvStr("fw", cfg_.fw_version);
     line.kvInt("proto", protocol::kProtocolVersion);
     line.kvStr("serial", cfg_.serial);
@@ -138,6 +160,16 @@ public:
       }
       if (watchdog_armed_ && watchdog_deadline_us_ < next_stop) {
         next_stop = watchdog_deadline_us_;
+      }
+      if (home_deadline_armed_ && home_deadline_us_ < next_stop) {
+        next_stop = home_deadline_us_;
+      }
+      const uint64_t watch_at = watch_.nextStopUs(now_us_);
+      if (watch_at != 0 && watch_at < next_stop) {
+        next_stop = watch_at;
+      }
+      if (stream_on_ && stream_next_us_ < next_stop) {
+        next_stop = stream_next_us_;
       }
       now_us_ = next_stop;
       service();
@@ -212,6 +244,23 @@ public:
   // ------------------------------------------------------------- observation
 
   const char *state() const { return state_; }
+
+  // `INSTR ON/OFF` sets this; the application drives the buffers from it (the
+  // protocol layer is Arduino-free). Seed it with the board's boot state, so
+  // `INSTR STATE` reports what the port is doing rather than what the host
+  // last asked. Before 2026-10-01 the verb only set the flag (review bug 3).
+  bool instrumentationOn() const { return instr_on_; }
+  void setInstrumentationOn(bool on) { instr_on_ = on; }
+
+  // ANGOUT/ANGSCALE (protocol v1): the application drives the DAC from these
+  // once `cfg_.has_angout` is set. The output is valid only while homed,
+  // unfaulted and on; otherwise the application parks it at the fault level.
+  bool angoutOn() const { return angout_on_; }
+  double angleScaleLo() const { return angscale_lo_; }
+  double angleScaleHi() const { return angscale_hi_; }
+  bool angleOutputValid() const {
+    return angout_on_ && homed_ && hv_on_ && !faulted();
+  }
   double angle() const { return motion_.angleDeg(); }
   double xactual() const { return motion_.xactualDeg(); }
   bool homed() const { return homed_; }
@@ -335,7 +384,7 @@ private:
 
   void emitEvent(const char *name, const char *key, double value) {
     protocol::Line line;
-    line.beginEvent(name, static_cast<uint32_t>(now_us_));
+    line.beginEvent(name, now_us_);
     if (key != nullptr) {
       line.kvNumber(key, value);
     }
@@ -361,6 +410,7 @@ private:
     bool was_home = false;
     if (motion_.consumeCompletion(&was_home)) {
       if (was_home) {
+        home_deadline_armed_ = false;
         homed_ = true;
         state_ = state_name::kHomed;
         emitEvent("HOMED", "angle", motion_.angleDeg());
@@ -370,30 +420,33 @@ private:
       }
     }
 
-    // PULL: the joystick crossed the armed threshold while compliant.
-    //
-    // Only in FREEWHEEL, deliberately. There the joystick is driven by the
-    // animal and a crossing means something; under commanded motion a crossing
-    // means the board did it, and reporting that as a pull would put a
-    // fabricated event into a behavioural dataset.
-    //
-    // Which side counts as "past" is recorded at ARMPULL time rather than
-    // baked in as a sign. The trial presents the joystick somewhere and the
-    // animal moves it away, so the direction follows from where it was when
-    // detection was armed -- and this way the same firmware serves the left and
-    // right joysticks, whose travel is mirrored, with no side-specific state.
-    //
-    // Latched: one ARMPULL yields one PULL. Re-arming is how a task asks for
-    // the next trial's.
-    if (has_pull_threshold_ && !pull_reported_ &&
-        inState(state_name::kFreewheel)) {
+    // RELEASED: the classifier and the capture see every sample, in order,
+    // and the TRIAL summary follows an outcome by one second if the host has
+    // not left RELEASED by then (protocol v1).
+    if (watch_.released()) {
       const double angle = motion_.angleDeg();
-      const bool crossed = pull_armed_above_ ? (angle < pull_threshold_)
-                                             : (angle > pull_threshold_);
-      if (crossed) {
-        pull_reported_ = true;
-        emitEvent("PULL", "angle", angle);
+      watch_.sample(now_us_, angle);
+      const TrialWatch::Outcome outcome = watch_.evaluate(now_us_, angle);
+      if (outcome != TrialWatch::Outcome::kNone) {
+        emitAngleEvent(TrialWatch::name(outcome), angle, /*with_brake=*/false);
       }
+      if (watch_.trialDue(now_us_)) {
+        emitTrial();
+      }
+    }
+
+    // STREAM: decimated telemetry, display only.
+    if (stream_on_ && now_us_ >= stream_next_us_) {
+      stream_next_us_ += stream_period_us_;
+      emitAngleEvent("S", motion_.angleDeg(), /*with_brake=*/false);
+    }
+
+    // The host's homing bound (`home;<s>;<timeout_ms>`), checked after the
+    // completion above so a home that finishes on the deadline counts as done.
+    if (home_deadline_armed_ && now_us_ >= home_deadline_us_) {
+      home_deadline_armed_ = false;
+      raiseFault(fault::kHomeTimeout, "home_timeout", false);
+      return;
     }
 
     if (watchdog_armed_ && now_us_ >= watchdog_deadline_us_) {
@@ -430,6 +483,11 @@ private:
   void raiseFault(uint8_t bit, const char *detail, bool cause_active) {
     motion_.abort();
     watchdog_armed_ = false;
+    home_deadline_armed_ = false;
+    stream_on_ = false;
+    if (inState(state_name::kReleased)) {
+      leaveReleased(); // the TRIAL summary precedes the FAULT event
+    }
     fault_mask_ |= (1u << bit);
     fault_bit_ = bit;
     fault_detail_ = detail;
@@ -446,7 +504,7 @@ private:
     hv_on_ = false;
 
     protocol::Line line;
-    line.beginEvent("FAULT", static_cast<uint32_t>(now_us_));
+    line.beginEvent("FAULT", now_us_);
     line.kvInt("code", bit);
     line.kvStr("detail", detail);
     push(line);
@@ -467,8 +525,20 @@ private:
   // turns into a fault: a compliant joystick that will not re-engage is not a
   // state to keep answering commands from.
   bool leaveCompliance() {
+    leaveReleased();
     motion_.resyncFromEncoder();
     return motion_.enableDriver();
+  }
+
+  // Close the RELEASED period: emit the TRIAL summary if a WATCH happened in
+  // it and has not been reported, then release the brake (where there is one;
+  // after the driver is back, which the callers guarantee by ordering).
+  void leaveReleased() {
+    if (watch_.trialPending()) {
+      emitTrial();
+    }
+    watch_.leave();
+    brake_level_ = 0.0;
   }
 
   bool faulted() const { return strcmp(state_, state_name::kFaulted) == 0; }
@@ -491,17 +561,28 @@ private:
     if (strcmp(v, "disarm") == 0) return cmdDisarm(cmd, out);
     if (strcmp(v, "stop") == 0) return cmdStop(cmd, out);
     if (strcmp(v, "moveto") == 0) return cmdMove(cmd, out, false);
-    if (strcmp(v, "move") == 0) return cmdMove(cmd, out, true);
-    if (strcmp(v, "freewheel") == 0) return cmdFreewheel(cmd, out);
-    if (strcmp(v, "armpull") == 0) return cmdArmPull(cmd, out);
+    if (strcmp(v, "move") == 0)
+      return cmdMove(cmd, out, true);
     if (strcmp(v, "cal") == 0) return cmdCal(cmd, out);
+    // Protocol v1 (2026-10-01). FREEWHEEL and ARMPULL are gone, not aliased.
+    if (strcmp(v, "brake") == 0)
+      return cmdBrake(cmd, out);
+    if (strcmp(v, "watch") == 0)
+      return cmdWatch(cmd, out);
+    if (strcmp(v, "cfg") == 0)
+      return cmdCfg(cmd, out);
+    if (strcmp(v, "fetch") == 0)
+      return cmdFetch(cmd, out);
+    if (strcmp(v, "stream") == 0)
+      return cmdStream(cmd, out);
+    if (strcmp(v, "tq") == 0)
+      return cmdTq(cmd, out);
+    if (strcmp(v, "angout") == 0)
+      return cmdAngout(cmd, out);
+    if (strcmp(v, "angscale") == 0)
+      return cmdAngscale(cmd, out);
 
     // "An unrecognized verb is rejected, never partially executed."
-    //
-    // ANGOUT and ANGSCALE land here deliberately. The analog outputs are not
-    // populated on the boards in hand, so implementing them would assert what
-    // was guessed. `badverb` means a host cannot believe the analog output is
-    // live and record a trace of nothing.
     out->nak(cmd.seq, protocol::kNakBadVerb);
     return true;
   }
@@ -521,7 +602,16 @@ private:
     // logic-analyzer capture. The honest list for a rev-0 board -- no `angout`
     // because the outputs are unpopulated, no `brake` because that hardware
     // does not exist. A host should gate on this, not on the firmware version.
-    out->kvStr("caps", "motion+home+freewheel+instr+hv");
+    // Fixed order, absent tokens omitted (protocol v1): the firmware facts
+    // first, then the hardware facts of this revision.
+    char caps[80] = "motion+home+instr+hv+watch+fetch+stream+cfg";
+    if (cfg_.has_angout)
+      strcat(caps, "+angout");
+    if (cfg_.has_brake)
+      strcat(caps, "+brake");
+    if (cfg_.has_torque)
+      strcat(caps, "+torque");
+    out->kvStr("caps", caps);
     out->kvInt("rxbuf", protocol::kMaxLine);
     return true;
   }
@@ -543,10 +633,15 @@ private:
     // moment the animal moves the joystick in FREEWHEEL.
     out->kvNumber("angle", motion_.angleDeg());
     out->kvNumber("xactual", motion_.xactualDeg());
+    // Always present, empty without the hardware (protocol v1), so field
+    // positions never move between revisions.
+    appendTorque(out);
+    appendBrake(out);
     out->kvBool("homed", homed_);
     out->kvBool("limit", motion_.limitAsserted());
     out->kvInt("faults", static_cast<long>(fault_mask_));
     out->kvBool("hv", hv_on_);
+    out->kvU64("t", now_us_); // the board clock, for the host's alignment
     return true;
   }
 
@@ -624,6 +719,7 @@ private:
       // ignored on purpose -- there is no useful answer to "turning it off
       // failed", and refusing to report success would leave a host unable to
       // confirm the safe state it just asked for.
+      home_deadline_armed_ = false;
       motion_.setHvEnabled(false);
       hv_on_ = false;
       if (inState(state_name::kArmed) || inState(state_name::kActive)) {
@@ -673,9 +769,10 @@ private:
       out->nak(cmd.seq, protocol::kNakBusy);
       return true;
     }
-    if (inState(state_name::kFreewheel)) {
+    if (inState(state_name::kReleased)) {
       // No re-engage here: `enableDriver()` is called below for every home, so
       // adding one would be a redundant SPI round trip.
+      leaveReleased();
       motion_.resyncFromEncoder();
       state_ = state_name::kArmed;
     }
@@ -697,16 +794,14 @@ private:
       timeout_us = static_cast<uint32_t>(us);
     }
 
-    if (bounded && timeout_us < motion_.expectedHomeDurationUs()) {
-      // Homing is bounded locally, and exceeding the bound is a fault rather
-      // than a nak because the motion did start. The bound comes from the
-      // backend, which is the only thing that knows how long homing takes.
-      motion_.abort();
-      out->beginAck(cmd.seq);
-      push(*out);
-      out->clear();
-      raiseFault(fault::kHomeTimeout, "home_timeout", false);
-      return false;  // already pushed, in order: ack then the FAULT event
+    // The host's timeout, clipped to the firmware maximum, becomes a deadline
+    // that `service()` enforces while the home runs: exceeding it aborts the
+    // motion and faults `home_timeout`, because by then the motion did start.
+    // It used to be compared against the backend's bound up front, which with
+    // the real backend's 8 s bound faulted every shorter request immediately
+    // (2026-10-01 review, bug 2).
+    if (bounded && timeout_us > motion_.homeTimeoutMaxUs()) {
+      timeout_us = motion_.homeTimeoutMaxUs();
     }
 
     // HOME has to energise the driver itself, and the draft does not say so.
@@ -737,6 +832,10 @@ private:
     if (!motion_.startHome()) {
       out->nak(cmd.seq, protocol::kNakBusy);
       return true;
+    }
+    if (bounded) {
+      home_deadline_armed_ = true;
+      home_deadline_us_ = now_us_ + timeout_us;
     }
     out->beginAck(cmd.seq);
     return true;
@@ -776,7 +875,9 @@ private:
   bool cmdDisarm(const protocol::Command &cmd, protocol::Line *out) {
     motion_.abort();
     watchdog_armed_ = false;
-    if (inState(state_name::kFreewheel)) {
+    home_deadline_armed_ = false;
+    stream_on_ = false;
+    if (inState(state_name::kReleased)) {
       // Re-engage on the way out even though this ends in HOMED rather than
       // ARMED. "Disarmed" has to mean "not accepting motion commands", not
       // "limp": a joystick left compliant within an animal's reach is a worse
@@ -799,7 +900,8 @@ private:
     // `abort()` holds position wherever the joystick is, which is what makes
     // this safe to send at any time -- including mid-move.
     motion_.abort();
-    if (inState(state_name::kFreewheel)) {
+    home_deadline_armed_ = false;
+    if (inState(state_name::kReleased)) {
       // "From FREEWHEEL this is how a host takes the joystick back: re-engage
       // the driver holding wherever the animal left it." Re-engaging is the
       // whole point of the command in this state.
@@ -827,7 +929,7 @@ private:
     }
     // FREEWHEEL re-engages implicitly. One command that resyncs, re-engages and
     // moves is better than three the host could be interrupted between.
-    if (inState(state_name::kFreewheel)) {
+    if (inState(state_name::kReleased)) {
       if (!leaveCompliance()) {
         out->nak(cmd.seq, protocol::kNakFaulted);
         push(*out);
@@ -852,6 +954,13 @@ private:
       out->nak(cmd.seq, protocol::kNakBadArgs);
       return true;
     }
+    // Named profiles (protocol v1): accepted here; the velocity each one
+    // selects is the application's constant (AppConfig.hpp), the same for all
+    // of them in the simulated backend so corpus timings do not depend on it.
+    if (cmd.arg_count > 1 && !isProfileName(cmd.arg(1))) {
+      out->nak(cmd.seq, protocol::kNakBadArgs);
+      return true;
+    }
 
     // Relative to where the joystick IS, which after a pull is not where the
     // ramp generator thinks it is. Using xactual would silently add the
@@ -873,14 +982,87 @@ private:
     return true;
   }
 
-  // Release the driver so the animal can move the joystick.
-  //
-  // On a board WITH a brake this verb should not exist separately: the brake
-  // must engage BEFORE drive is released or the joystick drops, and be released
-  // only after drive is restored or the motor fights it. Two host commands
-  // cannot guarantee that ordering across a link whose whole point is that it
-  // has latency. Expect `BRAKE <torque>` to REPLACE this, not extend it.
-  bool cmdFreewheel(const protocol::Command &cmd, protocol::Line *out) {
+  // ------------------------------------------------------ protocol v1 verbs
+
+  static bool isProfileName(const char *arg) {
+    return argEquals(arg, "present") || argEquals(arg, "retract") ||
+           argEquals(arg, "slow");
+  }
+
+  // `key=value` argument: splits at the first '=' into `key` and `value`.
+  static bool splitKv(const char *arg, char *key, size_t key_n,
+                      const char **value) {
+    const char *eq = strchr(arg, '=');
+    if (eq == nullptr || eq == arg) {
+      return false;
+    }
+    size_t klen = static_cast<size_t>(eq - arg);
+    if (klen >= key_n) {
+      return false;
+    }
+    for (size_t i = 0; i < klen; ++i) {
+      key[i] = protocol::lowerAscii(arg[i]);
+    }
+    key[klen] = '\0';
+    *value = eq + 1;
+    return true;
+  }
+
+  void appendTorque(protocol::Line *out) const {
+    out->kvStr("torque", ""); // v1.0 boards report the bridge here
+  }
+  void appendBrake(protocol::Line *out) const {
+    if (cfg_.has_brake && inState(state_name::kReleased)) {
+      out->kvNumber("brake", brake_level_);
+    } else {
+      out->kvStr("brake", "");
+    }
+  }
+
+  // `ev;NAME;t;angle=…;torque=…[;brake=…]`
+  void emitAngleEvent(const char *name, double angle, bool with_brake) {
+    protocol::Line line;
+    line.beginEvent(name, now_us_);
+    line.kvNumber("angle", angle);
+    appendTorque(&line);
+    if (with_brake) {
+      appendBrake(&line);
+    }
+    push(line);
+  }
+
+  void emitTrial() {
+    const TrialWatch::Summary s = watch_.takeSummary(motion_.angleDeg());
+    protocol::Line line;
+    line.beginEvent("TRIAL", now_us_);
+    line.kvStr("outcome", TrialWatch::name(s.outcome));
+    line.kvU64("t_rel", s.t_rel);
+    line.kvStr("t_touch", ""); // torque events need the v1.0 bridge
+    if (s.has_move) {
+      line.kvU64("t_move", s.t_move);
+    } else {
+      line.kvStr("t_move", "");
+    }
+    if (s.has_out) {
+      line.kvU64("t_out", s.t_out);
+    } else {
+      line.kvStr("t_out", "");
+    }
+    line.kvNumber("a0", s.a0);
+    line.kvNumber("a_peak", s.a_peak);
+    line.kvNumber("a_end", s.a_end);
+    line.kvStr("tq_peak", "");
+    line.kvStr("tq_out", "");
+    line.kvInt("dur_thr", static_cast<long>(s.dur_thr_ms));
+    push(line);
+  }
+
+  // BRAKE <torque_Ncm>: engage the brake, then release the drive, as one
+  // operation. On a board without a brake the torque is ignored and only the
+  // release happens -- today's FREEWHEEL, under the verb that will carry the
+  // brake, so the trial structure can be piloted now. The ack comes first and
+  // RELEASED when the release has happened.
+  bool cmdBrake(const protocol::Command &cmd, protocol::Line *out) {
     if (faulted()) {
       out->nak(cmd.seq, protocol::kNakFaulted);
       return true;
@@ -890,41 +1072,309 @@ private:
       return true;
     }
     if (!inState(state_name::kArmed)) {
-      // A joystick held by an energised motor cannot go compliant by accident.
+      // A joystick held by an energised motor cannot go compliant by accident;
+      // and a second BRAKE while RELEASED is refused too (the brief's rule).
       out->nak(cmd.seq, protocol::kNakNotArmed);
       return true;
     }
-    motion_.releaseDriver();
-    state_ = state_name::kFreewheel;
-    pull_reported_ = false;
-    out->beginAck(cmd.seq);
-    return true;
-  }
-
-  bool cmdArmPull(const protocol::Command &cmd, protocol::Line *out) {
     if (cmd.arg_count != 1) {
       out->nak(cmd.seq, protocol::kNakBadArgs);
       return true;
     }
-    double threshold = 0.0;
-    if (!protocol::parseNumber(cmd.arg(0), &threshold)) {
+    double torque = 0.0;
+    if (!protocol::parseNumber(cmd.arg(0), &torque)) {
       out->nak(cmd.seq, protocol::kNakBadArgs);
       return true;
     }
-    if (threshold < cfg_.travel_lo || threshold > cfg_.travel_hi) {
+    if (torque < 0.0) {
       out->nak(cmd.seq, protocol::kNakOutOfRange);
       return true;
     }
-    pull_threshold_ = threshold;
-    has_pull_threshold_ = true;
-    // Which side of the threshold the joystick is on NOW. A crossing to the
-    // other side is the pull. Equality counts as below, so a threshold armed
-    // exactly at the current position fires on the first movement upward
-    // rather than immediately.
-    pull_armed_above_ = motion_.angleDeg() > threshold;
-    // Re-arming clears the latch, so one ARMPULL yields one PULL per trial
-    // rather than a stream while the joystick sits past threshold.
-    pull_reported_ = false;
+    // Phases 1 and 2 (brake DAC to the calibrated code, wait for the coil
+    // current) belong to the v1.0 backend; without a brake there is nothing
+    // to wait for.
+    brake_level_ = cfg_.has_brake ? torque : 0.0;
+    motion_.releaseDriver();
+    state_ = state_name::kReleased;
+    watch_.release(now_us_, motion_.angleDeg(), cfg_.pull_sign);
+    out->beginAck(cmd.seq);
+    push(*out);
+    out->clear();
+    emitAngleEvent("RELEASED", motion_.angleDeg(), /*with_brake=*/true);
+    return false; // already pushed: ack, then RELEASED
+  }
+
+  // WATCH pull=deg;push=deg;timeout=ms[;hold=ms][;touch=Ncm][;maxdur=ms]
+  bool cmdWatch(const protocol::Command &cmd, protocol::Line *out) {
+    if (!inState(state_name::kReleased)) {
+      out->nak(cmd.seq, protocol::kNakNotReleased);
+      return true;
+    }
+    TrialWatch::Params p;
+    bool has_pull = false, has_push = false, has_timeout = false;
+    for (uint8_t i = 0; i < cmd.arg_count; ++i) {
+      char key[16];
+      const char *value = nullptr;
+      double v = 0.0;
+      if (!splitKv(cmd.arg(i), key, sizeof(key), &value) ||
+          !protocol::parseNumber(value, &v)) {
+        out->nak(cmd.seq, protocol::kNakBadArgs);
+        return true;
+      }
+      if (v < 0.0) {
+        out->nak(cmd.seq, protocol::kNakOutOfRange);
+        return true;
+      }
+      if (strcmp(key, "pull") == 0) {
+        p.pull = v;
+        has_pull = true;
+      } else if (strcmp(key, "push") == 0) {
+        p.push = v;
+        has_push = true;
+      } else if (strcmp(key, "timeout") == 0) {
+        p.timeout_us = static_cast<uint32_t>(v * 1000.0);
+        has_timeout = true;
+      } else if (strcmp(key, "hold") == 0) {
+        p.hold_us = static_cast<uint32_t>(v * 1000.0);
+      } else if (strcmp(key, "maxdur") == 0) {
+        p.has_maxdur = true;
+        p.maxdur_us = static_cast<uint32_t>(v * 1000.0);
+      } else if (strcmp(key, "touch") == 0) {
+        // Torque needs the v1.0 bridge; accepted and inert without it.
+      } else {
+        out->nak(cmd.seq, protocol::kNakBadArgs);
+        return true;
+      }
+    }
+    if (!has_pull || !has_push || !has_timeout) {
+      out->nak(cmd.seq, protocol::kNakBadArgs);
+      return true;
+    }
+    watch_.arm(now_us_, p, deadband_deg_);
+    out->beginAck(cmd.seq);
+    return true;
+  }
+
+  // CFG get | CFG key=value[;key=value…]: all pairs are checked, then all
+  // applied, or none.
+  bool cmdCfg(const protocol::Command &cmd, protocol::Line *out) {
+    if (cmd.arg_count == 0) {
+      out->nak(cmd.seq, protocol::kNakBadArgs);
+      return true;
+    }
+    if (cmd.arg_count == 1 && argEquals(cmd.arg(0), "get")) {
+      out->beginAck(cmd.seq);
+      out->kvInt("wdt_ms", static_cast<long>(cfg_.host_timeout_us / 1000u));
+      out->kvNumber("deadband_deg", deadband_deg_);
+      out->kvInt("stream_hz", stream_hz_);
+      out->kvInt("pre_ms", watch_.preMs());
+      out->kvInt("post_ms", watch_.postMs());
+      return true;
+    }
+    uint32_t wdt_us = cfg_.host_timeout_us;
+    double deadband = deadband_deg_;
+    uint16_t stream_hz = stream_hz_;
+    long pre_ms = watch_.preMs();
+    long post_ms = watch_.postMs();
+    for (uint8_t i = 0; i < cmd.arg_count; ++i) {
+      char key[16];
+      const char *value = nullptr;
+      double v = 0.0;
+      if (!splitKv(cmd.arg(i), key, sizeof(key), &value) ||
+          !protocol::parseNumber(value, &v)) {
+        out->nak(cmd.seq, protocol::kNakBadArgs);
+        return true;
+      }
+      if (strcmp(key, "wdt_ms") == 0) {
+        const double us = v * 1000.0;
+        if (us < kWdtMinUs || us > kWdtMaxUs) {
+          out->nak(cmd.seq, protocol::kNakOutOfRange);
+          return true;
+        }
+        wdt_us = static_cast<uint32_t>(us);
+      } else if (strcmp(key, "deadband_deg") == 0) {
+        if (v < kDeadbandMinDeg || v > kDeadbandMaxDeg) {
+          out->nak(cmd.seq, protocol::kNakOutOfRange);
+          return true;
+        }
+        deadband = v;
+      } else if (strcmp(key, "stream_hz") == 0) {
+        if (v < kStreamHzMin || v > kStreamHzMax) {
+          out->nak(cmd.seq, protocol::kNakOutOfRange);
+          return true;
+        }
+        stream_hz = static_cast<uint16_t>(v);
+      } else if (strcmp(key, "pre_ms") == 0 || strcmp(key, "post_ms") == 0) {
+        // The capture window around the outcome: each bounded by the ring,
+        // and together (checked below) by the ring less the outcome sample.
+        if (v < 0.0 || v > TrialWatch::kWindowMaxMs) {
+          out->nak(cmd.seq, protocol::kNakOutOfRange);
+          return true;
+        }
+        (key[1] == 'r' ? pre_ms : post_ms) = static_cast<long>(v);
+      } else {
+        out->nak(cmd.seq, protocol::kNakBadArgs);
+        return true;
+      }
+    }
+    if (pre_ms + post_ms > TrialWatch::kWindowMaxMs) {
+      out->nak(cmd.seq, protocol::kNakOutOfRange);
+      return true;
+    }
+    cfg_.host_timeout_us = wdt_us; // applies from the next watchdog refresh
+    deadband_deg_ = deadband;
+    stream_hz_ = stream_hz;
+    watch_.setWindow(static_cast<uint16_t>(pre_ms),
+                     static_cast<uint16_t>(post_ms));
+    out->beginAck(cmd.seq);
+    return true;
+  }
+
+  // FETCH [k0;n]: the frozen window of the last WATCH, in chunks of at most
+  // kFetchChunkMax lines. Sample `pre` is the outcome sample.
+  bool cmdFetch(const protocol::Command &cmd, protocol::Line *out) {
+    if (watch_.captureBusy()) {
+      out->nak(cmd.seq, protocol::kNakBusy);
+      return true;
+    }
+    long k0 = 0;
+    long n = kFetchChunkMax;
+    if (cmd.arg_count >= 1 && !protocol::parseInt(cmd.arg(0), &k0)) {
+      out->nak(cmd.seq, protocol::kNakBadArgs);
+      return true;
+    }
+    if (cmd.arg_count >= 2 && !protocol::parseInt(cmd.arg(1), &n)) {
+      out->nak(cmd.seq, protocol::kNakBadArgs);
+      return true;
+    }
+    if (k0 < 0 || n < 0) {
+      out->nak(cmd.seq, protocol::kNakOutOfRange);
+      return true;
+    }
+    if (n > kFetchChunkMax) {
+      n = kFetchChunkMax;
+    }
+    const long count = static_cast<long>(watch_.windowCount());
+    const long available = (k0 < count) ? (count - k0) : 0;
+    if (n > available) {
+      n = available;
+    }
+    out->beginAck(cmd.seq);
+    out->kvInt("n", n);
+    out->kvInt("k0", k0);
+    out->kvU64("t0", watch_.hasWindow()
+                         ? watch_.windowSampleTimeUs(static_cast<uint32_t>(k0))
+                         : 0u);
+    out->kvInt("dt_us", static_cast<long>(TrialWatch::kSampleUs));
+    out->kvInt("pre", static_cast<long>(watch_.windowPre()));
+    push(*out);
+    out->clear();
+    protocol::Line line;
+    for (long k = k0; k < k0 + n; ++k) {
+      line.clear();
+      line.append("cap");
+      line.appendChar(protocol::kDelimiter);
+      line.appendInt(k);
+      line.appendChar(protocol::kDelimiter);
+      line.appendNumber(watch_.windowSample(static_cast<uint32_t>(k)));
+      line.appendChar(protocol::kDelimiter); // torque, empty without the bridge
+      push(line);
+    }
+    line.clear();
+    line.append("cap");
+    line.appendChar(protocol::kDelimiter);
+    line.append("end");
+    push(line);
+    return false; // already pushed
+  }
+
+  // STREAM on[;rate_hz] | STREAM off
+  bool cmdStream(const protocol::Command &cmd, protocol::Line *out) {
+    if (cmd.arg_count == 0) {
+      out->nak(cmd.seq, protocol::kNakBadArgs);
+      return true;
+    }
+    if (argEquals(cmd.arg(0), "off")) {
+      stream_on_ = false;
+      out->beginAck(cmd.seq);
+      return true;
+    }
+    if (!argEquals(cmd.arg(0), "on")) {
+      out->nak(cmd.seq, protocol::kNakBadArgs);
+      return true;
+    }
+    uint16_t hz = stream_hz_;
+    if (cmd.arg_count >= 2) {
+      double v = 0.0;
+      if (!protocol::parseNumber(cmd.arg(1), &v)) {
+        out->nak(cmd.seq, protocol::kNakBadArgs);
+        return true;
+      }
+      if (v < kStreamHzMin || v > kStreamHzMax) {
+        out->nak(cmd.seq, protocol::kNakOutOfRange);
+        return true;
+      }
+      hz = static_cast<uint16_t>(v);
+    }
+    stream_period_us_ = 1000000u / hz;
+    stream_next_us_ = now_us_ + stream_period_us_;
+    stream_on_ = true;
+    out->beginAck(cmd.seq);
+    return true;
+  }
+
+  // TQ zero | cal;on|off | get: v1.0 boards only.
+  bool cmdTq(const protocol::Command &cmd, protocol::Line *out) {
+    // No board with the torque bridge exists yet; when one does, `caps` gains
+    // `torque` and this grows the three sub-commands. Until then the honest
+    // answer is the same as for any verb the board does not have.
+    out->nak(cmd.seq, protocol::kNakBadVerb);
+    return true;
+  }
+
+  // ANGOUT on|off: the application drives the DAC from `angoutOn()` and
+  // `angleOutputValid()`; a board without the output answers badverb so a
+  // host cannot believe it is live and record a trace of nothing.
+  bool cmdAngout(const protocol::Command &cmd, protocol::Line *out) {
+    if (!cfg_.has_angout) {
+      out->nak(cmd.seq, protocol::kNakBadVerb);
+      return true;
+    }
+    if (cmd.arg_count != 1) {
+      out->nak(cmd.seq, protocol::kNakBadArgs);
+      return true;
+    }
+    if (argEquals(cmd.arg(0), "on") || argEquals(cmd.arg(0), "off")) {
+      angout_on_ = argEquals(cmd.arg(0), "on");
+      out->beginAck(cmd.seq);
+      return true;
+    }
+    out->nak(cmd.seq, protocol::kNakBadArgs);
+    return true;
+  }
+
+  // ANGSCALE deg_lo deg_hi: maps [lo, hi] onto 0.05-3.300 V at the BNC.
+  bool cmdAngscale(const protocol::Command &cmd, protocol::Line *out) {
+    if (!cfg_.has_angout) {
+      out->nak(cmd.seq, protocol::kNakBadVerb);
+      return true;
+    }
+    if (cmd.arg_count != 2) {
+      out->nak(cmd.seq, protocol::kNakBadArgs);
+      return true;
+    }
+    double lo = 0.0, hi = 0.0;
+    if (!protocol::parseNumber(cmd.arg(0), &lo) ||
+        !protocol::parseNumber(cmd.arg(1), &hi)) {
+      out->nak(cmd.seq, protocol::kNakBadArgs);
+      return true;
+    }
+    if (!(lo < hi)) {
+      out->nak(cmd.seq, protocol::kNakOutOfRange);
+      return true;
+    }
+    angscale_lo_ = lo;
+    angscale_hi_ = hi;
     out->beginAck(cmd.seq);
     return true;
   }
@@ -1021,18 +1471,32 @@ private:
   // and the rail is genuinely off, which is why HV is observable rather than
   // something the host infers.
   bool hv_on_ = false;
-  bool instr_on_ = false;
+  // The InstrumentPort buffers are enabled at boot for the proof of life
+  // (protocol v1: INSTR STATE reports on at boot).
+  bool instr_on_ = true;
 
-  double pull_threshold_ = 0.0;
-  bool has_pull_threshold_ = false;
-  bool pull_armed_above_ = false;
-  bool pull_reported_ = false;
+  // Protocol v1 state.
+  TrialWatch watch_;
+  double brake_level_ = 0.0;
+  double deadband_deg_ = 0.5;
+  uint16_t stream_hz_ = 10;
+  bool stream_on_ = false;
+  uint32_t stream_period_us_ = 100000u;
+  uint64_t stream_next_us_ = 0;
+  bool angout_on_ = false;
+  double angscale_lo_ = -20.0;
+  double angscale_hi_ = 20.0;
 
   long cal_enc_offset_ = 1024;
   double cal_angle_zero_ = 0.0;
 
   bool watchdog_armed_ = false;
   uint64_t watchdog_deadline_us_ = 0;
+
+  // `home;<s>;<timeout_ms>`: the host's bound on the running home, clipped to
+  // the firmware maximum. Cleared by completion, STOP, DISARM and any fault.
+  bool home_deadline_armed_ = false;
+  uint64_t home_deadline_us_ = 0;
 
   char rx_[protocol::kMaxLine * 2] = {0};
   size_t rx_len_ = 0;

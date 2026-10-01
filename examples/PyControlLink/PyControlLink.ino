@@ -39,6 +39,7 @@
 
 #include <pico/unique_id.h>
 
+#include <FirmwareVersion.hpp>
 #include <MotionSetup.hpp>
 #include <MouseJoystickBoard.hpp>
 #include <PycUart.hpp>
@@ -133,6 +134,9 @@ TmcMotion::Config tmcConfig() { return TmcMotion::Config(); }
 
 ProtocolBoard::Config boardConfig() {
   ProtocolBoard::Config config;
+  config.fw_version =
+      mouse_joystick::kFirmwareVersion; // git describe, see FirmwareVersion.hpp
+  config.hw_rev = mouse_joystick::kHwRevName; // from MJ_BOARD_REV
   config.travel_lo = kTravelLoDeg;
   config.travel_hi = kTravelHiDeg;
   // v_max is what LIMITS reports and it must describe what the mechanism does.
@@ -183,6 +187,7 @@ void setup() {
   // started at any point in a session sees the protocol in hardware, which is
   // the only account of the link that does not come from one of its two ends.
   SafeState::setInstrumentationEnabled(true);
+  board.setInstrumentationOn(true); // so `instr state` reports the port's state
 
   // The board serial, from the flash unique id. This is what `ID` reports and
   // what a task checks before trusting a calibration, so it has to be THIS
@@ -247,6 +252,12 @@ void loop() {
   board.advanceTo(clock_us.now());
   link.service(board, usbMirror());
 
+  // `instr on/off` drives the InstrumentPort buffers (bug 3, 2026-10-01); until
+  // then the verb only set a flag and the port stayed enabled from setup().
+  if (board.instrumentationOn() != SafeState::instrumentationEnabled()) {
+    SafeState::setInstrumentationEnabled(board.instrumentationOn());
+  }
+
   // FW_TRIG1 is high for the whole compliant window.
   //
   // `docs/instrument-strategy.md` asks firmware to define marker semantics
@@ -259,7 +270,8 @@ void loop() {
   // on this edge starts exactly when the joystick goes compliant and its
   // duration bounds the window -- so raw quadrature edges can be counted
   // against what `STATUS` reported over the same interval.
-  SafeState::setTrigger1(strcmp(board.state(), "FREEWHEEL") == 0);
+  SafeState::setTrigger1(strcmp(board.state(), "RELEASED") ==
+                         0); // v1 name (was FREEWHEEL)
 
   // Deliberately no delay. The host-loss watchdog, the motion poll and the
   // link all run off this loop, and the protocol's whole safety argument is

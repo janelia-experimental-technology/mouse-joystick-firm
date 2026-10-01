@@ -15,6 +15,23 @@ namespace conversions {
 // absolute accuracy is only as good as that rail.
 constexpr float kAdcReferenceVolts = 3.3f;
 
+// ---------------------------------------------------------- angle output
+//
+// Rev 1's DAC80501 (GAIN register 0x0101: REF-DIV 1, BUFF-GAIN 1, a 2.5 V
+// full scale) behind the OPA197's 1.32 gain gives 3.300 V at the BNC. The
+// numbers are the board's, cited from
+// `../mouse-joystick-pcb/docs/bringup-log.md`
+// ("ANGLE OUTPUT CHARACTERISED -- 2026-09-10, board 4": unity to 0.03 %, a
+// 4.5 mV floor at code 0) and from `uart-protocol.md` (ANGSCALE maps onto
+// 0.05-3.300 V so that 0 V stays out of band). Which code the firmware parks
+// at while the output is invalid, 0 or 497 (25 mV), is that document's
+// reserved decision; it is implemented here only, as the 0 V the spec's
+// current text describes.
+constexpr float kAngleOutStageGain = 1.32f;
+constexpr float kAngleOutMinVolts = 0.050f;
+constexpr float kAngleOutMaxVolts = 3.300f;
+constexpr uint16_t kAngleOutFaultCode = 0;
+
 // The RP2040's native ADC width. The Arduino core defaults to 10 bits, so
 // every read path must set this explicitly -- a reader that forgets divides by
 // the wrong full scale and reports a quarter of the real voltage. These two

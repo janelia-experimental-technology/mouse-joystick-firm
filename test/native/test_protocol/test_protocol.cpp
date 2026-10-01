@@ -372,18 +372,18 @@ void test_an_animal_pull_diverges_the_two_positions(void) {
   sendOne(board, "home;2");
   board.advance(50000);
   sendOne(board, "arm;3");
-  sendOne(board, "freewheel;4");
+  sendOne(board, "brake;4;0"); // no brake on this board: release only
 
   rig.motion.setEncoderAngleDeg(-7.5);  // the animal pulls
-  TEST_ASSERT_EQUAL_STRING(
-      "ack;5;state=FREEWHEEL;angle=-7.5;xactual=0.0;homed=1;limit=0;faults=0;hv=1",
-      sendOne(board, "status;5").c_str());
+  TEST_ASSERT_EQUAL_STRING("ack;5;state=RELEASED;angle=-7.5;xactual=0.0;torque="
+                           ";brake=;homed=1;limit=0;faults=0;hv=1;t=50000",
+                           sendOne(board, "status;5").c_str());
 
   // Leaving compliance reconciles them, and only then.
   sendOne(board, "stop;6");
-  TEST_ASSERT_EQUAL_STRING(
-      "ack;7;state=ARMED;angle=-7.5;xactual=-7.5;homed=1;limit=0;faults=0;hv=1",
-      sendOne(board, "status;7").c_str());
+  TEST_ASSERT_EQUAL_STRING("ack;7;state=ARMED;angle=-7.5;xactual=-7.5;torque=;"
+                           "brake=;homed=1;limit=0;faults=0;hv=1;t=50000",
+                           sendOne(board, "status;7").c_str());
 }
 
 // A backend that fails the way real motion does: asynchronously, with no host
@@ -537,9 +537,9 @@ void test_status_reports_the_limit_switch_from_the_backend(void) {
   board.boot();
   board.clearOutput();
 
-  TEST_ASSERT_EQUAL_STRING(
-      "ack;1;state=IDLE;angle=0.0;xactual=0.0;homed=0;limit=1;faults=0;hv=0",
-      sendOne(board, "status;1").c_str());
+  TEST_ASSERT_EQUAL_STRING("ack;1;state=IDLE;angle=0.0;xactual=0.0;torque=;"
+                           "brake=;homed=0;limit=1;faults=0;hv=0;t=0",
+                           sendOne(board, "status;1").c_str());
 }
 
 // Records what the protocol layer asked of the hardware, so safety rules can be
@@ -618,7 +618,7 @@ void test_home_is_refused_when_the_driver_will_not_enable(void) {
                            board.output(1));
 }
 
-void test_leaving_freewheel_re_energises_the_driver(void) {
+void test_leaving_released_re_energises_the_driver(void) {
   // Found on hardware 2026-09-03: `freewheel` releases the driver and every
   // path out of it resynced and set ARMED without re-enabling. The ramp then
   // advanced with no torque and the follow check faulted `not_following`.
@@ -635,7 +635,7 @@ void test_leaving_freewheel_re_energises_the_driver(void) {
     sendOne(board, "home;2");
     board.advance(50000);
     sendOne(board, "arm;3");
-    TEST_ASSERT_EQUAL_STRING("ack;4", sendOne(board, "freewheel;4").c_str());
+    TEST_ASSERT_EQUAL_STRING("ack;4", sendOne(board, "brake;4;0").c_str());
 
     const int before = motion.enable_calls;
     sendOne(board, exit);
@@ -644,91 +644,125 @@ void test_leaving_freewheel_re_energises_the_driver(void) {
   }
 }
 
-static void armAndFreewheel(ProtocolBoard &board) {
-  sendOne(board, "hv;1;on");
-  sendOne(board, "home;2");
+static void armAndRelease(ProtocolBoard &board) {
+  sendOne(board, "cfg;1;wdt_ms=500");
+  sendOne(board, "hv;2;on");
+  sendOne(board, "home;3");
   board.advance(50000);
-  sendOne(board, "arm;3");
+  sendOne(board, "arm;4");
+  sendOne(board, "brake;5;0"); // no brake on this board: release only
 }
 
 void test_a_pull_past_the_threshold_emits_one_pull_event(void) {
+  // WATCH (protocol v1): thresholds are excursions from the angle at RELEASED,
+  // pull-positive; one WATCH yields exactly one outcome.
   Rig rig;
   ProtocolBoard &board = rig.board;
-  armAndFreewheel(board);
-  TEST_ASSERT_EQUAL_STRING("ack;4", sendOne(board, "armpull;4;-5.0").c_str());
-  TEST_ASSERT_EQUAL_STRING("ack;5", sendOne(board, "freewheel;5").c_str());
+  armAndRelease(board);
+  TEST_ASSERT_EQUAL_STRING(
+      "ack;6", sendOne(board, "watch;6;pull=5;push=5;timeout=300").c_str());
 
   // Not yet past it.
-  rig.motion.setEncoderAngleDeg(-4.0);
+  rig.motion.setEncoderAngleDeg(4.0);
   board.clearOutput();
   board.advance(1000);
   TEST_ASSERT_EQUAL_UINT8(0, board.outputCount());
 
   // The animal pulls past.
-  rig.motion.setEncoderAngleDeg(-6.5);
+  rig.motion.setEncoderAngleDeg(6.5);
   board.clearOutput();
   board.advance(1000);
   TEST_ASSERT_EQUAL_UINT8(1, board.outputCount());
-  TEST_ASSERT_EQUAL_STRING("ev;PULL;52000;angle=-6.5", board.output(0));
+  TEST_ASSERT_EQUAL_STRING("ev;PULL;52000;angle=6.5;torque=", board.output(0));
 
-  // Latched: one ARMPULL yields one PULL, not a stream while it sits past.
-  rig.motion.setEncoderAngleDeg(-7.5);
+  // Latched: one WATCH yields one outcome, not a stream while it sits past.
+  rig.motion.setEncoderAngleDeg(7.5);
   board.clearOutput();
   board.advance(1000);
   TEST_ASSERT_EQUAL_UINT8(0, board.outputCount());
-
-  // Re-arming is how a task asks for the next trial's. Present the joystick
-  // back above the threshold FIRST -- re-arming while it still sits past would
-  // arm from the far side, and the next crossing would be in the other
-  // direction. That is the rule working, not a quirk to work around.
-  rig.motion.setEncoderAngleDeg(-4.0);
-  sendOne(board, "armpull;6;-5.0");
-  rig.motion.setEncoderAngleDeg(-6.0);
-  board.clearOutput();
-  board.advance(1000);
-  TEST_ASSERT_EQUAL_UINT8(1, board.outputCount());
 }
 
-void test_the_pull_direction_follows_where_detection_was_armed(void) {
-  // Travel is mirrored between the left and right joysticks, so a baked-in sign
-  // would need side-specific state. Arming from BELOW the threshold must detect
-  // an upward crossing.
-  Rig rig;
-  ProtocolBoard &board = rig.board;
-  armAndFreewheel(board);
-  rig.motion.setEncoderAngleDeg(-8.0);
-  sendOne(board, "armpull;4;-5.0");  // armed from below
-  sendOne(board, "freewheel;5");
-
-  rig.motion.setEncoderAngleDeg(-9.0);  // further below: not a crossing
+void test_the_pull_direction_follows_the_configured_sign(void) {
+  // Travel is mirrored between the left and right joysticks. The board's
+  // `pull_sign` hides that: with -1 a pull is a decreasing angle, and the
+  // excursions the trace reports stay pull-positive.
+  SimulatedMotion motion;
+  ProtocolBoard::Config cfg = Rig::corpusConfig();
+  cfg.pull_sign = -1.0;
+  ProtocolBoard board(motion, cfg);
+  board.boot();
   board.clearOutput();
-  board.advance(1000);
-  TEST_ASSERT_EQUAL_UINT8(0, board.outputCount());
+  armAndRelease(board);
+  sendOne(board, "watch;6;pull=5;push=5;timeout=300");
 
-  rig.motion.setEncoderAngleDeg(-2.0);  // crossed upward
+  motion.setEncoderAngleDeg(6.0); // increasing angle: a push on this side
   board.clearOutput();
-  board.advance(1000);
+  board.advance(1000); // the first service after WATCH is at its own time
   TEST_ASSERT_EQUAL_UINT8(1, board.outputCount());
-  TEST_ASSERT_EQUAL_STRING("ev;PULL;52000;angle=-2.0", board.output(0));
+  TEST_ASSERT_EQUAL_STRING("ev;PUSH;50000;angle=6.0;torque=", board.output(0));
+
+  board.clearOutput();
+  sendOne(board, "stop;7"); // at 51000: the summary carries the outcome's times
+  TEST_ASSERT_EQUAL_STRING(
+      "ev;TRIAL;51000;outcome=PUSH;t_rel=50000;t_touch=;t_move=50000;t_out="
+      "50000;a0=0.0;a_peak=-6.0;a_end=-6.0;tq_peak=;tq_out=;dur_thr=0",
+      board.output(0));
+  TEST_ASSERT_EQUAL_STRING("ack;7", board.output(1));
 }
 
 void test_a_commanded_move_across_the_threshold_is_not_a_pull(void) {
   // Reporting the board's own motion as a pull would put a fabricated event
-  // into a behavioural dataset.
+  // into a behavioural dataset: the classifier only runs in RELEASED, and
+  // leaving RELEASED disarms it (TRIAL outcome=NONE).
   Rig rig;
   ProtocolBoard &board = rig.board;
-  armAndFreewheel(board);
-  sendOne(board, "armpull;4;-5.0");
-  TEST_ASSERT_EQUAL_STRING("ack;5", sendOne(board, "moveto;5;-9.0").c_str());
+  armAndRelease(board);
+  sendOne(board, "watch;6;pull=5;push=5;timeout=300");
   board.clearOutput();
-  // 60 ms: past the 50 ms move but inside the 100 ms watchdog armed by `arm`.
-  // An earlier version advanced 200 ms and got a second event -- the
-  // host_timeout fault -- which is the watchdog doing its job, not a pull.
+  board.feed("moveto;7;-9.0\n");
+  TEST_ASSERT_EQUAL_UINT8(2, board.outputCount());
+  TEST_ASSERT_EQUAL_STRING(
+      "ev;TRIAL;50000;outcome=NONE;t_rel=50000;t_touch=;t_move=;t_out=;a0=0.0;"
+      "a_peak=0.0;a_end=0.0;tq_peak=;tq_out=;dur_thr=0",
+      board.output(0));
+  TEST_ASSERT_EQUAL_STRING("ack;7", board.output(1));
+  board.clearOutput();
   board.advance(60000);
 
   // Exactly one event, and it is TARGET rather than PULL.
   TEST_ASSERT_EQUAL_UINT8(1, board.outputCount());
   TEST_ASSERT_EQUAL_STRING("ev;TARGET;100000;angle=-9.0", board.output(0));
+}
+
+void test_angle_output_verbs_work_when_the_board_has_the_output(void) {
+  // ANGOUT/ANGSCALE answer badverb on a board without the output (the corpus
+  // pins that); with `has_angout` they are real, and the application drives
+  // the DAC from the accessors.
+  SimulatedMotion motion;
+  ProtocolBoard::Config cfg = Rig::corpusConfig();
+  cfg.has_angout = true;
+  ProtocolBoard board(motion, cfg);
+  board.boot();
+  board.clearOutput();
+  TEST_ASSERT_EQUAL_STRING(
+      "ack;1;hw=rev0;serial=0000000000000000;fw=0.0.0;proto=2;axes=1;caps="
+      "motion+home+instr+hv+watch+fetch+stream+cfg+angout;rxbuf=200",
+      sendOne(board, "id;1").c_str());
+  TEST_ASSERT_FALSE(board.angoutOn());
+  TEST_ASSERT_EQUAL_STRING("ack;2", sendOne(board, "angout;2;on").c_str());
+  TEST_ASSERT_TRUE(board.angoutOn());
+  TEST_ASSERT_FALSE(
+      board.angleOutputValid()); // not homed: parked at the fault level
+  TEST_ASSERT_EQUAL_STRING("nak;3;outofrange",
+                           sendOne(board, "angscale;3;20;-20").c_str());
+  TEST_ASSERT_EQUAL_STRING("ack;4",
+                           sendOne(board, "angscale;4;-15;15").c_str());
+  TEST_ASSERT_EQUAL_FLOAT(-15.0f, static_cast<float>(board.angleScaleLo()));
+  TEST_ASSERT_EQUAL_FLOAT(15.0f, static_cast<float>(board.angleScaleHi()));
+  sendOne(board, "hv;5;on");
+  sendOne(board, "home;6");
+  board.advance(50000);
+  TEST_ASSERT_TRUE(board.angleOutputValid());
 }
 
 void test_every_fault_this_board_raises_can_be_cleared(void) {
@@ -776,12 +810,93 @@ void test_a_reply_is_never_silently_truncated(void) {
   TEST_ASSERT_TRUE(line.length() <= P::kMaxLine);
 }
 
+// ================================================= 2026-10-01 review bugs
+
+static std::string lastOutput(const ProtocolBoard &board) {
+  const uint8_t n = board.outputCount();
+  return n == 0 ? std::string() : std::string(board.output(n - 1));
+}
+
+void test_event_timestamps_do_not_wrap_at_32_bits(void) {
+  // Bug 1: `t` was cast to uint32_t and wrapped at 71.6 minutes, inside a
+  // session. The protocol carries the board's 64-bit microsecond clock whole.
+  Rig rig;
+  rig.board.feed("hv;1;on\n");
+  rig.board.clearOutput();
+  rig.board.advance(4294967296ULL); // 2^32 us: 71.6 minutes into the session
+  rig.board.feed("home;2\n");
+  rig.board.clearOutput();
+  rig.board.advance(50000);
+  TEST_ASSERT_EQUAL_STRING("ev;HOMED;4295017296;angle=0.0",
+                           lastOutput(rig.board).c_str());
+}
+
+void test_a_home_timeout_shorter_than_the_home_faults_when_it_expires(void) {
+  // Bug 2: the request used to be compared with the backend's bound up front,
+  // which faulted immediately. It is a deadline on the running home.
+  Rig rig;
+  rig.board.feed("hv;1;on\n");
+  rig.board.clearOutput();
+  rig.board.feed("home;2;30\n"); // 30 ms; the simulated home takes 50 ms
+  TEST_ASSERT_EQUAL_UINT8(1, rig.board.outputCount());
+  TEST_ASSERT_EQUAL_STRING("ack;2", rig.board.output(0));
+  rig.board.clearOutput();
+  rig.board.advance(29999);
+  TEST_ASSERT_EQUAL_UINT8(0, rig.board.outputCount()); // still homing
+  rig.board.advance(1);
+  TEST_ASSERT_EQUAL_STRING("ev;FAULT;30000;code=3;detail=home_timeout",
+                           lastOutput(rig.board).c_str());
+  TEST_ASSERT_EQUAL_STRING("FAULTED", rig.board.state());
+  TEST_ASSERT_FALSE(rig.motion.isMoving());
+}
+
+void test_a_home_timeout_longer_than_the_home_is_not_a_fault(void) {
+  Rig rig;
+  rig.board.feed("hv;1;on\n");
+  rig.board.clearOutput();
+  rig.board.feed("home;2;2000\n"); // under the old rule this faulted at once
+  TEST_ASSERT_EQUAL_STRING("ack;2", rig.board.output(0));
+  rig.board.clearOutput();
+  rig.board.advance(50000);
+  TEST_ASSERT_EQUAL_STRING("ev;HOMED;50000;angle=0.0",
+                           lastOutput(rig.board).c_str());
+  rig.board.clearOutput();
+  rig.board.advance(2000000); // the deadline has been disarmed by completion
+  TEST_ASSERT_EQUAL_UINT8(0, rig.board.outputCount());
+  TEST_ASSERT_EQUAL_STRING("HOMED", rig.board.state());
+}
+
+void test_a_home_timeout_is_clipped_to_the_firmware_maximum(void) {
+  Rig rig;
+  rig.board.feed("hv;1;on\n");
+  rig.board.clearOutput();
+  rig.board.feed("home;2;999999\n"); // 1000 s requested, 8 s is the maximum
+  TEST_ASSERT_EQUAL_STRING("ack;2", rig.board.output(0));
+  rig.board.clearOutput();
+  rig.board.advance(50000); // completes normally; the clip is only visible
+  TEST_ASSERT_EQUAL_STRING("ev;HOMED;50000;angle=0.0",
+                           lastOutput(rig.board).c_str());
+  TEST_ASSERT_EQUAL_UINT32(8000000u, rig.motion.homeTimeoutMaxUs());
+}
+
+void test_instrumentation_state_is_seeded_and_driven_by_the_verb(void) {
+  // Bug 3: the application drives the buffers from this flag and seeds it with
+  // the boot state, so `instr state` reports the port and not the last request.
+  Rig rig;
+  TEST_ASSERT_TRUE(rig.board.instrumentationOn()); // on at boot, like the port
+  rig.board.feed("instr;1;state\n");
+  TEST_ASSERT_EQUAL_STRING("ack;1;instr=1", lastOutput(rig.board).c_str());
+  rig.board.feed("instr;2;off\n");
+  TEST_ASSERT_FALSE(rig.board.instrumentationOn());
+}
+
 // ================================================================= the corpus
 
 struct Step {
-  std::string kind;  // send | advance | expect
+  std::string kind; // send | advance | angle | torque | expect
   std::string text;
   long value = 0;
+  double angle = 0.0;
 };
 
 struct Case {
@@ -881,6 +996,18 @@ static void loadCorpus(void) {
       step.kind = "advance";
       step.value = strtol(rest.c_str(), nullptr, 10);
       current.steps.push_back(step);
+    } else if (keyword == "ANGLE") {
+      // The animal moves the joystick: the simulated encoder reads this from
+      // now on, and the board services once so the classifier sees it.
+      Step step;
+      step.kind = "angle";
+      step.angle = strtod(rest.c_str(), nullptr);
+      current.steps.push_back(step);
+    } else if (keyword == "TORQUE") {
+      Step step;
+      step.kind = "torque"; // reserved: no board reports torque yet
+      step.angle = strtod(rest.c_str(), nullptr);
+      current.steps.push_back(step);
     } else if (keyword == "EXPECT") {
       Step step;
       step.kind = "expect";
@@ -951,6 +1078,18 @@ void test_the_firmware_reproduces_every_corpus_case(void) {
           pending.push_back(board.output(i));
         }
         TEST_ASSERT_FALSE_MESSAGE(board.outputOverflowed(), where);
+      } else if (step.kind == "angle") {
+        // The animal moves the joystick; one service step at the current time
+        // so the classifier sees the sample.
+        board.clearOutput();
+        rig.motion.setEncoderAngleDeg(step.angle);
+        board.advance(0);
+        for (uint8_t i = 0; i < board.outputCount(); ++i) {
+          pending.push_back(board.output(i));
+        }
+        TEST_ASSERT_FALSE_MESSAGE(board.outputOverflowed(), where);
+      } else if (step.kind == "torque") {
+        // reserved: nothing to set on a board without the bridge
       } else if (step.kind == "expect") {
         TEST_ASSERT_FALSE_MESSAGE(pending.empty(), where);
         std::string actual = pending.front();
@@ -999,12 +1138,18 @@ int main(int, char **) {
   RUN_TEST(test_home_energises_the_driver_it_is_about_to_use);
   RUN_TEST(test_a_fault_drops_the_rail_and_not_just_the_flag);
   RUN_TEST(test_home_is_refused_when_the_driver_will_not_enable);
-  RUN_TEST(test_leaving_freewheel_re_energises_the_driver);
+  RUN_TEST(test_leaving_released_re_energises_the_driver);
   RUN_TEST(test_a_pull_past_the_threshold_emits_one_pull_event);
-  RUN_TEST(test_the_pull_direction_follows_where_detection_was_armed);
+  RUN_TEST(test_the_pull_direction_follows_the_configured_sign);
+  RUN_TEST(test_angle_output_verbs_work_when_the_board_has_the_output);
   RUN_TEST(test_a_commanded_move_across_the_threshold_is_not_a_pull);
   RUN_TEST(test_every_fault_this_board_raises_can_be_cleared);
   RUN_TEST(test_a_reply_is_never_silently_truncated);
+  RUN_TEST(test_event_timestamps_do_not_wrap_at_32_bits);
+  RUN_TEST(test_a_home_timeout_shorter_than_the_home_faults_when_it_expires);
+  RUN_TEST(test_a_home_timeout_longer_than_the_home_is_not_a_fault);
+  RUN_TEST(test_a_home_timeout_is_clipped_to_the_firmware_maximum);
+  RUN_TEST(test_instrumentation_state_is_seeded_and_driven_by_the_verb);
 
   RUN_TEST(test_the_corpus_was_found);
   RUN_TEST(test_the_corpus_is_not_empty);
