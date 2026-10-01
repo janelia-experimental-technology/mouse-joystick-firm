@@ -292,6 +292,9 @@ between them does not invalidate a cache. Same arrangement as `TMC51X0`.
 | `mouse_joystick_fastflash` | same board, quad-lane stage 2 matched to the W25Q128JV. Use once stage 1 has passed. |
 | `mouse_joystick_rev1` | `MJ_BOARD_REV=1`, for pcb **v0.3 and later, including HEAD**, where GP10/GP11/GP13 carry the angle DAC. **This is not a future-only env — a v0.3 board needs it.** Building rev 0 against v0.3 drives the spare-pad test onto the DAC's SPI bus and chip select. The check count is the tell: a v0.3 board reporting 27 checks in stage 1 was built with the wrong env; rev 1 reports 24. |
 | `mouse_joystick_rev1_i2c` | Same, but the DAC on **I²C** (`MJ_DAC_I2C=1`). **No board can run this yet** — v0.3 ties `SPI2C` directly to GND in copper. It exists so the I²C path stays compiled and honest ahead of v1.0, which is strapping it. |
+| `mouse_joystick_qp` | `examples/PyControlLinkQp` only: the stage-4 protocol inside a QP/C++ active object with a QS trace on `FW_TRIG1`, rev 0, `TmcMotion`, pyControl on UART0. Needs the sibling `../qp-arduino` checkout. |
+| `mouse_joystick_qp_rev1` | Same for rev 1. |
+| `mouse_joystick_qp_sim_usb` | Same application for a board with no 36 V and no host: simulated motion, protocol over USB CDC. How it was first run on the fixture. |
 | `native` | host tests. |
 
 ### Five Build-System Traps

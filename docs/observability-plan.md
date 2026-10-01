@@ -75,6 +75,21 @@ QP before G4 correlation can use its non-QP baseline. Standalone RP2040 port
 qualification, Digital-50 board development and debug/probe qualification are
 separate paths; none should force a rewrite of the working joystick delivery.
 
+## 2026-10-01: the QP slice exists
+
+`OBS-FW-5`'s design question was answered in two steps the same day. First the
+protocol state machine and simulated backend ran as a QP active object in
+`qp-arduino-example/rp2040/joystick_link_bsp-rp2040` on the RP2040 fixture,
+traced over a PIO UART on `FW_TRIG1` (the only MCU-driven net besides the
+pyControl pair that reaches the v1.0 Digital-50 port), with budgets declared
+before the run and met; two defects in the RP2040 BSPs were found there and
+fixed. Then the same structure was brought here as `examples/PyControlLinkQp`
+with the real `TmcMotion` behind the AO and UART0 as the pyControl port, plus
+a simulated-motion USB bench build that ran the pilot sequence on the fixture.
+The non-QP `PyControlLink` is untouched. What remains is listed in the
+example's README and in `.agents/PLANS.md`; the adopt/defer decision is still
+open and belongs there.
+
 ## Evidence semantics
 
 - Associate records with firmware build, board serial/revision, session/boot,

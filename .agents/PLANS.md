@@ -32,9 +32,20 @@ board capabilities; `OBS-IF` and the selected PCB revision own those decisions.
       and claiming affected files with the delivery/watchdog agent.
 - [ ] `OBS-FW-4`: measure the baseline on a qualified board/capture path;
       hardware-gated, with measurements in the PCB bring-up log.
-- [ ] `OBS-FW-5`: optional QP application comparison after the active RP2040
-      port/core/BSP/target gates and selected-board checks. Teensy hardware
-      acceptance is not a prerequisite; the non-QP delivery continues.
+- [x] `OBS-FW-5` (first half, 2026-10-01): the QP comparison slice exists and
+      ran. `examples/PyControlLinkQp` puts `ProtocolBoard` and the motion
+      backend, unchanged, inside one QP/C++ active object with a transmit-only
+      QS trace on `FW_TRIG1`; the simulated-motion bench build ran the pilot's
+      full protocol sequence on the rev 0 fixture, the delivery build
+      (`TmcMotion`, UART0) builds and boots into the safe state. Evidence in
+      `../qp-arduino-example/evidence/2026-10-01-rp2040-joystick-link/` and
+      `.../2026-10-01-rp2040-joystick-firm-qp/`. Owner of the example files,
+      `platformio.ini`'s `[qp_env_data]` and the three `mouse_joystick_qp*`
+      envs: this workstream. **Still owed before any adopt/defer decision:**
+      `TmcMotion` behind the AO with the rail up (the same first supervised
+      run `PyControlLink` owes), the UART0 path under QP with a pyControl
+      host, the `OBS-IF` marker overlay for `FW_TRIG0`/`FW_TRIG1`, and the v1.0
+      pin map. Record the decision here when it is made.
 - [ ] `OBS-FW-6`: hand off correlated evidence for a supervised observation-only
       experiment pilot.
 
