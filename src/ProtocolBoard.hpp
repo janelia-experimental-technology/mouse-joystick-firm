@@ -340,15 +340,15 @@ private:
       line.appendChar(protocol::kDelimiter);
       line.append(cmd.arg(i));
     }
-    snprintf(out, n, "%s", line.c_str());
+    protocol::copyText(out, n, line.c_str());
   }
 
   void remember(uint16_t seq, const char *canonical, const char *reply) {
     for (uint8_t i = 0; i < cache_count_; ++i) {
       if (cache_[i].seq == seq) {
-        snprintf(cache_[i].canonical, sizeof(cache_[i].canonical), "%s",
-                 canonical);
-        snprintf(cache_[i].reply, sizeof(cache_[i].reply), "%s", reply);
+        protocol::copyText(cache_[i].canonical, sizeof(cache_[i].canonical),
+                           canonical);
+        protocol::copyText(cache_[i].reply, sizeof(cache_[i].reply), reply);
         return;
       }
     }
@@ -364,8 +364,8 @@ private:
     }
     Entry &slot = cache_[cache_count_ - 1];
     slot.seq = seq;
-    snprintf(slot.canonical, sizeof(slot.canonical), "%s", canonical);
-    snprintf(slot.reply, sizeof(slot.reply), "%s", reply);
+    protocol::copyText(slot.canonical, sizeof(slot.canonical), canonical);
+    protocol::copyText(slot.reply, sizeof(slot.reply), reply);
   }
 
   void push(const protocol::Line &line) {
@@ -378,7 +378,11 @@ private:
       pending_overflow_ = true;
       return;
     }
-    snprintf(pending_[pending_count_], sizeof(pending_[0]), "%s", line.c_str());
+    if (!protocol::copyText(pending_[pending_count_], sizeof(pending_[0]),
+                            line.c_str())) {
+      pending_overflow_ = true; // cannot happen: a Line fits its slot
+      return;
+    }
     ++pending_count_;
   }
 

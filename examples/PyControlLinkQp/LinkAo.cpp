@@ -18,8 +18,6 @@
 #include "LinkAo.hpp"
 
 #include <Arduino.h> // micros()
-#include <stdio.h>   // snprintf, for the bench stimulus reply
-#include <stdlib.h>
 #include <string.h>
 
 using namespace QP;
@@ -104,8 +102,12 @@ void Link::recordRx(const LineEvt *e) {
   verb[n] = '\0';
   m_lastHome = (strcmp(verb, "home") == 0);
   uint16_t seq = 0U;
-  if (*p == ';') {
-    seq = static_cast<uint16_t>(strtoul(p + 1, nullptr, 10));
+  if (*p == ';') { // the digits that follow, modulo 2^16; no newlib here
+    uint32_t v = 0U;
+    for (const char *d = p + 1; (*d >= '0') && (*d <= '9'); ++d) {
+      v = (v * 10U + static_cast<uint32_t>(*d - '0')) % 65536U;
+    }
+    seq = static_cast<uint16_t>(v);
   }
   QS_BEGIN_ID(LINK_RX, m_prio)
   QS_U16(0U, seq);
@@ -117,34 +119,83 @@ void Link::recordRx(const LineEvt *e) {
 #if MJ_SIM_MOTION
 // `<seq>;angle;<deg>`: answer ack;<seq> or nak;<seq>;badargs on the port.
 void Link::simStimulus(const char *rest) {
-  char *end = nullptr;
-  const unsigned long seq = strtoul(rest, &end, 10);
-  char reply[32];
-  if (end != rest && strncmp(end, ";angle;", 7U) == 0) {
-    char *num_end = nullptr;
-    const double deg = strtod(end + 7, &num_end);
-    if (num_end != end + 7) {
-      m_board.advanceTo(BSP::nowUs64());
-      l_motion.setEncoderAngleDeg(deg);
-      m_board.advanceTo(BSP::nowUs64()); // the classifier sees it now
-      snprintf(reply, sizeof(reply), "ack;%lu", seq);
-      static_cast<void>(BSP::linkWrite(reply));
-      return;
-    }
+  namespace protocol = mouse_joystick::protocol;
+  char seq_text[8];
+  size_t n = 0U;
+  while ((rest[n] >= '0') && (rest[n] <= '9') && (n + 1U < sizeof(seq_text))) {
+    seq_text[n] = rest[n];
+    ++n;
   }
-  snprintf(reply, sizeof(reply), "nak;%lu;badargs", seq);
-  static_cast<void>(BSP::linkWrite(reply));
+  seq_text[n] = '\0';
+  uint16_t seq = 0U;
+  const bool seq_ok = protocol::normalizeSeq(seq_text, &seq);
+  // The event text keeps its terminator; parseNumber, like the protocol
+  // parser after feed() has split the line, wants the bare field (the first
+  // rerun of 2026-10-01 answered badargs to every stimulus for this reason).
+  char number[16];
+  size_t m = 0U;
+  const char *num = rest + n + 7;
+  while ((num[m] != '\0') && (num[m] != '\n') && (num[m] != '\r') &&
+         (m + 1U < sizeof(number))) {
+    number[m] = num[m];
+    ++m;
+  }
+  number[m] = '\0';
+  protocol::Line reply;
+  double deg = 0.0;
+  if (seq_ok && strncmp(rest + n, ";angle;", 7U) == 0 &&
+      protocol::parseNumber(number, &deg)) {
+    m_board.advanceTo(BSP::nowUs64());
+    l_motion.setEncoderAngleDeg(deg);
+    m_board.advanceTo(BSP::nowUs64()); // the classifier sees it now
+    reply.beginAck(seq);
+  } else {
+    reply.nak(seq, protocol::kNakBadArgs);
+  }
+  static_cast<void>(BSP::linkWrite(reply.c_str()));
 }
 #endif
 
 // After every feed or clock advance: queue the replies and record what
 // changed.
 void Link::afterService() {
+  // A FETCH chunk is 32 `cap;k;...` lines and `cap;end` queued at once: one
+  // LINK_TX record per line saturated the 115200 baud trace (2026-10-01 run),
+  // so the chunk's cap lines share one record, `cap;<first>-<last>` plus
+  // `;end`, with the sent flag false if any of them was dropped.
+  uint16_t cap_lines = 0U;
+  bool cap_sent = true;
+  bool cap_end = false;
+  uint32_t cap_ready_us = 0U;
+  char cap_first[12] = "";
+  char cap_last[12] = "";
   for (uint8_t i = 0U; i < m_board.outputCount(); ++i) {
     const char *line = m_board.output(i);
     const uint32_t ready_us = micros();
     const bool sent = BSP::linkWrite(line);
 #ifdef QS_ON
+    if (strncmp(line, "cap;", 4U) == 0) {
+      if (cap_lines == 0U) {
+        cap_ready_us = ready_us;
+      }
+      ++cap_lines;
+      cap_sent = cap_sent && sent;
+      if (strcmp(line + 4, "end") == 0) {
+        cap_end = true;
+      } else {
+        size_t k = 0U;
+        while ((line[4U + k] >= '0') && (line[4U + k] <= '9') &&
+               (k + 1U < sizeof(cap_last))) {
+          cap_last[k] = line[4U + k];
+          ++k;
+        }
+        cap_last[k] = '\0';
+        if (cap_first[0] == '\0') {
+          strcpy(cap_first, cap_last);
+        }
+      }
+      continue;
+    }
     char prefix[21];
     strncpy(prefix, line, sizeof(prefix) - 1U);
     prefix[sizeof(prefix) - 1U] = '\0';
@@ -157,6 +208,26 @@ void Link::afterService() {
     (void)sent;
 #endif
   }
+#ifdef QS_ON
+  if (cap_lines != 0U) {
+    char prefix[32];
+    size_t n = 0U;
+    const char *parts[] = {"cap;", cap_first, "-", cap_last,
+                           cap_end ? ";end" : ""};
+    for (const char *part : parts) {
+      for (const char *c = part; (*c != '\0') && (n + 1U < sizeof(prefix));
+           ++c) {
+        prefix[n++] = *c;
+      }
+    }
+    prefix[n] = '\0';
+    QS_BEGIN_ID(LINK_TX, m_prio)
+    QS_U8(0U, cap_sent ? 1U : 0U);
+    QS_U32(0U, cap_ready_us);
+    QS_STR(prefix);
+    QS_END()
+  }
+#endif
   m_board.clearOutput();
 
   // `instr on/off` drives the InstrumentPort buffers (review bug 3).

@@ -25,13 +25,18 @@
 // `str(float)` is not guaranteed to agree between CPython and MicroPython, let
 // alone with `printf`; all three have to produce the same bytes or the corpus
 // comparison means nothing.
+//
+// 3. **No newlib on the line path** (2026-10-01, measured on the fixture).
+//    `snprintf("%.3f")` with software double arithmetic cost about 0.5 ms per
+//    number on the Cortex-M0+, which put every protocol line past the 1 kHz
+//    sampler's tick (`qp-arduino-example/evidence/2026-10-01-rp2040-joystick-
+//    ring-capture/`). Formatting and parsing here are integer fixed-point,
+//    exact on the binary value, so <stdio.h> and <stdlib.h> are not included.
 
 #pragma once
 
 #include <stddef.h>
 #include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 
 namespace mouse_joystick {
@@ -101,35 +106,140 @@ inline void formatU64(uint64_t value, char *out, size_t n) {
   out[i] = '\0';
 }
 
+// Whole-string copy: the whole of `src` or nothing, never a truncated line
+// (a host cannot tell a truncated reply from a different one). Returns false
+// and writes "" when `src` does not fit.
+inline bool copyText(char *dst, size_t n, const char *src) {
+  if (dst == nullptr || n == 0) {
+    return false;
+  }
+  const size_t len = (src != nullptr) ? strlen(src) : 0;
+  if (len + 1 > n) {
+    dst[0] = '\0';
+    return false;
+  }
+  memcpy(dst, src, len + 1);
+  return true;
+}
+
+inline void formatInt(long value, char *out, size_t n) {
+  if (n == 0) {
+    return;
+  }
+  unsigned long magnitude = (value < 0)
+                                ? (0ul - static_cast<unsigned long>(value))
+                                : static_cast<unsigned long>(value);
+  char tmp[21];
+  size_t len = 0;
+  do {
+    tmp[len++] = static_cast<char>('0' + (magnitude % 10u));
+    magnitude /= 10u;
+  } while (magnitude != 0 && len < sizeof(tmp));
+  size_t i = 0;
+  if (value < 0 && i + 1 < n) {
+    out[i++] = '-';
+  }
+  while (len > 0 && i + 1 < n) {
+    out[i++] = tmp[--len];
+  }
+  out[i] = '\0';
+}
+
+// The exact decimal rounding `%.3f` performs, without `printf`: the double is
+// taken apart into mantissa and binary exponent, scaled by 1000 in integers
+// and rounded to nearest with ties to even on the exact binary value, which
+// is what newlib's and CPython's `%.3f` both do (so 0.0625 -> "0.062",
+// 0.9995 -> "1.0" because the double 0.9995 is a hair above, 1.0005 -> "1.0"
+// because it is a hair below). Returns false for nan, inf and magnitudes of
+// 2^64 and more, which are not protocol values.
+inline bool roundToThousandths(double value, bool *negative,
+                               uint64_t *integer_part, uint32_t *thousandths) {
+  uint64_t bits = 0;
+  memcpy(&bits, &value, sizeof(bits));
+  *negative = (bits >> 63) != 0;
+  const uint32_t exp_field = static_cast<uint32_t>((bits >> 52) & 0x7FFu);
+  uint64_t mant = bits & ((1ull << 52) - 1u);
+  if (exp_field == 0x7FFu) {
+    return false; // inf or nan
+  }
+  int32_t exp2 = 0;
+  if (exp_field == 0) {
+    exp2 = -1074; // subnormal
+  } else {
+    mant |= (1ull << 52);
+    exp2 = static_cast<int32_t>(exp_field) - 1075;
+  }
+  if (mant == 0) {
+    *integer_part = 0;
+    *thousandths = 0;
+    return true;
+  }
+  if (exp2 >= 0) {
+    // 2^52 and above: an integer. 1000 * mant << exp2 could overflow, so the
+    // fraction is simply zero.
+    if (exp2 > 11) {
+      return false;
+    }
+    *integer_part = mant << exp2;
+    *thousandths = 0;
+    return true;
+  }
+  const uint32_t shift = static_cast<uint32_t>(-exp2);
+  const uint64_t scaled = mant * 1000u; // < 2^63: mant < 2^53
+  uint64_t q = 0;
+  if (shift < 64) {
+    q = scaled >> shift;
+    const uint64_t remainder = scaled - (q << shift);
+    const uint64_t half = 1ull << (shift - 1);
+    if (remainder > half || (remainder == half && (q & 1u) != 0)) {
+      ++q;
+    }
+  } // else the value is below 2^-11 and rounds to 0.000
+  *integer_part = q / 1000u;
+  *thousandths = static_cast<uint32_t>(q % 1000u);
+  return true;
+}
+
 inline void formatNumber(double value, char *out, size_t n) {
   if (n == 0) {
     return;
   }
-  snprintf(out, n, "%.3f", value);
-
-  char *dot = strchr(out, '.');
-  if (dot != nullptr) {
-    size_t len = strlen(out);
-    while (len > 0 && out[len - 1] == '0') {
-      out[--len] = '\0';
-    }
-    if (len > 0 && out[len - 1] == '.') {
-      // Python re-appends a zero rather than leaving a bare point, so
-      // `20.0` stays `20.0` and never becomes `20.`.
-      if (len + 1 < n) {
-        out[len] = '0';
-        out[len + 1] = '\0';
-      }
-    }
+  bool negative = false;
+  uint64_t integer_part = 0;
+  uint32_t thousandths = 0;
+  if (!roundToThousandths(value, &negative, &integer_part, &thousandths)) {
+    copyText(out, n, (value != value) ? "nan" : (negative ? "-inf" : "inf"));
+    return;
   }
-  if (strcmp(out, "-0.0") == 0) {
-    // A commanded zero reached from below. Same value, one spelling.
-    snprintf(out, n, "0.0");
+  // `-0.0` and anything that rounds to it: same value, one spelling.
+  if (integer_part == 0 && thousandths == 0) {
+    negative = false;
   }
-}
-
-inline void formatInt(long value, char *out, size_t n) {
-  snprintf(out, n, "%ld", value);
+  char tmp[32];
+  size_t len = 0;
+  if (negative) {
+    tmp[len++] = '-';
+  }
+  char digits[21];
+  formatU64(integer_part, digits, sizeof(digits));
+  for (const char *d = digits; *d != '\0'; ++d) {
+    tmp[len++] = *d;
+  }
+  tmp[len++] = '.';
+  // Three places, trailing zeros stripped, at least one kept: `%.3f` then
+  // Python's rstrip("0") with a zero re-appended after a bare point.
+  char frac[4] = {static_cast<char>('0' + thousandths / 100u),
+                  static_cast<char>('0' + (thousandths / 10u) % 10u),
+                  static_cast<char>('0' + thousandths % 10u), '\0'};
+  size_t keep = 3;
+  while (keep > 1 && frac[keep - 1] == '0') {
+    --keep;
+  }
+  for (size_t i = 0; i < keep; ++i) {
+    tmp[len++] = frac[i];
+  }
+  tmp[len] = '\0';
+  copyText(out, n, tmp);
 }
 
 inline const char *formatBool(bool value) { return value ? "1" : "0"; }
@@ -179,30 +289,14 @@ inline bool normalizeSeq(const char *text, uint16_t *out) {
   return true;
 }
 
-// Strict float parse, matching `float(arg)`: no trailing garbage allowed.
+// Strict float parse, matching `float(arg)` for what the protocol carries:
+// optional blanks, sign, digits with an optional point, an optional exponent,
+// optional blanks, nothing else. Decimal digits are accumulated as an integer
+// and scaled by one exact power of ten, which is correctly rounded (the same
+// double `strtod` and `float()` give) for up to 15 significant digits and
+// exponents within 10^+-22; longer inputs are within an ulp. Not accepted,
+// unlike `float()`: "inf", "nan", "1_000"; unlike `strtod`: hex.
 inline bool parseNumber(const char *text, double *out) {
-  if (text == nullptr || *text == '\0') {
-    return false;
-  }
-  char *end = nullptr;
-  double value = strtod(text, &end);
-  if (end == text) {
-    return false;
-  }
-  while (*end == ' ' || *end == '\t') {
-    ++end;
-  }
-  if (*end != '\0') {
-    return false;
-  }
-  *out = value;
-  return true;
-}
-
-// Strict integer parse, matching `int(arg)`.
-inline bool parseInt(const char *text, long *out) {
-  uint16_t unused = 0;
-  (void)unused;
   if (text == nullptr || *text == '\0') {
     return false;
   }
@@ -210,21 +304,137 @@ inline bool parseInt(const char *text, long *out) {
   while (*p == ' ' || *p == '\t') {
     ++p;
   }
+  bool negative = false;
   if (*p == '+' || *p == '-') {
+    negative = (*p == '-');
+    ++p;
+  }
+  uint64_t mant = 0;
+  int32_t exp10 = 0;
+  uint8_t significant = 0;
+  bool any_digit = false;
+  while (*p >= '0' && *p <= '9') {
+    any_digit = true;
+    if (significant < 15) {
+      mant = mant * 10u + static_cast<uint64_t>(*p - '0');
+      if (mant != 0) {
+        ++significant;
+      }
+    } else {
+      ++exp10; // dropped digit before the point keeps its weight
+    }
+    ++p;
+  }
+  if (*p == '.') {
+    ++p;
+    while (*p >= '0' && *p <= '9') {
+      any_digit = true;
+      if (significant < 15) {
+        mant = mant * 10u + static_cast<uint64_t>(*p - '0');
+        if (mant != 0) {
+          ++significant;
+        }
+        --exp10;
+      }
+      ++p;
+    }
+  }
+  if (!any_digit) {
+    return false;
+  }
+  if (*p == 'e' || *p == 'E') {
+    ++p;
+    bool exp_negative = false;
+    if (*p == '+' || *p == '-') {
+      exp_negative = (*p == '-');
+      ++p;
+    }
+    if (*p < '0' || *p > '9') {
+      return false;
+    }
+    int32_t e = 0;
+    while (*p >= '0' && *p <= '9') {
+      if (e < 100000) {
+        e = e * 10 + (*p - '0');
+      }
+      ++p;
+    }
+    exp10 += exp_negative ? -e : e;
+  }
+  while (*p == ' ' || *p == '\t') {
+    ++p;
+  }
+  if (*p != '\0') {
+    return false;
+  }
+  static const double kPow10[] = {
+      1e0,  1e1,  1e2,  1e3,  1e4,  1e5,  1e6,  1e7,  1e8,  1e9,  1e10, 1e11,
+      1e12, 1e13, 1e14, 1e15, 1e16, 1e17, 1e18, 1e19, 1e20, 1e21, 1e22};
+  double value = static_cast<double>(mant); // exact: at most 15 digits
+  if (mant != 0) {
+    while (exp10 > 22) {
+      value *= 1e22;
+      exp10 -= 22;
+    }
+    while (exp10 < -22) {
+      value /= 1e22;
+      exp10 += 22;
+    }
+    if (exp10 > 0) {
+      value *= kPow10[exp10];
+    } else if (exp10 < 0) {
+      value /= kPow10[-exp10];
+    }
+  }
+  *out = negative ? -value : value;
+  return true;
+}
+
+// Strict integer parse, matching `int(arg)`: optional blanks, sign, digits,
+// optional blanks. Out-of-range magnitudes clamp to LONG_MAX/LONG_MIN, as
+// `strtol` did.
+inline bool parseInt(const char *text, long *out) {
+  if (text == nullptr || *text == '\0') {
+    return false;
+  }
+  const char *p = text;
+  while (*p == ' ' || *p == '\t') {
+    ++p;
+  }
+  bool negative = false;
+  if (*p == '+' || *p == '-') {
+    negative = (*p == '-');
     ++p;
   }
   if (*p < '0' || *p > '9') {
     return false;
   }
-  char *end = nullptr;
-  long value = strtol(text, &end, 10);
-  while (*end == ' ' || *end == '\t') {
-    ++end;
+  const unsigned long limit =
+      negative ? (static_cast<unsigned long>(0x7FFFFFFFul) + 1ul)
+               : 0x7FFFFFFFul; // 32-bit long on the RP2040; clamped below on
+                               // hosts with a wider long as well
+  unsigned long magnitude = 0;
+  bool clamped = false;
+  while (*p >= '0' && *p <= '9') {
+    const unsigned long digit = static_cast<unsigned long>(*p - '0');
+    if (!clamped) {
+      if (magnitude > (limit - digit) / 10ul) {
+        clamped = true;
+        magnitude = limit;
+      } else {
+        magnitude = magnitude * 10ul + digit;
+      }
+    }
+    ++p;
   }
-  if (*end != '\0') {
+  while (*p == ' ' || *p == '\t') {
+    ++p;
+  }
+  if (*p != '\0') {
     return false;
   }
-  *out = value;
+  *out = negative ? -static_cast<long>(magnitude - 1ul) - 1l
+                  : static_cast<long>(magnitude);
   return true;
 }
 

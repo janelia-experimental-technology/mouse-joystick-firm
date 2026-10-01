@@ -95,6 +95,139 @@ void test_negative_zero_is_never_emitted(void) {
   TEST_ASSERT_EQUAL_STRING("0.0", out);
 }
 
+// The formatter rounds the exact binary value with ties to even, as `%.3f`
+// does in newlib and CPython, without calling either: these expectations were
+// produced by `MouseJoystickProtocol.format_number` on CPython and include the
+// cases that only exact arithmetic gets right (0.9995 is a hair above, 1.0005
+// a hair below, 0.0625 and 0.1875 are exact ties).
+void test_number_formatting_is_exact_on_the_binary_value(void) {
+  struct Case {
+    double value;
+    const char *text;
+  };
+  static const Case cases[] = {
+      {0.0, "0.0"},
+      {-0.0, "0.0"},
+      {6.0, "6.0"},
+      {-9.0, "-9.0"},
+      {12.5, "12.5"},
+      {20.0, "20.0"},
+      {-20.0, "-20.0"},
+      {180.0, "180.0"},
+      {3600.0, "3600.0"},
+      {0.421, "0.421"},
+      {0.5, "0.5"},
+      {0.05, "0.05"},
+      {0.001, "0.001"},
+      {0.0005, "0.001"},
+      {-0.0005, "-0.001"},
+      {0.00049, "0.0"},
+      {0.0625, "0.062"},
+      {0.1875, "0.188"},
+      {0.0015, "0.002"},
+      {0.0025, "0.003"},
+      {2.0005, "2.001"},
+      {1.0005, "1.0"},
+      {1234.5678, "1234.568"},
+      {-3.691, "-3.691"},
+      {0.1, "0.1"},
+      {0.2, "0.2"},
+      {0.3, "0.3"},
+      {1e-07, "0.0"},
+      {-1e-07, "0.0"},
+      {123456.789, "123456.789"},
+      {0.9995, "1.0"},
+      {0.99949, "0.999"},
+      {9.9995, "9.999"},
+      {359.99951, "360.0"},
+      {1.0 / 3.0, "0.333"},
+      {2.0 / 3.0, "0.667"},
+      {1e15, "1000000000000000.0"},
+      {4294967296.5, "4294967296.5"},
+      {100.0 / 3.0, "33.333"},
+      {7.0 / 9.0, "0.778"},
+  };
+  char out[32];
+  for (const Case &c : cases) {
+    P::formatNumber(c.value, out, sizeof(out));
+    TEST_ASSERT_EQUAL_STRING_MESSAGE(c.text, out, "formatNumber");
+  }
+}
+
+void test_integer_formatting_without_printf(void) {
+  char out[24];
+  P::formatInt(0, out, sizeof(out));
+  TEST_ASSERT_EQUAL_STRING("0", out);
+  P::formatInt(65535, out, sizeof(out));
+  TEST_ASSERT_EQUAL_STRING("65535", out);
+  P::formatInt(-1, out, sizeof(out));
+  TEST_ASSERT_EQUAL_STRING("-1", out);
+  P::formatInt(-2147483647L - 1L, out, sizeof(out));
+  TEST_ASSERT_EQUAL_STRING("-2147483648", out);
+  P::formatInt(2147483647L, out, sizeof(out));
+  TEST_ASSERT_EQUAL_STRING("2147483647", out);
+}
+
+// Decimal digits scaled by one exact power of ten give the same double as
+// `strtod`/`float()` for everything the protocol carries; rejected inputs are
+// the ones `float()` rejects too, plus "inf"/"nan"/underscores, which no case
+// uses.
+void test_number_parsing_matches_float(void) {
+  struct Case {
+    const char *text;
+    double value;
+  };
+  static const Case accepted[] = {
+      {"0", 0.0},
+      {"6", 6.0},
+      {"-9.0", -9.0},
+      {"12.5", 12.5},
+      {"+3", 3.0},
+      {"0.05", 0.05},
+      {"3.691", 3.691},
+      {"-3.691", -3.691},
+      {".5", 0.5},
+      {"5.", 5.0},
+      {" 4 ", 4.0},
+      {"1e3", 1000.0},
+      {"2.5E-3", 0.0025},
+      {"0.1", 0.1},
+      {"5000", 5000.0},
+      {"0.000499999999999", 0.000499999999999}, // 12 digits: exact path
+      {"180.0", 180.0},
+      {"-0", -0.0},
+      {"1234.5678", 1234.5678},
+  };
+  for (const Case &c : accepted) {
+    double v = 123.0;
+    TEST_ASSERT_TRUE_MESSAGE(P::parseNumber(c.text, &v), c.text);
+    TEST_ASSERT_TRUE_MESSAGE(v == c.value, c.text);
+  }
+  static const char *const rejected[] = {"",     "abc",   "1.2.3", "1e",  "e3",
+                                         "-",    ".",     "12x",   "nan", "inf",
+                                         "0x10", "1_000", "1 2"};
+  for (const char *text : rejected) {
+    double v = 0.0;
+    TEST_ASSERT_FALSE_MESSAGE(P::parseNumber(text, &v), text);
+  }
+}
+
+void test_integer_parsing_matches_int(void) {
+  long v = 0;
+  TEST_ASSERT_TRUE(P::parseInt("32", &v));
+  TEST_ASSERT_EQUAL(32, v);
+  TEST_ASSERT_TRUE(P::parseInt("-7", &v));
+  TEST_ASSERT_EQUAL(-7, v);
+  TEST_ASSERT_TRUE(P::parseInt(" +0 ", &v));
+  TEST_ASSERT_EQUAL(0, v);
+  TEST_ASSERT_TRUE(P::parseInt("99999999999", &v)); // clamps, as strtol did
+  TEST_ASSERT_EQUAL(2147483647L, v);
+  TEST_ASSERT_FALSE(P::parseInt("12.5", &v));
+  TEST_ASSERT_FALSE(P::parseInt("", &v));
+  TEST_ASSERT_FALSE(P::parseInt("-", &v));
+  TEST_ASSERT_FALSE(P::parseInt("3a", &v));
+}
+
 void test_sequence_numbers_wrap_the_way_python_does(void) {
   uint16_t seq = 0;
 
@@ -1113,6 +1246,10 @@ int main(int, char **) {
 
   RUN_TEST(test_number_formatting_matches_the_python_side);
   RUN_TEST(test_negative_zero_is_never_emitted);
+  RUN_TEST(test_number_formatting_is_exact_on_the_binary_value);
+  RUN_TEST(test_integer_formatting_without_printf);
+  RUN_TEST(test_number_parsing_matches_float);
+  RUN_TEST(test_integer_parsing_matches_int);
   RUN_TEST(test_sequence_numbers_wrap_the_way_python_does);
   RUN_TEST(test_sequence_numbers_reject_what_python_rejects);
   RUN_TEST(test_decode_recovers_verb_seq_and_args);

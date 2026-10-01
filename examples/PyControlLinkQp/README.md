@@ -114,6 +114,32 @@ does (sigrok `uart` decoder on channel 17, bytes to `qspy -k -f`).
   `RELEASED` on, frozen `post_ms` after the outcome around the outcome sample
   (`CFG pre_ms`/`post_ms`, 500/500, sum ≤ 2047), so a pull late in a 10 s
   trial is captured where the old two-second linear buffer missed it. Corpus,
-  simulator, firmware and device class changed together; the fixture run is
-  scripted in `qp-arduino-example/evidence/bench-scripts/link_run_ring.sh`
-  and not yet run.
+  simulator, firmware and device class changed together.
+- 2026-10-01, fixture run of the bench build at firmware 0109ca5
+  (`qp-arduino-example/evidence/2026-10-01-rp2040-joystick-ring-capture/`):
+  31 of 31 pilot steps, the whole v1 trial shape including the 1,001-sample
+  window fetched in 32 chunks and 100 stream lines in 2 s. **Measured
+  against the 400 µs budget:** the sampler tick costs 20 to 60 µs idle, the
+  alarm tick is exact (stdev 10 µs, none lost), but one protocol line costs
+  1.0 ms (`ping`) to 2.8 ms (`status`) to 15.9 ms (a 32-line `FETCH`
+  chunk), so one sample is coalesced per host line (2,183 of 86,024 ticks,
+  2.5 %, zero dropped, filled on the grid). The cost is `formatNumber`'s
+  `snprintf("%.3f")` with software double on the M0+, about 0.5 ms per
+  number, pre-dating this example. Also: a `FETCH` chunk's 34 `LINK_TX`
+  records saturate the trace (QS high-water 2,048, 35 buffer-full events).
+  Fixed the same day, below.
+- 2026-10-01, no newlib on the line path
+  (`qp-arduino-example/evidence/2026-10-01-rp2040-joystick-no-newlib/`):
+  `Protocol.hpp` formats and parses in integer fixed point (exact on the
+  binary value, ties to even, 124 native tests), the cache and queue copy
+  without `snprintf`, and the trace takes one `LINK_TX` per `FETCH` chunk.
+  Rerun on the fixture, 31 of 31 steps: feed cost `ping` 330 µs (was 1,031),
+  `status` 519 (2,839), `moveto` 818 (1,841), a `FETCH` chunk 1,201 (15,921);
+  coalesced samples 237 of 85,999 (was 2,183), QS buffer-full 4 (was 35),
+  worst tick 694 µs (was 2,379), the window in 217 ms (was 774). Still over
+  one tick per line: `moveto` (1.13 ms total, the one that coalesces a sample
+  per command), `FETCH` chunks (1.6 ms), `id`, `watch`, `brake`, `stream`.
+  The floor of about 450 µs per line, with no number in it, is not
+  attributed yet; splitting `LINK_WORK` inside `feed()` is the next
+  measurement, and whether long replies alternate with the tick is a
+  decision, not a default.
