@@ -168,6 +168,7 @@ constexpr uint32_t kCrumbMagic = 0xC0DEC0DEu;
 bool l_bootByWatchdogTimeout = false; // the 2 s timer fired
 bool l_bootByReboot = false; // watchdog_reboot() (Q_onError) or timeout
 uint32_t l_lastCrumb = 0U;   // scratch[0] at boot, if the magic held
+const char *l_bootReason = "por"; // ID's boot=: por | wdt | reboot
 
 #if MJ_TICK_PROBE
 inline void tickProbe(PinStatus level) {
@@ -435,9 +436,13 @@ void qsPeriodic() {
     l_qsNoFlush = false;
   }
 #endif
+  // BOOT_INFO with every dictionary period (first pass, then every
+  // MJ_QS_DICT_PERIOD_MS), so a capture that starts late still sees it.
+  static uint32_t lastBoot_ms = 0U;
   static bool boot_reported = false;
-  if (!boot_reported) {
+  if (!boot_reported || (millis() - lastBoot_ms) >= MJ_QS_DICT_PERIOD_MS) {
     boot_reported = true;
+    lastBoot_ms = millis();
     QS_BEGIN_ID(BOOT_INFO, 0U)
     QS_U8(0U, l_bootByWatchdogTimeout ? 1U : 0U);
     QS_U8(0U, l_bootByReboot ? 1U : 0U);
@@ -499,11 +504,18 @@ void BSP::init() {
   // Why did we boot, and where was the previous run when it died?
   l_bootByReboot = watchdog_caused_reboot();
   l_bootByWatchdogTimeout = watchdog_enable_caused_reboot();
+  // Scratch 0 is written by BSP::crumb() only and never cleared here (the
+  // 2026-10-02 session's number was lost to a clear at this point); a
+  // power-on reset clears the magic and with it the stale value.
   if (watchdog_hw->scratch[1] == kCrumbMagic) {
     l_lastCrumb = watchdog_hw->scratch[0];
+  } else {
+    watchdog_hw->scratch[0] = 0U;
+    watchdog_hw->scratch[1] = kCrumbMagic;
   }
-  watchdog_hw->scratch[0] = 0U;
-  watchdog_hw->scratch[1] = kCrumbMagic;
+  l_bootReason = l_bootByWatchdogTimeout ? "wdt"
+                 : l_bootByReboot        ? "reboot"
+                                         : "por";
 
   Serial.begin(115200);
 #if MJ_LINK_USB
@@ -609,6 +621,9 @@ bool BSP::linkWrite(const char *line) {
 }
 //............................................................................
 void BSP::opMarker(bool on) { SafeState::setTrigger0(on); }
+//............................................................................
+const char *BSP::bootReason() { return l_bootReason; }
+uint32_t BSP::bootCrumb() { return l_lastCrumb; }
 //............................................................................
 void BSP::crumb(uint8_t n) {
   watchdog_hw->scratch[0] = n;

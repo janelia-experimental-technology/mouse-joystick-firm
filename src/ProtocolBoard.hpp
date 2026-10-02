@@ -100,6 +100,11 @@ public:
     // A board-and-harness fact (bringup-log.md); WATCH thresholds and the
     // TRIAL excursions are expressed pull-positive through it.
     double pull_sign = 1.0;
+    // ID boot= and crumb=: the reset reason ("por", "wdt", "reboot") and the
+    // last bring-up breadcrumb before a watchdog reboot; the simulator and the
+    // non-QP sketch report the defaults.
+    const char *boot_reason = "por";
+    uint32_t boot_crumb = 0;
   };
 
   // CFG bounds (protocol v1).
@@ -184,6 +189,15 @@ public:
   // Firmware sets this once, in setup(), from the flash unique id. Not done in
   // the constructor because reading it issues a real QSPI command and the board
   // is constructed before the runtime is fully up.
+  // ID's boot= and crumb= (2026-10-02): the reset reason and the last
+  // bring-up breadcrumb, captured once at boot by the board support.
+  void setBootInfo(const char *reason, uint32_t crumb) {
+    if (reason != nullptr && *reason != '\0') {
+      cfg_.boot_reason = reason;
+    }
+    cfg_.boot_crumb = crumb;
+  }
+
   void setSerial(const char *serial) {
     if (serial != nullptr && *serial != '\0') {
       cfg_.serial = serial;
@@ -617,6 +631,8 @@ private:
       strcat(caps, "+torque");
     out->kvStr("caps", caps);
     out->kvInt("rxbuf", protocol::kMaxLine);
+    out->kvStr("boot", cfg_.boot_reason);
+    out->kvInt("crumb", static_cast<long>(cfg_.boot_crumb));
     return true;
   }
 

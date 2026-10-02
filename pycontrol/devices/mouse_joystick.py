@@ -103,6 +103,8 @@ class MouseJoystick:
         self.serial = None
         self.firmware_version = None
         self.protocol_version = None
+        self.boot_reason = None  # ID boot=: por, wdt, reboot
+        self.boot_crumb = None  # ID crumb=: last bring-up breadcrumb before a watchdog reboot
         self.axis_count = None
 
         self._read_available()  # discard anything buffered from before this object existed
@@ -192,6 +194,11 @@ class MouseJoystick:
         """
         proto = int(data["proto"])
         axes = int(data["axes"])
+        # 2026-10-02: why the board booted ("por", "wdt", "reboot") and the
+        # last bring-up breadcrumb before a watchdog reboot; a task that sees
+        # "wdt" has a board that rebooted itself out of a stuck step.
+        self.boot_reason = data.get("boot")
+        self.boot_crumb = int(data["crumb"]) if "crumb" in data else None
 
         # v2 is the protocol v1 proposal of 2026-10-01 (BRAKE/WATCH/CFG/FETCH;
         # FREEWHEEL/ARMPULL gone). Earlier boards are refused rather than driven

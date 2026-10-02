@@ -43,6 +43,7 @@
 #   travel -20.0..20.0 deg    v_max 180.0 deg/s    home takes 50000 us
 #   host timeout 100000 us    home timeout maximum 8000000 us
 #   caps motion+home+instr+hv+watch+fetch+stream+cfg (no brake, torque, angout)
+#   boot por, crumb 0 (the reset reason and last breadcrumb are the board's)
 #   deadband 0.5 deg          stream_hz 10          instrumentation on at boot
 #   pull direction = +angle   capture ring 1 kHz from RELEASED; pre_ms 500, post_ms 500
 #
@@ -65,13 +66,13 @@
 # twin-axis board on the same link.
 CASE id-reports-version-serial-and-axis-count
   SEND id;1
-  EXPECT ack;1;hw=rev0;serial=0000000000000000;fw=0.0.0;proto=2;axes=1;caps=motion+home+instr+hv+watch+fetch+stream+cfg;rxbuf=200
+  EXPECT ack;1;hw=rev0;serial=0000000000000000;fw=0.0.0;proto=2;axes=1;caps=motion+home+instr+hv+watch+fetch+stream+cfg;rxbuf=200;boot=por;crumb=0
 END
 
 # "Must work before ARM and must never fail" - including before HV is on.
 CASE id-answers-before-arm
   SEND id;7
-  EXPECT ack;7;hw=rev0;serial=0000000000000000;fw=0.0.0;proto=2;axes=1;caps=motion+home+instr+hv+watch+fetch+stream+cfg;rxbuf=200
+  EXPECT ack;7;hw=rev0;serial=0000000000000000;fw=0.0.0;proto=2;axes=1;caps=motion+home+instr+hv+watch+fetch+stream+cfg;rxbuf=200;boot=por;crumb=0
 END
 
 

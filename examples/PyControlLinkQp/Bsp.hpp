@@ -51,6 +51,11 @@ public:
   // rail-up sequence in TmcMotion::setHvEnabled, 9 the hv ack queued,
   // 11-17 the rev 1 DAC bring-up and release, see Bsp.cpp.
   static void crumb(uint8_t n);
+  // Captured once in init(), before any crumb(): why the chip booted ("por",
+  // "wdt" for the 2 s watchdog, "reboot" for watchdog_reboot) and the last
+  // breadcrumb scratch 0 held. ID reports them as boot= and crumb=.
+  static const char *bootReason();
+  static uint32_t bootCrumb();
 
   // The angle output (rev 1): map `angle_deg` from [lo, hi] onto the BNC's
   // 0.050-3.300 V while `valid`, park at the fault level otherwise. The DAC

@@ -413,6 +413,8 @@ class BoardSim:
                 "axes": P.AXIS_COUNT,
                 "caps": self._capabilities(),
                 "rxbuf": P.MAX_LINE,
+                "boot": "por",  # the simulator never reboots
+                "crumb": 0,
             },
         )
 

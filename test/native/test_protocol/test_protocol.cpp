@@ -909,7 +909,8 @@ void test_angle_output_verbs_work_when_the_board_has_the_output(void) {
   board.clearOutput();
   TEST_ASSERT_EQUAL_STRING(
       "ack;1;hw=rev0;serial=0000000000000000;fw=0.0.0;proto=2;axes=1;caps="
-      "motion+home+instr+hv+watch+fetch+stream+cfg+angout;rxbuf=200",
+      "motion+home+instr+hv+watch+fetch+stream+cfg+angout;rxbuf=200;boot=por;"
+      "crumb=0",
       sendOne(board, "id;1").c_str());
   TEST_ASSERT_FALSE(board.angoutOn());
   TEST_ASSERT_EQUAL_STRING("ack;2", sendOne(board, "angout;2;on").c_str());
