@@ -228,6 +228,10 @@ CASE status-is-safe-before-anything-is-configured
 END
 
 CASE limits-reports-what-the-board-will-enforce
+  # a_max is the acceleration programmed into the ramp generator, not a
+  # separate bound: the rig build reports 180.0 from its 0.5 rev/s^2
+  # (2026-10-02, after a 432 ms move was read against a 3600 placeholder);
+  # the simulator reports its own programmed value, these defaults.
   SEND limits;1
   EXPECT ack;1;travel_lo=-20.0;travel_hi=20.0;v_max=180.0;a_max=3600.0;i_max=0.421
 END

@@ -136,7 +136,7 @@ class BoardSim:
         hw_rev="rev0",
         travel_deg=(-20.0, 20.0),
         v_max_deg_s=180.0,
-        a_max_deg_s2=3600.0,
+        a_max_deg_s2=3600.0,  # LIMITS a_max: the simulator's programmed ramp (its moves are constant-velocity; the number is reported, not modelled)
         i_max_a=0.421,
         host_timeout_us=DEFAULT_HOST_TIMEOUT_US,
         home_duration_us=50_000,

@@ -144,7 +144,9 @@ ProtocolBoard::Config boardConfig() {
   // The bench jogged at 0.100 rev/s; a host that believed the corpus's 180
   // deg/s would time out on every move.
   config.v_max = conv::kJogRevsPerSecond * 360.0f;
-  config.a_max = 3600.0;
+  // LIMITS reports the programmed ramp acceleration, AMAX (0.5 rev/s^2 =
+  // 180 deg/s^2), not a placeholder (2026-10-02).
+  config.a_max = conv::kRevsPerSecondSq * 360.0f;
   config.i_max = 0.421;  // IRUN 17, the conservative reading of the 0.6 A spec
   return config;
 }

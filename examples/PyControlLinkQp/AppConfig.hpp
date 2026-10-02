@@ -69,7 +69,11 @@ inline mouse_joystick::ProtocolBoard::Config boardConfig() {
   config.travel_lo = kTravelLoDeg;
   config.travel_hi = kTravelHiDeg;
   config.v_max = conv::kJogRevsPerSecond * 360.0f;
-  config.a_max = 3600.0;
+  // LIMITS reports what the ramp generator is programmed with (2026-10-02:
+  // 0.5 rev/s^2 = 180 deg/s^2; the 3600 that stood here was the simulator's
+  // placeholder and made a 432 ms move look wrong). Not a bound enforced
+  // separately: AMAX itself.
+  config.a_max = conv::kRevsPerSecondSq * 360.0f;
   config.i_max = 0.421; // IRUN 17, the conservative reading of the 0.6 A spec
 #endif
   return config;
