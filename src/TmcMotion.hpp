@@ -86,6 +86,27 @@ namespace mouse_joystick {
 
 class TmcMotion : public MotionBackend {
 public:
+  // Bring-up breadcrumbs (2026-10-02): an optional hook called with a
+  // checkpoint number at each step of the rail-up sequence, so a hang that no
+  // trace can flush is placed from a GPIO pulse train and the watchdog
+  // scratch register. The QP BSP installs one; nothing happens without it.
+  //   1 setHvEnabled(true) entered, before powerUp
+  //   2 powerUp returned                 3 connectBus done
+  //   4 beginSpi done                    5 TMC version and link verified
+  //   6 SD_MODE check passed             7 configure done, bus up
+  //   8 position cache seeded, returning true
+  using CheckpointHook = void (*)(uint8_t);
+  void setCheckpointHook(CheckpointHook hook) { checkpoint_hook_ = hook; }
+
+private:
+  CheckpointHook checkpoint_hook_ = nullptr;
+  void checkpoint(uint8_t n) const {
+    if (checkpoint_hook_ != nullptr) {
+      checkpoint_hook_(n);
+    }
+  }
+
+public:
   struct Config {
     // Bounds. Motion that exceeds one of these is a fault and not a nak,
     // because by then it has started.
@@ -302,8 +323,10 @@ public:
       return true;
     }
 
+    checkpoint(1);
     PowerUpReport report;
     const PowerUpResult result = PowerSequence::powerUp(report);
+    checkpoint(2);
     if (result != PowerUpResult::kOk &&
         result != PowerUpResult::kRailAlreadyLive) {
       return false;
@@ -311,24 +334,29 @@ public:
     if (!PowerSequence::connectBus()) {
       return false;
     }
+    checkpoint(3);
     delay(10);
 
     MotionSetup::beginSpi(stepper_);
     delay(10);
+    checkpoint(4);
 
     // 0x11 is the TMC5130A signature. A wrong version here means the bus, not
     // the protocol, and stage 2 is the tool for that.
     if (stepper_.readVersion() != 0x11 || !stepper_.communicating()) {
       return false;
     }
+    checkpoint(5);
     // SD_MODE is tied to GND on this board; if it reads set, SPI motion
     // commands do nothing at all and every later ack would be a lie.
     if (stepper_.controller.stepAndDirectionMode()) {
       return false;
     }
+    checkpoint(6);
 
     MotionSetup::configure(stepper_, motion_);
     bus_up_ = true;
+    checkpoint(7);
     seedFollowWindow();
 
     // Seed the cache immediately, so the first STATUS after `hv on` reports
@@ -336,6 +364,7 @@ public:
     const MotionSnapshot s = MotionSetup::snapshot(stepper_);
     angle_deg_ = conversions::microstepsToDegrees(s.encoder);
     xactual_deg_ = conversions::microstepsToDegrees(s.position);
+    checkpoint(8);
     return true;
   }
 

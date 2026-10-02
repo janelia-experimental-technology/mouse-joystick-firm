@@ -53,6 +53,7 @@ one-line changes.
 | `OP_START` / `OP_DONE` | homing flag, angle | an operation started / completed; `FW_TRIG0` follows |
 | `LINK_WORK` | advance µs, feed µs, output µs | where a dispatched line's time went |
 | `DAC_STATE` | phase (0 down, 1 reset, 2 up), begin failures | the rev 1 angle DAC's bring-up after `hv=1` and its release when the rail drops |
+| `BOOT_INFO` | watchdog timeout?, forced reboot?, last breadcrumb | once after boot: why the chip booted and where the previous run was when the hardware watchdog bit |
 | `SAMPLE_STAT` | ticks, handled, coalesced, dropped, max µs, last µs | the 1 kHz sampler: ticks the alarm posted, ticks the AO ran, samples lost to a tick still in flight or to a full queue, and the cost of the tick handler (poll, classifier, capture, DAC write), every second |
 | `TRACE_STAT` | high-water, buffer-full count, size, ticks | QS buffer use, every second |
 | `LINK_STAT` | lines, drops (pool, queue, ring), overlong, queue min free, pool min free, ring high-water | transport and budget use, every second |
@@ -62,6 +63,45 @@ Plus QP's own state transitions, entry/exit and assertions. The per-event
 dispatch/post/get records are filtered out by default (`LINK_QS_FULL=1` keeps
 them, and saturates the line at a 1 kHz tick).
 
+## Watchdog and breadcrumbs
+
+Since 2026-10-02 the BSP enables the RP2040 hardware watchdog, 2 s, after
+`SafeState` and the USB host wait, and feeds it in `QV::onIdle()` only: a
+run-to-completion step that never returns reboots the chip, and the reset
+drops `HV_EN`. `Q_onError` keeps its two-second `FW_TRIG0` signature by
+feeding the watchdog inside it. The reason for a boot and the last
+breadcrumb are read from the watchdog block and its scratch registers before
+anything else runs, printed in the banner (`Boot: WATCHDOG TIMEOUT, last
+breadcrumb N`) and traced as `BOOT_INFO`.
+
+`BSP::crumb(n)` is the breadcrumb: a train of `n` pulses, 25 µs high and
+25 µs low, on `FW_TRIG0`, and `n` into watchdog scratch 0. An operation
+marker pulse is 500 µs or longer, so the two are told apart on the analyzer.
+A train during a running operation briefly lowers the marker; none of the
+checkpoints below runs during a move.
+
+| Count | Where |
+|---|---|
+| 1 | `TmcMotion::setHvEnabled(true)` entered, before `powerUp` |
+| 2 | `powerUp` returned |
+| 3 | `connectBus` done |
+| 4 | `beginSpi` done (after its 10 ms delays) |
+| 5 | TMC version 0x11 and link verified |
+| 6 | SD_MODE check passed |
+| 7 | `configure` done, bus up |
+| 8 | position cache seeded, `setHvEnabled` returning true |
+| 9 | the `hv` reply queued in the port ring (LINE handler) |
+| 11 | DAC: claiming the bus (first tick after `hv=1`, rev 1) |
+| 12 | DAC: bus up (SPI1 or Wire begun) |
+| 13 | DAC: soft reset frame sent |
+| 14 | DAC: writing CONFIG, GAIN, SYNC (2 ms later) |
+| 15 | DAC: configured |
+| 16 | DAC: releasing the bus (rail going down) |
+| 17 | DAC: bus released |
+
+The hook into `TmcMotion` is `setCheckpointHook()`; `PyControlLink` does not
+install one and pulses nothing.
+
 ## Builds
 
 | Env | For |
@@ -69,7 +109,8 @@ them, and saturates the line at a 1 kHz tick).
 | `mouse_joystick_qp` | rev 0 (pcb v0.1/v0.2): `TmcMotion`, UART0, trace on `FW_TRIG1` |
 | `mouse_joystick_qp_rev1` | rev 1 (pcb v0.3 and later): angle DAC on SPI1 |
 | `mouse_joystick_qp_rev1_i2c` | rev 1 with the DAC on I2C, v1.0's strap (compiles; no board to test it on yet) |
-| `mouse_joystick_qp_rev1_usb` | board 4's rail-up bench build (prepared 2026-10-02, compiled, not flashed): `TmcMotion`, rev 1, DAC on SPI1, protocol over USB CDC, trace on `FW_TRIG1`, tick probe on the UART0 TX pad with the RJ-45 unplugged; driven by `qp-arduino-example/evidence/bench-scripts/board4_session.sh` |
+| `mouse_joystick_qp_rev1_usb` | board 4's rail-up bench build: `TmcMotion`, rev 1, DAC on SPI1, protocol over USB CDC, trace on `FW_TRIG1`, tick probe on the UART0 TX pad with the RJ-45 unplugged; driven by `qp-arduino-example/evidence/bench-scripts/board4_session.sh`. **Hung on the first `hv on` on board 4, 2026-10-02** (see Status) |
+| `mouse_joystick_qp_rev0_usb` | the bisect build for that hang: the same, with the rev 0 pad map and therefore no DAC path at all; safe on a v0.3 board, whose rail-up pins are the same |
 | `mouse_joystick_qp_sim_usb` | a board with no 36 V and no host: `SimulatedMotion`, protocol over USB CDC, tick probe on the unused UART0 TX pad (InstrumentPort `DIG8`). Accepts the bench stimulus `sim;<seq>;angle;<deg>` (sets the simulated encoder, as the corpus's `ANGLE` step does, so a `WATCH` outcome can be driven by hand; `ack;<seq>`), which exists in no other build and is not a protocol verb |
 
 ```sh
@@ -151,3 +192,13 @@ does (sigrok `uart` decoder on channel 17, bytes to `qspy -k -f`).
   corpus, simulator, firmware, device class; a fill-path unit test on each
   side); the `DAC_STATE` record; the `mouse_joystick_qp_rev1_usb` build; the
   board 4 session script and procedure. Nothing flashed.
+- 2026-10-02, board 4, first rail-up attempt
+  (`qp-arduino-example/evidence/2026-10-02-board4-rail-up/`): identity ok,
+  `limits` ok (travel [−10.125, 0], `v_max` 36), then **`hv on` never
+  answered**: USB stayed enumerated, the tick probe kept running, the trace
+  and the port went silent, no reset. The active object never returned from
+  the `hv` LINE handler or the first TICK after it. Static reading found no
+  unbounded wait that differs from `PyControlLink`'s working sequence
+  (`panic()` is excluded by the live tick), so the firmware gained the
+  hardware watchdog, the breadcrumbs and the rev 0 bisect build above; the
+  reproduction is Peter's, from the bench.

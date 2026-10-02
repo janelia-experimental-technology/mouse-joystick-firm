@@ -55,7 +55,7 @@
 #include <Wire.h>
 #endif
 #include <hardware/timer.h>    // hardware_alarm_*()
-#include <hardware/watchdog.h> // watchdog_reboot()
+#include <hardware/watchdog.h> // watchdog_enable/update/reboot, scratch
 #include <pico/time.h>         // time_us_64(), from_us_since_boot()
 #include <pico/unique_id.h>    // pico_get_unique_board_id_string()
 #include <string.h>
@@ -120,8 +120,10 @@ enum BspRecords { // BSP-level QS user records (the application uses +0..+7)
   SAMPLE_STAT =
       QP::QS_USER +
       11, // per second: ticks posted, coalesced, dropped, max/last cost
-  DAC_STATE = QP::QS_USER + 12 // rev 1 angle DAC phase changed: phase (0 down,
-                               // 1 reset, 2 up), begin failures
+  DAC_STATE = QP::QS_USER + 12, // rev 1 angle DAC phase changed: phase (0 down,
+                                // 1 reset, 2 up), begin failures
+  BOOT_INFO = QP::QS_USER + 13  // once after boot: watchdog timeout reboot?,
+                                // forced reboot?, last breadcrumb before it
 };
 
 namespace {
@@ -155,6 +157,17 @@ uint32_t volatile l_tickDropped = 0U;   // the AO queue refused the tick
 uint32_t l_tickCostMax_us = 0U; // from the AO, since the last SAMPLE_STAT
 uint32_t l_tickCostLast_us = 0U;
 uint32_t l_tickHandled = 0U;
+
+// RP2040 hardware watchdog (2026-10-02, after board 4 hung inside a handler
+// with interrupts alive): 2 s, fed from the idle loop only, so a stuck
+// run-to-completion step reboots the chip and the reset drops HV_EN. The last
+// breadcrumb (BSP::crumb) is parked in scratch[0] behind a magic in
+// scratch[1]; both survive the watchdog reset and are reported at boot.
+constexpr uint32_t kWatchdogMs = 2000U;
+constexpr uint32_t kCrumbMagic = 0xC0DEC0DEu;
+bool l_bootByWatchdogTimeout = false; // the 2 s timer fired
+bool l_bootByReboot = false; // watchdog_reboot() (Q_onError) or timeout
+uint32_t l_lastCrumb = 0U;   // scratch[0] at boot, if the magic held
 
 #if MJ_TICK_PROBE
 inline void tickProbe(PinStatus level) {
@@ -404,6 +417,7 @@ void bspDictionaries() {
   QS_USR_DICTIONARY(LINK_STAT);
   QS_USR_DICTIONARY(SAMPLE_STAT);
   QS_USR_DICTIONARY(DAC_STATE);
+  QS_USR_DICTIONARY(BOOT_INFO);
 }
 
 void qsPeriodic() {
@@ -421,6 +435,15 @@ void qsPeriodic() {
     l_qsNoFlush = false;
   }
 #endif
+  static bool boot_reported = false;
+  if (!boot_reported) {
+    boot_reported = true;
+    QS_BEGIN_ID(BOOT_INFO, 0U)
+    QS_U8(0U, l_bootByWatchdogTimeout ? 1U : 0U);
+    QS_U8(0U, l_bootByReboot ? 1U : 0U);
+    QS_U32(0U, l_lastCrumb);
+    QS_END()
+  }
 #if (MJ_QS_STAT_PERIOD_MS > 0U)
   static uint32_t lastStat_ms = 0U;
   if ((millis() - lastStat_ms) >= MJ_QS_STAT_PERIOD_MS) {
@@ -473,6 +496,15 @@ void BSP::init() {
   SafeState::apply();
   (void)reset_reads;
 
+  // Why did we boot, and where was the previous run when it died?
+  l_bootByReboot = watchdog_caused_reboot();
+  l_bootByWatchdogTimeout = watchdog_enable_caused_reboot();
+  if (watchdog_hw->scratch[1] == kCrumbMagic) {
+    l_lastCrumb = watchdog_hw->scratch[0];
+  }
+  watchdog_hw->scratch[0] = 0U;
+  watchdog_hw->scratch[1] = kCrumbMagic;
+
   Serial.begin(115200);
 #if MJ_LINK_USB
   // USB CDC is the protocol port on this bench: wait for a host so READY is
@@ -485,6 +517,10 @@ void BSP::init() {
   }
 #endif
   pico_get_unique_board_id_string(l_boardSerial, sizeof(l_boardSerial));
+
+  // From here on the idle loop must come round every 2 s or the chip resets
+  // (pause while a debugger halts the core). Everything below is bounded.
+  watchdog_enable(kWatchdogMs, true);
 
   // Proof of life that needs no USB, on the InstrumentPort: the boot
   // signature, then the identity beacon (three frames), both as GPIO on
@@ -511,6 +547,12 @@ void BSP::init() {
     Serial.println(F("Motion is SIMULATED in this build."));
 #endif
     Serial.println(F("QS trace: FW_TRIG1, transmit only."));
+    Serial.print(F("Boot: "));
+    Serial.print(l_bootByWatchdogTimeout ? F("WATCHDOG TIMEOUT")
+                 : l_bootByReboot        ? F("forced reboot")
+                                         : F("power-on or reset"));
+    Serial.print(F(", last breadcrumb "));
+    Serial.println(l_lastCrumb);
     Serial.println();
   }
 
@@ -568,6 +610,16 @@ bool BSP::linkWrite(const char *line) {
 //............................................................................
 void BSP::opMarker(bool on) { SafeState::setTrigger0(on); }
 //............................................................................
+void BSP::crumb(uint8_t n) {
+  watchdog_hw->scratch[0] = n;
+  for (uint8_t i = 0U; i < n; ++i) {
+    SafeState::setTrigger0(true);
+    busy_wait_us_32(25U);
+    SafeState::setTrigger0(false);
+    busy_wait_us_32(25U);
+  }
+}
+//............................................................................
 void BSP::tickHandled() {
   l_tickPending = false;
   ++l_tickHandled;
@@ -607,6 +659,7 @@ uint32_t l_dacBeginFailures = 0U;
 constexpr uint32_t kDacResetSettleUs = 2000U; // the driver's 1 ms, doubled
 
 void dacBusUp() {
+  BSP::crumb(11U); // DAC: claiming the bus
 #if MJ_DAC_I2C
   Wire.setSCL(pins::kDacSpiSck);
   Wire.setSDA(pins::kDacSpiCopi);
@@ -619,9 +672,11 @@ void dacBusUp() {
   SPI1.begin();
   l_dacTransport.begin();
 #endif
+  BSP::crumb(12U); // DAC: bus up
 }
 
 void dacBusDown() {
+  BSP::crumb(16U);    // DAC: releasing the bus
   l_dac.invalidate(); // its GAIN is about to reset with the domain
 #if MJ_DAC_I2C
   Wire.end();
@@ -629,6 +684,7 @@ void dacBusDown() {
   SPI1.end();
   pinMode(pins::kDacCsN, INPUT); // nothing drives an unpowered part
 #endif
+  BSP::crumb(17U); // DAC: bus released
 }
 
 void dacPhase(DacPhase phase) {
@@ -647,6 +703,7 @@ void dacStep(uint32_t now_us) {
   case DacPhase::kDown:
     dacBusUp();
     static_cast<void>(l_dac.softReset());
+    BSP::crumb(13U); // DAC: soft reset frame sent
     l_dacResetAt_us = now_us;
     dacPhase(DacPhase::kReset);
     break;
@@ -656,7 +713,9 @@ void dacStep(uint32_t now_us) {
       cfg.gain_register = dac80501::kGainRefDiv | dac80501::kGainBuffGain;
       cfg.soft_reset_first = false; // done, and settled, in the previous phase
       cfg.delay_ms = nullptr;
+      BSP::crumb(14U); // DAC: writing CONFIG, GAIN, SYNC
       if (l_dac.begin(cfg)) {
+        BSP::crumb(15U); // DAC: configured
         dacPhase(DacPhase::kUp);
         l_dacParked = false;
       } else {
@@ -725,6 +784,7 @@ void QF::onCleanup() {}
 //............................................................................
 void QV::onIdle() { // called with interrupts DISABLED, see NOTE in qv.hpp
   QF_INT_ENABLE();
+  watchdog_update(); // the only place the hardware watchdog is fed
   tickWatchdog();
   linkPoll();  // protocol lines in
   linkDrain(); // replies out
@@ -757,6 +817,7 @@ extern "C" Q_NORETURN Q_onError(char const *const module, int const id) {
   SafeState::setTrigger0(true);
   const uint32_t start = micros();
   while ((micros() - start) < 2000000U) {
+    watchdog_update(); // keep the signature its full two seconds
   }
   watchdog_reboot(0U, 0U, 10U);
   for (;;) {

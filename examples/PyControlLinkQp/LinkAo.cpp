@@ -264,6 +264,9 @@ void Link::afterService() {
 Q_STATE_DEF(Link, initial) {
   (void)e;
   dictionaries();
+#if !MJ_SIM_MOTION
+  l_motion.setCheckpointHook(&BSP::crumb); // rail-up breadcrumbs on FW_TRIG0
+#endif
   m_board.setSerial(BSP::boardSerial());
   m_board.setInstrumentationOn(
       BSP::instrumentationEnabled()); // enabled at boot
@@ -317,6 +320,11 @@ Q_STATE_DEF(Link, running) {
     m_board.feed(le->text);
     const uint32_t t2 = micros();
     afterService();
+#if !MJ_SIM_MOTION
+    if (strncmp(le->text, "hv;", 3U) == 0) {
+      BSP::crumb(9U); // the hv reply is in the port ring
+    }
+#endif
     const uint32_t t3 = micros();
     QS_BEGIN_ID(LINK_WORK, m_prio)
     QS_U16(0U, static_cast<uint16_t>(t1 - t0)); // clock advance (motion poll)

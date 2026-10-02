@@ -43,6 +43,15 @@ public:
   static void tickHandled();
   static void reportTickCost(uint32_t us);
 
+  // Bring-up breadcrumb (2026-10-02): checkpoint `n` as a train of n pulses
+  // of 25 us high / 25 us low on FW_TRIG0 (an operation marker pulse is
+  // 500 us or longer, so the two cannot be confused), and `n` into the
+  // watchdog scratch register, where it survives the watchdog's reset and is
+  // reported at the next boot (BOOT_INFO record, banner). Counts: 1-8 the
+  // rail-up sequence in TmcMotion::setHvEnabled, 9 the hv ack queued,
+  // 11-17 the rev 1 DAC bring-up and release, see Bsp.cpp.
+  static void crumb(uint8_t n);
+
   // The angle output (rev 1): map `angle_deg` from [lo, hi] onto the BNC's
   // 0.050-3.300 V while `valid`, park at the fault level otherwise. The DAC
   // sits on the switched domain, so it is configured after the rail is up
