@@ -16,6 +16,7 @@
 #include "AppConfig.hpp"
 #include "Bsp.hpp"
 #include "LinkAo.hpp"
+#include <BoardCalibration.hpp>
 
 #include <Arduino.h> // micros()
 #include <string.h>
@@ -275,6 +276,8 @@ Q_STATE_DEF(Link, initial) {
   l_motion.setCheckpointHook(&BSP::crumb); // rail-up breadcrumbs on FW_TRIG0
 #endif
   m_board.setSerial(BSP::boardSerial());
+  m_board.setPullSign(
+      mouse_joystick::calibration::pullSignForSerial(BSP::boardSerial()));
   m_board.setBootInfo(BSP::bootReason(), BSP::bootCrumb());
   m_board.setInstrumentationOn(
       BSP::instrumentationEnabled()); // enabled at boot

@@ -5,6 +5,7 @@
 
 #pragma once
 
+#include <BoardCalibration.hpp>
 #include <Conversions.hpp>
 #include <FirmwareVersion.hpp>
 #include <MotionSetup.hpp>
@@ -57,9 +58,10 @@ inline mouse_joystick::ProtocolBoard::Config boardConfig() {
   config.has_angout = (MJ_BOARD_REV != 0);
   config.has_brake = false;
   config.has_torque = false;
-  // Which encoder direction is "pull". +1 = increasing angle. A board-and-
-  // harness fact to be recorded per board in bringup-log.md; unmeasured.
-  config.pull_sign = 1.0;
+  // Which encoder direction is "pull": per board, from BoardCalibration.hpp,
+  // applied by the application once the serial is known (board 4 is -1,
+  // measured 2026-10-02). This default is the unmeasured one.
+  config.pull_sign = mouse_joystick::calibration::kPullSignUnmeasured;
 #if MJ_SIM_MOTION
   // The simulator's placeholder limits, so expected durations are the
   // corpus's: 9 deg at 180 deg/s is 50,000 us, homing is 50,000 us.

@@ -39,6 +39,7 @@
 
 #include <pico/unique_id.h>
 
+#include <BoardCalibration.hpp>
 #include <FirmwareVersion.hpp>
 #include <MotionSetup.hpp>
 #include <MouseJoystickBoard.hpp>
@@ -195,6 +196,7 @@ void setup() {
   static char serial[2 * PICO_UNIQUE_BOARD_ID_SIZE_BYTES + 1] = {0};
   pico_get_unique_board_id_string(serial, sizeof(serial));
   board.setSerial(serial);
+  board.setPullSign(mouse_joystick::calibration::pullSignForSerial(serial));
 
   link.begin();
 

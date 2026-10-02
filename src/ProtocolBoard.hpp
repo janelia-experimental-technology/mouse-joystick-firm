@@ -198,6 +198,10 @@ public:
     cfg_.boot_crumb = crumb;
   }
 
+  // The pull direction for this board (BoardCalibration.hpp), applied with
+  // the serial: +1 increasing angle, -1 decreasing.
+  void setPullSign(double sign) { cfg_.pull_sign = (sign < 0.0) ? -1.0 : 1.0; }
+
   void setSerial(const char *serial) {
     if (serial != nullptr && *serial != '\0') {
       cfg_.serial = serial;

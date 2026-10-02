@@ -20,7 +20,7 @@ delivery sketch; nothing here changes the protocol or the pyControl side.
 | `ProtocolBoard`, `TrialWatch`, `TmcMotion`, `SimulatedMotion` | `src/` | shared with `PyControlLink`; protocol v1 (`proto=2`) since 2026-10-01, the 48-case corpus holds in both halves |
 | `LinkAo.cpp` | the active object | 64-bit clock, lines in, lines out: what `PyControlLink.ino`'s `loop()` did, as run-to-completion steps with trace records |
 | `Bsp.cpp` | board support | `SafeState` first, boot signature and identity beacon, 1 kHz hardware-alarm tick (the sampler) with watchdog, non-blocking line transport, transmit-only QS on a PIO UART at `FW_TRIG1`, the rev 1 angle DAC |
-| `AppConfig.hpp` | configuration | the mechanism and protocol numbers of `PyControlLink.ino`; `has_angout` follows `MJ_BOARD_REV`, `pull_sign` is +1 until measured per board |
+| `AppConfig.hpp` | configuration | the mechanism and protocol numbers of `PyControlLink.ino`; `has_angout` follows `MJ_BOARD_REV`; `pull_sign` comes from `src/BoardCalibration.hpp` by serial once the board is known (board 4 is −1, measured 2026-10-02; others +1, unmeasured) |
 | `PyControlLinkQp.ino` | `setup()`/`loop()` only | event pool (8 lines), queue (16 events), start |
 
 The qp-arduino library comes from the sibling checkout `../qp-arduino`
@@ -89,6 +89,14 @@ things changed:
   that never falls is a stuck poll. The operation marker is then a trace
   record only; breadcrumb trains still pulse the pin.
 - The static accounting behind this is in the evidence README of the run.
+- 2026-10-02 12:45, board 4, `mouse_joystick_qp_rev0_usb`
+  (`qp-arduino-example/evidence/2026-10-02-1245-board4-rail-up/`): `hv on`
+  acked in 272 ms, the full v1 trial on real motion, 300 of 300 moves, the
+  watchdog never fired. The tick cost with the rail up is about 640 µs flat
+  while holding and 444 µs p50 moving, which the datagram count does not
+  explain, so the sampler ran decimated at 500 Hz for the whole rail-up
+  period; the next capture includes the SPI lines. Findings and the
+  poll-cost proposal are in that README.
 
 ## Watchdog and breadcrumbs
 
