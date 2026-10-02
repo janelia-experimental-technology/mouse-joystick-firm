@@ -47,6 +47,7 @@ private:
   bool m_pollDecimated = false;
   bool m_tickParity = false;
   uint8_t m_overBudgetStreak = 0U;
+  uint32_t m_enableCount = 0U;
   const char *m_lastState;
   bool m_moving;   // an operation is in progress
   bool m_home;     // ... and it is a homing
@@ -84,6 +85,7 @@ void Link::dictionaries() {
   QS_OBJ_DICTIONARY(&Link::instance);
   QS_SIG_DICTIONARY(LINE_SIG, &Link::instance);
   QS_SIG_DICTIONARY(TICK_SIG, &Link::instance);
+  QS_USR_DICTIONARY(ENABLE_SETTLE);
   QS_FUN_DICTIONARY(&Link::running);
   QS_USR_DICTIONARY(LINK_RX);
   QS_USR_DICTIONARY(LINK_TX);
@@ -251,6 +253,16 @@ void Link::afterService() {
     QS_END()
   }
 
+#if !MJ_SIM_MOTION
+  if (l_motion.enableCount() != m_enableCount) { // a driver enable settled
+    m_enableCount = l_motion.enableCount();
+    QS_BEGIN_ID(ENABLE_SETTLE, m_prio)
+    QS_U32(0U, l_motion.enableSettleUs());
+    QS_I32(0U, l_motion.enableSnapMicrosteps());
+    QS_U16(0U, static_cast<uint16_t>(m_enableCount));
+    QS_END()
+  }
+#endif
   const bool moving = l_motion.isMoving();
   if (moving && !m_moving) {
     m_home = m_lastHome; // a move that starts right after "home" is a homing

@@ -398,6 +398,27 @@ constexpr uint32_t nonZeroRampParameter(uint32_t converted, uint32_t fallback) {
 
 constexpr float kFollowFractionMin = 0.25f;
 
+// The follow rule's two guards, from board 4 on 2026-10-02 (qp-arduino-example/
+// evidence/2026-10-02-1346-board4-rail-up/): at the first energisation of the
+// coils the rotor snapped to the driver's electrical angle, 141 microsteps
+// (1.0 deg) the wrong way in 17 ms, then followed the ramp at 0.8; the first
+// 200-microstep window read that as a stop. So: after each driver enable the
+// first degree of commanded travel is not judged and the window is re-seeded
+// at its end, and a fault needs two consecutive windows below the fraction.
+// The TARGET offsets of the 12:45 run, 0.06 to 0.6 deg, are the same snap and
+// stay under the grace.
+constexpr int32_t kFollowGraceMicrosteps = 142; // 1.0 deg
+constexpr uint8_t kFollowFailuresToFault = 2;
+
+// After each driver enable the rotor is given time to settle before XACTUAL
+// and XTARGET are resynced to the encoder: X_ENC within one encoder count
+// (12.8 microsteps) for 20 ms, polled every 2 ms, bounded at 150 ms (the
+// snap on board 4 took about 45 ms to turn into forward motion).
+constexpr int32_t kEnableSettleToleranceMicrosteps = 13;
+constexpr uint32_t kEnableSettleStableUs = 20000;
+constexpr uint32_t kEnableSettlePollUs = 2000;
+constexpr uint32_t kEnableSettleMaxUs = 150000;
+
 // The follow check is only evaluated once the ramp generator has commanded this
 // much travel, so acceleration from standstill and the encoder's 12.8 microstep
 // quantum cannot trip it. 200 microsteps is about 16 encoder counts.

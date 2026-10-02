@@ -28,7 +28,9 @@ enum LinkRecords {
   OP_START = QP::QS_USER + 3, // operation started (home?, angle); FW_TRIG0 high
   OP_DONE = QP::QS_USER + 4, // operation completed (home?, angle); FW_TRIG0 low
   LINK_WORK =
-      QP::QS_USER + 5 // per line: clock-advance, feed, output cost in us
+      QP::QS_USER + 5, // per line: clock-advance, feed, output cost in us
+  ENABLE_SETTLE = QP::QS_USER + 6 // after a driver enable: settle us, snap
+                                  // microsteps, enable count (TmcMotion)
 };
 
 extern QP::QActive *const AO_Link;

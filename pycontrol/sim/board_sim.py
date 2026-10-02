@@ -228,6 +228,7 @@ class BoardSim:
     def advance(self, delta_us):
         """Advance simulated time, running anything that is time-driven."""
         target = self.now_us + int(delta_us)
+        serviced_at_target = False  # one service per advance (2026-10-02), as the firmware
         while self.now_us < target:
             # Step to the next scheduled thing, so an event never lands at the
             # wrong timestamp just because the caller advanced in one big jump.
@@ -248,9 +249,11 @@ class BoardSim:
             self._service()
 
             if next_stop == target:
+                serviced_at_target = True
                 break
         self.now_us = target
-        self._service()
+        if not serviced_at_target:
+            self._service()
         return self._drain()
 
     def _service(self):

@@ -300,8 +300,9 @@ public:
   double xactualDeg() const override { return xactual_deg_; }
 
   void resyncFromEncoder() override {
-    // Only ever called on leaving a compliant state; the protocol layer owns
-    // that rule. Writing both registers, because a target left where the ramp
+    // Called on leaving a compliant state (the protocol layer owns that rule)
+    // and, since 2026-10-02, after every driver enable once the rotor has
+    // settled. Writing both registers, because a target left where the ramp
     // generator used to think it was would start the next move with a jump.
     if (!bus_up_) {
       return;
@@ -390,8 +391,18 @@ public:
     const CurrentCheck check = MotionSetup::applyHighSensitivity(
         stepper_, motion_.run_current_scale, motion_.hold_current_scale);
     driver_enabled_ = MotionSetup::enableDriver(stepper_, check);
+    if (driver_enabled_) {
+      settleAfterEnable();
+    }
     return driver_enabled_;
   }
+
+  // What the last enable did to the rotor: how long X_ENC took to stand
+  // still, how far it moved meanwhile, and how many enables there have been
+  // (the application records them). Bring-up figures for the IRUN decision.
+  uint32_t enableSettleUs() const { return enable_settle_us_; }
+  int32_t enableSnapMicrosteps() const { return enable_snap_microsteps_; }
+  uint32_t enableCount() const { return enable_count_; }
 
   void releaseDriver() override {
     // Stop first, then release, so the joystick is not handed to the animal
@@ -436,8 +447,24 @@ private:
   // cannot trip it, then compare measured against commanded.
   bool following(const MotionSnapshot &s) {
     const int32_t commanded = s.position - window_position_;
-    if (commanded < conversions::kFollowWindowMicrosteps &&
-        commanded > -conversions::kFollowWindowMicrosteps) {
+    const int32_t magnitude = (commanded < 0) ? -commanded : commanded;
+    // Grace after a driver enable (2026-10-02, board 4): the rotor's snap to
+    // the electrical angle at energisation is not a stall. The first degree
+    // of commanded travel after the enable is not judged, and the window is
+    // re-seeded where it ends so the snap never enters a measurement. Armed
+    // per enable, not per move: a walk in small steps toward a stop must stay
+    // checked after the first degree (hardware, 2026-09-03).
+    if (follow_grace_) {
+      if (magnitude < conversions::kFollowGraceMicrosteps) {
+        return true;
+      }
+      follow_grace_ = false;
+      window_position_ = s.position;
+      window_encoder_ = s.encoder;
+      follow_failures_ = 0;
+      return true;
+    }
+    if (magnitude < conversions::kFollowWindowMicrosteps) {
       return true;  // not enough commanded travel to judge yet
     }
     const int32_t measured = s.encoder - window_encoder_;
@@ -451,7 +478,48 @@ private:
     follow_ratio_ = ratio;
     window_position_ = s.position;
     window_encoder_ = s.encoder;
-    return ratio >= conversions::kFollowFractionMin;
+    if (ratio >= conversions::kFollowFractionMin) {
+      follow_failures_ = 0;
+      return true;
+    }
+    // One window below the fraction is a warning; the fault needs the next
+    // one too (2026-10-02). A real stop fails both.
+    ++follow_failures_;
+    return follow_failures_ < conversions::kFollowFailuresToFault;
+  }
+
+  // After the coils come on the rotor may snap to the driver's electrical
+  // angle (board 4, 2026-10-02: 1.0 deg in 17 ms, settled within ~45 ms).
+  // Wait, bounded, for X_ENC to stand still, then put XACTUAL and XTARGET
+  // where the rotor actually is and arm the follow grace, so that no home or
+  // move starts from a position the ramp generator only believes.
+  void settleAfterEnable() {
+    const int32_t before = stepper_.encoder.readActualPosition();
+    int32_t last = before;
+    uint32_t stable_us = 0;
+    uint32_t waited_us = 0;
+    while (waited_us < conversions::kEnableSettleMaxUs) {
+      delay(conversions::kEnableSettlePollUs / 1000u);
+      waited_us += conversions::kEnableSettlePollUs;
+      const int32_t enc = stepper_.encoder.readActualPosition();
+      const int32_t d = enc - last;
+      if (d <= conversions::kEnableSettleToleranceMicrosteps &&
+          d >= -conversions::kEnableSettleToleranceMicrosteps) {
+        stable_us += conversions::kEnableSettlePollUs;
+        if (stable_us >= conversions::kEnableSettleStableUs) {
+          break;
+        }
+      } else {
+        stable_us = 0;
+        last = enc;
+      }
+    }
+    enable_snap_microsteps_ = stepper_.encoder.readActualPosition() - before;
+    enable_settle_us_ = waited_us;
+    ++enable_count_;
+    resyncFromEncoder();
+    follow_grace_ = true;
+    follow_failures_ = 0;
   }
 
   // Seed the follow-check window.
@@ -696,6 +764,11 @@ private:
   int32_t window_position_ = 0;
   int32_t window_encoder_ = 0;
   float follow_ratio_ = 0.0f;
+  bool follow_grace_ = false;     // first degree after an enable not judged
+  uint8_t follow_failures_ = 0;   // consecutive windows below the fraction
+  uint32_t enable_settle_us_ = 0; // the last enable's settle wait
+  int32_t enable_snap_microsteps_ = 0; // X_ENC change during that wait
+  uint32_t enable_count_ = 0;
   int32_t approach_start_position_ = 0;
 
   bool completion_pending_ = false;

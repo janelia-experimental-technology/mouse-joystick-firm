@@ -154,6 +154,7 @@ public:
   // never lands at the wrong timestamp because the caller advanced coarsely.
   void advance(uint64_t delta_us) {
     uint64_t target = now_us_ + delta_us;
+    bool serviced_at_target = false; // one service per advance (2026-10-02)
     while (now_us_ < target) {
       uint64_t next_stop = target;
       // A backend that can predict its completion gets stepped to exactly that
@@ -179,11 +180,14 @@ public:
       now_us_ = next_stop;
       service();
       if (next_stop == target) {
+        serviced_at_target = true;
         break;
       }
     }
     now_us_ = target;
-    service();
+    if (!serviced_at_target) {
+      service(); // a zero advance, or no stop at the target: service once
+    }
   }
 
   // Firmware sets this once, in setup(), from the flash unique id. Not done in
