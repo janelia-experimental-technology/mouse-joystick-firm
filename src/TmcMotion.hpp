@@ -131,10 +131,20 @@ public:
       return;
     }
 
-    // ONE read per poll. See the header note about read-and-clear flags -- and
-    // note this happens in every phase, including idle and FREEWHEEL, because
-    // the encoder moves when the animal moves the joystick and nothing else
-    // would notice.
+    // Every poll reads the encoder (X_ENC, one register, two datagrams),
+    // because the encoder moves when the animal moves the joystick and
+    // nothing else would notice. Every kFullSnapshotEvery-th poll reads the
+    // full snapshot (RAMP_STAT, DRV_STATUS, XACTUAL, VACTUAL and X_ENC) and
+    // decides completion, the limit switch and driver faults, so those are
+    // seen within ten polls. (2026-10-02: the full snapshot on every 1 kHz
+    // tick, at the library's 1 MHz, was most of the tick.) See the header
+    // note about read-and-clear flags: RAMP_STAT is read once per snapshot.
+    ++poll_count_;
+    if ((poll_count_ % kFullSnapshotEvery) != 0u) {
+      angle_deg_ = conversions::microstepsToDegrees(
+          stepper_.encoder.readActualPosition());
+      return;
+    }
     const MotionSnapshot s = MotionSetup::snapshot(stepper_);
     angle_deg_ = conversions::microstepsToDegrees(s.encoder);
     xactual_deg_ = conversions::microstepsToDegrees(s.position);
@@ -702,6 +712,11 @@ private:
 
   bool fault_pending_ = false;
   uint8_t fault_bit_ = 0;
+  // Poll divider: the full snapshot every tenth poll, the encoder alone in
+  // between (2026-10-02). At the 1 kHz tick: completion and faults within
+  // 10 ms, the encoder every 1 ms.
+  static constexpr uint32_t kFullSnapshotEvery = 10u;
+  uint32_t poll_count_ = 0u;
   const char *fault_detail_ = "";
 };
 

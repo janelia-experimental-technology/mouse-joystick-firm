@@ -35,8 +35,10 @@ void MotionSetup::beginSpi(TMC51X0 &stepper) {
   SPI.setRX(pins::kTmcSpiCipo);
   SPI.begin();
 
-  const auto spi_parameters =
-      tmc51x0::SpiParameters{}.withSpi(&SPI).withChipSelectPin(pins::kTmcCsN);
+  const auto spi_parameters = tmc51x0::SpiParameters{}
+                                  .withSpi(&SPI)
+                                  .withClockRate(conv::kTmcSpiClockHz)
+                                  .withChipSelectPin(pins::kTmcCsN);
 
   // Declaring the model seeds the register mirror with TMC5130A reset defaults
   // rather than inferring them from the first identity read.

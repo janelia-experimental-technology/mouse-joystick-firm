@@ -42,6 +42,17 @@ public:
   // one may be posted, and reports what the tick cost (SAMPLE_STAT).
   static void tickHandled();
   static void reportTickCost(uint32_t us);
+  // Overrun bookkeeping (2026-10-02): a tick whose work was skipped because
+  // the previous handler ended less than 200 us earlier (close=true) or
+  // because polling is decimated to every other tick; and the decimation
+  // state itself. All three go out in SAMPLE_STAT.
+  static void reportTickSkipped(bool decimated);
+  static void reportPollMode(bool decimated);
+  // MJ_TICK_LEVEL builds: FW_TRIG0 high for the whole TICK handler, so the
+  // analyzer shows the handler's duration directly (back-to-back levels are
+  // an overrun, a level that never falls a stuck poll). The operation marker
+  // is then a trace record only. No-op in other builds.
+  static void tickLevel(bool on);
 
   // Bring-up breadcrumb (2026-10-02): checkpoint `n` as a train of n pulses
   // of 25 us high / 25 us low on FW_TRIG0 (an operation marker pulse is

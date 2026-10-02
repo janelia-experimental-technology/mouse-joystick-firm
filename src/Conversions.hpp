@@ -134,6 +134,16 @@ constexpr bool hvSenseIsFault(uint16_t counts,
 // silent 33% error on every velocity if it is left unset.
 constexpr uint8_t kTmcClockMhz = 16;
 
+// The SPI clock the MCU drives the TMC5130A at. The TMC51X0 library defaults
+// to 1 MHz, chosen on this board for a logic analyser at 1 MSa/s. At 1 MHz a
+// register read (two 40-bit datagrams) is 80 us of bus time and the full
+// five-register snapshot 400 us, most of a 1 kHz tick (2026-10-02, board 4).
+// 4 MHz is the SCK ceiling the TMC5130A datasheet gives for its SPI slave
+// (to be confirmed against the datasheet PDF before the first run at this
+// rate; the bus switch and the short traces are not the limit); the analyser
+// then needs 10 MSa/s or more to resolve the clock.
+constexpr uint32_t kTmcSpiClockHz = 4000000;
+
 // -----------------------------------------------------------------------------
 // The motor. Lin Engineering WO-208-13-01D, identified 2026-09-02.
 // -----------------------------------------------------------------------------

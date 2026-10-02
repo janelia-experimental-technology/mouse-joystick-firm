@@ -38,7 +38,14 @@ mouse_joystick::TmcMotion l_motion(l_stepper, app::motionConfig(),
 
 class Link : public QActive {
 private:
+  static constexpr uint32_t kIdleGapUs = 200U; // idle must have had this much
+  static constexpr uint32_t kTickBudgetUs = 400U; // the declared sampler budget
   mouse_joystick::ProtocolBoard m_board;
+  uint32_t m_lastTickEnd_us = 0U;
+  bool m_tickEndValid = false;
+  bool m_pollDecimated = false;
+  bool m_tickParity = false;
+  uint8_t m_overBudgetStreak = 0U;
   const char *m_lastState;
   bool m_moving;   // an operation is in progress
   bool m_home;     // ... and it is a homing
@@ -289,13 +296,53 @@ Q_STATE_DEF(Link, running) {
     // reported per second as SAMPLE_STAT; the budget is 400 us.
     BSP::tickHandled();
     const uint32_t t0 = micros();
+    // Overrun guard (2026-10-02, after board 4 never idled once the rail was
+    // up): if the previous handler ended less than kIdleGapUs ago the AO is
+    // running back to back and the idle loop has had no turn, so this tick's
+    // work is skipped (counted) and idle gets one. If the cost exceeds the
+    // budget three ticks running, poll every other tick (counted, flagged)
+    // until the rail goes down.
+    if (m_tickEndValid && (t0 - m_lastTickEnd_us) < kIdleGapUs) {
+      BSP::reportTickSkipped(false);
+      status_ = Q_RET_HANDLED;
+      break;
+    }
+    if (m_pollDecimated) {
+      m_tickParity = !m_tickParity;
+      if (m_tickParity) {
+        BSP::reportTickSkipped(true);
+        status_ = Q_RET_HANDLED;
+        break;
+      }
+    }
+    BSP::tickLevel(true);
     m_board.advanceTo(BSP::nowUs64());
     afterService();
     BSP::angleOutput(
         m_board.angleOutputValid(), static_cast<float>(l_motion.angleDeg()),
         static_cast<float>(m_board.angleScaleLo()),
         static_cast<float>(m_board.angleScaleHi()), m_board.hvOn());
-    BSP::reportTickCost(micros() - t0);
+    BSP::tickLevel(false);
+    const uint32_t cost = micros() - t0;
+    BSP::reportTickCost(cost);
+    if (cost > kTickBudgetUs) {
+      if (m_overBudgetStreak < 255U) {
+        ++m_overBudgetStreak;
+      }
+      if (m_overBudgetStreak >= 3U && !m_pollDecimated) {
+        m_pollDecimated = true;
+        BSP::reportPollMode(true);
+      }
+    } else {
+      m_overBudgetStreak = 0U;
+    }
+    if (m_pollDecimated && !m_board.hvOn()) { // the rail went down: start over
+      m_pollDecimated = false;
+      m_overBudgetStreak = 0U;
+      BSP::reportPollMode(false);
+    }
+    m_lastTickEnd_us = micros();
+    m_tickEndValid = true;
     status_ = Q_RET_HANDLED;
     break;
   }

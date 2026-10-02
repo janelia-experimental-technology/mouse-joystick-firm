@@ -54,7 +54,7 @@ one-line changes.
 | `LINK_WORK` | advance µs, feed µs, output µs | where a dispatched line's time went |
 | `DAC_STATE` | phase (0 down, 1 reset, 2 up), begin failures | the rev 1 angle DAC's bring-up after `hv=1` and its release when the rail drops |
 | `BOOT_INFO` | watchdog timeout?, forced reboot?, last breadcrumb | once after boot: why the chip booted and where the previous run was when the hardware watchdog bit |
-| `SAMPLE_STAT` | ticks, handled, coalesced, dropped, max µs, last µs | the 1 kHz sampler: ticks the alarm posted, ticks the AO ran, samples lost to a tick still in flight or to a full queue, and the cost of the tick handler (poll, classifier, capture, DAC write), every second |
+| `SAMPLE_STAT` | ticks, handled, coalesced, dropped, max µs, last µs, skipped (idle gap), skipped (decimated), decimated flag | the 1 kHz sampler: ticks the alarm posted, ticks the AO ran, samples lost to a tick still in flight or to a full queue, and the cost of the tick handler (poll, classifier, capture, DAC write), every second |
 | `TRACE_STAT` | high-water, buffer-full count, size, ticks | QS buffer use, every second |
 | `LINK_STAT` | lines, drops (pool, queue, ring), overlong, queue min free, pool min free, ring high-water | transport and budget use, every second |
 | `TICK_LOST` | ticks, re-arms, catch-ups | the tick watchdog fired (never expected) |
@@ -62,6 +62,33 @@ one-line changes.
 Plus QP's own state transitions, entry/exit and assertions. The per-event
 dispatch/post/get records are filtered out by default (`LINK_QS_FULL=1` keeps
 them, and saturates the line at a 1 kHz tick).
+
+## The sampler under the rail (2026-10-02)
+
+Board 4's second attempt reached breadcrumb 9, `hv on` complete in 272 ms,
+and then never idled again: with the bus up every 1 kHz tick polled the
+TMC5130A, and the handler ran back to back until the watchdog bit. Four
+things changed:
+
+- **Poll cost.** `TmcMotion::poll` reads the encoder alone (X_ENC, two 40-bit
+  datagrams) on every tick and the full snapshot (RAMP_STAT, DRV_STATUS,
+  XACTUAL, VACTUAL, X_ENC: ten datagrams) every tenth tick, where completion,
+  the limit switch and driver faults are decided, so within 10 ms. The SPI
+  clock is `kTmcSpiClockHz`, 4 MHz, in `Conversions.hpp` (the library's
+  1 MHz default was chosen for a 1 MSa/s analyser; the analyser now needs
+  10 MSa/s to see the clock).
+- **Overrun guard.** If the previous TICK handler ended less than 200 µs
+  before this one starts, the AO is running back to back and the idle loop
+  has had no turn: the tick's work is skipped and counted, so idle always
+  gets one. If the handler exceeds the 400 µs budget three ticks running,
+  polling drops to every other tick until the rail goes down; counted and
+  flagged in `SAMPLE_STAT`.
+- **Tick level.** In `MJ_TICK_LEVEL` builds (the three `_usb` bench builds)
+  `FW_TRIG0` is high for the whole TICK handler: the analyser shows the
+  handler's duration directly, back-to-back levels are an overrun, a level
+  that never falls is a stuck poll. The operation marker is then a trace
+  record only; breadcrumb trains still pulse the pin.
+- The static accounting behind this is in the evidence README of the run.
 
 ## Watchdog and breadcrumbs
 

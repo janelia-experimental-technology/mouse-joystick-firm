@@ -28,6 +28,9 @@
 //   MJ_DAC_I2C (default 0)
 //       Rev 1 only: the angle DAC on I2C instead of SPI1 (v1.0 straps I2C;
 //       untestable on v0.3, whose SPI2C pin is tied to ground).
+//   MJ_TICK_LEVEL (default 0)
+//       FW_TRIG0 is high for the whole TICK handler (the sampler) and the
+//       operation marker becomes a trace record only. For the bench builds.
 //   LINK_QS_FULL (default 0)
 //       1 keeps every QP record; 0, the observation set, drops the per-event
 //       dispatch/internal-transition/post/get records so a 100 Hz tick does not
@@ -75,6 +78,9 @@ Q_DEFINE_THIS_FILE
 #endif
 #ifndef MJ_TICK_PROBE
 #define MJ_TICK_PROBE 0
+#endif
+#ifndef MJ_TICK_LEVEL
+#define MJ_TICK_LEVEL 0
 #endif
 #if MJ_TICK_PROBE && !MJ_LINK_USB
 #error "MJ_TICK_PROBE needs MJ_LINK_USB=1: the probe pad is UART0 TX"
@@ -157,6 +163,10 @@ uint32_t volatile l_tickDropped = 0U;   // the AO queue refused the tick
 uint32_t l_tickCostMax_us = 0U; // from the AO, since the last SAMPLE_STAT
 uint32_t l_tickCostLast_us = 0U;
 uint32_t l_tickHandled = 0U;
+uint32_t l_tickSkippedClose =
+    0U; // work skipped: previous handler ended < 200 us ago
+uint32_t l_tickSkippedDecim = 0U; // work skipped: polling every other tick
+uint8_t l_pollDecimated = 0U;     // 1 while decimated
 
 // RP2040 hardware watchdog (2026-10-02, after board 4 hung inside a handler
 // with interrupts alive): 2 s, fed from the idle loop only, so a stuck
@@ -472,6 +482,9 @@ void qsPeriodic() {
     QS_U32(0U, l_tickDropped);    // samples lost to a full queue
     QS_U32(0U, l_tickCostMax_us); // worst tick handler since the last record
     QS_U32(0U, l_tickCostLast_us);
+    QS_U32(0U, l_tickSkippedClose); // 2026-10-02: overrun guard counts
+    QS_U32(0U, l_tickSkippedDecim);
+    QS_U8(0U, l_pollDecimated);
     QS_END()
     l_tickCostMax_us = 0U;
     QS_BEGIN_ID(LINK_STAT, 0U)
@@ -620,7 +633,33 @@ bool BSP::linkWrite(const char *line) {
   return true;
 }
 //............................................................................
-void BSP::opMarker(bool on) { SafeState::setTrigger0(on); }
+void BSP::opMarker(bool on) {
+#if MJ_TICK_LEVEL
+  (void)on; // FW_TRIG0 carries the tick level in this build
+#else
+  SafeState::setTrigger0(on);
+#endif
+}
+//............................................................................
+void BSP::tickLevel(bool on) {
+#if MJ_TICK_LEVEL
+  SafeState::setTrigger0(on);
+#else
+  (void)on;
+#endif
+}
+//............................................................................
+void BSP::reportTickSkipped(bool decimated) {
+  if (decimated) {
+    ++l_tickSkippedDecim;
+  } else {
+    ++l_tickSkippedClose;
+  }
+}
+//............................................................................
+void BSP::reportPollMode(bool decimated) {
+  l_pollDecimated = decimated ? 1U : 0U;
+}
 //............................................................................
 const char *BSP::bootReason() { return l_bootReason; }
 uint32_t BSP::bootCrumb() { return l_lastCrumb; }
