@@ -56,6 +56,15 @@ historical firmware wiring matches current PCB development.
 
 ## Status
 
+**2026-10-02:** protocol v1 (`proto=2`) implemented on both ends and run end to
+end on board 4 with the rail up in the QP bench build; watchdog, breadcrumbs,
+overrun guard, 4 MHz SPI, follow rule with grace and resync after enable are
+in. The rev 1 angle-output session (phases b–e) is the next bench step. Current
+local context, bench state and open items: `.agents/handoff.local.md` (top
+block). Cross-repository plan of record:
+`../orb-weaver-context/context/mouse-joystick-rig-system-plan.md`.
+
+
 **Stage 1 passed on hardware, 2026-09-01.** Board serial `E4654C159F2C2534`.
 27 checks, 0 failed. Recorded in `../mouse-joystick-pcb/docs/bringup-log.md`.
 
