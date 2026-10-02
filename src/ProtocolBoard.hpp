@@ -1271,6 +1271,7 @@ private:
                          : 0u);
     out->kvInt("dt_us", static_cast<long>(TrialWatch::kSampleUs));
     out->kvInt("pre", static_cast<long>(watch_.windowPre()));
+    out->kvInt("lost", static_cast<long>(watch_.windowLost()));
     push(*out);
     out->clear();
     protocol::Line line;

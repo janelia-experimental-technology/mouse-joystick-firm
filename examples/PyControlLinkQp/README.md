@@ -52,6 +52,7 @@ one-line changes.
 | `LINK_STATE` | name | `ProtocolBoard`'s state changed |
 | `OP_START` / `OP_DONE` | homing flag, angle | an operation started / completed; `FW_TRIG0` follows |
 | `LINK_WORK` | advance µs, feed µs, output µs | where a dispatched line's time went |
+| `DAC_STATE` | phase (0 down, 1 reset, 2 up), begin failures | the rev 1 angle DAC's bring-up after `hv=1` and its release when the rail drops |
 | `SAMPLE_STAT` | ticks, handled, coalesced, dropped, max µs, last µs | the 1 kHz sampler: ticks the alarm posted, ticks the AO ran, samples lost to a tick still in flight or to a full queue, and the cost of the tick handler (poll, classifier, capture, DAC write), every second |
 | `TRACE_STAT` | high-water, buffer-full count, size, ticks | QS buffer use, every second |
 | `LINK_STAT` | lines, drops (pool, queue, ring), overlong, queue min free, pool min free, ring high-water | transport and budget use, every second |
@@ -68,6 +69,7 @@ them, and saturates the line at a 1 kHz tick).
 | `mouse_joystick_qp` | rev 0 (pcb v0.1/v0.2): `TmcMotion`, UART0, trace on `FW_TRIG1` |
 | `mouse_joystick_qp_rev1` | rev 1 (pcb v0.3 and later): angle DAC on SPI1 |
 | `mouse_joystick_qp_rev1_i2c` | rev 1 with the DAC on I2C, v1.0's strap (compiles; no board to test it on yet) |
+| `mouse_joystick_qp_rev1_usb` | board 4's rail-up bench build (prepared 2026-10-02, compiled, not flashed): `TmcMotion`, rev 1, DAC on SPI1, protocol over USB CDC, trace on `FW_TRIG1`, tick probe on the UART0 TX pad with the RJ-45 unplugged; driven by `qp-arduino-example/evidence/bench-scripts/board4_session.sh` |
 | `mouse_joystick_qp_sim_usb` | a board with no 36 V and no host: `SimulatedMotion`, protocol over USB CDC, tick probe on the unused UART0 TX pad (InstrumentPort `DIG8`). Accepts the bench stimulus `sim;<seq>;angle;<deg>` (sets the simulated encoder, as the corpus's `ANGLE` step does, so a `WATCH` outcome can be driven by hand; `ack;<seq>`), which exists in no other build and is not a protocol verb |
 
 ```sh
@@ -142,4 +144,10 @@ does (sigrok `uart` decoder on channel 17, bytes to `qspy -k -f`).
   The floor of about 450 µs per line, with no number in it, is not
   attributed yet; splitting `LINK_WORK` inside `feed()` is the next
   measurement, and whether long replies alternate with the tick is a
-  decision, not a default.
+  decision, not a default. Accepted as is on 2026-10-02: the floor fits the
+  rig's message rate.
+- 2026-10-02, before the rail-up session: `FETCH`'s ack carries `lost=N`,
+  the window samples that were grid fills after a coalesced tick (spec,
+  corpus, simulator, firmware, device class; a fill-path unit test on each
+  side); the `DAC_STATE` record; the `mouse_joystick_qp_rev1_usb` build; the
+  board 4 session script and procedure. Nothing flashed.

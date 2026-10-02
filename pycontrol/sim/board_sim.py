@@ -898,6 +898,7 @@ class BoardSim:
                     "t0": self._watch.window_sample_time_us(k0) if self._watch.has_window() else 0,
                     "dt_us": self.SAMPLE_US,
                     "pre": self._watch.window_pre(),
+                    "lost": self._watch.window_lost(),
                 },
             )
         )
@@ -1097,7 +1098,9 @@ class _TrialWatch:
         self.win_start = 0
         self.win_count = 0
         self.win_pre = 0
+        self.win_lost = 0
         self.cap = [0.0] * BoardSim.CAPTURE_MAX
+        self.fill = [False] * BoardSim.CAPTURE_MAX  # a grid fill, per slot
 
     def excursion(self, angle):
         return (angle - self.a0) * self.pull_sign
@@ -1164,7 +1167,11 @@ class _TrialWatch:
         if now_us >= self.next_sample + BoardSim.CAPTURE_MAX * BoardSim.SAMPLE_US:
             self.next_sample = now_us
         while self.ring_running and now_us >= self.next_sample:
-            self.cap[self.written % BoardSim.CAPTURE_MAX] = float(angle)
+            slot = self.written % BoardSim.CAPTURE_MAX
+            self.cap[slot] = float(angle)
+            # A grid point more than one period behind `now` was missed (the
+            # firmware's coalesced tick) and is filled; FETCH reports `lost`.
+            self.fill[slot] = (now_us - self.next_sample) >= BoardSim.SAMPLE_US
             self.written += 1
             self.next_sample += BoardSim.SAMPLE_US
             if self.trig_set and self.written >= self.trig_index + 1 + self.post_ms:
@@ -1293,6 +1300,9 @@ class _TrialWatch:
             self.win_start = self.written - self.win_pre
             self.win_count = self.win_pre
         self.win_valid = self.cap_watched
+        self.win_lost = sum(
+            1 for k in range(self.win_count) if self.fill[(self.win_start + k) % BoardSim.CAPTURE_MAX]
+        )
 
     def capture_busy(self):
         """FETCH is refused while the capture is live: a WATCH armed, or the
@@ -1307,6 +1317,9 @@ class _TrialWatch:
 
     def window_pre(self):
         return self.win_pre if self.win_valid else 0
+
+    def window_lost(self):
+        return self.win_lost if self.win_valid else 0
 
     def window_sample_time_us(self, k):
         return self.ring_t0 + (self.win_start + k) * BoardSim.SAMPLE_US

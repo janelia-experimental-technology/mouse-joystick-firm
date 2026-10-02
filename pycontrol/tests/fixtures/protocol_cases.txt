@@ -651,7 +651,10 @@ END
 # later: the last pre_ms samples before the outcome sample, the outcome sample
 # (k = pre) and the post_ms after it. FETCH is busy until then and returns the
 # window in chunks of at most 32 lines. pre reports what the ring holds: here
-# RELEASED is 5 ms old at the outcome and pre_ms is 3, so pre is 3.
+# RELEASED is 5 ms old at the outcome and pre_ms is 3, so pre is 3. lost is
+# the number of window samples that were grid fills after a missed 1 kHz
+# tick; the simulator never misses one, so it is 0 in every case here (the
+# fill path is unit-tested on both sides).
 CASE fetch-returns-the-capture-in-chunks
   SEND cfg;1;wdt_ms=500;pre_ms=3;post_ms=2
   EXPECT ack;1
@@ -676,7 +679,7 @@ CASE fetch-returns-the-capture-in-chunks
   EXPECT nak;8;busy
   ADVANCE 2000
   SEND fetch;9
-  EXPECT ack;9;n=6;k0=0;t0=52000;dt_us=1000;pre=3
+  EXPECT ack;9;n=6;k0=0;t0=52000;dt_us=1000;pre=3;lost=0
   EXPECT cap;0;0.0;
   EXPECT cap;1;0.0;
   EXPECT cap;2;0.0;
@@ -685,12 +688,12 @@ CASE fetch-returns-the-capture-in-chunks
   EXPECT cap;5;0.0;
   EXPECT cap;end
   SEND fetch;10;4;2
-  EXPECT ack;10;n=2;k0=4;t0=56000;dt_us=1000;pre=3
+  EXPECT ack;10;n=2;k0=4;t0=56000;dt_us=1000;pre=3;lost=0
   EXPECT cap;4;0.0;
   EXPECT cap;5;0.0;
   EXPECT cap;end
   SEND fetch;11;6;2
-  EXPECT ack;11;n=0;k0=6;t0=58000;dt_us=1000;pre=3
+  EXPECT ack;11;n=0;k0=6;t0=58000;dt_us=1000;pre=3;lost=0
   EXPECT cap;end
 END
 
@@ -736,7 +739,7 @@ CASE fetch-window-follows-a-late-outcome-past-the-ring
   EXPECT ev;PULL;2451000;angle=6.0;torque=
   ADVANCE 2000
   SEND fetch;13
-  EXPECT ack;13;n=5;k0=0;t0=2449000;dt_us=1000;pre=2
+  EXPECT ack;13;n=5;k0=0;t0=2449000;dt_us=1000;pre=2;lost=0
   EXPECT cap;0;0.0;
   EXPECT cap;1;0.0;
   EXPECT cap;2;6.0;
@@ -772,7 +775,7 @@ CASE fetch-after-none-holds-only-the-pre-window
   EXPECT ev;TRIAL;57000;outcome=NONE;t_rel=50000;t_touch=;t_move=;t_out=;a0=0.0;a_peak=0.0;a_end=0.0;tq_peak=;tq_out=;dur_thr=0
   EXPECT ack;7
   SEND fetch;8
-  EXPECT ack;8;n=3;k0=0;t0=55000;dt_us=1000;pre=3
+  EXPECT ack;8;n=3;k0=0;t0=55000;dt_us=1000;pre=3;lost=0
   EXPECT cap;0;0.0;
   EXPECT cap;1;0.0;
   EXPECT cap;2;0.0;
@@ -783,13 +786,13 @@ CASE fetch-after-none-holds-only-the-pre-window
   EXPECT ack;9
   EXPECT ev;RELEASED;57001;angle=0.0;torque=;brake=
   SEND fetch;10
-  EXPECT ack;10;n=0;k0=0;t0=0;dt_us=1000;pre=0
+  EXPECT ack;10;n=0;k0=0;t0=0;dt_us=1000;pre=0;lost=0
   EXPECT cap;end
 END
 
 CASE fetch-before-any-watch-is-empty
   SEND fetch;1
-  EXPECT ack;1;n=0;k0=0;t0=0;dt_us=1000;pre=0
+  EXPECT ack;1;n=0;k0=0;t0=0;dt_us=1000;pre=0;lost=0
   EXPECT cap;end
 END
 

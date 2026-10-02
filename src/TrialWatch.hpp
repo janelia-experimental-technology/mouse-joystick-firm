@@ -152,7 +152,17 @@ public:
       next_sample_us_ = now_us;
     }
     while (ring_running_ && now_us >= next_sample_us_) {
-      cap_[written_ % kCaptureMax] = static_cast<float>(angle);
+      const uint32_t slot = written_ % kCaptureMax;
+      cap_[slot] = static_cast<float>(angle);
+      // A grid point more than one period behind `now` was missed (a
+      // coalesced tick) and is filled with this angle; FETCH reports how
+      // many of those a window holds as `lost`.
+      const bool fill = (now_us - next_sample_us_) >= kSampleUs;
+      if (fill) {
+        fill_[slot / 8u] |= static_cast<uint8_t>(1u << (slot % 8u));
+      } else {
+        fill_[slot / 8u] &= static_cast<uint8_t>(~(1u << (slot % 8u)));
+      }
       ++written_;
       next_sample_us_ += kSampleUs;
       if (trig_set_ && written_ >= trig_index_ + 1u + post_ms_) {
@@ -295,6 +305,8 @@ public:
   bool hasWindow() const { return win_valid_; }
   uint32_t windowCount() const { return win_valid_ ? win_count_ : 0u; }
   uint32_t windowPre() const { return win_valid_ ? win_pre_ : 0u; }
+  // Samples in the window that were grid fills (FETCH `lost`).
+  uint32_t windowLost() const { return win_valid_ ? win_lost_ : 0u; }
   // Board time of window sample k (k may be past the end: FETCH echoes it).
   uint64_t windowSampleTimeUs(uint32_t k) const {
     return ring_t0_us_ + static_cast<uint64_t>(win_start_ + k) * kSampleUs;
@@ -334,6 +346,13 @@ private:
       win_count_ = win_pre_;
     }
     win_valid_ = cap_watched_;
+    win_lost_ = 0;
+    for (uint32_t k = 0; k < win_count_; ++k) {
+      const uint32_t slot = (win_start_ + k) % kCaptureMax;
+      if ((fill_[slot / 8u] & (1u << (slot % 8u))) != 0) {
+        ++win_lost_;
+      }
+    }
   }
 
   bool released_ = false;
@@ -374,7 +393,9 @@ private:
   uint32_t win_start_ = 0; // absolute index of window sample 0
   uint32_t win_count_ = 0;
   uint32_t win_pre_ = 0; // index of the outcome sample, or the count if none
+  uint32_t win_lost_ = 0;
   float cap_[kCaptureMax] = {0};
+  uint8_t fill_[kCaptureMax / 8] = {0}; // one bit per slot: a grid fill
 };
 
 } // namespace mouse_joystick

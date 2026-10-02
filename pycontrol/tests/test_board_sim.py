@@ -697,3 +697,26 @@ def test_a_home_timeout_is_clipped_to_the_firmware_maximum(sim):
     send(sim, "hv;1;on")
     assert send(sim, "home;2;999999") == ("ack;2", [])
     assert sim._home_deadline == sim.now_us + sim.home_timeout_max_us
+
+
+def test_a_late_tick_fills_the_grid_and_fetch_counts_it():
+    """The simulator's ring mirrors the firmware's grid fill: a sample that
+    arrives more than one period late fills the missed points and the window
+    reports them as lost (the corpus cannot reach this; advance() never skips
+    a grid point)."""
+    from sim.board_sim import _TrialWatch
+
+    w = _TrialWatch()
+    w.set_window(10, 2)
+    w.release(1_000_000, 0.0, 1.0)
+    w.arm(1_000_000, {"pull": 5.0, "push": 5.0, "timeout_us": 1_000_000, "hold_us": 0, "maxdur_us": None}, 0.5)
+    for k in range(5):
+        w.sample(1_000_000 + k * 1000, 0.0)
+        w.evaluate(1_000_000 + k * 1000, 0.0)
+    w.sample(1_008_000, 6.0)  # 3 ms late: grid points +5, +6, +7 are fills
+    assert w.evaluate(1_008_000, 6.0) == "PULL"
+    for k in (9, 10):
+        w.sample(1_000_000 + k * 1000, 6.0)
+    assert w.has_window()
+    assert (w.window_pre(), w.window_count(), w.window_lost()) == (8, 11, 3)
+    assert w.window_sample(4) == 0.0 and w.window_sample(5) == 6.0

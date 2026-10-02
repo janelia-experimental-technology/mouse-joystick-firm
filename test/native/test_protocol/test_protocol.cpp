@@ -228,6 +228,36 @@ void test_integer_parsing_matches_int(void) {
   TEST_ASSERT_FALSE(P::parseInt("3a", &v));
 }
 
+// A tick that arrives late fills the missed grid points with the current
+// angle and FETCH reports them as `lost`; a tick on time reports none.
+void test_a_late_tick_fills_the_grid_and_fetch_counts_it(void) {
+  mouse_joystick::TrialWatch w;
+  w.setWindow(10, 2);
+  w.release(1000000, 0.0, 1.0);
+  mouse_joystick::TrialWatch::Params p;
+  p.pull = 5.0;
+  p.push = 5.0;
+  p.timeout_us = 1000000;
+  w.arm(1000000, p, 0.5);
+  for (uint32_t k = 0; k < 5; ++k) { // five on-time samples
+    w.sample(1000000 + k * 1000, 0.0);
+    w.evaluate(1000000 + k * 1000, 0.0);
+  }
+  // the next tick comes 3 ms late: grid points +5, +6, +7 ms are fills
+  w.sample(1008000, 6.0);
+  TEST_ASSERT_EQUAL(mouse_joystick::TrialWatch::Outcome::kPull,
+                    w.evaluate(1008000, 6.0));
+  for (uint32_t k = 9; k <= 10; ++k) {
+    w.sample(1000000 + k * 1000, 6.0);
+  }
+  TEST_ASSERT_TRUE(w.hasWindow());
+  TEST_ASSERT_EQUAL(8, w.windowPre()); // samples 0..7 precede the outcome
+  TEST_ASSERT_EQUAL(11, w.windowCount());
+  TEST_ASSERT_EQUAL(3, w.windowLost());
+  TEST_ASSERT_EQUAL_FLOAT(0.0f, static_cast<float>(w.windowSample(4)));
+  TEST_ASSERT_EQUAL_FLOAT(6.0f, static_cast<float>(w.windowSample(5)));
+}
+
 void test_sequence_numbers_wrap_the_way_python_does(void) {
   uint16_t seq = 0;
 
@@ -1250,6 +1280,7 @@ int main(int, char **) {
   RUN_TEST(test_integer_formatting_without_printf);
   RUN_TEST(test_number_parsing_matches_float);
   RUN_TEST(test_integer_parsing_matches_int);
+  RUN_TEST(test_a_late_tick_fills_the_grid_and_fetch_counts_it);
   RUN_TEST(test_sequence_numbers_wrap_the_way_python_does);
   RUN_TEST(test_sequence_numbers_reject_what_python_rejects);
   RUN_TEST(test_decode_recovers_verb_seq_and_args);

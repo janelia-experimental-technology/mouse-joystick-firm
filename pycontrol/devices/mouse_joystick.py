@@ -296,7 +296,9 @@ class MouseJoystick:
 
     def fetch(self, k0=0, n=32):
         """One chunk of the frozen capture window of the last WATCH: the ack
-        carries n, k0, t0, dt_us and pre; `cap` lines follow through poll(),
+        carries n, k0, t0, dt_us, pre and lost (window samples that are grid
+        fills after a missed 1 kHz tick on the board; 0 means every sample
+        was taken on time); `cap` lines follow through poll(),
         then `cap;end`. The window is the last pre_ms samples before the
         outcome sample, that sample (k == pre) and post_ms after it; after a
         TRIAL with outcome=NONE there is no outcome sample and the window

@@ -119,7 +119,9 @@ enum BspRecords { // BSP-level QS user records (the application uses +0..+7)
   LINK_STAT = QP::QS_USER + 10,
   SAMPLE_STAT =
       QP::QS_USER +
-      11 // per second: ticks posted, coalesced, dropped, max/last cost
+      11, // per second: ticks posted, coalesced, dropped, max/last cost
+  DAC_STATE = QP::QS_USER + 12 // rev 1 angle DAC phase changed: phase (0 down,
+                               // 1 reset, 2 up), begin failures
 };
 
 namespace {
@@ -401,6 +403,7 @@ void bspDictionaries() {
   QS_USR_DICTIONARY(TICK_LOST);
   QS_USR_DICTIONARY(LINK_STAT);
   QS_USR_DICTIONARY(SAMPLE_STAT);
+  QS_USR_DICTIONARY(DAC_STATE);
 }
 
 void qsPeriodic() {
@@ -597,6 +600,7 @@ dac80501::Dac80501 l_dac(l_dacTransport);
 // reset, which is the whole sampler budget.
 enum class DacPhase : uint8_t { kDown, kReset, kUp };
 DacPhase l_dacPhase = DacPhase::kDown;
+void dacPhase(DacPhase phase); // sets l_dacPhase and records it
 uint32_t l_dacResetAt_us = 0U;
 bool l_dacParked = false;
 uint32_t l_dacBeginFailures = 0U;
@@ -627,6 +631,14 @@ void dacBusDown() {
 #endif
 }
 
+void dacPhase(DacPhase phase) {
+  l_dacPhase = phase;
+  QS_BEGIN_ID(DAC_STATE, 0U)
+  QS_U8(0U, static_cast<uint8_t>(phase));
+  QS_U32(0U, l_dacBeginFailures);
+  QS_END()
+}
+
 // Tick 1 after the rail: claim the bus and soft-reset the part. Tick N: write
 // CONFIG, GAIN 0x0101 and SYNC (begin() without its own reset and sleep), as
 // the bench console does before its first data write.
@@ -636,7 +648,7 @@ void dacStep(uint32_t now_us) {
     dacBusUp();
     static_cast<void>(l_dac.softReset());
     l_dacResetAt_us = now_us;
-    l_dacPhase = DacPhase::kReset;
+    dacPhase(DacPhase::kReset);
     break;
   case DacPhase::kReset:
     if ((now_us - l_dacResetAt_us) >= kDacResetSettleUs) {
@@ -645,7 +657,7 @@ void dacStep(uint32_t now_us) {
       cfg.soft_reset_first = false; // done, and settled, in the previous phase
       cfg.delay_ms = nullptr;
       if (l_dac.begin(cfg)) {
-        l_dacPhase = DacPhase::kUp;
+        dacPhase(DacPhase::kUp);
         l_dacParked = false;
       } else {
         ++l_dacBeginFailures;
@@ -665,7 +677,7 @@ void BSP::angleOutput(bool valid, float angle_deg, float lo, float hi,
   if (!hv_on) {
     if (l_dacPhase != DacPhase::kDown) {
       dacBusDown();
-      l_dacPhase = DacPhase::kDown;
+      dacPhase(DacPhase::kDown);
     }
     return;
   }
