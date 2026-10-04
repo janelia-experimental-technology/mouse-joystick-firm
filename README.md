@@ -30,7 +30,7 @@ an optional QP/QV trace pilot. It links to the shared architecture and parallel
 workstreams. Current delivery remains non-QP; this work does not require a
 firmware rewrite or delay existing board bring-up and delivery.
 
-The [QP port plan](../qp-arduino/docs/observability-plan.md) now targets RP2040
+The [QP port plan](../qp-arduino-example/docs/observability-plan.md) now targets RP2040
 first with the same Earle Philhower Arduino core family, on a separate simple
 non-actuating fixture. Exact core/fixture versions and qualification gates are
 open. Teensy hardware work is deferred and does not block this path;

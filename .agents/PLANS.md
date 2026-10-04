@@ -110,7 +110,7 @@ owns cross-repository dependencies and stages. This optional path runs alongside
 existing delivery, bring-up and hardware-watchdog work; it does not replace
 those tasks or commit the application to QP.
 
-The [QP plan](../../qp-arduino/docs/observability-plan.md) now qualifies
+The [QP plan](../../qp-arduino-example/docs/observability-plan.md) now qualifies
 RP2040 first, using the Earle Philhower core family already used here, on a
 separate simple non-actuating fixture. Exact core/fixture versions and all
 RP2040 qualification gates remain open. Teensy hardware work is deferred and

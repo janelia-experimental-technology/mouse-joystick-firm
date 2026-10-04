@@ -22,7 +22,7 @@ protocol state machine and `MotionBackend` boundary are the baseline. Structured
 application events from this implementation are valid inputs to the observation
 system even if QP is never adopted.
 
-The [QP port plan](../../qp-arduino/docs/observability-plan.md) now makes
+The [QP port plan](../../qp-arduino-example/docs/observability-plan.md) now makes
 RP2040 the primary QP `v7.3.4`/QV qualification target, using the Earle
 Philhower Arduino core family already selected in this repository's
 `platformio.ini`. That effort starts on a simple non-actuating fixture in
