@@ -63,6 +63,11 @@ constexpr uint32_t kBeaconIdBits = 8u * PICO_UNIQUE_BOARD_ID_SIZE_BYTES;
 constexpr float kTempMinCelsius = 5.0f;
 constexpr float kTempMaxCelsius = 60.0f;
 
+// v1.0 analog monitors with the switched domain down: both nodes are held at
+// 0 V by 100 kohm-class pull-downs, so anything above this is a short to a
+// live rail or a part fitted wrong. ADC offset on this part is a few mV.
+constexpr float kMonitorOffMaxVolts = 0.10f;
+
 void report(Print &out, const char *label, bool ok, uint16_t &checks,
             uint16_t &failures) {
   ++checks;
@@ -124,6 +129,10 @@ void SelfTest::beginAdc() {
   analogReadResolution(conversions::kAdcResolutionBits);
   pinMode(pins::kSwRailSenseDiv2, INPUT);
   pinMode(pins::kHvSns, INPUT);
+#if MJ_BOARD_REV >= 2
+  pinMode(pins::kBrakeIsense, INPUT);
+  pinMode(pins::kAngleOutMon, INPUT);
+#endif
 }
 
 void SelfTest::reportIdentity(Print &out) {
@@ -153,12 +162,22 @@ void SelfTest::reportIdentity(Print &out) {
       F("      are tested as spare pads. From v0.3 they carry the DAC,"));
   out.println(
       F("      so a v0.3 board needs env:mouse_joystick_rev1 instead."));
-#else
-  out.println(F("  (pcb v0.3 or HEAD, angle output DAC fitted)"));
+#elif MJ_BOARD_REV == 1
+  out.println(F("  (pcb v0.3, angle output DAC on SPI1)"));
   out.println(
       F("    GP10, GP11 and GP13 carry the DAC bus, so they are NOT"));
   out.println(F("      exercised as spare pads: 9 pads here against 12 on"));
-  out.println(F("      rev 0, and 24 checks against 27."));
+  out.println(F("      rev 0, and 24 checks against 27. pcb HEAD is v1.0,"));
+  out.println(F("      which is rev 2, not this."));
+#else
+  out.println(F("  (pcb v1.0: I2C DACs, torque ADC, brake, LATCH on GP24)"));
+  out.println(
+      F("    Only GP20 and GP22 are spare. GP10-13, GP15-18 reach the"));
+  out.println(
+      F("      torque, brake and DAC blocks through the bus switch and"));
+  out.println(F("      are left alone: 2 pads, 20 checks. ~{HV_FAULT} is"));
+  out.println(F("      GP23 here; GP29 is an ADC input. Not yet confirmed"));
+  out.println(F("      on hardware: this is the first v1.0 firmware."));
 #endif
 }
 
@@ -302,8 +321,10 @@ void SelfTest::reportStraps(Print &out, const ResetStateReads &reads,
       F("      a pin, so each level comes from a board resistor. A failure"));
 #if MJ_BOARD_REV == 0
   out.println(F("      here is a missing part, not firmware. v0.1 refdes."));
-#else
+#elif MJ_BOARD_REV == 1
   out.println(F("      here is a missing part, not firmware. v0.3 refdes."));
+#else
+  out.println(F("      here is a missing part, not firmware. v1.0 refdes."));
 #endif
 
   if (!reads.valid) {
@@ -313,29 +334,66 @@ void SelfTest::reportStraps(Print &out, const ResetStateReads &reads,
 
   out.print(F("    GP9  ~{BUS_SW_EN}    = "));
   out.println(reads.bus_sw_en_n ? F("high") : F("low"));
+#if MJ_BOARD_REV < 2
   report(out, "R601 7.87k holds the GPIO bus isolated", reads.bus_sw_en_n,
          checks, failures);
+#else
+  report(out, "R607 7.87k holds the GPIO bus isolated", reads.bus_sw_en_n,
+         checks, failures);
+#endif
 
+#if MJ_BOARD_REV < 2
   out.print(F("    GP24 ~{INSTR_BUF_OE} = "));
   out.println(reads.instr_buf_oe_n ? F("high") : F("low"));
   report(out, "buffer OE pull-ups hold the instrument port silent",
          reads.instr_buf_oe_n, checks, failures);
+#else
+  // Not a check. The TPS1HTC100-Q1 is unpowered in stage 1 (36 V absent), so
+  // this is its unpowered LATCH pin seen through R503 10k. Recorded because
+  // the level at reset is the configuration the switch wakes up in, and
+  // because a board that reads high here with 36 V absent deserves a look.
+  out.print(F("    GP24 HV_LATCH        = "));
+  out.print(reads.hv_latch ? F("high") : F("low"));
+  out.println(F("  (informational: switch unpowered; low = auto-retry)"));
+
+  out.print(F("    GP16 DAC_SDA         = "));
+  out.println(reads.dac_sda ? F("high") : F("low"));
+  report(out, "R403 4.7k holds the I2C SDA tap idle high", reads.dac_sda,
+         checks, failures);
+  out.print(F("    GP17 DAC_SCL         = "));
+  out.println(reads.dac_scl ? F("high") : F("low"));
+  report(out, "R402 4.7k holds the I2C SCL tap idle high", reads.dac_scl,
+         checks, failures);
+#endif
 
   out.print(F("    GP1  PYC_UART_RX     = "));
   out.println(reads.pyc_uart_rx ? F("high") : F("low"));
+#if MJ_BOARD_REV < 2
   report(out, "R403 10k holds the pyControl RX idle high", reads.pyc_uart_rx,
          checks, failures);
+#else
+  report(out, "R401 10k holds the pyControl RX idle high", reads.pyc_uart_rx,
+         checks, failures);
+#endif
 
+  // The 36 V block moved from the R2xx range to R19xx between v0.2 and v0.3
+  // and to R5xx at v1.0, so this pull-up has three names. Naming the wrong
+  // one sends whoever is probing to a part that does not exist on the board
+  // in front of them. At v1.0 the pin moved too: GP29 became an ADC input.
+#if MJ_BOARD_REV == 0
   out.print(F("    GP29 ~{HV_FAULT}     = "));
   out.println(reads.hv_fault_n ? F("high") : F("low"));
-  // The 36 V block moved from the R2xx range to R19xx between v0.2 and v0.3,
-  // so this pull-up has two names. Naming the wrong one sends whoever is
-  // probing to a part that does not exist on the board in front of them.
-#if MJ_BOARD_REV == 0
   report(out, "R205 10k present and no latched 36 V fault", reads.hv_fault_n,
          checks, failures);
-#else
+#elif MJ_BOARD_REV == 1
+  out.print(F("    GP29 ~{HV_FAULT}     = "));
+  out.println(reads.hv_fault_n ? F("high") : F("low"));
   report(out, "R1905 10k present and no latched 36 V fault", reads.hv_fault_n,
+         checks, failures);
+#else
+  out.print(F("    GP23 ~{HV_FAULT}     = "));
+  out.println(reads.hv_fault_n ? F("high") : F("low"));
+  report(out, "R507 10k present and no latched 36 V fault", reads.hv_fault_n,
          checks, failures);
 #endif
 
@@ -404,8 +462,10 @@ void SelfTest::reportAdc(Print &out, uint16_t &checks, uint16_t &failures) {
   out.print(hv_volts, 4);
 #if MJ_BOARD_REV == 0
   out.println(F(" V across R207 249R"));
-#else
+#elif MJ_BOARD_REV == 1
   out.println(F(" V across R1907 249R"));
+#else
+  out.println(F(" V across R509 249R (behind R505 1k)"));
 #endif
   report(out, "no 36 V load current (HV_SNS below 0.10 V)",
          hv_volts <= kHvSenseOffMaxVolts, checks, failures);
@@ -414,6 +474,32 @@ void SelfTest::reportAdc(Print &out, uint16_t &checks, uint16_t &failures) {
   out.println(
       F("      Stage 1 keeps it low on purpose, so this check confirms the"));
   out.println(F("      quiet state rather than the sense chain."));
+
+#if MJ_BOARD_REV >= 2
+  // The two v1.0 output monitors. With the switched domain down both nodes
+  // are pulled to 0 V (R1818 110k, R805 100k); the rail off is the only thing
+  // this can confirm. The live-chain numbers belong to stages A3 and A4 with
+  // the rail up and a meter on the BNC.
+  const uint16_t brake_counts = analogRead(pins::kBrakeIsense);
+  const float brake_volts = conversions::countsToVolts(brake_counts);
+  out.print(F("    GP27 BRAKE_ISENSE: "));
+  out.print(brake_counts);
+  out.print(F(" counts = "));
+  out.print(brake_volts, 4);
+  out.println(F(" V  (0 to 1.006 V is 0 to 48.78 mA with the rail up)"));
+  report(out, "brake current monitor at 0 V with the rail off",
+         brake_volts <= kMonitorOffMaxVolts, checks, failures);
+
+  const uint16_t angle_counts = analogRead(pins::kAngleOutMon);
+  const float angle_volts = conversions::countsToVolts(angle_counts);
+  out.print(F("    GP29 ANGLE_OUT_MON: "));
+  out.print(angle_counts);
+  out.print(F(" counts = "));
+  out.print(angle_volts, 4);
+  out.println(F(" V  (the BNC node, 0 to 1.650 V with the rail up)"));
+  report(out, "angle output monitor at 0 V with the rail off",
+         angle_volts <= kMonitorOffMaxVolts, checks, failures);
+#endif
 
   const float temp_c = analogReadTemp();
   out.print(F("    internal temperature: "));
@@ -523,8 +609,13 @@ void SelfTest::pulseTriggers(Print &out, uint32_t half_period_us,
   out.print(F(" cycles at "));
   out.print(half_period_us * 2);
   out.println(F(" us period."));
+#if MJ_BOARD_REV < 2
   out.println(
       F("Watch InstrumentPort-40 TRIG0 and TRIG1. FW_TRIG1 runs at half"));
+#else
+  out.println(
+      F("Watch Digital-50 DIG0 and DIG1 (LA CH0/CH1). FW_TRIG1 runs at half"));
+#endif
   out.println(
       F("the rate of FW_TRIG0, so a capture that shows one without the"));
   out.println(

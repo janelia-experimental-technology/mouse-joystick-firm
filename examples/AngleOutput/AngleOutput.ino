@@ -71,29 +71,45 @@ constexpr uint16_t kGainRegister =
     dac80501::kGainRefDiv | dac80501::kGainBuffGain;
 
 // The OPA197 stage after the filter. 2.5 V DAC full scale becomes 3.3 V at the
-// BNC on v0.3. v1.0 halves everything after this with a divider.
+// BNC on v0.3. v1.0 halves everything after this with a 3.2k/3.2k divider
+// (R807/R811), so the BNC and ANGLE_OUT_MON see 1.650 V full scale there.
+// The v1.0 figure is the design value; the v0.3 one was measured 2026-09-10
+// as unity to within 0.03%.
+#if MJ_BOARD_REV == 1
 constexpr float kOutputStageGain = 1.32f;
+#else
+constexpr float kOutputStageGain = 1.32f * 0.5f;
+#endif
 
+#if MJ_BOARD_REV == 1
 // SPI1 on this board. RX is not used -- the DAC has no SDO -- but the core wants
 // a pin assigned, and GP12 is SPI1's RX candidate that is routed nowhere on
-// v0.3, so it is the safe choice. At v1.0 GP12 becomes the torque bridge ADC's
-// SDO on this same bus.
-constexpr uint8_t kSpi1Rx = 12;
+// v0.3, so it is the safe choice. At v1.0 GP12 is the torque bridge ADC's SDO
+// on this same bus, which is one reason the SPI DAC path does not exist there.
+constexpr uint8_t kSpi1Rx = pins::kSpi1RxUnused;
+#endif
 
 // Transport selection, same shape as examples/MotionAndHoming -- deliberately
 // duplicated rather than shared, because each example is meant to read on its
-// own. Build with -DMJ_DAC_I2C=1, or use env:mouse_joystick_rev1_i2c.
-//
-// NO BOARD CAN RUN THE I2C PATH YET: pcb v0.3 ties `SPI2C` (U2001 pad 5)
-// directly to GND in copper.
-#ifndef MJ_DAC_I2C
+// own. The revision decides: v0.3 (rev 1) is SPI, v1.0 (rev 2) is I2C, and a
+// build that says otherwise describes a board that does not exist.
+#if MJ_BOARD_REV >= 2
+#if defined(MJ_DAC_I2C) && !MJ_DAC_I2C
+#error "pcb v1.0 straps both DACs to I2C (R808, R1809); there is no SPI DAC path on this revision"
+#endif
+#undef MJ_DAC_I2C
+#define MJ_DAC_I2C 1
+#elif !defined(MJ_DAC_I2C)
 #define MJ_DAC_I2C 0
+#elif MJ_DAC_I2C
+#error "no v0.3 board can run the I2C path: SPI2C is tied to GND in copper. The I2C DAC is MJ_BOARD_REV 2 (pcb v1.0)."
 #endif
 
 #if MJ_DAC_I2C
 // A0 gives four addresses by what it is tied to -- AGND 0x48, VDD 0x49,
-// SDA 0x4A, SCL 0x4B -- so v1.0's two DACs share one bus. Angle output is 0x48.
-constexpr uint8_t kDacI2cAddress = dac80501::kI2cAddrA0Agnd;
+// SDA 0x4A, SCL 0x4B -- so v1.0's two DACs share one bus. Angle output is
+// 0x48 (R806 to GND); BoardPins.hpp owns the number.
+constexpr uint8_t kDacI2cAddress = mouse_joystick::kAngleDacI2cAddress;
 dac80501::I2cTransport transport(Wire, kDacI2cAddress);
 #else
 dac80501::SpiTransport transport(SPI1, pins::kDacCsN);
@@ -161,20 +177,24 @@ bool bringUp(Print &out) {
     return false;
   }
   bus_closed = true;
+#if MJ_DAC_I2C
+  out.println(F("    [ ok ] closed. GP16/GP17 now reach both DACs."));
+#else
   out.println(F("    [ ok ] closed. GP10/GP11/GP13 now reach the DAC."));
+#endif
 
   // Only now. See the back-power note in the header.
 #if MJ_DAC_I2C
   out.println(F("[3] I2C"));
   // The strap changes what the pins are: SCLK becomes SCL, SDIN becomes SDA,
   // and SYNC stops being a chip select and becomes the static A0 strap.
-  Wire.setSCL(pins::kDacSpiSck);
-  Wire.setSDA(pins::kDacSpiCopi);
+  Wire.setSCL(pins::kDacScl); // v1.0 I2C0 pins; Wire's defaults are TMC pins
+  Wire.setSDA(pins::kDacSda);
   transport.begin();
   out.print(F("    [ ok ] SCL GP"));
-  out.print(pins::kDacSpiSck);
+  out.print(pins::kDacScl);
   out.print(F(", SDA GP"));
-  out.print(pins::kDacSpiCopi);
+  out.print(pins::kDacSda);
   out.print(F(", address 0x"));
   out.println(kDacI2cAddress, HEX);
 #else

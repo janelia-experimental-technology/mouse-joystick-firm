@@ -143,7 +143,8 @@ install one and pulses nothing.
 |---|---|
 | `mouse_joystick_qp` | rev 0 (pcb v0.1/v0.2): `TmcMotion`, UART0, trace on `FW_TRIG1` |
 | `mouse_joystick_qp_rev1` | rev 1 (pcb v0.3 and later): angle DAC on SPI1 |
-| `mouse_joystick_qp_rev1_i2c` | rev 1 with the DAC on I2C, v1.0's strap (compiles; no board to test it on yet) |
+| `mouse_joystick_qp_rev2` | pcb v1.0 (`MJ_BOARD_REV=2`): `TmcMotion`, UART0, trace on `FW_TRIG1` (Digital-50 `DIG1`), the angle DAC on I2C0 `GP16`/`GP17` at 0x48. The brake DAC (0x49) and the ADS8689 are not driven yet, so `caps` lacks `brake` and `torque`. Compiles; no v1.0 board had arrived when it was written (2026-10-04). Replaces `mouse_joystick_qp_rev1_i2c`, which paired rev 1 pins with an I2C DAC and matched no board |
+| `mouse_joystick_qp_rev2_usb` | the same for the bench: protocol over USB CDC, tick probe on the UART0 TX pad, TICK handler level on `FW_TRIG0`; the first rail-up runs on a v1.0 board |
 | `mouse_joystick_qp_rev1_usb` | board 4's rail-up bench build: `TmcMotion`, rev 1, DAC on SPI1, protocol over USB CDC, trace on `FW_TRIG1`, tick probe on the UART0 TX pad with the RJ-45 unplugged; driven by `qp-arduino-example/evidence/bench-scripts/board4_session.sh`. **Hung on the first `hv on` on board 4, 2026-10-02** (see Status) |
 | `mouse_joystick_qp_rev0_usb` | the bisect build for that hang: the same, with the rev 0 pad map and therefore no DAC path at all; safe on a v0.3 board, whose rail-up pins are the same |
 | `mouse_joystick_qp_sim_usb` | a board with no 36 V and no host: `SimulatedMotion`, protocol over USB CDC, tick probe on the unused UART0 TX pad (InstrumentPort `DIG8`). Accepts the bench stimulus `sim;<seq>;angle;<deg>` (sets the simulated encoder, as the corpus's `ANGLE` step does, so a `WATCH` outcome can be driven by hand; `ack;<seq>`), which exists in no other build and is not a protocol verb |

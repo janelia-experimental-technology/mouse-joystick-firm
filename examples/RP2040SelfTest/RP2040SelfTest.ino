@@ -12,10 +12,12 @@
 // header. That leaves two feedback channels, and the second one matters:
 //
 //   * USB CDC, for everything the test measures. Open the monitor and read.
-//   * FW_TRIG0 and FW_TRIG1 on InstrumentPort-40, carrying a boot signature and
-//     a 1 Hz heartbeat. These are the only evidence of firmware execution that
-//     does not depend on USB working, which is exactly what you want when USB
-//     is one of the things under test. LA5032 channels 16 and 17.
+//   * FW_TRIG0 and FW_TRIG1 on the instrument port, carrying a boot signature
+//     and a 1 Hz heartbeat. These are the only evidence of firmware execution
+//     that does not depend on USB working, which is exactly what you want when
+//     USB is one of the things under test. InstrumentPort-40 (rev 0/1): TRIG0
+//     and TRIG1, LA5032 channels 16 and 17. InstrumentPort-Digital-50 (v1.0):
+//     DIG0 and DIG1, LA5032 channels 0 and 1 through the v2.0 adapter.
 
 #include <MouseJoystickBoard.hpp>
 
@@ -46,8 +48,13 @@ void printMenu(Print &out) {
   out.println(F("  t  pulse FW_TRIG0/FW_TRIG1 into InstrumentPort-40"));
   out.println(F("  I  beacon the board serial on the triggers, so a"));
   out.println(F("     capture identifies which board it came from"));
+#if MJ_BOARD_REV < 2
   out.println(F("  i  toggle the instrumentation buffers, which silences"));
   out.println(F("     or restores the 1 Hz FW_TRIG0 heartbeat"));
+#else
+  out.println(F("  i  (no effect on v1.0: the Digital-50 buffers have no"));
+  out.println(F("     enable and are always on)"));
+#endif
   out.println(F("  k  10 s clock tick stream, for host-side crystal check"));
   out.println(F("  u  pyControl UART loopback (needs DIO-A shorted to DIO-B)"));
   out.println(F("  B  reboot into BOOTSEL for reflashing"));

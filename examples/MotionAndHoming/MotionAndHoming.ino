@@ -81,17 +81,27 @@ TMC51X0 stepper;
 // The gates are cumulative, so their results have to survive between commands.
 bool bus_up = false;
 
-#if MJ_BOARD_REV != 0
+#if MJ_BOARD_REV == 1
 // SPI1, separate from the TMC's SPI0, so the two never contend. GP12 is SPI1's
 // RX candidate that is routed nowhere on v0.3; the DAC has no SDO so nothing is
 // read, but the core wants a pin assigned.
 constexpr uint8_t kSpi1Rx = pins::kSpi1RxUnused; // BoardPins owns the number
+#endif
+#if MJ_BOARD_REV != 0
 // REF-DIV 1 with BUFF-GAIN 1: a 2.5 V DAC full scale, which the OPA197's 1.32
 // gain turns into 3.3 V at the BNC. Measured on board E4654C159F171E34 on
 // 2026-09-10 as unity gain to within 0.03%.
 constexpr uint16_t kDacGainRegister =
     dac80501::kGainRefDiv | dac80501::kGainBuffGain;
+#if MJ_BOARD_REV == 1
 constexpr float kDacOutputStageGain = 1.32f;
+#else
+// pcb v1.0 halves everything after the OPA197 with a 3.2k/3.2k divider
+// (R807/R811): 2.5 V at the DAC is 1.650 V at the BNC and at ANGLE_OUT_MON.
+// The 1.32 is the same amplifier (R804/R803); the divider is the v1.0 change.
+// Not yet measured on a v1.0 board.
+constexpr float kDacOutputStageGain = 1.32f * 0.5f;
+#endif
 
 // The live angle output loop.
 //
@@ -122,23 +132,38 @@ constexpr uint32_t kAngleUpdateIntervalUs = 1000; // 1 kHz
 // measured swing would silently misreport a re-adjusted stop. Gearing is 1:1,
 // so motor degrees and joystick degrees are the same number.
 constexpr float kAngleSpanDegrees = 90.0f;
+#if MJ_BOARD_REV == 1
 constexpr float kAngleOutMinVolts = 0.050f;
 constexpr float kAngleOutMaxVolts = 3.300f;
+#else
+// Half of the above at the v1.0 BNC, so the DAC codes the loop writes are the
+// same as on v0.3 and only the meter reading halves.
+constexpr float kAngleOutMinVolts = 0.025f;
+constexpr float kAngleOutMaxVolts = 1.650f;
+#endif
 
-// TRANSPORT SELECTION. Build with -DMJ_DAC_I2C=1 for the I2C path.
+// TRANSPORT SELECTION. The board revision decides it; MJ_DAC_I2C is derived.
 //
-// Defaults to SPI because that is what pcb v0.3 IS: `SPI2C` (U2001 pad 5) is
-// tied DIRECTLY TO GND in copper -- no strap resistor -- so v0.3 cannot run I2C
-// without cutting a trace. The I2C path is here and compiled so it is ready for
-// v1.0, but it CANNOT be tested on any board that exists today.
-//
-// v1.0 is expected to strap I2C, for two reasons that have nothing to do with
-// speed: STATUS.REF-ALARM is unreadable over SPI, and the 4.5 mV output floor
-// measured on 2026-09-10 makes the analog level a weaker fault discriminator
-// than the design assumed. Bandwidth is not a factor -- I2C at 1 MHz adds ~33 us
-// to a measured 527 us worst-case loop, about 6%.
-#ifndef MJ_DAC_I2C
+// pcb v0.3 (rev 1) IS SPI: `SPI2C` (U2001 pad 5 at v0.3) is tied DIRECTLY TO
+// GND in copper -- no strap resistor -- so v0.3 cannot run I2C without cutting
+// a trace. pcb v1.0 (rev 2) IS I2C: both DACs strap SPI2C high (R808, R1809)
+// and share I2C0 on GP16/GP17 behind the bus switch, and GP10/GP11/GP13 carry
+// the torque ADC and the brake fault input instead, so the SPI DAC path must
+// not even compile for it. v1.0 chose I2C for two reasons that have nothing
+// to do with speed: STATUS.REF-ALARM is unreadable over SPI, and the 4.5 mV
+// output floor measured on 2026-09-10 makes the analog level a weaker fault
+// discriminator than the design assumed. Bandwidth is not a factor -- I2C at
+// 400 kHz adds well under 100 us to a measured 527 us worst-case loop.
+#if MJ_BOARD_REV >= 2
+#if defined(MJ_DAC_I2C) && !MJ_DAC_I2C
+#error "pcb v1.0 straps both DACs to I2C (R808, R1809); there is no SPI DAC path on this revision"
+#endif
+#undef MJ_DAC_I2C
+#define MJ_DAC_I2C 1
+#elif !defined(MJ_DAC_I2C)
 #define MJ_DAC_I2C 0
+#elif MJ_DAC_I2C
+#error "no v0.3 board can run the I2C path: SPI2C is tied to GND in copper. The I2C DAC is MJ_BOARD_REV 2 (pcb v1.0)."
 #endif
 
 #if MJ_DAC_I2C
@@ -147,9 +172,10 @@ constexpr float kAngleOutMaxVolts = 3.300f;
 // unique addresses and two spare -- no second bus, and 2 GPIOs instead of the
 // 4 that SPI needs for two chip selects.
 //
-// The angle output takes 0x48. Whichever address a board straps has to match
-// here; there is no way to discover it, because a wrong address simply NAKs.
-constexpr uint8_t kDacI2cAddress = dac80501::kI2cAddrA0Agnd;
+// The angle output takes 0x48 (R806 to GND). Whichever address a board straps
+// has to match here; there is no way to discover it, because a wrong address
+// simply NAKs. BoardPins.hpp owns the number, as it owns the pins.
+constexpr uint8_t kDacI2cAddress = mouse_joystick::kAngleDacI2cAddress;
 dac80501::I2cTransport dac_transport(Wire, kDacI2cAddress);
 #else
 dac80501::SpiTransport dac_transport(SPI1, pins::kDacCsN);
@@ -546,15 +572,17 @@ bool bringUpBus(Print &out) {
   configured = true;
 
 #if MJ_BOARD_REV != 0
-  // Only now. The DAC runs from +5V_SW and sits on the MCU side of the bus
-  // switch, so driving its chip select before the rail is up pushes current
-  // through its input clamps and back-powers the switched domain.
+  // Only now. The DAC runs from the switched domain (+5V_SW on v0.3, filtered
+  // +3.3V_SW on v1.0), so driving its bus before the rail is up pushes current
+  // through its input clamps and back-powers that domain. On v0.3 the SPI bus
+  // reaches it on the MCU side of the switch; on v1.0 the I2C pair is behind
+  // the switch like everything else and the bus must be closed first.
   out.println(F("[4] angle-output DAC"));
 #if MJ_DAC_I2C
-  // Pin roles change with the strap: SCLK becomes SCL and SDIN becomes SDA, and
-  // SYNC stops being a chip select and becomes the static A0 address strap.
-  Wire.setSCL(pins::kDacSpiSck);
-  Wire.setSDA(pins::kDacSpiCopi);
+  // I2C0 on the v1.0 pins. The core's Wire defaults are GP4/GP5, which here
+  // are the TMC's CIPO and DIAG0, so the pins must be set before begin().
+  Wire.setSCL(pins::kDacScl);
+  Wire.setSDA(pins::kDacSda);
   dac_transport.begin();
   out.print(F("    transport: I2C at 0x"));
   out.println(kDacI2cAddress, HEX);

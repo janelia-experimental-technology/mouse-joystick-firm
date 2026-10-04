@@ -4,6 +4,103 @@
 
 Stage 4: the pyControl UART protocol. Stages 1 to 3 have passed on hardware.
 
+## Task: pcb v1.0 Bring-Up (opened 2026-10-04; boards arrive 2026-10-05)
+
+The v1.0 boards (two ordered from the 2026-09-21 fabrication package) are the
+first boards with the brake sink, the torque bridge, I2C DACs, LATCH on a GPIO
+and the Digital-50 instrument port. The board file is unchanged from
+`mouse-joystick-pcb` commit `d5ae4b0` through its fabrication package `646b8f4`
+and HEAD `6d5ffd3`; **no `v1.0` tag exists yet** — tagging the fabricated
+commit is Peter's call and the firmware comments say "no tag yet" until then.
+The pin map was read off footprint `U601` with a script over the `.kicad_pcb`
+(the RP2040 is `U601` at v1.0; `U501` is now the 36 V switch), not from prose.
+Rig-level sequence: `../orb-weaver-context/context/mouse-joystick-rig-system-plan.md`
+section 9, Phase A.
+
+### Done before the boards arrived (software only, 2026-10-04, uncommitted)
+
+- [x] `MJ_BOARD_REV=2` in `src/BoardPins.hpp`: the v1.0 map, `hw=rev2`,
+      `HV_LATCH` on GP24 (`MJ_HAS_LATCH_GPIO`/`MJ_LATCH_GPIO` forced, overrides
+      refused), `~{HV_FAULT}` on GP23, I2C0 on GP16/GP17 with the DAC
+      addresses 0x48/0x49, the torque ADC on SPI1 (GP10/11/12, CONVST GP15),
+      `TQ_CAL_EN` GP18, `~{BRAKE_FAULT}` GP13, `BRAKE_ISENSE` GP27,
+      `ANGLE_OUT_MON` GP29, spares GP20/GP22. The SPI DAC constants do not
+      exist for rev 2, so no SPI DAC code path compiles for it.
+- [x] `SafeState`: drives `HV_LATCH` low (auto-retry, the reset default;
+      `powerUp()` raises it after the rail is up), `TQ_CAL_EN` low and
+      `TQ_CONVST_CS` high behind the open switch, leaves `~{BRAKE_FAULT}`, the
+      SPI1 and I2C pins as inputs; `setInstrumentationEnabled()` is a no-op
+      on rev 2 (Digital-50 has no enable). Reset-state reads: `R607`, `R401`,
+      `R507` on GP23, `R402`/`R403` (I2C idle high), `HV_LATCH` informational.
+- [x] `RP2040SelfTest` on rev 2: 2 spare pads, the four straps above, the two
+      monitor ADC channels at 0 V with the rail off; **20 checks** by
+      derivation from rev 1's 24 (−7 spares −1 buffer OE +2 I2C +2 ADC).
+- [x] `TMC5130Communication`: v1.0 designators (`U501`, `R501`, `R506`,
+      `R508`, `R509`; no LATCH strap). `MotionAndHoming`, `AngleOutput` and
+      `PyControlLinkQp/Bsp.cpp`: the DAC transport follows the revision (rev 1
+      SPI1, rev 2 I2C0 on `pins::kDacScl`/`kDacSda`), `MJ_DAC_I2C` is derived
+      and a contradiction is a compile error; the v1.0 ÷2 output divider is in
+      the printed BNC volts (1.650 V full scale).
+- [x] Protocol: `ProtocolBoard::Config::instr_switchable` (false on rev 2, so
+      `INSTR` is accepted and `state` is always 1, per uart-protocol.md).
+- [x] Envs: `mouse_joystick_rev2`, `mouse_joystick_qp_rev2`,
+      `mouse_joystick_qp_rev2_usb`; the two `*_rev1_i2c` envs removed (they
+      paired rev 1 pins with an I2C DAC and matched no board).
+      `mouse_joystick_rev1` is now documented as v0.3 only, not "HEAD".
+- [x] Host tests: 125 pass (a Guix `gcc-toolchain` is needed on this machine;
+      the conda compiler in the Pixi env fails at link against the system
+      glibc). Target builds for every example and env: see the status line
+      below once they have run.
+
+### Still owed, in order (software first, then the bench)
+
+- [ ] **Tag `mouse-joystick-pcb` `v1.0` at the fabricated commit** (`646b8f4`
+      is the one whose `fab/` package is the order; `d5ae4b0` is the last
+      board-file change). Then replace "no tag yet" in `BoardPins.hpp`,
+      `platformio.ini`, the README and `docs/rp2040-bringup.md`.
+- [ ] **Rig plan Phase A1 cannot see the DACs or the ADS8689 on USB alone.**
+      Both DACs run from `+3.3V_FILT`, the ADC from `+3.3V_SW`/`+5V_FILT`, and
+      every one of their bus lines is behind the bus switch. "I2C sees 0x48
+      and 0x49, SPI1 sees the ADS8689" is an A2/A3 check with the rail up and
+      the bus closed. Corrected in the rig plan 2026-10-04; A1 is the
+      `RP2040SelfTest` run and nothing more.
+- [ ] A1: `RP2040SelfTest` on `mouse_joystick_rev2`, USB only, 36 V unplugged.
+      Expect 20 checks. Record the serial, the `HV_LATCH` level and the two
+      monitor readings in the PCB bring-up log under a new v1.0 section.
+- [ ] A2: `TMC5130Communication` on rev 2 with 36 V: the latch probe should
+      PASS (LATCH held low by firmware) and `powerUp()` should report the
+      direct method, the first time any board has. `~{HV_FAULT}` on GP23.
+      `PG_5V`/`PG_12V` are visible only on Digital-50 `DIG30`/`DIG31`.
+- [ ] A3: `AngleOutput` (or `MotionAndHoming` `b`) on rev 2: the I2C DAC at
+      0x48 answers; `GAIN 0x0101` first; BNC 0–1.650 V into 1 MΩ;
+      `ANGLE_OUT_MON` tracks (the self test's `a` command reads it).
+- [ ] A4 needs code that does not exist yet: a second `Dac80501` on `Wire` at
+      `kBrakeDacI2cAddress` with the same `GAIN 0x0101`, a bench console that
+      sets a code and reads `BRAKE_ISENSE` (0–1.006 V for 0–48.78 mA) and
+      `~{BRAKE_FAULT}`. The DAC80501**Z** resets to zero code, so the coil is
+      at 0 mA from rail-up until written. Put it in `AngleOutput` as a brake
+      section or in a new `examples/BrakeAndTorque`; `BoardPins.hpp` owns
+      every number.
+- [ ] A5 needs an ADS8689 driver (16-bit, 100 kSPS, SPI mode 0, 32-bit frames;
+      after reset write `RANGE_SEL` to the 0–1.25×VREF range, 78.125 µV/LSB,
+      because the reset range is ±12.288 V; conversion starts on the CONVST
+      rising edge; `R2012` holds CIPO low). The ADC sees `AMP_VOUT`, the
+      torque node before the ÷2 divider (nominal 0.67–2.66 V for ±rated),
+      `TQ_CAL_EN` switches `R2003` 75 kΩ across one bridge arm. Then `TQ`,
+      `caps` `torque`, torque in `STATUS`/`TRIAL`/capture, fault bits 11–12.
+- [ ] A6: `MotionAndHoming` on rev 2 as on v0.3 — the TMC pins and the
+      `MotionBackend` seam are unchanged, so this is a repeat of the v0.3
+      stage log on the new board, not new firmware.
+- [ ] After A6: `PyControlLinkQp` on `mouse_joystick_qp_rev2_usb` with the
+      board-4 session script generalised to a serial and env argument
+      (`qp-arduino-example/evidence/bench-scripts/board4_session.sh` and
+      `tools/board4_steps.py` hard-code board 4 and `rev1`).
+- [ ] Digital-50 observation depends on the LA5032 adapter **v2.0** and the
+      Molex 15020 FFC, received but with no continuity or permutation
+      measurement; the boot signature on CH0/CH1 (or CH31/CH30 if the cable
+      reverses) is the first test and belongs in the adapter's bring-up log.
+      Until then the v1.0 boards are observable over USB CDC only.
+
 ## Parallel Observability Workstream — Updated 2026-09-30
 
 [docs/observability-plan.md](../docs/observability-plan.md) is the local

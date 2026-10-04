@@ -14,17 +14,33 @@ serial, as numbers with units.
 
 The firmware pin map was taken from footprint `U501` in the `.kicad_pcb` at tag
 **v0.1**. Tags v0.1 and v0.2 have **byte-identical RP2040 pad-to-net maps**, so
-the ambiguity between them does not matter. Tag **v0.3** and current HEAD differ
-on exactly three pins — `GP10`, `GP11`, `GP13` — which they route to the
-angle-output DAC and v0.1/v0.2 leave unrouted. No connected pin moved.
+the ambiguity between them does not matter. Tag **v0.3** differs on exactly
+three pins — `GP10`, `GP11`, `GP13` — which it routes to the angle-output DAC
+and v0.1/v0.2 leave unrouted. No connected pin moved.
 
-**Pick the env from the tag the board was fabricated at, not from "is this the
-newest board".**
+**pcb v1.0** (the board file from commit `d5ae4b0`, 2026-09-21, unchanged
+through the fabrication package and HEAD; no tag yet) is a different map, read
+off footprint **`U601`** — the RP2040 moved into the combined MCU block and
+`U501` is now the 36 V switch. Eight pins change role and one leaves; see
+`src/BoardPins.hpp` and the README's pin map. Its first firmware was written
+on 2026-10-04 and has not run on a board.
+
+**Pick the env from the revision the board was fabricated at, not from "is
+this the newest board".**
 
 | PCB | env | `MJ_BOARD_REV` | spare pads | stage 1 checks |
 | --- | --- | --- | --- | --- |
 | `v0.1`, `v0.2` | `mouse_joystick` | 0 | 12 | 27 |
-| `v0.3`, HEAD | `mouse_joystick_rev1` | 1 | 9 | 24 |
+| `v0.3` | `mouse_joystick_rev1` | 1 | 9 | 24 |
+| v1.0 (`d5ae4b0`…HEAD) | `mouse_joystick_rev2` | 2 | 2 | 20 (derived from the rev 1 count; confirm on the first board) |
+
+On v1.0, section `[6]` checks `R607` (bus isolated), `R403`/`R402` (the I2C
+pair idles high on the MCU side), `R401` (RX idle high) and `R507` on **GP23**
+(no 36 V fault), and prints the level of `HV_LATCH` on GP24 without judging
+it, because the switch it belongs to is unpowered in stage 1. Section `[8]`
+adds `BRAKE_ISENSE` (GP27) and `ANGLE_OUT_MON` (GP29), both expected at 0 V
+with the rail off. The `i` command does nothing: the Digital-50 buffers have
+no enable.
 
 `env:mouse_joystick_rev1` is **not** a future-only env — a `v0.3` board needs
 it. Build `env:mouse_joystick` against `v0.3` and the spare-pad test drives
@@ -51,8 +67,21 @@ series resistors at HEAD. Identify parts by **value and net**, not by designator
 Worth setting up before you plug in USB, because it is the only diagnostic that
 works when USB does not.
 
-InstrumentPort-40 is `J1501`. Through the `la5032-instrument-port-adapter`,
-channels 0–17 map straight onto Strands `DIG0`–`DIG15` and `TRIG0`–`TRIG1`:
+**pcb v1.0 has a different port.** InstrumentPort-Digital-50 is `J1301`, a
+50-way 0.5 mm FFC, read-only and always enabled; it mates the
+`la5032-instrument-port-adapter` **v2.0** (built and received, mechanical fit
+checked by hand on 2026-09-28, continuity and cable permutation **not yet
+measured**) through a Molex Premo-Flex 15020 same-side FFC. Designed mapping:
+`CHn` observes `DIGn`, so **`FW_TRIG0` is CH0 and `FW_TRIG1` is CH1**, the
+TMC bus is CH8–CH14, the pyControl UART CH2/CH3, the DAC I2C pair CH22/CH23,
+the torque bus CH16–CH20, `PG_5V`/`PG_12V` CH30/CH31. A fully reversing cable
+would map `CHn` to `CH31-n` instead; the boot signature on CH0/CH1 (or CH31/
+CH30) is how to find out. The adapter's own bring-up log owns that result.
+The rest of this section is the rev 0/1 port.
+
+InstrumentPort-40 is `J1501`. Through the `la5032-instrument-port-adapter`
+v1.0, channels 0–17 map straight onto Strands `DIG0`–`DIG15` and
+`TRIG0`–`TRIG1`:
 
 | Signal | `J1501` pin | Strand | LA5032 channel | Useful for |
 |--------|------------|--------|----------------|------------|

@@ -138,6 +138,8 @@ ProtocolBoard::Config boardConfig() {
   config.fw_version =
       mouse_joystick::kFirmwareVersion; // git describe, see FirmwareVersion.hpp
   config.hw_rev = mouse_joystick::kHwRevName; // from MJ_BOARD_REV
+  // v1.0's Digital-50 port has no enable: INSTR is accepted, state is 1.
+  config.instr_switchable = (MJ_BOARD_REV < 2);
   config.travel_lo = kTravelLoDeg;
   config.travel_hi = kTravelHiDeg;
   // v_max is what LIMITS reports and it must describe what the mechanism does.

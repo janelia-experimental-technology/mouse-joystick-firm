@@ -96,6 +96,11 @@ public:
     bool has_brake = false;
     bool has_torque = false;
     bool has_angout = false;
+    // Whether `INSTR on/off` can switch anything. Rev 0 and rev 1 drive
+    // ~{INSTR_BUF_OE}; pcb v1.0's Digital-50 port has no enable, so there the
+    // verb is accepted and `state` always reports 1 (uart-protocol.md, INSTR,
+    // 2026-10-01). The simulator keeps the switchable default.
+    bool instr_switchable = true;
     // Which encoder direction is "pull": +1 if increasing angle is a pull.
     // A board-and-harness fact (bringup-log.md); WATCH thresholds and the
     // TRIAL excursions are expressed pull-positive through it.
@@ -272,7 +277,7 @@ public:
   // `INSTR STATE` reports what the port is doing rather than what the host
   // last asked. Before 2026-10-01 the verb only set the flag (review bug 3).
   bool instrumentationOn() const { return instr_on_; }
-  void setInstrumentationOn(bool on) { instr_on_ = on; }
+  void setInstrumentationOn(bool on) { instr_on_ = on || !cfg_.instr_switchable; }
 
   // ANGOUT/ANGSCALE (protocol v1): the application drives the DAC from these
   // once `cfg_.has_angout` is set. The output is valid only while homed,
@@ -773,7 +778,8 @@ private:
       return true;
     }
     if (argEquals(cmd.arg(0), "on") || argEquals(cmd.arg(0), "off")) {
-      instr_on_ = argEquals(cmd.arg(0), "on");
+      // A board whose port cannot be disabled accepts the verb and stays on.
+      instr_on_ = argEquals(cmd.arg(0), "on") || !cfg_.instr_switchable;
       out->beginAck(cmd.seq);
       return true;
     }

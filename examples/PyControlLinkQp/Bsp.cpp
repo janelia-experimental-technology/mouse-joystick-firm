@@ -25,9 +25,11 @@
 //       MJ_QS_STAT_PERIOD_MS (1000). No receive side exists: nothing on the
 //       trace link can reset, command or poke the board. Without QS_ON the
 //       application runs untraced and FW_TRIG1 stays idle.
-//   MJ_DAC_I2C (default 0)
-//       Rev 1 only: the angle DAC on I2C instead of SPI1 (v1.0 straps I2C;
-//       untestable on v0.3, whose SPI2C pin is tied to ground).
+//   MJ_DAC_I2C (derived from MJ_BOARD_REV)
+//       The angle DAC's transport: SPI1 on rev 1 (pcb v0.3, whose SPI2C pin
+//       is tied to ground), I2C0 on GP16/GP17 on rev 2 (pcb v1.0, which
+//       straps SPI2C high and shares the bus with the brake DAC). Overriding
+//       it describes a board that does not exist and is refused.
 //   MJ_TICK_LEVEL (default 0)
 //       FW_TRIG0 is high for the whole TICK handler (the sampler) and the
 //       operation marker becomes a trace record only. For the bench builds.
@@ -688,11 +690,19 @@ void BSP::reportTickCost(uint32_t us) {
 //............................................................................
 #if MJ_BOARD_REV != 0
 namespace {
-#ifndef MJ_DAC_I2C
+#if MJ_BOARD_REV >= 2
+#if defined(MJ_DAC_I2C) && !MJ_DAC_I2C
+#error "pcb v1.0 straps both DACs to I2C (R808, R1809); there is no SPI DAC path on this revision"
+#endif
+#undef MJ_DAC_I2C
+#define MJ_DAC_I2C 1
+#elif !defined(MJ_DAC_I2C)
 #define MJ_DAC_I2C 0
+#elif MJ_DAC_I2C
+#error "no v0.3 board can run the I2C path: SPI2C is tied to GND in copper. The I2C DAC is MJ_BOARD_REV 2 (pcb v1.0)."
 #endif
 #if MJ_DAC_I2C
-dac80501::I2cTransport l_dacTransport(Wire, dac80501::kI2cAddrA0Agnd);
+dac80501::I2cTransport l_dacTransport(Wire, mouse_joystick::kAngleDacI2cAddress);
 #else
 dac80501::SpiTransport l_dacTransport(SPI1, pins::kDacCsN);
 #endif
@@ -715,8 +725,8 @@ constexpr uint32_t kDacResetSettleUs = 2000U; // the driver's 1 ms, doubled
 void dacBusUp() {
   BSP::crumb(11U); // DAC: claiming the bus
 #if MJ_DAC_I2C
-  Wire.setSCL(pins::kDacSpiSck);
-  Wire.setSDA(pins::kDacSpiCopi);
+  Wire.setSCL(pins::kDacScl); // v1.0 I2C0 pins; Wire's defaults are TMC pins
+  Wire.setSDA(pins::kDacSda);
   l_dacTransport.begin();
   Wire.setClock(400000U); // 100 kHz would cost ~400 us per update
 #else

@@ -8,6 +8,11 @@
 // This board has no LEDs and no test points, and rev 0 has no SWD header, so
 // USB CDC is the whole feedback channel. Every check therefore reports a number
 // or a level, not a bare pass mark.
+//
+// The comments below say InstrumentPort-40 and TRIG0/TRIG1. On pcb v1.0
+// (MJ_BOARD_REV 2) the same two marker pins reach InstrumentPort-Digital-50 as
+// DIG0/DIG1, the buffers have no enable, and `SafeState::setInstrumentationEnabled()`
+// is a no-op; the checks themselves differ per revision as BoardPins.hpp says.
 
 #pragma once
 

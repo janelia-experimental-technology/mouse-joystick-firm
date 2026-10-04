@@ -238,11 +238,41 @@ Rev 0 and rev 1 share this allocation by design. No rev 0 pin moved. The only
 firmware-visible difference is GP10/GP11/GP13, unrouted on rev 0 and therefore
 folded into the spare-pad test — see `MJ_BOARD_REV`.
 
+**pcb v1.0 is `MJ_BOARD_REV=2` and moves pins.** Read off footprint `U601`
+(the RP2040 moved into the combined MCU block; `U501` is now the 36 V switch)
+in the board file, which is unchanged from commit `d5ae4b0` through the
+fabrication package and HEAD. GP0–GP9, GP14, GP19, GP21, GP25, GP26 and GP28
+are as above. The rest:
+
+| GPIO | v1.0 net | Function | Isolated |
+|------|----------|----------|----------|
+| 10, 11, 12 | `TQ_SPI_SCK`, `TQ_SPI_COPI`, `TQ_SPI_CIPO` | torque ADC ADS8689, SPI1 | yes |
+| 13 | `~{BRAKE_FAULT}` | brake current-limiter indication, **input** | yes |
+| 15 | `TQ_CONVST_CS` | torque ADC convert-start / chip select, no pull | yes |
+| 16, 17 | `DAC_SDA`, `DAC_SCL` | I2C0 to both DACs: angle 0x48, brake 0x49; 4.7 kΩ pull-ups both sides of the switch | yes |
+| 18 | `TQ_CAL_EN` | torque shunt-calibration switch, must idle low | yes |
+| 23 | `~{HV_FAULT}` | 36 V switch fault, 10 kΩ pull-up (`R507`) | no |
+| 24 | `HV_LATCH` | 36 V switch latch-off select, via `R503` 10 kΩ; low = auto-retry | no |
+| 27 | `BRAKE_ISENSE` | brake coil current monitor, 0–1.006 V, ADC1 | no |
+| 29 | `ANGLE_OUT_MON` | angle output node, 0–1.650 V, ADC3 | no |
+| 20, 22 | — | spare | — |
+
+The instrument port is InstrumentPort-Digital-50 (`J1301`), always enabled,
+with `FW_TRIG0`/`FW_TRIG1` on `DIG0`/`DIG1`; there is no `~{INSTR_BUF_OE}`.
+Three traps follow directly: **GP24 is an output that configures the 36 V
+switch**, not a buffer enable; **GP29 is an ADC input**, so reading it as the
+fault line finds no fault, ever; and **GP13 is driven by the brake block**, so
+a rev 1 build that closes the bus and drives the old DAC chip select shorts
+two outputs. `SafeState::apply()` and `PowerSequence::powerUp()` handle
+`HV_LATCH`; nothing else may touch it.
+
 **Reference designators are not stable across revisions.** Automatic annotation
 orders by sheet position, so inserting a part rotates everything after it.
 `R1901`/`R1902` are 100 Ω pyControl series resistors at v0.1 and 1 kΩ
-`HV_EN`/`HV_DIAG_EN` series resistors at HEAD. Designators quoted in this
-repository are **v0.1** designators; identify parts by value and net.
+`HV_EN`/`HV_DIAG_EN` series resistors at v0.3; at v1.0 the 36 V block is
+`U501`/`R50x` and `U501` had been the RP2040. Designators quoted in this
+repository are **v0.1** designators unless a revision is named; identify parts
+by value and net.
 
 ## Layout
 
@@ -290,10 +320,11 @@ between them does not invalidate a cache. Same arrangement as `TMC51X0`.
 |-----|---------|
 | `mouse_joystick` | `MJ_BOARD_REV=0`, for pcb **v0.1 and v0.2 only**. Universal `boot2_generic_03h` stage 2 — slower XIP, but boots regardless of the flash's quad-enable bit, which is what a first-article board wants. |
 | `mouse_joystick_fastflash` | same board, quad-lane stage 2 matched to the W25Q128JV. Use once stage 1 has passed. |
-| `mouse_joystick_rev1` | `MJ_BOARD_REV=1`, for pcb **v0.3 and later, including HEAD**, where GP10/GP11/GP13 carry the angle DAC. **This is not a future-only env — a v0.3 board needs it.** Building rev 0 against v0.3 drives the spare-pad test onto the DAC's SPI bus and chip select. The check count is the tell: a v0.3 board reporting 27 checks in stage 1 was built with the wrong env; rev 1 reports 24. |
-| `mouse_joystick_rev1_i2c` | Same, but the DAC on **I²C** (`MJ_DAC_I2C=1`). **No board can run this yet** — v0.3 ties `SPI2C` directly to GND in copper. It exists so the I²C path stays compiled and honest ahead of v1.0, which is strapping it. |
+| `mouse_joystick_rev1` | `MJ_BOARD_REV=1`, for pcb **v0.3 only**, where GP10/GP11/GP13 carry the angle DAC on SPI1. **This is not a future-only env — a v0.3 board needs it.** Building rev 0 against v0.3 drives the spare-pad test onto the DAC's SPI bus and chip select. The check count is the tell: a v0.3 board reporting 27 checks in stage 1 was built with the wrong env; rev 1 reports 24. **Not for v1.0**, where GP13 is an input from the brake block. |
+| `mouse_joystick_rev2` | `MJ_BOARD_REV=2`, for pcb **v1.0** (board file `d5ae4b0` through HEAD; no tag yet). I2C DACs on GP16/GP17, torque ADC on SPI1, `~{BRAKE_FAULT}` GP13, `HV_LATCH` GP24, `~{HV_FAULT}` GP23, two spare pads, **20 stage 1 checks**. The transport is chosen by the revision; `MJ_DAC_I2C` is not needed. **Untested on hardware** as of 2026-10-04. Replaces `mouse_joystick_rev1_i2c`, which described a board that never existed. |
 | `mouse_joystick_qp` | `examples/PyControlLinkQp` only: the stage-4 protocol inside a QP/C++ active object with a QS trace on `FW_TRIG1`, rev 0, `TmcMotion`, pyControl on UART0. Needs the sibling `../qp-arduino` checkout. |
 | `mouse_joystick_qp_rev1` | Same for rev 1. |
+| `mouse_joystick_qp_rev2`, `mouse_joystick_qp_rev2_usb` | Same for pcb v1.0, delivery and bench (USB protocol, tick probe) builds. The brake and torque blocks are not driven yet: `caps` lacks `brake` and `torque`. |
 | `mouse_joystick_qp_sim_usb` | Same application for a board with no 36 V and no host: simulated motion, protocol over USB CDC. How it was first run on the fixture. |
 | `native` | host tests. |
 

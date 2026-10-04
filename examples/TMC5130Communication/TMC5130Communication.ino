@@ -55,7 +55,7 @@ namespace tmc = mouse_joystick::tmc;
 #define MJ_REF_HV_LATCH_STRAP "R203"
 #define MJ_REF_HV_ICL "R206"
 #define MJ_REF_HV_SNS_BOTTOM "R207"
-#else
+#elif MJ_BOARD_REV == 1
 #define MJ_REF_HV_CONN "J1901"
 #define MJ_REF_HV_SWITCH "U1901"
 #define MJ_REF_HV_DIODE "D1901"
@@ -64,6 +64,18 @@ namespace tmc = mouse_joystick::tmc;
 #define MJ_REF_HV_LATCH_STRAP "R1903"
 #define MJ_REF_HV_ICL "R1906"
 #define MJ_REF_HV_SNS_BOTTOM "R1907"
+#else
+// pcb v1.0: the block is U501/R50x and LATCH is on GP24 through R503, so there
+// is no strap to name; the latch probe should PASS on this revision and
+// powerUp() should report the direct method. Read off the v1.0 kicad_pcb.
+#define MJ_REF_HV_CONN "J501"
+#define MJ_REF_HV_SWITCH "U501"
+#define MJ_REF_HV_DIODE "D501"
+#define MJ_REF_HV_EN_SERIES "R501"
+#define MJ_REF_HV_EN_PULLDOWN "R506"
+#define MJ_REF_HV_LATCH_STRAP "(none: LATCH is GP24 via R503)"
+#define MJ_REF_HV_ICL "R508"
+#define MJ_REF_HV_SNS_BOTTOM "R509"
 #endif
 
 constexpr uint32_t kSerialBaudRate = 115200;
@@ -592,12 +604,21 @@ void latchProbe(Print &out) {
   constexpr uint16_t kWindowMs = 250;
 
   out.println(F("LATCH probe: a plain single-shot HV_EN assertion."));
+#if MJ_BOARD_REV < 2
   out.println(F("  On pcb v0.1-v0.3 " MJ_REF_HV_LATCH_STRAP
                  " straps the 36 V switch's LATCH to"));
   out.println(F("  +3.3V_MCU, so it latches off 1-2 ms into charging 208 uF at"));
   out.println(F("  only ~10-12 V and the rail collapses when the stored charge"));
   out.println(F("  runs out. Expect FAIL on those, and PASS once LATCH reaches"));
   out.println(F("  a GPIO or is tied low."));
+#else
+  out.println(F("  On pcb v1.0 LATCH is GP24 through R503. The probe drives it"));
+  out.println(F("  HIGH first to reproduce the strapped behaviour of v0.1-v0.3"));
+  out.println(F("  (expect FAIL: latch-off trips while charging 208 uF), then"));
+  out.println(F("  'p'/powerUp() holds it LOW for the ramp, which should PASS"));
+  out.println(F("  and report the direct method, for the first time on any"));
+  out.println(F("  board. Record both outcomes in the PCB bring-up log."));
+#endif
   out.println();
 
   const mouse_joystick::LatchProbe probe =
