@@ -23,10 +23,12 @@ delivery sketch; nothing here changes the protocol or the pyControl side.
 | `AppConfig.hpp` | configuration | the mechanism and protocol numbers of `PyControlLink.ino`; `has_angout` follows `MJ_BOARD_REV`; `pull_sign` comes from `src/BoardCalibration.hpp` by serial once the board is known (board 4 is −1, measured 2026-10-02; others +1, unmeasured) |
 | `PyControlLinkQp.ino` | `setup()`/`loop()` only | event pool (8 lines), queue (16 events), start |
 
-The qp-arduino library comes from the sibling checkout `../qp-arduino`
-(branch `upgrade/qpcpp-v7`) through `platformio.ini`'s `[qp_env_data]` until
-it is released; the link is `symlink://`, never a bare path, for the reason the
-board library already documents.
+The qp-arduino library comes from its released tag on GitHub
+(`https://github.com/QuantumLeaps/qp-arduino.git#v7.3.4`) through
+`platformio.ini`'s `[qp_env_data]`, since 2026-10-04; PlatformIO clones it
+once into `.pio/libdeps` and refreshes it only when the pin changes. Before
+the release it was the sibling checkout `../qp-arduino`, linked with
+`symlink://`.
 
 ## Signals and ports
 
