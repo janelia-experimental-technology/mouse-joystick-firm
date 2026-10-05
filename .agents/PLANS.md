@@ -54,6 +54,9 @@ section 9, Phase A.
 
 ### Still owed, in order (software first, then the bench)
 
+- [x] **Regression of HEAD on v0.3 before the v1.0 boards (2026-10-05, board 4):**
+      every stage console on `mouse_joystick_rev1` and the QP session on
+      `mouse_joystick_qp_rev1_usb`, no firmware regression; see Status.
 - [ ] **Tag `mouse-joystick-pcb` `v1.0` at the fabricated commit** (`646b8f4`
       is the one whose `fab/` package is the order; `d5ae4b0` is the last
       board-file change). Then replace "no tag yet" in `BoardPins.hpp`,
@@ -152,6 +155,24 @@ items. Preserve selected manufactured-tag/serial context rather than assuming
 historical firmware wiring matches current PCB development.
 
 ## Status
+
+**2026-10-05: HEAD (`ec3b36d`) regressed on board 4 (pcb v0.3) before the v1.0
+boards arrive — no firmware regression.** Every stage tool ran on
+`mouse_joystick_rev1` and the QP session on `mouse_joystick_qp_rev1_usb`,
+non-interactively: stage 1 24 checks / 0 failed; stage 2 rail 133 ms, 5 / 0
+registers, SPI taps decoded byte-for-byte; stage 3 switch witnessed, homed,
+5 of 5 at a 2.0-count spread, live loop 1000.1 Hz; QP a–e with 320 moves,
+release/watch/fetch/stream, host-loss fault 124.7 ms, hv off. Host tests 125,
+pyControl tests 168, 15 target builds, qp-arduino resolved from the GitHub
+tag. Evidence `../qp-arduino-example/evidence/2026-10-05-1142-board4-regression/`; numbers in the PCB
+bring-up log under board 4. **Bench finding:** board 4's mechanism now has
+lost motion (encoder follow 0.88–0.94 against 1.0000 on 2026-09-09; `t` fails
+because of it) — coupling or gear mesh, not firmware. Nits, none applied:
+`measureHvCurrent()` 50 ms discharge wait (`m` fails after a live rail; from a
+cold rail it measured 12.9 mA), `W` sweeps
+with the driver disabled, the session scripts miss pre-dictionary `DAC_STATE`
+records. The UART0 path with a pyboard and Gate E remain owed; no pyboard was
+on the bench.
 
 **2026-10-02:** protocol v1 (`proto=2`) implemented on both ends and run end to
 end on board 4 with the rail up in the QP bench build; watchdog, breadcrumbs,
