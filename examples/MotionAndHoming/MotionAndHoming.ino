@@ -500,6 +500,11 @@ bool bringUpBus(Print &out) {
   out.println(report.method == mouse_joystick::PowerUpMethod::kLatchGpio
                   ? F("direct HV_EN")
                   : F("firmware staircase"));
+  if (report.method == mouse_joystick::PowerUpMethod::kLatchGpio) {
+    out.print(F("    [ ok ] +36V_SW bulk charged at "));
+    out.print(report.charge_ms);
+    out.println(F(" ms (HV_SNS below the fault level); latch-off armed"));
+  }
 
   if (!PowerSequence::connectBus()) {
     out.println(F("    [FAIL] refused to close the bus: rail not live."));
@@ -584,6 +589,10 @@ bool bringUpBus(Print &out) {
   Wire.setSCL(pins::kDacScl);
   Wire.setSDA(pins::kDacSda);
   dac_transport.begin();
+  // 400 kHz, as the QP build: at the 100 kHz default one DAC write costs
+  // ~400 us and the 1 kHz live loop's worst iteration reached 1082 us
+  // (v1.0 unit E4654C159F274534, 2026-10-05).
+  Wire.setClock(400000U);
   out.print(F("    transport: I2C at 0x"));
   out.println(kDacI2cAddress, HEX);
   out.println(F("    Pull-ups must be BOARD-level, not per instance -- two"));

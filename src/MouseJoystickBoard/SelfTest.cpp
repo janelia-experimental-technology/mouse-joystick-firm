@@ -176,8 +176,8 @@ void SelfTest::reportIdentity(Print &out) {
   out.println(
       F("      torque, brake and DAC blocks through the bus switch and"));
   out.println(F("      are left alone: 2 pads, 20 checks. ~{HV_FAULT} is"));
-  out.println(F("      GP23 here; GP29 is an ADC input. Not yet confirmed"));
-  out.println(F("      on hardware: this is the first v1.0 firmware."));
+  out.println(F("      GP23 here; GP29 is an ADC input. Confirmed on"));
+  out.println(F("      hardware 2026-10-05: 20 checks on E4654C159F274534."));
 #endif
 }
 

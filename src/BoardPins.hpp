@@ -19,7 +19,7 @@
 //          map was written (2026-10-04); the three commits carry one pad map.
 //          Eight pins change role and one leaves the sheet; everything the
 //          pyControl link, the TMC bus and the power-monitoring group use is
-//          unchanged. Not yet confirmed on hardware.
+//          unchanged. Confirmed on hardware 2026-10-05 (E4654C159F274534).
 //
 // Names here are the board's net names, not Pico conventions. Trailing `_N`
 // marks an active-low signal, which the schematic spells `~{NAME}`.

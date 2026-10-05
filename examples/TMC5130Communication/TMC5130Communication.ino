@@ -748,12 +748,26 @@ void runSequence(Print &out) {
   case PowerUpResult::kFaultLatched:
     out.println(
         F("    [FAIL] the 36 V switch latched a fault during power-up."));
+#if MJ_HAS_LATCH_GPIO
+    if (report.charge_timed_out) {
+      out.print(F("      HV_SNS never left the fault band in "));
+      out.print(report.charge_ms);
+      out.println(F(" ms with LATCH low: the switch stayed in current"));
+      out.println(F("      limit, which is a short on +36V_SW, not inrush."));
+    } else {
+      out.print(F("      LATCH was held low until HV_SNS left the fault band at "));
+      out.print(report.charge_ms);
+      out.println(F(" ms, then armed; the fault came after that."));
+    }
+    out.println(F("      HV_EN has been dropped, which is what clears it."));
+#else
     out.println(
         F("      LATCH is tied high on this board, so faults latch off"));
     out.println(
         F("      rather than auto-retrying. HV_EN has been dropped, which"));
     out.println(F("      is what clears it. I_CL is about 1.2 A ("
                    MJ_REF_HV_ICL " 40k)."));
+#endif
     return;
   case PowerUpResult::kOk:
     break;
@@ -768,6 +782,13 @@ void runSequence(Print &out) {
   out.print(F(" ms, peak "));
   out.print(report.peak_rail_volts, 4);
   out.println(F(" V"));
+  if (report.method == mouse_joystick::PowerUpMethod::kLatchGpio) {
+    out.print(F("    [ ok ] +36V_SW bulk charged (HV_SNS below the fault level "));
+    out.print(PowerSequence::kBulkChargeQuietMs);
+    out.print(F(" ms running) at "));
+    out.print(report.charge_ms);
+    out.println(F(" ms; latch-off armed"));
+  }
   printRail(out, PowerSequence::readRail());
   out.println();
 

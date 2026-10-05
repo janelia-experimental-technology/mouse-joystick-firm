@@ -51,6 +51,8 @@ PowerUpResult PowerSequence::powerUp(PowerUpReport &report) {
   report.peak_rail_volts = 0.0f;
   report.samples = 0;
   report.method = PowerUpMethod::kNone;
+  report.charge_ms = 0;
+  report.charge_timed_out = false;
 
   // Refuse to start from anything but a known-dead rail. If +3.3V_SW is already
   // live with HV_EN low, the switch or its enable network is not doing what
@@ -93,11 +95,40 @@ PowerUpResult PowerSequence::powerUp(PowerUpReport &report) {
     delay(1);
   }
   if (up) {
-    // Arm latch-off now that charging is done. Measured retry window on a
-    // LATCH-released board is 10-12 ms; the rail-up poll above already covers
-    // it, but leave a margin before taking the retry away.
-    delay(10);
-    digitalWrite(pins::kHvLatch, HIGH);
+    // Arm latch-off only once the bulk is charged, and +3.3V_SW being live
+    // does not say that: the bucks run from a few volts of +36V_SW, so the
+    // rail reads up while the switch is still in current limit. Watch HV_SNS
+    // instead -- it sits at the fault level (V_SNSFH) for as long as the
+    // switch limits -- and arm when it has read below the fault level for
+    // kBulkChargeQuietMs. Taking the retry away earlier let the switch trip
+    // on the remaining inrush with latch-off armed (v1.0 unit
+    // E4654C159F274534, 2026-10-05: tripped at ~37 ms, armed at ~20 ms).
+    pinMode(pins::kHvDiagEn, OUTPUT);
+    digitalWrite(pins::kHvDiagEn, HIGH);
+    delay(2);
+    uint32_t quiet_ms = 0;
+    while ((millis() - start_ms) < kBulkChargeTimeoutMs) {
+      const uint16_t sns = analogRead(pins::kHvSns);
+      if (conversions::hvSenseVolts(sns) >= conversions::kHvSenseFaultVolts) {
+        quiet_ms = 0;
+      } else {
+        ++quiet_ms;
+      }
+      if (quiet_ms >= kBulkChargeQuietMs) {
+        break;
+      }
+      delay(1);
+    }
+    digitalWrite(pins::kHvDiagEn, LOW);
+    report.charge_ms = millis() - start_ms;
+    report.charge_timed_out = quiet_ms < kBulkChargeQuietMs;
+    if (report.charge_timed_out) {
+      // Still limiting after a second is a short, not a slow charge. Leave
+      // the retry on and let the fault check below report it.
+      up = false;
+    } else {
+      digitalWrite(pins::kHvLatch, HIGH);
+    }
   }
 #else
   // The workaround. R203 straps LATCH high on this revision, so the switch
@@ -496,6 +527,12 @@ void PowerSequence::powerDown() {
   digitalWrite(pins::kHvEn, LOW);
   pinMode(pins::kHvDiagEn, OUTPUT);
   digitalWrite(pins::kHvDiagEn, LOW);
+#if MJ_HAS_LATCH_GPIO
+  // Back to the auto-retry default, so a later plain assertion (holdEnable,
+  // the profile) does not inherit latch-off from a probe that drove it high.
+  pinMode(pins::kHvLatch, OUTPUT);
+  digitalWrite(pins::kHvLatch, LOW);
+#endif
 }
 
 } // namespace mouse_joystick

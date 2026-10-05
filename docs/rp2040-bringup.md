@@ -23,7 +23,8 @@ through the fabrication package and HEAD; no tag yet) is a different map, read
 off footprint **`U601`** — the RP2040 moved into the combined MCU block and
 `U501` is now the 36 V switch. Eight pins change role and one leaves; see
 `src/BoardPins.hpp` and the README's pin map. Its first firmware was written
-on 2026-10-04 and has not run on a board.
+on 2026-10-04 and first ran on unit `E4654C159F274534` on 2026-10-05: 20
+checks, then stages 2, A3, A6 and the QP build the same day.
 
 **Pick the env from the revision the board was fabricated at, not from "is
 this the newest board".**
@@ -32,7 +33,7 @@ this the newest board".**
 | --- | --- | --- | --- | --- |
 | `v0.1`, `v0.2` | `mouse_joystick` | 0 | 12 | 27 |
 | `v0.3` | `mouse_joystick_rev1` | 1 | 9 | 24 |
-| v1.0 (`d5ae4b0`…HEAD) | `mouse_joystick_rev2` | 2 | 2 | 20 (derived from the rev 1 count; confirm on the first board) |
+| v1.0 (`d5ae4b0`…HEAD) | `mouse_joystick_rev2` | 2 | 2 | 20 (observed 2026-10-05 on `E4654C159F274534`) |
 
 On v1.0, section `[6]` checks `R607` (bus isolated), `R403`/`R402` (the I2C
 pair idles high on the MCU side), `R401` (RX idle high) and `R507` on **GP23**

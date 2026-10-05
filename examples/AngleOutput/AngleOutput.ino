@@ -191,6 +191,10 @@ bool bringUp(Print &out) {
   Wire.setSCL(pins::kDacScl); // v1.0 I2C0 pins; Wire's defaults are TMC pins
   Wire.setSDA(pins::kDacSda);
   transport.begin();
+  // 400 kHz, as the QP build. At the 100 kHz default a three-byte DAC write
+  // costs ~400 us, which is what pushed the 1 kHz live loop's worst iteration
+  // to 1082 us on v1.0 unit E4654C159F274534 (2026-10-05).
+  Wire.setClock(400000U);
   out.print(F("    [ ok ] SCL GP"));
   out.print(pins::kDacScl);
   out.print(F(", SDA GP"));
@@ -298,6 +302,25 @@ void setCodeAndReport(Print &out, uint16_t code) {
     return;
   }
   printExpected(out, code);
+#if MJ_BOARD_REV >= 2
+  // v1.0 brings the BNC node back to the MCU as ANGLE_OUT_MON (GP29, through
+  // R810 1 kOhm), so the commanded value can be checked without a meter. The
+  // 987 Hz filter settles in ~2 ms; average 16 readings after 5 ms.
+  delay(5);
+  analogReadResolution(mouse_joystick::conversions::kAdcResolutionBits);
+  uint32_t acc = 0;
+  for (uint8_t i = 0; i < 16; ++i) {
+    acc += analogRead(mouse_joystick::pins::kAngleOutMon);
+  }
+  const float counts = static_cast<float>(acc) / 16.0f;
+  out.print(F("    ANGLE_OUT_MON: "));
+  out.print(mouse_joystick::conversions::countsToVolts(
+                static_cast<uint16_t>(counts + 0.5f)),
+            4);
+  out.print(F(" V measured at the BNC node ("));
+  out.print(counts, 1);
+  out.println(F(" counts)"));
+#endif
 }
 
 void threePointFit(Print &out) {

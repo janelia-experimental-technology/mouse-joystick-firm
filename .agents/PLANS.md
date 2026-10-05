@@ -67,16 +67,30 @@ section 9, Phase A.
       and 0x49, SPI1 sees the ADS8689" is an A2/A3 check with the rail up and
       the bus closed. Corrected in the rig plan 2026-10-04; A1 is the
       `RP2040SelfTest` run and nothing more.
-- [ ] A1: `RP2040SelfTest` on `mouse_joystick_rev2`, USB only, 36 V unplugged.
-      Expect 20 checks. Record the serial, the `HV_LATCH` level and the two
-      monitor readings in the PCB bring-up log under a new v1.0 section.
-- [ ] A2: `TMC5130Communication` on rev 2 with 36 V: the latch probe should
-      PASS (LATCH held low by firmware) and `powerUp()` should report the
-      direct method, the first time any board has. `~{HV_FAULT}` on GP23.
-      `PG_5V`/`PG_12V` are visible only on Digital-50 `DIG30`/`DIG31`.
-- [ ] A3: `AngleOutput` (or `MotionAndHoming` `b`) on rev 2: the I2C DAC at
-      0x48 answers; `GAIN 0x0101` first; BNC 0–1.650 V into 1 MΩ;
-      `ANGLE_OUT_MON` tracks (the self test's `a` command reads it).
+- [x] A1: `RP2040SelfTest` on `mouse_joystick_rev2`, USB only (2026-10-05,
+      unit A `E4654C159F274534`): **20 checks, 0 failed**, `HV_LATCH` low,
+      monitors at 0 V; recorded in the PCB bring-up log. Both v1.0 units
+      arrived with a wrong part (green, banded) at every `C2858031` position
+      (`C1301` on `+3.3V_MCU`, `C1208` on TMC `5VOUT`, `C1501` on `+5V_SW`);
+      removing `C1301` brought the board up. `C1208` must be refitted with a
+      real 2.2–4.7 µF before A2.
+- [x] A2 (2026-10-05, unit A): `powerUp()` reports the direct method; the
+      first attempt failed because latch-off was armed 10 ms after `+3.3V_SW`
+      read live while the switch was still charging the bulk (PG lines up at
+      6–11 ms, trip at 37 ms). **Fixed in `PowerSequence`: LATCH stays low
+      until `HV_SNS` has left the fault band for 20 ms (33–34 ms measured),
+      `powerDown()` restores LATCH low, `PowerUpReport::charge_ms` added.**
+      Two clean passes, 5/0 register checks each; idle 36 V input current
+      43.6–51.3 mA. The LATCH probe's strapped half fails as designed. Numbers
+      in the PCB bring-up log. Uncommitted.
+- [x] A3 (2026-10-05, unit A): the I2C DAC at 0x48 answers, `GAIN 0x0101`
+      written and **read back matched**, `DEVID` 0x115, `REF-ALARM` clear, every
+      transaction ACKed on the Digital-50 I2C taps. `ANGLE_OUT_MON`
+      readback added to `AngleOutput` (rev 2): midscale 0.8236 V, full scale
+      1.6415 V, floor 12 mV at the BNC node, within the RP2040 ADC's accuracy; a
+      meter fit is still owed. I2C set to 400 kHz in both bench consoles (the
+      QP build already had it); the live loop's worst iteration went 1082 →
+      732 µs. Uncommitted.
 - [ ] A4 needs code that does not exist yet: a second `Dac80501` on `Wire` at
       `kBrakeDacI2cAddress` with the same `GAIN 0x0101`, a bench console that
       sets a code and reads `BRAKE_ISENSE` (0–1.006 V for 0–48.78 mA) and
@@ -91,13 +105,19 @@ section 9, Phase A.
       torque node before the ÷2 divider (nominal 0.67–2.66 V for ±rated),
       `TQ_CAL_EN` switches `R2003` 75 kΩ across one bridge arm. Then `TQ`,
       `caps` `torque`, torque in `STATUS`/`TRIAL`/capture, fault bits 11–12.
-- [ ] A6: `MotionAndHoming` on rev 2 as on v0.3 — the TMC pins and the
-      `MotionBackend` seam are unchanged, so this is a repeat of the v0.3
-      stage log on the new board, not new firmware.
-- [ ] After A6: `PyControlLinkQp` on `mouse_joystick_qp_rev2_usb` with the
-      board-4 session script generalised to a serial and env argument
-      (`qp-arduino-example/evidence/bench-scripts/board4_session.sh` and
-      `tools/board4_steps.py` hard-code board 4 and `rev1`).
+- [x] A6 (2026-10-05, unit A): rail 3 ms / charged 34 ms, TMC 0x11, `vsense`
+      1, switch witnessed, homed, **5 of 5 at 2.0 counts**, reversal dead band
+      89 µsteps as on board 4 (mechanism, not board), `L` 1000.1 Hz but worst
+      loop **1082 µs** over the I2C DAC (v0.3 SPI: 386–527 µs). Numbers in the
+      PCB bring-up log.
+- [x] After A6 (2026-10-05, unit A): `PyControlLinkQp` on
+      `mouse_joystick_qp_rev2_usb`, phases a–e, no asserts; tick cost 305/357 µs
+      holding with the angle output on (I2C), 15/52 idle, 116/1081 moving;
+      host-loss 105.7 ms; 320 moves. Run with a scratch variant of the session
+      script that remaps the Digital-50 channels to the 40-pin names the trace
+      tools expect (CH1→CH17, CH0→CH16, CH2→CH8, CH9→CH5, CH8→CH2); the
+      bench scripts still hard-code board 4, `rev1` and the 40-pin map and
+      are owed a serial/env/channel-map parameterisation.
 - [ ] Digital-50 observation depends on the LA5032 adapter **v2.0** and the
       Molex 15020 FFC, received but with no continuity or permutation
       measurement; the boot signature on CH0/CH1 (or CH31/CH30 if the cable
@@ -165,9 +185,13 @@ registers, SPI taps decoded byte-for-byte; stage 3 switch witnessed, homed,
 release/watch/fetch/stream, host-loss fault 124.7 ms, hv off. Host tests 125,
 pyControl tests 168, 15 target builds, qp-arduino resolved from the GitHub
 tag. Evidence `../qp-arduino-example/evidence/2026-10-05-1142-board4-regression/`; numbers in the PCB
-bring-up log under board 4. **Bench finding:** board 4's mechanism now has
-lost motion (encoder follow 0.88–0.94 against 1.0000 on 2026-09-09; `t` fails
-because of it) — coupling or gear mesh, not firmware. Nits, none applied:
+bring-up log under board 4. **Bench finding, settled:** the reversal lost motion (reversals 6–7 counts at
+IRUN 8, 4–5 at IRUN 17; continuing moves 1.00; taps = `X_ENC` within 2 counts;
+same on a replacement joystick unit; board 2 had −4 counts in September) is the
+stepper's dead band against friction, not the TMC, not firmware, not a defect.
+`t` fails because its move away off the switch is ended by the bench console's
+follow check, which lacks `TmcMotion`'s grace and second window, and is not checked. Nits, none applied: `SafeState::driveOutput()` drives `~{BUS_SW_EN}` low for 34 µs
+at boot (direction set before level; seen on v1.0 unit A's Digital-50 tap);
 `measureHvCurrent()` 50 ms discharge wait (`m` fails after a live rail; from a
 cold rail it measured 12.9 mA), `W` sweeps
 with the driver disabled, the session scripts miss pre-dictionary `DAC_STATE`

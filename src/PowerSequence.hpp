@@ -56,6 +56,13 @@ struct PowerUpReport {
   float peak_rail_volts; // that reading, undivided
   uint32_t samples;      // how many times the rail was polled
   PowerUpMethod method;  // which mechanism brought it up
+  // LATCH-GPIO method only: HV_EN high to HV_SNS leaving the switch's fault
+  // band for kBulkChargeQuietMs, i.e. +36V_SW's bulk charged and latch-off
+  // armed. 0 when the method did not measure it. `charge_timed_out` means the
+  // sense never left the band within kBulkChargeTimeoutMs: the switch stayed
+  // in current limit, which is a short, not a slow charge.
+  uint32_t charge_ms;
+  bool charge_timed_out;
 };
 
 enum class PowerUpResult {
@@ -101,6 +108,17 @@ public:
   // soft-start. The measured figure is what matters; this is only a give-up
   // point.
   static constexpr uint32_t kRailRiseTimeoutMs = 1000;
+  // LATCH-GPIO method: how long to keep LATCH low (auto-retry) after HV_EN
+  // before giving up on the bulk ever charging, and how many consecutive
+  // milliseconds HV_SNS must read below the fault level before latch-off is
+  // armed. The rail reading cannot stand in for this: the bucks start from a
+  // few volts of +36V_SW, so +3.3V_SW is live long before the switch has
+  // finished charging 208 uF through its current limit. Measured on pcb v1.0
+  // unit E4654C159F274534, 2026-10-05: PG_5V 6.6 ms and PG_12V 10.9 ms after
+  // HV_EN, latch-off armed at ~20 ms, the switch tripped at ~37 ms with
+  // latch-off armed and stayed off.
+  static constexpr uint32_t kBulkChargeTimeoutMs = 1000;
+  static constexpr uint32_t kBulkChargeQuietMs = 20;
 
   // After the rail is up, before touching the bus. The TMC5130A needs its
   // internal reset and charge pump, and its 16 MHz clock source X1201 is itself
