@@ -997,13 +997,59 @@ static std::string lastOutput(const ProtocolBoard &board) {
   return n == 0 ? std::string() : std::string(board.output(n - 1));
 }
 
+namespace {
+uint64_t g_fake_wall_us = 0;
+uint64_t fakeWallClock() { return g_fake_wall_us; }
+} // namespace
+
+void test_a_blocking_hv_on_does_not_trip_the_watchdog_it_arms(void) {
+  // On pcb v1.0 `hv on` blocks 185 ms in the rail's soft start, longer than
+  // the 100 ms host timeout. The deadline armed by it must count from the
+  // end of the call, not from the line's arrival (Gate E, 2026-10-06 11:16).
+  Rig rig;
+  rig.board.setWallClock(&fakeWallClock);
+  g_fake_wall_us = 185000; // the wall when the backend call returns
+  rig.board.feed("hv;1;on\n");
+  TEST_ASSERT_EQUAL_STRING("ack;1", rig.board.output(0));
+  rig.board.clearOutput();
+  rig.board.advanceTo(190000); // the firmware's advance after the line
+  TEST_ASSERT_EQUAL_UINT8(0, rig.board.outputCount());
+  rig.board.advanceTo(284999);
+  TEST_ASSERT_EQUAL_UINT8(0, rig.board.outputCount());
+  rig.board.advanceTo(285000); // 100 ms after the rail came up
+  TEST_ASSERT_EQUAL_STRING("ev;FAULT;285000;code=0;detail=host_timeout",
+                           lastOutput(rig.board).c_str());
+}
+
+void test_time_blocked_in_a_command_is_credited_to_the_watchdog(void) {
+  // Gate E 11:25: `home` blocked ~130 ms with the watchdog running from
+  // `hv on`; the heartbeats that arrived meanwhile were read only after the
+  // deadline check. The blocked time moves the deadline.
+  Rig rig;
+  rig.board.setWallClock(&fakeWallClock);
+  g_fake_wall_us = 185000;
+  rig.board.feed("hv;1;on\n"); // deadline 285000
+  rig.board.advanceTo(190000);
+  g_fake_wall_us = 340000; // `home` returns 150 ms after its arrival
+  rig.board.feed("home;2\n"); // refreshed to 290000 on arrival, +150000
+  rig.board.clearOutput();
+  rig.board.advanceTo(345000);
+  rig.board.clearOutput(); // HOMED lands here; not the point
+  rig.board.advanceTo(439999);
+  TEST_ASSERT_EQUAL_UINT8(0, rig.board.outputCount());
+  rig.board.advanceTo(440000);
+  TEST_ASSERT_EQUAL_STRING("ev;FAULT;440000;code=0;detail=host_timeout",
+                           lastOutput(rig.board).c_str());
+}
+
 void test_event_timestamps_do_not_wrap_at_32_bits(void) {
   // Bug 1: `t` was cast to uint32_t and wrapped at 71.6 minutes, inside a
   // session. The protocol carries the board's 64-bit microsecond clock whole.
   Rig rig;
+  rig.board.advance(4294967296ULL); // 2^32 us: 71.6 minutes into the session,
+                                    // rail off (the watchdog runs with the rail)
   rig.board.feed("hv;1;on\n");
   rig.board.clearOutput();
-  rig.board.advance(4294967296ULL); // 2^32 us: 71.6 minutes into the session
   rig.board.feed("home;2\n");
   rig.board.clearOutput();
   rig.board.advance(50000);
@@ -1032,17 +1078,26 @@ void test_a_home_timeout_shorter_than_the_home_faults_when_it_expires(void) {
 
 void test_a_home_timeout_longer_than_the_home_is_not_a_fault(void) {
   Rig rig;
-  rig.board.feed("hv;1;on\n");
+  // The rail stays on for two seconds, so the host keeps the heartbeat
+  // (V1.12: the watchdog runs with the rail), widened first to 500 ms.
+  rig.board.feed("cfg;1;wdt_ms=500\n");
+  rig.board.feed("hv;2;on\n");
   rig.board.clearOutput();
-  rig.board.feed("home;2;2000\n"); // under the old rule this faulted at once
-  TEST_ASSERT_EQUAL_STRING("ack;2", rig.board.output(0));
+  rig.board.feed("home;3;2000\n"); // under the old rule this faulted at once
+  TEST_ASSERT_EQUAL_STRING("ack;3", rig.board.output(0));
   rig.board.clearOutput();
   rig.board.advance(50000);
   TEST_ASSERT_EQUAL_STRING("ev;HOMED;50000;angle=0.0",
                            lastOutput(rig.board).c_str());
   rig.board.clearOutput();
-  rig.board.advance(2000000); // the deadline has been disarmed by completion
-  TEST_ASSERT_EQUAL_UINT8(0, rig.board.outputCount());
+  for (unsigned n = 4; n < 9; ++n) { // 2 s: the deadline was disarmed by completion
+    rig.board.advance(400000);
+    TEST_ASSERT_EQUAL_UINT8(0, rig.board.outputCount());
+    char ping[16];
+    snprintf(ping, sizeof(ping), "ping;%u\n", n);
+    rig.board.feed(ping);
+    rig.board.clearOutput();
+  }
   TEST_ASSERT_EQUAL_STRING("HOMED", rig.board.state());
 }
 
@@ -1335,6 +1390,8 @@ int main(int, char **) {
   RUN_TEST(test_a_repeated_relative_move_is_not_re_executed);
   RUN_TEST(test_reads_are_re_executed_and_return_fresh_state);
   RUN_TEST(test_any_well_formed_command_resets_the_watchdog);
+  RUN_TEST(test_a_blocking_hv_on_does_not_trip_the_watchdog_it_arms);
+  RUN_TEST(test_time_blocked_in_a_command_is_credited_to_the_watchdog);
   RUN_TEST(test_malformed_frames_do_not_hold_the_watchdog_open);
   RUN_TEST(test_reported_limits_agree_with_the_backend);
   RUN_TEST(test_arm_is_refused_when_the_driver_refuses_to_enable);

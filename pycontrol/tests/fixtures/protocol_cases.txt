@@ -227,6 +227,53 @@ CASE heartbeat-loss-faults-the-board
   EXPECT ack;4;state=FAULTED;angle=0.0;xactual=0.0;torque=;brake=;homed=1;limit=0;faults=1;hv=0;t=150000
 END
 
+# The watchdog runs with the rail (V1.12, 2026-10-06): `hv on` arms it, so a
+# host that dies between `hv on` and `arm` does not leave the rail up. Before
+# this, `arm` armed it, and a task that crashed one step after `hv on` on the
+# first Gate E run left a v1.0 board's rail up until the next run.
+CASE hv-on-arms-the-watchdog
+  SEND hv;1;on
+  EXPECT ack;1
+  ADVANCE 100000
+  EXPECT ev;FAULT;100000;code=0;detail=host_timeout
+  SEND status;2
+  EXPECT ack;2;state=FAULTED;angle=0.0;xactual=0.0;torque=;brake=;homed=0;limit=0;faults=1;hv=0;t=100000
+END
+
+# `hv off` disarms it: with the rail off there is nothing left to protect, and
+# a host may go quiet for as long as it likes.
+CASE hv-off-disarms-the-watchdog
+  SEND hv;1;on
+  EXPECT ack;1
+  SEND home;2
+  EXPECT ack;2
+  ADVANCE 50000
+  EXPECT ev;HOMED;50000;angle=0.0
+  SEND arm;3
+  EXPECT ack;3
+  SEND hv;4;off
+  EXPECT ack;4
+  ADVANCE 500000
+  SEND status;5
+  EXPECT ack;5;state=HOMED;angle=0.0;xactual=0.0;torque=;brake=;homed=1;limit=0;faults=0;hv=0;t=550000
+END
+
+# `disarm` does not: the rail is still on.
+CASE disarm-keeps-the-watchdog-while-the-rail-is-on
+  SEND hv;1;on
+  EXPECT ack;1
+  SEND home;2
+  EXPECT ack;2
+  ADVANCE 50000
+  EXPECT ev;HOMED;50000;angle=0.0
+  SEND arm;3
+  EXPECT ack;3
+  SEND disarm;4
+  EXPECT ack;4
+  ADVANCE 100000
+  EXPECT ev;FAULT;150000;code=0;detail=host_timeout
+END
+
 
 # ------------------------------------------------------------- observability
 
@@ -327,9 +374,9 @@ END
 # `t` is the board's 64-bit microsecond clock. 2^32 us is 71.6 minutes, inside
 # a normal session; the firmware used to wrap there.
 CASE event-time-is-64-bit
+  ADVANCE 4294967296
   SEND hv;1;on
   EXPECT ack;1
-  ADVANCE 4294967296
   SEND home;2
   EXPECT ack;2
   ADVANCE 50000
@@ -352,15 +399,78 @@ END
 # A timeout above the firmware maximum is clipped to it. With the simulated
 # 50 ms home the clip itself is not observable here (both halves pin it in
 # their unit tests); what this case pins is that a long bound does not fault a
-# home that completed, however far the clock then runs.
+# home that completed, however far the clock then runs. The rail stays on, so
+# the host keeps the heartbeat for those eight seconds, as a task would
+# (V1.12: the watchdog runs with the rail).
 CASE home-timeout-above-the-maximum-is-clipped-not-refused
-  SEND hv;1;on
+  SEND cfg;1;wdt_ms=500
   EXPECT ack;1
-  SEND home;2;999999
+  SEND hv;2;on
   EXPECT ack;2
+  SEND home;3;999999
+  EXPECT ack;3
   ADVANCE 50000
   EXPECT ev;HOMED;50000;angle=0.0
-  ADVANCE 8000000
+  ADVANCE 400000
+  SEND ping;4
+  EXPECT ack;4
+  ADVANCE 400000
+  SEND ping;5
+  EXPECT ack;5
+  ADVANCE 400000
+  SEND ping;6
+  EXPECT ack;6
+  ADVANCE 400000
+  SEND ping;7
+  EXPECT ack;7
+  ADVANCE 400000
+  SEND ping;8
+  EXPECT ack;8
+  ADVANCE 400000
+  SEND ping;9
+  EXPECT ack;9
+  ADVANCE 400000
+  SEND ping;10
+  EXPECT ack;10
+  ADVANCE 400000
+  SEND ping;11
+  EXPECT ack;11
+  ADVANCE 400000
+  SEND ping;12
+  EXPECT ack;12
+  ADVANCE 400000
+  SEND ping;13
+  EXPECT ack;13
+  ADVANCE 400000
+  SEND ping;14
+  EXPECT ack;14
+  ADVANCE 400000
+  SEND ping;15
+  EXPECT ack;15
+  ADVANCE 400000
+  SEND ping;16
+  EXPECT ack;16
+  ADVANCE 400000
+  SEND ping;17
+  EXPECT ack;17
+  ADVANCE 400000
+  SEND ping;18
+  EXPECT ack;18
+  ADVANCE 400000
+  SEND ping;19
+  EXPECT ack;19
+  ADVANCE 400000
+  SEND ping;20
+  EXPECT ack;20
+  ADVANCE 400000
+  SEND ping;21
+  EXPECT ack;21
+  ADVANCE 400000
+  SEND ping;22
+  EXPECT ack;22
+  ADVANCE 400000
+  SEND ping;23
+  EXPECT ack;23
 END
 
 # The board enables the InstrumentPort buffers at boot for its proof of life,

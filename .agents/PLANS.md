@@ -178,11 +178,115 @@ section 9, Phase A.
       tools expect (CH1→CH17, CH0→CH16, CH2→CH8, CH9→CH5, CH8→CH2); the
       bench scripts still hard-code board 4, `rev1` and the 40-pin map and
       are owed a serial/env/channel-map parameterisation.
-- [ ] Digital-50 observation depends on the LA5032 adapter **v2.0** and the
-      Molex 15020 FFC, received but with no continuity or permutation
-      measurement; the boot signature on CH0/CH1 (or CH31/CH30 if the cable
-      reverses) is the first test and belongs in the adapter's bring-up log.
-      Until then the v1.0 boards are observable over USB CDC only.
+- [x] Digital-50 observation through the LA5032 adapter **v2.0** and the
+      Molex 15020 FFC: straight mapping confirmed 2026-10-05, 26 of 32
+      channels exercised by 2026-10-06 (the UART pair last, with a pyboard).
+- [x] **First contact over the RJ-45 on v1.0 (2026-10-06, 09:59):** the
+      delivery build `mouse_joystick_qp_rev2` (protocol on UART0) answered
+      `id` from the pyboard's REPL on **Breakout 1.2 port 4 (USART3)** — the
+      right joystick's port, which is the one unit A drives — with the full
+      v1.0 identity and caps; ports 1 and 3 silent. Then the whole protocol
+      over the real link with the rail up: `hv on`, torque live and tared,
+      `home`, `arm`, `brake 1.0` → `RELEASED`, `watch` → `NOMOVE` at
+      1500.0 ms, `TRIAL` 1 s later with torque, `fetch` with the torque
+      column; a 150 ms gap in the REPL script then tripped the 100 ms
+      host-loss watchdog exactly as specified (`FAULT`, `hv=0`, `brake=0.0`,
+      `nak;faulted` to the next `brake`, `clrfault` recovered). Decoded on
+      CH2/CH3. PCB bring-up log, "first contact over the RJ-45".
+- [x] **The tick budget, attributed and half fixed (2026-10-06).** Over
+      UART0 the primitives drop to a third of the USB build's maxima (X_ENC
+      161 µs, snapshot 310, ADS8689 sample 103, `BRAKE_ISENSE` 57–137), so
+      the USB protocol port's interrupt-level servicing was the big inflator
+      and the `_usb` builds are not where the budget is judged. What remained
+      was structural: both hardware backends polled at every scheduler stop
+      (the `RELEASED` ring adds one per millisecond), and the `hv on`
+      transient latched the decimated mode until `hv off`. Fixed: hardware
+      polls reuse their cache within 500 µs (`TmcMotion`, `BrakeTorqueHw`;
+      the simulated backends are unlimited so the corpus is untouched), and
+      decimation ends after 500 handled ticks under half the budget
+      (`LinkAo`). Measured on the Gate E run — see Status.
+- [x] **The watchdog runs with the rail (2026-10-06, Peter's call after Gate
+      E).** `hv on` arms the host-loss watchdog, `hv off` or a fault disarms
+      it, `arm` refreshes, `disarm` leaves it running while the rail is on
+      (`ProtocolBoard::cmdHv/cmdDisarm`, `board_sim._cmd_hv/_cmd_disarm`,
+      `uart-protocol.md` V1.12 and its tables). Three new corpus cases; two
+      older ones rewritten (`event-time-is-64-bit` advances before the rail,
+      `home-timeout-above-the-maximum-is-clipped-not-refused` widens the
+      watchdog and heartbeats for its eight seconds), their unit-test mirrors
+      in both languages likewise. Consequence: a host heartbeats from
+      `hv on`; the device class's `hv()` docstring says so.
+- [x] **Tare before the watch (same day).** `mouse_joystick_check` sends
+      `tq zero` right before `watch` when the board has `torque`, so the rest
+      offset (−0.2 to −0.35 N·cm at rest after `RELEASED`) stops tripping
+      `touch=0.3`. Bench knobs `v.wdt_ms` and `v.instr` added for the tick
+      attribution runs.
+- [x] **The tick budget, round three, attributed and fixed (2026-10-06,
+      11:04–11:55).** Measured on the LA5032 rather than with the CPU's own
+      clock (PCB bring-up log, "the tick budget attributed on the bus and on
+      the pin"; scripts `qp-arduino-example/tools/la/`). The bus was never
+      the problem: an X_ENC read is 27 µs on the wire and a snapshot 101 µs
+      after the library changes, yet the firmware measured 240–430 and
+      400–570 µs for them, a `ping` cost the active object 1.2–1.9 ms
+      (`LINK_WORK`), and on the pin (`MJ_TICK_LEVEL`) the `RELEASED` tick was
+      758 µs median for a few hundred instructions of classifier work. The
+      trace off changed nothing; fewer host lines helped only the idle. **The
+      cause: every build ran from the W25Q128JVZPIQ through the generic
+      single-lane 03h stage 2** (`boot2_generic_03h_4`, kept "until stage 1
+      passes" since the first article, never switched). On the quad-lane
+      stage 2 matched to the part (`env:mouse_joystick_qp_rev2_fastflash`,
+      `boot2_w25q128jvxq_4`; boots and runs the task first time) the
+      `RELEASED` tick is 346 µs median / 450 p90 / 760 max, the `ARMED` tick
+      146 / 235 / 370 at 1000 handlers/s, a `ping` 0.5 ms, every `POLL_STAT`
+      maximum 2–3× lower, and the sampler holds 1 kHz in `ARMED`. The budget
+      constant (400 µs) then decimated the trial on its own, so it is 700 µs
+      (measured headroom in `LinkAo.cpp`); **run 9
+      (`…-1147-unitA-gate-e-fastflash/`): 1 kHz for the whole run, trial
+      included, never decimated, 79 overrun skips and 47 coalesced ticks in
+      50 s (from ≈1900 / ≈1500), handler max 798 µs in `RELEASED`, 371 in
+      `ARMED`.** Also done on the way, all
+      measured: `TMC51X0` working copy with one buffer transfer per datagram
+      (two-buffer form on RP2040/Teensy: 17 → 12 µs per datagram, clocks
+      back to back) and the pipelined `readMany()` (snapshot 10 → 6
+      datagrams), used by `MotionSetup::snapshot()`; `platformio.ini` pins
+      `TMC51X0.git#4.2.0` (the library is versioned and release-checked;
+      Peter tags and pushes). Open: (1) make the quad-lane stage 2 the
+      default for pcb v1.0 (flip `env:mouse_joystick`'s `boot2_source`, or
+      the rev2 envs'); every v1.0 board has the same flash; keep the generic
+      one for a first article. (2) The `RELEASED` tick is still 2.4× the
+      `ARMED` one for little work — code size and the 16 KB cache; a
+      `-Os`/`-O2` and section-placement pass (`__not_in_flash_func` on the
+      tick path) is the next lever if ever needed. (3) Unit B and the pyboard
+      heartbeat rate: 25/s costs 5 % of the ticks ~40 µs; fine.
+- [x] **Gate E (2026-10-06), passed on v1.0 unit A:** `tools/pycontrol_run.py` runs a task on the
+      pyboard headlessly through pyControl's own `Pycboard` API (the GUI's
+      path, no GUI); `pixi run -e pycontrol pycontrol-run`. Two things
+      pyControl 2.1.1 taught us on the way: (1) its device-file discovery is
+      a substring match of class names over file TEXT, comments included,
+      recursing without a cycle check, so `MouseJoystick` being a prefix of
+      `MouseJoystickProtocol` looped it to a `RecursionError` — the codec is
+      now `JoystickProtocol` and the constraint is written in its header;
+      (2) the pyboard's 95 KB flash had 36 KB free against 60 KB of uploads
+      (our files were 60 % prose, and comment-only mentions of `MCP23017`
+      and `Poke` pulled a 9 KB driver along), so `tools/pycontrol_lean.py`
+      now generates comment- and docstring-free copies into
+      `pycontrol/dist/` (49 → 20 KB), which is what `pycontrol-link` points
+      pyControl at and what the rig will ship; `tests/test_lean.py` imports
+      them. The bring-up task `mouse_joystick_check` speaks protocol v1 with
+      `v.board` selecting the side, and keeps its own `v.phase` because the
+      task API has no current-state query (the third lesson; the first run
+      on the board died on `get_current_state()` one step after `hv on`,
+      rail up, host watchdog not yet armed). **Passed twice** (evidence
+      `qp-arduino-example/evidence/2026-10-06-1019-unitA-gate-e/`, `-1037-`,
+      `-1043-`): identify → `hv on` (180 ms from cold) → `HOMED` → `arm` →
+      `TARGET` −5.041° → `BRAKE 1.0` → `RELEASED` 23 ms later → `TOUCH` →
+      `NOMOVE` → `TRIAL` → park → `done`; `run_end` stops, disarms, drops
+      the rail. Heartbeats 25/s, none lost. Written up in
+      `pycontrol/README.md` and the PCB bring-up log's "pyControl
+      Integration". Two observations for the rig: the rest torque reading
+      (−0.2 to −0.35 N·cm, the PCB plan's third finding) trips a 0.3 N·cm
+      `touch` with nobody there — tare before `watch`; and the park after a
+      trial ends ~1° short on the encoder (backlash on the direction
+      reversal) — home first when the park position matters.
 
 ## Parallel Observability Workstream — Updated 2026-09-30
 
@@ -235,6 +339,36 @@ items. Preserve selected manufactured-tag/serial context rather than assuming
 historical firmware wiring matches current PCB development.
 
 ## Status
+
+**2026-10-06, later: Gate E passed on v1.0 unit A.** pyControl 2.1.1 on
+the PYBV11 ran `mouse_joystick_check` against the board over the RJ-45 three
+times through the GUI's own `Pycboard` path (`tools/pycontrol_run.py`), the
+whole sequence from `id` to `hv off` (identify, rail, home, arm, present,
+`BRAKE` → `RELEASED` in 12 ms, `TOUCH`, `NOMOVE`, `TRIAL`, park). Getting
+there: the codec renamed `JoystickProtocol` (pyControl's substring device
+discovery), comment-free lean copies in `pycontrol/dist/` (36 KB of pyboard
+flash), and the task keeping its own `v.phase` (no current-state query in
+the task API). The hardware polls are now gated to one per advance of the
+protocol clock, which removed the doubled bus reads and most of the overrun
+skips; the sampler still runs decimated (500 Hz) with the rail up because
+every bus primitive costs 2–4× its console cost in the link build, and
+attribution is the next firmware step (plan item "round three"). The board
+is flashed with this build (`mouse_joystick_qp_rev2`, 10:43), rail off.
+Host tests 154 Unity + 182 pytest; the two qp rev2 envs build.
+
+**2026-10-06, 12:00: the 1 kHz sampler is back, and the watchdog runs with
+the rail.** The tick budget was never the bus: every build ran from flash
+through the generic single-lane 03h stage 2, and the quad-lane stage 2
+matched to the W25Q128JV (`env:mouse_joystick_qp_rev2_fastflash`) halves to
+thirds everything the CPU does (tick 758 → 346 µs median in `RELEASED`,
+268 → 146 in `ARMED`, `ping` 1.35 → 0.5 ms). With the budget constant at the
+measured 700 µs, Gate E run 9 held 1 kHz through the whole trial. On the
+way: `TMC51X0` working copy (buffer-transfer datagrams, pipelined
+`readMany`; unreleased, `lib_deps` via `symlink://` until Peter tags it),
+one hardware poll per advance, the watchdog armed by `hv on` with blocked
+time credited (V1.12), the task taring before `watch`. Board: unit A on the
+fastflash build, rail off. Tests 156 Unity + 185 pytest + 53 library; all
+twelve example/env builds pass.
 
 **2026-10-06: v1.0 unit A stages A4 and A5 passed with the new
 `examples/BrakeAndTorque`** (brake sink 0–48.80 mA linear; ADS8689 alive at

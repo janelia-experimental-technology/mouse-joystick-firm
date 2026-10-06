@@ -37,6 +37,7 @@ help:
 	@printf "  pycontrol-check    verify pyControl's dependency gate\\n"
 	@printf "  pycontrol-test     host-side pytest (Gate C)\\n"
 	@printf "  pycontrol-link     point a pyControl checkout at this repo\\n"
+	@printf "  pycontrol-run      run a task on the pyboard headlessly (Gate E); PYB_PORT, HWD, TASK, SECONDS\\n"
 	@printf "  gui                launch the pyControl GUI\\n"
 	@printf "\\nEXAMPLE=%s ENV=%s PORT=%s\\n" "$(EXAMPLE)" "$(ENV)" "$(PORT)"
 	@printf "PYCONTROL_DIR=%s\\n" "$(PYCONTROL_DIR)"
@@ -109,6 +110,17 @@ pycontrol-test:
 .PHONY: pycontrol-link
 pycontrol-link:
 	$(PYC_RUN) pycontrol-link
+
+# Gate E: the pyControl framework on the pyboard loads this repo's device class,
+# hardware definition and task through its normal path and runs the task; the
+# events stream back to the terminal.
+PYB_PORT ?= /dev/ttyACM1
+HWD ?= mouse_joystick_bringup
+TASK ?= mouse_joystick_check
+SECONDS ?= 60
+.PHONY: pycontrol-run
+pycontrol-run:
+	$(PYC_RUN) pycontrol-run $(PYB_PORT) $(HWD) $(TASK) $(SECONDS)
 
 .PHONY: pycontrol-unlink
 pycontrol-unlink:

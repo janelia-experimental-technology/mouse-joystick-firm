@@ -1,32 +1,35 @@
-# Stage 4 bring-up exerciser for one mouse-joystick board over pyControl.
+# Stage 4 bring-up exerciser for one mouse-joystick board over pyControl,
+# protocol v1 (2026-10-06; the first version spoke the retired rev-0 verbs
+# `arm_pull` and `freewheel`, which no longer exist on the device class).
 #
-# Exercises the three things rev 0 hardware can actually do - home, move to a
-# position, and release the driver - printing every line the board sends. A
-# bring-up tool, not an experiment: no trial structure, no reward, no subject.
+# One trial's shape, as far as a bench without an animal can go: identify the
+# board, raise its motor rail, home (park), arm, present the joystick with a
+# bounded move, engage the brake and release the drive (`BRAKE`, one board
+# operation), arm the classifier (`WATCH`), take whatever outcome comes --
+# `PULL`/`PUSH` if a hand moves the joystick, `NOMOVE` at the timeout
+# otherwise -- read the `TRIAL` summary, park again, and stop. Every line the
+# board sends is printed. A bring-up tool, not an experiment: no cue, no
+# reward, no subject.
 #
-# It is a sketch of the real trial shape, as far as this board goes: park the
-# joystick (home), present it (move), then let it be moved (freewheel). What is
-# missing is everything the hardware does not have yet - the electronic brake
-# that would set the pull torque, the torque sensor, and the analog outputs that
-# will stream position and torque continuously.
+# Use with hardware definition `mouse_joystick_bringup.py`, which constructs
+# `left` (port 1) and `right` (port 4). `v.board` names the one this run
+# drives; the other may be unplugged (its UART is constructed, nothing is sent
+# to it). Gate E, `../../../mouse-joystick-pcb/docs/validation-plan.md`.
 #
-# Use with hardware definition `mouse_joystick_bringup.py`.
-#
-# WHAT TO EXPECT IN THE LOG, in order:
-#   ID reply carrying the board serial - record it, it is how this board's
-#   bring-up results are attributed in
-#   ../../../mouse-joystick-pcb/docs/bringup-log.md
-#   then HV on, HOMED, ARM, a small move ending in TARGET, then the driver
-#   releases and PULL follows when you move the joystick by hand.
+# WHAT TO EXPECT IN THE LOG, in order: the ID reply with the board serial
+# (record it -- it attributes the results in
+# ../../../mouse-joystick-pcb/docs/bringup-log.md), HV on, HOMED, ARM, a
+# small move ending in TARGET, the brake engaging and RELEASED, WATCH, then
+# NOMOVE after `v.watch_timeout_ms` (or PULL/PUSH/TOUCH if you move the
+# joystick by hand), TRIAL, the park move's TARGET, "done".
 #
 # SAFETY: this raises the motor rail, moves the joystick, and then RELEASES the
-# driver so the joystick is free to move under any load on it. Nothing should be
-# attached that a 0.211 A RMS stepper can damage, and nothing should be hanging
-# on the joystick when it goes free. Set `v.do_freewheel = 0` to stop before that
-# step, and `v.do_move = 0` to stop before commanding any motion at all - the
-# right setting the first time a board is connected. The move is bounded by
-# `v.move_degrees` and by the board's own travel limits, which it enforces
-# locally and will refuse to exceed.
+# driver with the brake holding `v.brake_ncm`. Nothing should be attached that a
+# 0.211 A RMS stepper can damage, and nothing should be hanging on the joystick
+# when it goes compliant. `v.do_move = 0` stops after arming (the right setting
+# the first time a board is connected); `v.do_brake = 0` stops after the move.
+# Every move is bounded by `v.move_degrees` and by the board's own travel
+# limits, which it enforces locally and refuses to exceed.
 
 from pyControl.utility import *
 import hardware_definition as hw
@@ -35,30 +38,52 @@ import hardware_definition as hw
 # Variables
 # ---------------------------------------------------------------------------
 
+# Which board this run drives: "left" (port 1) or "right" (port 4).
+v.board = "right"
+
 # The board faults on heartbeat loss after 100 ms. Pinging at 40 ms leaves room
 # for a missed reply without the watchdog expiring. Do NOT raise this above the
 # board's timeout while testing something else - a HOST_TIMEOUT fault mid-run
 # looks exactly like a firmware bug.
 v.heartbeat_interval = 40  # ms
 
-# Small and well inside the board's travel. The board rejects anything outside
-# its limits, but a bring-up move should not be relying on that.
-v.move_degrees = 5.0
+# The presented position. Travel runs negative from the parked zero (the
+# switch end); -5 is well inside the ~-10 deg the board reports in LIMITS.
+v.move_degrees = -5.0
 
-# Set 0 to stop after homing, which is the right setting the first time a board
+# Set 0 to stop after arming, which is the right setting the first time a board
 # is connected: it proves the link and the state machine without commanding
 # motion under host control.
 v.do_move = 1
 
-# Set 0 to stop after the move rather than releasing the driver. With the driver
-# released the joystick is free to move under any load on it, including gravity
-# and its own linkage - check nothing is hanging on it before enabling this.
-v.do_freewheel = 1
+# Set 0 to stop after the move rather than engaging the brake and releasing
+# the drive. Compliant, the joystick is held only by the brake.
+v.do_brake = 1
 
-# How far the joystick must be moved by hand to report a pull.
-v.pull_degrees = 8.0
+# The brake's holding torque for the release (N.cm, 0 to 3.4). 1.0 is about
+# 14 mA of coil current on pcb v1.0.
+v.brake_ncm = 1.0
+
+# The classifier: pull-positive excursions in degrees from the angle at
+# release, the time without first motion before NOMOVE, and the torque at
+# which TOUCH is reported (N.cm).
+v.pull_degrees = 5.0
+v.push_degrees = 5.0
+v.watch_timeout_ms = 10000
+v.touch_ncm = 0.3
 
 v.serial = ""
+v.outcome = ""
+# Bench knobs for the tick-budget attribution (2026-10-06): the board's host
+# watchdog in ms (0 = leave the default 100), set before the rail comes on so
+# a slower heartbeat can be used (heartbeat_interval must stay under it); and
+# whether the instrument port, and with it the QS trace, is left on.
+v.wdt_ms = 0
+v.instr = 1
+# The state the task is in, kept by hand: pyControl's task API has no
+# "current state" query (found on the pyboard 2026-10-06), and the replies to
+# `hv`, `arm` and the two moves mean different things in different states.
+v.phase = "identifying"
 
 # ---------------------------------------------------------------------------
 # State machine
@@ -70,21 +95,28 @@ states = [
     "homing",
     "arming",
     "moving",
-    "freewheeling",
+    "braking",
+    "watching",
+    "parking",
     "done",
     "faulted",
 ]
 
 events = [
-    # Raised by pyControl's UART_handler when the link goes idle with data
-    # waiting. Must be declared here or UART_handler finds no event ID and
-    # silently does nothing - see devices/uart_handler.py, which looks the name
-    # up in sm.events at initialise time.
+    # Raised by pyControl's UART_handler when a link goes idle with data
+    # waiting. Both boards' names must be declared here or UART_handler finds
+    # no event ID and silently does nothing - see devices/uart_handler.py,
+    # which looks the name up in sm.events at initialise time.
     "joystick_L",
+    "joystick_R",
     "heartbeat",
 ]
 
 initial_state = "identifying"
+
+
+def board():
+    return getattr(hw, v.board)
 
 
 # ---------------------------------------------------------------------------
@@ -94,20 +126,19 @@ initial_state = "identifying"
 
 def run_start():
     set_timer("heartbeat", v.heartbeat_interval * ms, output_event=False)
-    hw.left.identify()
+    print("identifying the {} board".format(v.board))
+    board().identify()
 
 
 def run_end():
     # STOP first: it re-engages the driver and reloads position from the
     # encoder, so the board is not left compliant with an animal on it if the
-    # run was stopped mid-trial.
-    hw.left.stop()
-    # Leave the board safe regardless of which state the run stopped in. The
-    # board does not require this - it faults itself on heartbeat loss - but
-    # relying on the watchdog to tidy up means every clean stop also logs a
-    # fault.
-    hw.left.disarm()
-    hw.left.hv(False)
+    # run was stopped mid-trial. Then DISARM and the rail off. The board does
+    # not require this - it faults itself on heartbeat loss - but relying on
+    # the watchdog to tidy up means every clean stop also logs a fault.
+    board().stop()
+    board().disarm()
+    board().hv(False)
 
 
 # ---------------------------------------------------------------------------
@@ -117,56 +148,87 @@ def run_end():
 
 def identifying(event):
     if event == "entry":
-        print("identifying board on port 1")
+        v.phase = "identifying"
+        # Replies to these carry no data and no phase handles them, so they
+        # are ignored by _handle; the id reply is told apart by its serial.
+        if v.wdt_ms:
+            board().cfg(wdt_ms=v.wdt_ms)
+        if not v.instr:
+            board().instrumentation(False)
 
 
 def powering(event):
     if event == "entry":
+        v.phase = "powering"
         print("raising the motor rail")
-        hw.left.hv(True)
+        board().hv(True)
 
 
 def homing(event):
     if event == "entry":
+        v.phase = "homing"
         print("homing")
-        hw.left.home()
+        board().home()
 
 
 def arming(event):
     if event == "entry":
-        hw.left.arm()
+        v.phase = "arming"
+        board().arm()
 
 
 def moving(event):
     if event == "entry":
-        print("moving to {} deg".format(v.move_degrees))
-        hw.left.move_to(v.move_degrees)
+        v.phase = "moving"
+        print("presenting: moving to {} deg".format(v.move_degrees))
+        board().move_to(v.move_degrees)
 
 
-def freewheeling(event):
-    # The third and last thing rev 0 hardware can test. There is no electronic
-    # brake on these boards, so "compliant" here means only that the driver is
-    # released - move the joystick BY HAND to produce the pull.
-    #
-    # On a board with the brake this step disappears: the brake must engage
-    # before drive is released, and that ordering cannot be split across two
-    # host commands. It becomes one `BRAKE <torque>`.
+def braking(event):
+    # One board operation: the brake to v.brake_ncm, the coil current settled,
+    # then the drive released. RELEASED follows the ack by the brake's ramp
+    # and settle (11-17 ms measured on pcb v1.0, 2026-10-06).
     if event == "entry":
-        print("releasing the driver - move the joystick by hand past {} deg".format(v.pull_degrees))
-        hw.left.arm_pull(v.pull_degrees)
-        hw.left.freewheel()
+        v.phase = "braking"
+        print("brake {} N.cm, then release".format(v.brake_ncm))
+        board().brake(v.brake_ncm)
+
+
+def watching(event):
+    if event == "entry":
+        v.phase = "watching"
+        print("watching: pull past {} deg or push past {} deg within {} ms".format(
+            v.pull_degrees, v.push_degrees, v.watch_timeout_ms))
+        # Tare first: the reading at rest after RELEASED is -0.2 to -0.35 N.cm
+        # on pcb v1.0 unit A (the sensor's rest offset plus the brake's
+        # release), which is above a 0.3 N.cm touch level with nobody there
+        # (2026-10-06). The board applies the zero before the watch starts;
+        # both lines are queued back to back.
+        if board().has("torque"):
+            board().torque_zero()
+        board().watch(v.pull_degrees, v.push_degrees, v.watch_timeout_ms, touch_ncm=v.touch_ncm)
+
+
+def parking(event):
+    # Leaving RELEASED: the board re-engages the drive, resyncs from the
+    # encoder, emits TRIAL, releases the brake, then moves.
+    if event == "entry":
+        v.phase = "parking"
+        print("parking at 0 deg")
+        board().move_to(0.0)
 
 
 def done(event):
     if event == "entry":
-        hw.left.stop()  # re-engage the driver and reload position from the encoder
-        print("bring-up sequence complete; serial {}".format(v.serial))
+        v.phase = "done"
+        print("bring-up sequence complete; serial {} outcome {}".format(v.serial, v.outcome))
 
 
 def faulted(event):
     if event == "entry":
+        v.phase = "faulted"
         print("FAULTED - reading the fault mask")
-        hw.left.faults()
+        board().faults()
 
 
 # ---------------------------------------------------------------------------
@@ -176,13 +238,20 @@ def faulted(event):
 
 def all_states(event):
     if event == "heartbeat":
-        hw.left.ping()
+        board().ping()
         set_timer("heartbeat", v.heartbeat_interval * ms, output_event=False)
 
-    elif event == "joystick_L":
-        # One UART idle event can cover several lines, so drain the whole batch.
-        for message in hw.left.poll():
-            _handle(message)
+    elif event == "joystick_L" or event == "joystick_R":
+        # One UART idle event can cover several lines, so drain the whole
+        # batch. Only the driven board's lines are acted on; the other board,
+        # if present, is drained and printed.
+        mine = (event == "joystick_R") == (v.board == "right")
+        source = board() if mine else getattr(hw, "left" if v.board == "right" else "right")
+        for message in source.poll():
+            if mine:
+                _handle(message)
+            else:
+                print("other board: {}".format(message))
 
 
 def _handle(message):
@@ -196,15 +265,22 @@ def _handle(message):
         if name == "HOMED":
             goto_state("arming")
         elif name == "TARGET":
-            if v.do_freewheel:
-                goto_state("freewheeling")
-            else:
+            if v.phase == "moving":
+                if v.do_brake:
+                    goto_state("braking")
+                else:
+                    goto_state("done")
+            elif v.phase == "parking":
                 goto_state("done")
-        elif name == "PULL":
-            # The board is still compliant here. A move, home or stop re-engages
-            # the driver implicitly, reloading position from the encoder first.
-            print("pull detected at {} deg".format(data.get("angle")))
-            goto_state("done")
+        elif name == "RELEASED":
+            goto_state("watching")
+        elif name in ("PULL", "PUSH", "NOMOVE", "ABORT"):
+            v.outcome = name
+            print("outcome {} at angle {} torque {}".format(name, data.get("angle"), data.get("torque")))
+        elif name == "TRIAL":
+            # The summary comes one second after the outcome if the host has
+            # not left RELEASED by then; parking leaves it.
+            goto_state("parking")
         elif name == "FAULT":
             goto_state("faulted")
 
@@ -218,18 +294,19 @@ def _handle(message):
         data = message[2]
 
         if "serial" in data:
-            hw.left.apply_identity(data)
-            v.serial = hw.left.serial
-            print("board serial {} fw {} proto {}".format(data["serial"], data["fw"], data["proto"]))
+            board().apply_identity(data)
+            v.serial = board().serial
+            print("board serial {} fw {} hw {} proto {} caps {}".format(
+                data["serial"], data["fw"], data.get("hw"), data["proto"], data.get("caps")))
             goto_state("powering")
 
         elif "mask" in data:
             print("faults {}".format(data))
 
-        elif get_current_state() == "powering":
+        elif v.phase == "powering":
             goto_state("homing")
 
-        elif get_current_state() == "arming":
+        elif v.phase == "arming":
             if v.do_move:
                 goto_state("moving")
             else:

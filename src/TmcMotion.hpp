@@ -75,6 +75,7 @@
 
 #include <Arduino.h>
 #include <TMC51X0.hpp>
+#include <pico/time.h> // time_us_64
 #include <stdint.h>
 
 #include "Conversions.hpp"
@@ -130,6 +131,34 @@ public:
     if (!bus_up_) {
       return;
     }
+    // Once per tick, not once per scheduler stop. The protocol layer services
+    // at every scheduled instant, and in RELEASED the classifier's 1 kHz ring
+    // adds one stop per millisecond, so a tick that covers two milliseconds
+    // (the decimated sampler) was reading the bus three times: that, times
+    // ~300 us a read with the brake and torque poll alongside, was the 1.2 ms
+    // tick measured on pcb v1.0 unit A on 2026-10-06. A second poll inside
+    // the same half-millisecond reuses the cache; the simulated backend has
+    // no such limit, so the corpus timing is untouched.
+    //
+    // Two guards, both learnt on unit A on 2026-10-06. Keyed to `now_us`
+    // the limit let every catch-up stop of a late tick hit the bus (they
+    // are a millisecond apart on the protocol clock, microseconds apart on
+    // the wall): 1000 polls/s against 500 handled ticks, handlers of
+    // 1-2.4 ms. Keyed to the wall clock alone it still let the SECOND stop
+    // poll once the first poll had itself taken longer than the window
+    // (730 polls/s, 10:37). So: at most one bus read per advance of the
+    // protocol clock (beginAdvance()), and never two within half a
+    // millisecond of wall-clock time (a host line arrives between ticks
+    // and advances twice).
+    const uint64_t wall_us = time_us_64();
+    if (polled_this_advance_ ||
+        (last_bus_poll_wall_us_ != 0 &&
+         (wall_us - last_bus_poll_wall_us_) < kPollMinIntervalUs)) {
+      ++poll_reused_;
+      return;
+    }
+    polled_this_advance_ = true;
+    last_bus_poll_wall_us_ = wall_us;
     const uint32_t poll_t0 = micros();
     pollBus();
     const uint32_t cost = micros() - poll_t0;
@@ -160,11 +189,21 @@ public:
     return m;
   }
 
+  void beginAdvance() override { polled_this_advance_ = false; }
+
+  // Bus reads closer together than this, on the wall clock, reuse the cache
+  // (see poll()).
+  static constexpr uint64_t kPollMinIntervalUs = 500u;
+  uint32_t pollsReused() const { return poll_reused_; }
+
 private:
   uint32_t poll_cost_max_us_ = 0;
   uint32_t poll_calls_ = 0;
   uint32_t enc_read_max_us_ = 0;
   uint32_t snapshot_max_us_ = 0;
+  uint64_t last_bus_poll_wall_us_ = 0; // time_us_64() of the last bus poll
+  bool polled_this_advance_ = false;
+  uint32_t poll_reused_ = 0;
 
   void pollBus() {
 

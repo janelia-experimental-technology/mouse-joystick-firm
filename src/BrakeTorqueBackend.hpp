@@ -39,6 +39,8 @@ public:
   // coil current. Called once per service step, which is the firmware's
   // 1 kHz tick.
   virtual void poll(uint64_t now_us) = 0;
+  // See MotionBackend::beginAdvance(): one bus read per advance.
+  virtual void beginAdvance() {}
 
   // The earliest time `poll()` could change `brakeSettled()`, or 0 for
   // "unknown". The simulated backend returns its settle instant so the clock

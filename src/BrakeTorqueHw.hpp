@@ -40,6 +40,7 @@
 #include <SPI.h>
 #include <Wire.h>
 #include <math.h>
+#include <pico/time.h> // time_us_64
 #include <stdint.h>
 
 #include "ADS8689.hpp"
@@ -172,6 +173,19 @@ public:
   // ------------------------------------------------- BrakeTorqueBackend
 
   void poll(uint64_t now_us) override {
+    // Once per advance of the protocol clock and never twice within half a
+    // millisecond of wall-clock time, as TmcMotion::poll() (which explains
+    // both guards): the other stops of the same advance reuse the last
+    // conversion and monitor reading.
+    const uint64_t wall_us = time_us_64();
+    if (polled_this_advance_ ||
+        (last_poll_wall_us_ != 0 &&
+         (wall_us - last_poll_wall_us_) < kPollMinIntervalUs)) {
+      now_us_ = now_us;
+      return;
+    }
+    polled_this_advance_ = true;
+    last_poll_wall_us_ = wall_us;
     const uint32_t poll_t0 = micros();
     pollParts(now_us);
     const uint32_t cost = micros() - poll_t0;
@@ -202,11 +216,16 @@ public:
     return m;
   }
 
+  static constexpr uint64_t kPollMinIntervalUs = 500u;
+  void beginAdvance() override { polled_this_advance_ = false; }
+
 private:
   uint32_t poll_cost_max_us_ = 0;
   uint32_t poll_calls_ = 0;
   uint32_t sample_max_us_ = 0;
   uint32_t isense_max_us_ = 0;
+  uint64_t last_poll_wall_us_ = 0; // time_us_64() of the last real poll
+  bool polled_this_advance_ = false;
 
   void pollParts(uint64_t now_us) {
     now_us_ = now_us;

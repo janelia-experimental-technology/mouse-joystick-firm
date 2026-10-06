@@ -174,7 +174,9 @@ def _link_device_files(root: Path, pycontrol_dir: Path, *, unlink: bool, dry_run
     a copy there and say so - a silent copy is how a stale device class ends up
     on the pyboard while the repo says otherwise.
     """
-    source_dir = root / "pycontrol" / "devices"
+    # The LEAN copies (tools/pycontrol_lean.py), not the sources: the pyboard's
+    # flash is 95 KB and pyControl uploads files verbatim (2026-10-06).
+    source_dir = root / "pycontrol" / "dist" / "devices"
     target_dir = pycontrol_dir / "devices"
     device_files = sorted(source_dir.glob("*.py")) if source_dir.is_dir() else []
 
@@ -222,11 +224,19 @@ def cmd_link(args: argparse.Namespace, root: Path) -> int:
     pycontrol_dir = _resolve_pycontrol_dir(root, args.pycontrol_dir)
     settings_path = pycontrol_dir / "config" / "settings.json"
 
+    # Regenerate the lean copies first: pyControl is pointed at
+    # pycontrol/dist/, never at the commented sources (see pycontrol_lean.py).
+    if not args.unlink and not args.dry_run:
+        sys.path.insert(0, str(Path(__file__).resolve().parent))
+        from pycontrol_lean import generate  # noqa: E402
+
+        generate(root, verbose=False)
+
     folders = {}
     for name in LINKED_FOLDERS:
-        source_dir = root / "pycontrol" / name
+        source_dir = root / "pycontrol" / "dist" / name
         if not source_dir.is_dir():
-            raise SystemExit(f"ERROR: missing {source_dir}. Nothing to link.")
+            raise SystemExit(f"ERROR: missing {source_dir}. Run tools/pycontrol_lean.py first.")
         folders[name] = str(source_dir)
 
     existing: dict = {}

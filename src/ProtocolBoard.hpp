@@ -170,6 +170,12 @@ public:
   // Advance to the next scheduled thing rather than in one jump, so an event
   // never lands at the wrong timestamp because the caller advanced coarsely.
   void advance(uint64_t delta_us) {
+    // One advance, however many stops: the hardware backends read their
+    // buses on the first service() below and answer the rest from that.
+    motion_.beginAdvance();
+    if (brake_torque_ != nullptr) {
+      brake_torque_->beginAdvance();
+    }
     uint64_t target = now_us_ + delta_us;
     bool serviced_at_target = false; // one service per advance (2026-10-02)
     while (now_us_ < target) {
@@ -234,6 +240,20 @@ public:
       cfg_.serial = serial;
     }
   }
+
+  // Firmware registers its microsecond clock here (2026-10-06). Some
+  // commands block in the backend -- `hv on` is the rail's soft start, 185 ms
+  // on pcb v1.0; `home` and `arm` tens of ms; a `stop` from speed the ramp's
+  // deceleration -- while this clock stands at the line's arrival and the
+  // host's lines queue up unread. With the watchdog armed from `hv on` that
+  // showed twice on Gate E (11:16, 11:25): a deadline armed by the blocked
+  // command read as expired on the first advance after it, and heartbeats
+  // that arrived during a blocked `home` were read only after the deadline
+  // check. After every dispatched line the clock is moved to the wall and
+  // the time the board spent blocked is credited to the deadlines then
+  // running (host watchdog, home bound): the host could not be heard during
+  // it. The simulation registers no clock and the corpus is untouched.
+  void setWallClock(uint64_t (*clock)()) { wall_clock_ = clock; }
 
   // Advance to an absolute time, which is what firmware has. The delta
   // arithmetic lives here so a caller cannot hand over a negative one, and a
@@ -369,6 +389,7 @@ private:
 
     protocol::Line reply;
     const bool answered = dispatch(cmd, &reply);
+    syncClock(); // the handler may have blocked; see setWallClock()
     if (!answered) {
       return;
     }
@@ -537,6 +558,25 @@ private:
       watchdog_armed_ = false;
       raiseFault(fault::kHostTimeout, "host_timeout", false);
     }
+  }
+
+  // See setWallClock(). Only ever moves the clock forward.
+  void syncClock() {
+    if (wall_clock_ == nullptr) {
+      return;
+    }
+    const uint64_t wall = wall_clock_();
+    if (wall <= now_us_) {
+      return;
+    }
+    const uint64_t blocked = wall - now_us_;
+    if (watchdog_armed_) {
+      watchdog_deadline_us_ += blocked;
+    }
+    if (home_deadline_armed_) {
+      home_deadline_us_ += blocked;
+    }
+    now_us_ = wall;
   }
 
   void refreshWatchdog() {
@@ -827,6 +867,13 @@ private:
         return false;
       }
       hv_on_ = true;
+      // The heartbeat requirement begins with the rail (2026-10-06): a host
+      // that dies between `hv on` and `arm` must not leave the rail up, which
+      // is what happened when a task crashed one step after this ack. Armed
+      // here, refreshed by every well-formed line, disarmed by `hv off` or a
+      // fault; `disarm` leaves it running while the rail is on.
+      watchdog_armed_ = true;
+      watchdog_deadline_us_ = now_us_ + cfg_.host_timeout_us;
       out->beginAck(cmd.seq);
       return true;
     }
@@ -839,10 +886,10 @@ private:
       home_deadline_armed_ = false;
       motion_.setHvEnabled(false);
       hv_on_ = false;
+      watchdog_armed_ = false; // the rail is off: nothing left to protect
       if (inState(state_name::kArmed) || inState(state_name::kActive)) {
         motion_.abort();
         state_ = state_name::kHomed;
-        watchdog_armed_ = false;
       }
       out->beginAck(cmd.seq);
       return true;
@@ -997,7 +1044,7 @@ private:
 
   bool cmdDisarm(const protocol::Command &cmd, protocol::Line *out) {
     motion_.abort();
-    watchdog_armed_ = false;
+    watchdog_armed_ = hv_on_; // runs for as long as the rail is on
     home_deadline_armed_ = false;
     stream_on_ = false;
     if (brake_pending_) {
@@ -1666,6 +1713,7 @@ private:
   BrakeTorqueBackend *brake_torque_ = nullptr; // null without the hardware
 
   uint64_t now_us_ = 0;
+  uint64_t (*wall_clock_)() = nullptr; // firmware's clock, see setWallClock()
   const char *state_ = state_name::kBoot;
 
   bool homed_ = false;

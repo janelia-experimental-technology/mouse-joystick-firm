@@ -744,6 +744,10 @@ DacPhase l_dacPhase = DacPhase::kDown;
 void dacPhase(DacPhase phase); // sets l_dacPhase and records it
 uint32_t l_dacResetAt_us = 0U;
 bool l_dacParked = false;
+// The angle value last written, so an unchanged value costs no I2C frame
+// (angleOutput(), 2026-10-06). Cleared whenever the DAC's state is unknown.
+bool l_angleWritten = false;
+float l_lastAngleVolts = 0.0f;
 uint32_t l_dacBeginFailures = 0U;
 constexpr uint32_t kDacResetSettleUs = 2000U; // the driver's 1 ms, doubled
 
@@ -767,6 +771,7 @@ void dacBusUp() {
 void dacBusDown() {
   BSP::crumb(16U);    // DAC: releasing the bus
   l_dac.invalidate(); // its GAIN is about to reset with the domain
+  l_angleWritten = false;
 #if MJ_BOARD_REV >= 2
   l_brakeTorque.end(); // the brake DAC and the ADC reset with it, too
 #endif
@@ -810,6 +815,7 @@ void dacStep(uint32_t now_us) {
         BSP::crumb(15U); // DAC: configured
         dacPhase(DacPhase::kUp);
         l_dacParked = false;
+        l_angleWritten = false;
       } else {
         ++l_dacBeginFailures;
         l_dacResetAt_us = now_us; // try again after another settle
@@ -873,6 +879,7 @@ void BSP::angleOutput(bool valid, float angle_deg, float lo, float hi,
     if (!l_dacParked) {
       static_cast<void>(l_dac.setCode(conv::kAngleOutFaultCode));
       l_dacParked = true;
+      l_angleWritten = false; // the next valid angle is written whatever it is
     }
     return;
   }
@@ -886,10 +893,18 @@ void BSP::angleOutput(bool valid, float angle_deg, float lo, float hi,
   const float bnc_volts =
       conv::kAngleOutMinVolts +
       fraction * (conv::kAngleOutMaxVolts - conv::kAngleOutMinVolts);
-  // One data frame per tick, whether or not the code changed, so the cost the
-  // SAMPLE_STAT record reports is the steady one. The DAC produces the BNC
-  // voltage divided by the output stage's gain.
-  static_cast<void>(l_dac.setVolts(bnc_volts / conv::kAngleOutStageGain));
+  // A data frame only when the value changes (2026-10-06; until then one per
+  // tick, for a steady SAMPLE_STAT cost). The ~110 us I2C write is a quarter
+  // of the tick budget, and with the joystick at rest -- most of a trial --
+  // the value does not change. The DAC produces the BNC voltage divided by
+  // the output stage's gain.
+  if (l_angleWritten && bnc_volts == l_lastAngleVolts) {
+    return;
+  }
+  if (l_dac.setVolts(bnc_volts / conv::kAngleOutStageGain)) {
+    l_angleWritten = true;
+    l_lastAngleVolts = bnc_volts;
+  }
 }
 #else
 void BSP::angleOutput(bool, float, float, float, bool) {} // rev 0: no DAC

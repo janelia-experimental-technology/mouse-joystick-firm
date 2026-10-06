@@ -36,6 +36,10 @@ public:
   // Advance internal state to `now_us`. A real backend uses this as its poll
   // tick; the simulated one uses it to complete a move at a computed deadline.
   virtual void poll(uint64_t now_us) = 0;
+  // The protocol layer is about to run one or more service passes for ONE
+  // advance of its clock (one sampler tick, one host line). A hardware
+  // backend reads its bus once for all of them; the simulation ignores it.
+  virtual void beginAdvance() {}
 
   // True while a commanded move is in progress.
   virtual bool isMoving() const = 0;

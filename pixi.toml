@@ -150,6 +150,16 @@ cmd = "python tools/pycontrol_task.py link"
 description = "Host-side pytest for the pyControl device class and protocol (Gate C)."
 cmd = "pytest pycontrol/tests -q"
 
+[feature.pycontrol.tasks.pycontrol-run]
+description = "Run a task on the pyboard headlessly through pyControl's own board API (Gate E): hardware definition, device files and task uploaded, events streamed back."
+args = [
+  { arg = "port", default = "/dev/ttyACM1" },
+  { arg = "hwd", default = "mouse_joystick_bringup" },
+  { arg = "task", default = "mouse_joystick_check" },
+  { arg = "seconds", default = "60" },
+]
+cmd = "python tools/pycontrol_run.py --port {{ port }} --hwd {{ hwd }} --task {{ task }} --seconds {{ seconds }}"
+
 # Which LA5032 is watching which board. Runs `instrument-control`'s general
 # tool -- the decode logic and the frame contract live there and in
 # `board-interfaces`, not here -- but under THIS environment's interpreter,

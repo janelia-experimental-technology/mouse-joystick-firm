@@ -9,7 +9,7 @@ No board, no breakout, no pyControl installation is needed to run this.
 
 import pytest
 
-from devices.mouse_joystick_protocol import MouseJoystickProtocol as P
+from devices.mouse_joystick_protocol import JoystickProtocol as P
 from sim import BoardSim, Fault, State
 
 
@@ -668,8 +668,8 @@ def test_two_simulator_instances_on_two_links_do_not_interfere():
 
 def test_event_timestamps_do_not_wrap_at_32_bits(sim):
     """Bug 1: the firmware cast `t` to 32 bits and wrapped at 71.6 minutes."""
+    sim.advance(4294967296)  # 2^32 us into the session, rail off (no watchdog)
     send(sim, "hv;1;on")
-    sim.advance(4294967296)  # 2^32 us into the session
     send(sim, "home;2")
     out = sim.advance(50000)
     assert out == ["ev;HOMED;4295017296;angle=0.0"]
@@ -686,10 +686,15 @@ def test_a_home_timeout_shorter_than_the_home_faults_when_it_expires(sim):
 
 
 def test_a_home_timeout_longer_than_the_home_is_not_a_fault(sim):
-    send(sim, "hv;1;on")
-    assert send(sim, "home;2;2000") == ("ack;2", [])
+    # The rail stays on for two seconds, so the host keeps the heartbeat
+    # (V1.12: the watchdog runs with the rail), widened first to 500 ms.
+    assert send(sim, "cfg;1;wdt_ms=500") == ("ack;1", [])
+    send(sim, "hv;2;on")
+    assert send(sim, "home;3;2000") == ("ack;3", [])
     assert sim.advance(50000) == ["ev;HOMED;50000;angle=0.0"]
-    assert sim.advance(2000000) == []
+    for n in range(4, 9):
+        assert sim.advance(400000) == []
+        assert send(sim, "ping;%d" % n) == ("ack;%d" % n, [])
     assert sim.state == State.HOMED
 
 

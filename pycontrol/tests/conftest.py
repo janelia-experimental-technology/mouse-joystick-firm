@@ -46,6 +46,6 @@ def armed(sim):
 
 @pytest.fixture
 def protocol():
-    from mouse_joystick_protocol import MouseJoystickProtocol
+    from mouse_joystick_protocol import JoystickProtocol
 
-    return MouseJoystickProtocol
+    return JoystickProtocol

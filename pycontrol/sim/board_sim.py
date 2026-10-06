@@ -38,7 +38,7 @@ from pathlib import Path
 # than keeping a second copy that could drift.
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "devices"))
 
-from mouse_joystick_protocol import MouseJoystickProtocol as P  # noqa: E402
+from mouse_joystick_protocol import JoystickProtocol as P  # noqa: E402
 
 
 class Fault:
@@ -563,16 +563,21 @@ class BoardSim:
             if self.state == State.FAULTED:
                 return P.encode_nak(seq, P.NAK_FAULTED)
             self.hv_on = True
+            # The heartbeat requirement begins with the rail (2026-10-06): a
+            # host that dies between `hv on` and `arm` must not leave the rail
+            # up. Armed here, disarmed by `hv off` or a fault; `disarm` leaves
+            # it running while the rail is on.
+            self._watchdog_deadline = self.now_us + self.host_timeout_us
             return P.encode_ack(seq)
         if action == "OFF":
             # Always permitted: the board never requires a message in order to
             # become safe, and this is the message that makes it safer.
             self.hv_on = False
             self._home_deadline = None
+            self._watchdog_deadline = None  # the rail is off: nothing to protect
             if self.state in (State.ARMED, State.ACTIVE):
                 self._motion = None
                 self.state = State.HOMED
-                self._watchdog_deadline = None
             return P.encode_ack(seq)
         return P.encode_nak(seq, P.NAK_BADARGS)
 
@@ -658,9 +663,10 @@ class BoardSim:
         return P.encode_ack(seq)
 
     def _cmd_disarm(self, seq, args):
-        # "Always permitted."
+        # "Always permitted." The watchdog runs for as long as the rail is on.
         self._motion = None
-        self._watchdog_deadline = None
+        if not self.hv_on:
+            self._watchdog_deadline = None
         self._home_deadline = None
         self.stream_on = False
         if self._brake_pending:

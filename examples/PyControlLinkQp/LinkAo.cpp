@@ -40,13 +40,30 @@ mouse_joystick::TmcMotion l_motion(l_stepper, app::motionConfig(),
 class Link : public QActive {
 private:
   static constexpr uint32_t kIdleGapUs = 200U; // idle must have had this much
-  static constexpr uint32_t kTickBudgetUs = 400U; // the declared sampler budget
+  // The sampler budget: three handled ticks over it in a row decimate the
+  // sampler to every other tick, so that the idle loop (host lines in and
+  // out, the trace) keeps its share of the millisecond. 400 us until
+  // 2026-10-06; measured on the pin on v1.0 unit A with the quad-lane flash
+  // stage 2 (MJ_TICK_LEVEL, tools/la/tick_level.py): the RELEASED handler is
+  // 346 us median, 450 us p90, 620-760 us max, the ARMED one 146 / 235 /
+  // 340 us, and a host line adds ~40 us to the tick after it. 700 us keeps
+  // every measured RELEASED tick inside the budget and still leaves the idle
+  // loop 300 us of the worst millisecond; a stall beyond that is what the
+  // decimation is for.
+  static constexpr uint32_t kTickBudgetUs = 700U;
+  // Decimation ends after this many handled ticks without two over-budget
+  // ticks in a row (2026-10-06): the ten-poll snapshot tick is over budget
+  // on its own and used to reset the count every time, so the decimated
+  // mode never ended; the hv-on transient, which is what decimation is for,
+  // is several over-budget ticks in a row.
+  static constexpr uint16_t kRecoverTicks = 500U;
   mouse_joystick::ProtocolBoard m_board;
   uint32_t m_lastTickEnd_us = 0U;
   bool m_tickEndValid = false;
   bool m_pollDecimated = false;
   bool m_tickParity = false;
   uint8_t m_overBudgetStreak = 0U;
+  uint16_t m_underBudgetStreak = 0U; // handled ticks well inside the budget
   uint32_t m_enableCount = 0U;
   const char *m_lastState;
   bool m_brakeEngaging = false;
@@ -336,6 +353,7 @@ Q_STATE_DEF(Link, initial) {
   l_motion.setCheckpointHook(&BSP::crumb); // rail-up breadcrumbs on FW_TRIG0
 #endif
   m_board.setSerial(BSP::boardSerial());
+  m_board.setWallClock(&BSP::nowUs64); // blocking commands move its clock
   m_board.setPullSign(
       mouse_joystick::calibration::pullSignForSerial(BSP::boardSerial()));
   m_board.setBootInfo(BSP::bootReason(), BSP::bootCrumb());
@@ -392,16 +410,35 @@ Q_STATE_DEF(Link, running) {
       if (m_overBudgetStreak < 255U) {
         ++m_overBudgetStreak;
       }
+      // An isolated over-budget tick (the full snapshot every tenth poll,
+      // a tick that absorbed a host line) does not count against recovery;
+      // two in a row do.
+      if (m_overBudgetStreak >= 2U) {
+        m_underBudgetStreak = 0U;
+      }
       if (m_overBudgetStreak >= 3U && !m_pollDecimated) {
         m_pollDecimated = true;
         BSP::reportPollMode(true);
       }
     } else {
       m_overBudgetStreak = 0U;
+      // Hysteresis (2026-10-06): the `hv on` transient -- one 3.9 ms tick and
+      // the four peripheral phases -- is three over-budget ticks in a row,
+      // and decimation used to last until the rail went down. Half a second
+      // of handled ticks without a run of two over budget earns the full
+      // rate back.
+      if (m_pollDecimated) {
+        if (++m_underBudgetStreak >= kRecoverTicks) {
+          m_pollDecimated = false;
+          m_underBudgetStreak = 0U;
+          BSP::reportPollMode(false);
+        }
+      }
     }
     if (m_pollDecimated && !m_board.hvOn()) { // the rail went down: start over
       m_pollDecimated = false;
       m_overBudgetStreak = 0U;
+      m_underBudgetStreak = 0U;
       BSP::reportPollMode(false);
     }
     m_lastTickEnd_us = micros();

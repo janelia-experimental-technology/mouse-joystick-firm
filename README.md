@@ -66,6 +66,7 @@ make pycontrol-test           # host-side tests, no board and no pyControl neede
 
 export PYCONTROL_DIR=~/Repositories/github/pycontrol-code
 make pycontrol-link           # point that checkout at pycontrol/
+make pycontrol-run            # run a task on the pyboard through pyControl's own board API, no GUI (Gate E)
 make gui                      # launch the pyControl GUI
 ```
 
@@ -342,6 +343,7 @@ between them does not invalidate a cache. Same arrangement as `TMC51X0`.
 | `mouse_joystick_qp` | `examples/PyControlLinkQp` only: the stage-4 protocol inside a QP/C++ active object with a QS trace on `FW_TRIG1`, rev 0, `TmcMotion`, pyControl on UART0. qp-arduino comes from its `v7.3.4` tag on GitHub. |
 | `mouse_joystick_qp_rev1` | Same for rev 1. |
 | `mouse_joystick_qp_rev2`, `mouse_joystick_qp_rev2_usb` | Same for pcb v1.0, delivery and bench (USB protocol, tick probe) builds. Since 2026-10-06 the brake sink and the torque bridge are driven through `src/BrakeTorqueHw.hpp`: `caps` reports `brake` and `torque`, `BRAKE` ramps the coil and releases the drive once the current has settled, `TQ` answers, torque rides in `STATUS`, the events, `TRIAL` and the capture. |
+| `mouse_joystick_qp_rev2_fastflash` | The delivery build on the quad-lane stage 2 matched to the board's W25Q128JVZPIQ (`boot2_w25q128jvxq_4`). First run on unit A 2026-10-06: every build before it used the generic 03h stage 2, which fetches each XIP cache miss single-lane with a command and address per word, and on this build's code size that cost the 1 kHz sampler most of its budget (PCB bring-up log, "the tick budget attributed"). |
 | `mouse_joystick_qp_sim_usb` | Same application for a board with no 36 V and no host: simulated motion, protocol over USB CDC. How it was first run on the fixture. |
 | `native` | host tests. |
 

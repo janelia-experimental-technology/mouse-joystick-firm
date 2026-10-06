@@ -12,7 +12,7 @@ import pytest
 
 import stubs
 from sim import BoardSim
-from mouse_joystick_protocol import MouseJoystickProtocol as P
+from mouse_joystick_protocol import JoystickProtocol as P
 
 DEVICES_DIR = Path(__file__).resolve().parents[1] / "devices"
 

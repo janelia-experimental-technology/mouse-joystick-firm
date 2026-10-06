@@ -33,7 +33,7 @@ Task:
             for message in hw.left.poll():
                 ...
 
-`MouseJoystickProtocol` is named here so pyControl uploads
+`JoystickProtocol` is named here so pyControl uploads
 `mouse_joystick_protocol.py` alongside this file - see that file's header for why
 the codec has to be a class.
 """
@@ -48,7 +48,7 @@ from devices.uart_handler import UART_handler
 # package and `/flash/devices` is not on sys.path, so a bare
 # `from mouse_joystick_protocol import ...` raises ImportError there while
 # working perfectly on a host - which is the worst possible way to find out.
-from devices.mouse_joystick_protocol import MouseJoystickProtocol
+from devices.mouse_joystick_protocol import JoystickProtocol
 
 
 class MouseJoystick:
@@ -119,16 +119,16 @@ class MouseJoystick:
         return self.uart.read(pending)
 
     def _next_seq(self):
-        self._seq = (self._seq + 1) % MouseJoystickProtocol.SEQ_MODULUS
+        self._seq = (self._seq + 1) % JoystickProtocol.SEQ_MODULUS
         return self._seq
 
     def _send(self, verb, *args):
         """Write one command. Returns the sequence number it was sent under."""
         seq = self._next_seq()
-        line = MouseJoystickProtocol.encode_command(verb, seq, args)
+        line = JoystickProtocol.encode_command(verb, seq, args)
         self._pending[seq] = verb
         # Bounded: a board that never answers must not grow this without limit.
-        if len(self._pending) > MouseJoystickProtocol.SEQ_MODULUS // 8:
+        if len(self._pending) > JoystickProtocol.SEQ_MODULUS // 8:
             self._pending.clear()
         self.uart.write(line)
         return seq
@@ -137,7 +137,7 @@ class MouseJoystick:
         """Drain the link and return decoded messages, oldest first.
 
         Call this from the task when the `event_name` event fires. Returns a list
-        of tuples as produced by `MouseJoystickProtocol.decode_reply`, so a task
+        of tuples as produced by `JoystickProtocol.decode_reply`, so a task
         can dispatch on the kind without string matching.
 
         Reads rather than readlines: a UART read can return a partial line, and a
@@ -155,11 +155,11 @@ class MouseJoystick:
             line, _, self._rx = self._rx.partition("\n")
             if not line.strip("\r"):
                 continue
-            message = MouseJoystickProtocol.decode_reply(line)
+            message = JoystickProtocol.decode_reply(line)
             kind = message[0]
-            if kind in (MouseJoystickProtocol.KIND_ACK, MouseJoystickProtocol.KIND_NAK):
+            if kind in (JoystickProtocol.KIND_ACK, JoystickProtocol.KIND_NAK):
                 self._pending.pop(message[1], None)
-            if kind == MouseJoystickProtocol.KIND_EVENT and message[1] == "S":
+            if kind == JoystickProtocol.KIND_EVENT and message[1] == "S":
                 # Telemetry, not an event: route to the analog sink and drop.
                 t_us, data = message[2]
                 if self.stream_sink is not None:
@@ -169,7 +169,7 @@ class MouseJoystick:
 
         # A partial line longer than any legal line means the link is desynced;
         # dropping it resynchronises at the next newline instead of wedging.
-        if len(self._rx) > MouseJoystickProtocol.MAX_LINE:
+        if len(self._rx) > JoystickProtocol.MAX_LINE:
             self._rx = ""
 
         return messages
@@ -203,13 +203,13 @@ class MouseJoystick:
         # v2 is the protocol v1 proposal of 2026-10-01 (BRAKE/WATCH/CFG/FETCH;
         # FREEWHEEL/ARMPULL gone). Earlier boards are refused rather than driven
         # with verbs they do not have.
-        assert proto == MouseJoystickProtocol.PROTOCOL_VERSION, (
+        assert proto == JoystickProtocol.PROTOCOL_VERSION, (
             "! MouseJoystick: board speaks protocol v%d, this class speaks v%d."
-            % (proto, MouseJoystickProtocol.PROTOCOL_VERSION)
+            % (proto, JoystickProtocol.PROTOCOL_VERSION)
         )
-        assert axes == MouseJoystickProtocol.AXIS_COUNT, (
+        assert axes == JoystickProtocol.AXIS_COUNT, (
             "! MouseJoystick: board reports %d axes, this class drives %d. "
-            "A twin-axis board needs its own device class." % (axes, MouseJoystickProtocol.AXIS_COUNT)
+            "A twin-axis board needs its own device class." % (axes, JoystickProtocol.AXIS_COUNT)
         )
 
         self.protocol_version = proto
@@ -236,6 +236,10 @@ class MouseJoystick:
         return self._send("limits")
 
     def hv(self, on):
+        """Motor rail on or off. `hv;s;ON` also arms the board's host-loss
+        watchdog (protocol V1.12, 2026-10-06), so the task's heartbeat must be
+        running from here on: a host that dies before its first heartbeat no
+        longer leaves the rail up."""
         return self._send("hv", "ON" if on else "OFF")
 
     def hv_state(self):
@@ -349,7 +353,7 @@ class MouseJoystick:
 
     @staticmethod
     def _num(value):
-        return MouseJoystickProtocol.format_number(value) if not isinstance(value, str) else value
+        return JoystickProtocol.format_number(value) if not isinstance(value, str) else value
 
     def faults(self):
         return self._send("faults")

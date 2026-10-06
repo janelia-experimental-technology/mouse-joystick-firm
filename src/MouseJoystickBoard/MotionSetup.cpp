@@ -227,11 +227,27 @@ MotionSnapshot MotionSetup::snapshot(TMC51X0 &stepper) {
   // Exactly one RAMP_STAT read. See the note in MotionSetup.hpp: the library's
   // per-flag accessors each read it again, and several of those flags are
   // read-and-clear.
-  s.ramp_stat = stepper.registers.read(Regs::RampStatAddress);
-  s.drv_status = stepper.registers.read(Regs::DrvStatusAddress);
-  s.position = stepper.controller.readActualPosition();
-  s.velocity = stepper.controller.readActualVelocity();
-  s.encoder = stepper.encoder.readActualPosition();
+  //
+  // One pipelined transaction (TMC51X0 `readMany`, 2026-10-06): six datagrams
+  // instead of ten, 270 us on the bus instead of 450 at 4 MHz. RAMP_STAT goes
+  // first because the last address is sent twice and it is read-and-clear;
+  // X_ENC last is harmless to read again.
+  const Regs::RegisterAddress addresses[5] = {
+      Regs::RampStatAddress, Regs::DrvStatusAddress, Regs::XactualAddress,
+      Regs::VactualAddress, Regs::XencAddress};
+  uint32_t values[5] = {0, 0, 0, 0, 0};
+  stepper.registers.readMany(addresses, values, 5);
+  s.ramp_stat = values[0];
+  s.drv_status = values[1];
+  s.position = static_cast<int32_t>(values[2]);
+  // VACTUAL is 24-bit two's complement in a 32-bit register, as
+  // Controller::readActualVelocity() converts it.
+  int32_t velocity = static_cast<int32_t>(values[3]);
+  if (velocity > 8388607) {
+    velocity -= 16777216;
+  }
+  s.velocity = velocity;
+  s.encoder = static_cast<int32_t>(values[4]);
   return s;
 }
 

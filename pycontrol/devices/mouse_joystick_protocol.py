@@ -27,10 +27,21 @@ Everything also lives inside the class namespace because the board's
 `devices/__init__.py` does `from devices.<file> import *` for every file in the
 folder. Module-level names like `IDLE` or `MAX_LINE` would leak into every
 device driver's namespace.
+
+WHY THE CLASS IS NOT CALLED MouseJoystickProtocol (found at Gate E, 2026-10-06):
+that same scan is a plain substring test over the whole file text, and it
+recurses from each discovered file into the files IT mentions with no cycle
+check. `MouseJoystick` is a prefix of `MouseJoystickProtocol`, so this file
+"mentioned" the device class through its own class name, the device class
+mentions the codec, and pyControl 2.1.1 recursed until Python gave up
+(`RecursionError` in `_get_used_device_files`). The codec's name must not
+contain the device class's name, and nothing in this file's text may spell
+`MouseJoystick` either -- comments included. `JoystickProtocol` is a
+substring of no pyControl device class and contains none.
 """
 
 
-class MouseJoystickProtocol:
+class JoystickProtocol:
     """Encode and decode one line of the mouse-joystick protocol.
 
     All methods are static. This class is a namespace and a marker for
@@ -175,7 +186,7 @@ class MouseJoystickProtocol:
     def normalize_seq(seq):
         """Wrap a sequence number into 0..65535, or None if it is not usable."""
         try:
-            return int(seq) % MouseJoystickProtocol.SEQ_MODULUS
+            return int(seq) % JoystickProtocol.SEQ_MODULUS
         except (TypeError, ValueError):
             return None
 
@@ -193,9 +204,9 @@ class MouseJoystickProtocol:
         text = line.strip("\r\n").strip("\r")
         if not text:
             return None
-        if len(text) > MouseJoystickProtocol.MAX_LINE:
+        if len(text) > JoystickProtocol.MAX_LINE:
             return None
-        return text.split(MouseJoystickProtocol.DELIMITER)
+        return text.split(JoystickProtocol.DELIMITER)
 
     @staticmethod
     def _parse_kv(fields):
@@ -226,7 +237,7 @@ class MouseJoystickProtocol:
         accepts either. Flagged in `../README.md` as a draft inconsistency to
         resolve before the protocol is frozen.
         """
-        normalized = MouseJoystickProtocol.normalize_seq(seq)
+        normalized = JoystickProtocol.normalize_seq(seq)
         if normalized is None:
             raise ValueError("seq must be an integer")
 
@@ -236,15 +247,15 @@ class MouseJoystickProtocol:
                 if isinstance(arg, str):
                     text = arg
                 else:
-                    text = MouseJoystickProtocol.format_number(arg)
-                if MouseJoystickProtocol.DELIMITER in text or "\n" in text:
+                    text = JoystickProtocol.format_number(arg)
+                if JoystickProtocol.DELIMITER in text or "\n" in text:
                     raise ValueError("argument may not contain a delimiter or newline")
                 parts.append(text)
 
-        line = MouseJoystickProtocol.DELIMITER.join(parts)
-        if len(line) > MouseJoystickProtocol.MAX_LINE:
+        line = JoystickProtocol.DELIMITER.join(parts)
+        if len(line) > JoystickProtocol.MAX_LINE:
             raise ValueError("command exceeds MAX_LINE")
-        return line + MouseJoystickProtocol.TERMINATOR
+        return line + JoystickProtocol.TERMINATOR
 
     @staticmethod
     def encode_ack(seq, data=None):
@@ -256,22 +267,22 @@ class MouseJoystickProtocol:
         every data-carrying ack here is `key=value`. Positional reply fields
         would be shorter but would make adding a field a breaking change.
         """
-        parts = [MouseJoystickProtocol.ACK, str(seq)]
+        parts = [JoystickProtocol.ACK, str(seq)]
         if data:
             for key in data:
                 value = data[key]
                 if isinstance(value, str):
                     text = value
                 else:
-                    text = MouseJoystickProtocol.format_number(value)
+                    text = JoystickProtocol.format_number(value)
                 parts.append(key + "=" + text)
-        return MouseJoystickProtocol.DELIMITER.join(parts) + MouseJoystickProtocol.TERMINATOR
+        return JoystickProtocol.DELIMITER.join(parts) + JoystickProtocol.TERMINATOR
 
     @staticmethod
     def encode_nak(seq, reason):
         """Build `nak;seq;reason`. `seq` may be SEQ_UNKNOWN for a bad frame."""
-        parts = [MouseJoystickProtocol.NAK, str(seq), reason]
-        return MouseJoystickProtocol.DELIMITER.join(parts) + MouseJoystickProtocol.TERMINATOR
+        parts = [JoystickProtocol.NAK, str(seq), reason]
+        return JoystickProtocol.DELIMITER.join(parts) + JoystickProtocol.TERMINATOR
 
     @staticmethod
     def encode_event(name, t_us, data=None):
@@ -279,16 +290,16 @@ class MouseJoystickProtocol:
 
         Event names are uppercase on the wire in every example the draft gives.
         """
-        parts = [MouseJoystickProtocol.EVENT, str(name).upper(), str(int(t_us))]
+        parts = [JoystickProtocol.EVENT, str(name).upper(), str(int(t_us))]
         if data:
             for key in data:
                 value = data[key]
                 if isinstance(value, str):
                     text = value
                 else:
-                    text = MouseJoystickProtocol.format_number(value)
+                    text = JoystickProtocol.format_number(value)
                 parts.append(key + "=" + text)
-        return MouseJoystickProtocol.DELIMITER.join(parts) + MouseJoystickProtocol.TERMINATOR
+        return JoystickProtocol.DELIMITER.join(parts) + JoystickProtocol.TERMINATOR
 
     # --------------------------------------------------------------- decoding
 
@@ -304,22 +315,22 @@ class MouseJoystickProtocol:
         because the draft requires `nak;<seq or ?>;badframe` - answering `?` when
         the seq was perfectly readable would cost the host its correlation.
         """
-        fields = MouseJoystickProtocol._split(line)
+        fields = JoystickProtocol._split(line)
         if not fields:
-            return (MouseJoystickProtocol.KIND_BAD, None, None, MouseJoystickProtocol.NAK_BADFRAME)
+            return (JoystickProtocol.KIND_BAD, None, None, JoystickProtocol.NAK_BADFRAME)
 
         verb = fields[0].lower()
         if not verb:
-            return (MouseJoystickProtocol.KIND_BAD, None, None, MouseJoystickProtocol.NAK_BADFRAME)
+            return (JoystickProtocol.KIND_BAD, None, None, JoystickProtocol.NAK_BADFRAME)
 
         if len(fields) < 2:
-            return (MouseJoystickProtocol.KIND_BAD, verb, None, MouseJoystickProtocol.NAK_BADFRAME)
+            return (JoystickProtocol.KIND_BAD, verb, None, JoystickProtocol.NAK_BADFRAME)
 
-        seq = MouseJoystickProtocol.normalize_seq(fields[1])
+        seq = JoystickProtocol.normalize_seq(fields[1])
         if seq is None:
-            return (MouseJoystickProtocol.KIND_BAD, verb, None, MouseJoystickProtocol.NAK_BADFRAME)
+            return (JoystickProtocol.KIND_BAD, verb, None, JoystickProtocol.NAK_BADFRAME)
 
-        return (MouseJoystickProtocol.KIND_COMMAND, verb, seq, fields[2:])
+        return (JoystickProtocol.KIND_COMMAND, verb, seq, fields[2:])
 
     @staticmethod
     def decode_reply(line):
@@ -335,55 +346,55 @@ class MouseJoystickProtocol:
         ack must be prepared to see an event first. That is the whole reason
         events carry their own discriminator in field 0.
         """
-        fields = MouseJoystickProtocol._split(line)
+        fields = JoystickProtocol._split(line)
         if not fields:
-            return (MouseJoystickProtocol.KIND_BAD, None, MouseJoystickProtocol.NAK_BADFRAME)
+            return (JoystickProtocol.KIND_BAD, None, JoystickProtocol.NAK_BADFRAME)
 
         head = fields[0]
 
-        if head == MouseJoystickProtocol.EVENT:
+        if head == JoystickProtocol.EVENT:
             if len(fields) < 3:
-                return (MouseJoystickProtocol.KIND_BAD, None, MouseJoystickProtocol.NAK_BADFRAME)
+                return (JoystickProtocol.KIND_BAD, None, JoystickProtocol.NAK_BADFRAME)
             name = fields[1]
             try:
                 t_us = int(fields[2])
             except ValueError:
-                return (MouseJoystickProtocol.KIND_BAD, None, MouseJoystickProtocol.NAK_BADFRAME)
-            data, ok = MouseJoystickProtocol._parse_kv(fields[3:])
+                return (JoystickProtocol.KIND_BAD, None, JoystickProtocol.NAK_BADFRAME)
+            data, ok = JoystickProtocol._parse_kv(fields[3:])
             if not ok:
-                return (MouseJoystickProtocol.KIND_BAD, None, MouseJoystickProtocol.NAK_BADFRAME)
-            return (MouseJoystickProtocol.KIND_EVENT, name, (t_us, data))
+                return (JoystickProtocol.KIND_BAD, None, JoystickProtocol.NAK_BADFRAME)
+            return (JoystickProtocol.KIND_EVENT, name, (t_us, data))
 
-        if head == MouseJoystickProtocol.ACK:
+        if head == JoystickProtocol.ACK:
             if len(fields) < 2:
-                return (MouseJoystickProtocol.KIND_BAD, None, MouseJoystickProtocol.NAK_BADFRAME)
-            seq = MouseJoystickProtocol.normalize_seq(fields[1])
+                return (JoystickProtocol.KIND_BAD, None, JoystickProtocol.NAK_BADFRAME)
+            seq = JoystickProtocol.normalize_seq(fields[1])
             if seq is None:
-                return (MouseJoystickProtocol.KIND_BAD, None, MouseJoystickProtocol.NAK_BADFRAME)
-            data, ok = MouseJoystickProtocol._parse_kv(fields[2:])
+                return (JoystickProtocol.KIND_BAD, None, JoystickProtocol.NAK_BADFRAME)
+            data, ok = JoystickProtocol._parse_kv(fields[2:])
             if not ok:
-                return (MouseJoystickProtocol.KIND_BAD, None, MouseJoystickProtocol.NAK_BADFRAME)
-            return (MouseJoystickProtocol.KIND_ACK, seq, data)
+                return (JoystickProtocol.KIND_BAD, None, JoystickProtocol.NAK_BADFRAME)
+            return (JoystickProtocol.KIND_ACK, seq, data)
 
-        if head == MouseJoystickProtocol.NAK:
+        if head == JoystickProtocol.NAK:
             if len(fields) < 3:
-                return (MouseJoystickProtocol.KIND_BAD, None, MouseJoystickProtocol.NAK_BADFRAME)
-            seq = MouseJoystickProtocol.normalize_seq(fields[1])
+                return (JoystickProtocol.KIND_BAD, None, JoystickProtocol.NAK_BADFRAME)
+            seq = JoystickProtocol.normalize_seq(fields[1])
             # `nak;?;badframe` is legal and carries no seq, which is not an error.
-            return (MouseJoystickProtocol.KIND_NAK, seq, fields[2])
+            return (JoystickProtocol.KIND_NAK, seq, fields[2])
 
-        if head == MouseJoystickProtocol.CAP:
+        if head == JoystickProtocol.CAP:
             # `cap;end` closes a FETCH chunk; `cap;k;angle;torque` is one sample
             # (torque empty on a board without the sensor). Returned as
             # (KIND_CAP, k_or_None, (angle_text, torque_text)).
             if len(fields) == 2 and fields[1] == "end":
-                return (MouseJoystickProtocol.KIND_CAP, None, None)
+                return (JoystickProtocol.KIND_CAP, None, None)
             if len(fields) != 4:
-                return (MouseJoystickProtocol.KIND_BAD, None, MouseJoystickProtocol.NAK_BADFRAME)
+                return (JoystickProtocol.KIND_BAD, None, JoystickProtocol.NAK_BADFRAME)
             try:
                 k = int(fields[1])
             except ValueError:
-                return (MouseJoystickProtocol.KIND_BAD, None, MouseJoystickProtocol.NAK_BADFRAME)
-            return (MouseJoystickProtocol.KIND_CAP, k, (fields[2], fields[3]))
+                return (JoystickProtocol.KIND_BAD, None, JoystickProtocol.NAK_BADFRAME)
+            return (JoystickProtocol.KIND_CAP, k, (fields[2], fields[3]))
 
-        return (MouseJoystickProtocol.KIND_BAD, None, MouseJoystickProtocol.NAK_BADFRAME)
+        return (JoystickProtocol.KIND_BAD, None, JoystickProtocol.NAK_BADFRAME)
