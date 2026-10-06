@@ -189,7 +189,7 @@ trace). Both are sent from `identifying`, whose acks nothing handles.
 The attribution they served ended the same day: the board's 1 kHz sampler
 was being throttled by instruction fetch from flash (the generic 03h flash
 stage 2), not by the bus or the host; on the quad-lane stage 2
-(`mouse_joystick_qp_rev2_fastflash`) run 9 held 1 kHz through the whole
+(now the default of `mouse_joystick_qp_rev2`) run 9 held 1 kHz through the whole
 trial with the 25/s heartbeat (PCB bring-up log, "the tick budget attributed
 on the bus and on the pin"). A `ping` costs the board ~0.5 ms of handler
 time there, so the 40 ms heartbeat is fine as it is.

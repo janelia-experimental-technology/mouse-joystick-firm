@@ -233,7 +233,7 @@ section 9, Phase A.
       cause: every build ran from the W25Q128JVZPIQ through the generic
       single-lane 03h stage 2** (`boot2_generic_03h_4`, kept "until stage 1
       passes" since the first article, never switched). On the quad-lane
-      stage 2 matched to the part (`env:mouse_joystick_qp_rev2_fastflash`,
+      stage 2 matched to the part (tried as `env:mouse_joystick_qp_rev2_fastflash`, then made the default of every env at 14:05,
       `boot2_w25q128jvxq_4`; boots and runs the task first time) the
       `RELEASED` tick is 346 µs median / 450 p90 / 760 max, the `ARMED` tick
       146 / 235 / 370 at 1000 handlers/s, a `ping` 0.5 ms, every `POLL_STAT`
@@ -243,7 +243,7 @@ section 9, Phase A.
       (`…-1147-unitA-gate-e-fastflash/`): 1 kHz for the whole run, trial
       included, never decimated, 79 overrun skips and 47 coalesced ticks in
       50 s (from ≈1900 / ≈1500), handler max 798 µs in `RELEASED`, 371 in
-      `ARMED`.** Also done on the way, all
+      `ARMED`.** Peter made it the default at 14:05: `env:mouse_joystick`'s `boot2_source` is the quad-lane one, every env inherits it, `env:mouse_joystick_safeflash` keeps the generic stage 2 for a first article, and the `_fastflash` envs are gone. Also done on the way, all
       measured: `TMC51X0` working copy with one buffer transfer per datagram
       (two-buffer form on RP2040/Teensy: 17 → 12 µs per datagram, clocks
       back to back) and the pipelined `readMany()` (snapshot 10 → 6
@@ -257,6 +257,24 @@ section 9, Phase A.
       `-Os`/`-O2` and section-placement pass (`__not_in_flash_func` on the
       tick path) is the next lever if ever needed. (3) Unit B and the pyboard
       heartbeat rate: 25/s costs 5 % of the ticks ~40 µs; fine.
+- [ ] **The park error: lost motion on direction reversal, measured
+      (2026-10-06, 14:07–14:25).** Every trial parked 0.99° short on the
+      encoder with the ramp generator satisfied. Probed with the bring-up
+      task's `park` knob (PCB bring-up log, "the park error measured";
+      evidence `…-1407-unitA-park-error/`): the release, the resync and the
+      brake are not it (both frames equal and the brake off for 300 ms, the
+      move still lands at −0.991); a chain of six moves loses 0.35–0.77° on
+      every reversal and ≤ 0.07° on same-direction moves, independent of
+      distance, not accumulating. Not the encoder, not the firmware. At
+      IRUN 17 instead of 8 the after-positive state is −0.633 three times
+      out of three (from −0.82…−0.99) and the hysteresis shrinks by a third:
+      ~0.3° is the stepper's torque angle under friction at the bring-up
+      current, 0.3–0.6° is drive-train lost motion. Options, in order of
+      preference: (1) settle on the encoder after `TARGET` with one or two
+      correction moves of the residual — needs a `TARGET` semantics decision
+      in `uart-protocol.md`; (2) same-direction approach (overshoot and
+      return); (3) `IRUN` toward 17 when the thermal survey allows. Until
+      then both tasks home before every trial.
 - [x] **Gate E (2026-10-06), passed on v1.0 unit A:** `tools/pycontrol_run.py` runs a task on the
       pyboard headlessly through pyControl's own `Pycboard` API (the GUI's
       path, no GUI); `pixi run -e pycontrol pycontrol-run`. Two things
@@ -356,10 +374,20 @@ attribution is the next firmware step (plan item "round three"). The board
 is flashed with this build (`mouse_joystick_qp_rev2`, 10:43), rail off.
 Host tests 154 Unity + 182 pytest; the two qp rev2 envs build.
 
+**2026-10-06, 14:30.** TMC51X0 4.2.0 released and pinned; the quad-lane
+flash stage 2 is the default of every env (`mouse_joystick_safeflash` keeps
+the generic one); the park error is measured — lost motion on direction
+reversal, part torque angle at the bring-up current, part drive train, not
+the encoder or the firmware — with the encoder-settle fix as the next
+firmware item; the rig repository has branch `feat/mouse-joystick` with the
+device files, the hardware definition (ports 1/4, solenoid to port 5) and a
+first trial task. Board: unit A on the default build, rail off. Tests 156
+Unity + 185 pytest; all 14 example/env builds pass.
+
 **2026-10-06, 12:00: the 1 kHz sampler is back, and the watchdog runs with
 the rail.** The tick budget was never the bus: every build ran from flash
 through the generic single-lane 03h stage 2, and the quad-lane stage 2
-matched to the W25Q128JV (`env:mouse_joystick_qp_rev2_fastflash`) halves to
+matched to the W25Q128JV (now the default of every env; `mouse_joystick_safeflash` keeps the generic one) halves to
 thirds everything the CPU does (tick 758 → 346 µs median in `RELEASED`,
 268 → 146 in `ARMED`, `ping` 1.35 → 0.5 ms). With the budget constant at the
 measured 700 µs, Gate E run 9 held 1 kHz through the whole trial. On the
@@ -699,7 +727,7 @@ Read `.agents/handoff.local.md` for bench state and the immediate next actions.
 - [x] Boot signature and heartbeat on `FW_TRIG0`/`FW_TRIG1`, so firmware
       execution is observable without USB
 - [x] `MJ_BOARD_REV` so the spare-pad test matches the revision being built
-- [x] Compile clean on `mouse_joystick`, `mouse_joystick_fastflash`,
+- [x] Compile clean on `mouse_joystick`, `mouse_joystick_safeflash` (was `_fastflash`: the quad-lane stage 2 is the default since 2026-10-06),
       `mouse_joystick_rev1`; 7/7 host tests pass
 - [x] BOOTSEL enumerates (`RPI-RP2` mass storage) — passed 2026-09-01
 - [x] Firmware flashes, verifies, and runs — **27 checks, 0 failed**, 2026-09-01
@@ -878,7 +906,7 @@ Read from `git show <tag>:kicad/mouse-joystick-pcb.kicad_pcb`, footprint `U501`:
 Board serial `E4654C159F2C2534`, 36 V absent, USB only.
 
 - **The `generic` board definition boots this board** with
-  `boot2_generic_03h_4`. `mouse_joystick_fastflash` is untried on hardware.
+  `boot2_generic_03h_4`. `mouse_joystick_fastflash` is untried on hardware. (2026-10-06: tried, measured, and made the default; the generic one is `mouse_joystick_safeflash` now.)
 - **Flash is really 16 MiB.** No aliasing at +2, +4 or +8 MiB, and `picotool`
   verified the whole image byte for byte.
 - **Clocks are nominal:** `clk_ref` 12000 kHz, `clk_sys` 133000 kHz measured,
@@ -901,7 +929,7 @@ Board serial `E4654C159F2C2534`, 36 V absent, USB only.
   signature is a known pattern on known pins, so it doubles as the confirmation
   once the adapter is connected. Nothing in stage 1 needed it, because USB came
   up on the first try.
-- `env:mouse_joystick_fastflash` on hardware.
+- `env:mouse_joystick_fastflash` on hardware. (Done 2026-10-06, see the tick budget item.)
 - Everything on the far side of `HV_EN`: the switched rails, the TMC5130A, the
   16 MHz oscillator `X1201`, the motor, encoder, and limit switch.
 

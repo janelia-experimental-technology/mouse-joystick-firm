@@ -224,7 +224,7 @@ asserts on this so a merge fails loudly.
 
 - Host tests: `make test`. Covers `src/Conversions.hpp` only; everything else
   needs the board.
-- Compile check: `make build`, plus `ENV=mouse_joystick_fastflash` when the
+- Compile check: `make build`, plus `ENV=mouse_joystick_safeflash` when the
   change could touch the flash configuration and `ENV=mouse_joystick_rev1` when
   it touches anything revision-dependent.
 - Note `make test` prunes the per-example firmware build directories. Build after

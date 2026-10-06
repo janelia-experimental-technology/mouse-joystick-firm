@@ -85,7 +85,7 @@ def main(argv: list[str]) -> int:
         sp.add_argument(
             "--env",
             default="mouse_joystick",
-            help="PlatformIO environment name (mouse_joystick, mouse_joystick_fastflash, native).",
+            help="PlatformIO environment name (mouse_joystick, mouse_joystick_safeflash, native).",
         )
 
     # build

@@ -336,14 +336,13 @@ between them does not invalidate a cache. Same arrangement as `TMC51X0`.
 
 | Env | Purpose |
 |-----|---------|
-| `mouse_joystick` | `MJ_BOARD_REV=0`, for pcb **v0.1 and v0.2 only**. Universal `boot2_generic_03h` stage 2 — slower XIP, but boots regardless of the flash's quad-enable bit, which is what a first-article board wants. |
-| `mouse_joystick_fastflash` | same board, quad-lane stage 2 matched to the W25Q128JV. Use once stage 1 has passed. |
+| `mouse_joystick` | `MJ_BOARD_REV=0`, for pcb **v0.1 and v0.2 only**. Quad-lane `boot2_w25q128jvxq` stage 2 since 2026-10-06 (every env inherits it); see `mouse_joystick_safeflash` for the generic one. |
+| `mouse_joystick_safeflash` | Same board on the universal single-lane `boot2_generic_03h` stage 2, which boots regardless of the flash's quad-enable bit: for a first-article board before its flash is proven. Slow XIP: on the link build it cost the 1 kHz sampler most of its budget (bring-up log, "the tick budget attributed"). Not for delivery. |
 | `mouse_joystick_rev1` | `MJ_BOARD_REV=1`, for pcb **v0.3 only**, where GP10/GP11/GP13 carry the angle DAC on SPI1. **This is not a future-only env — a v0.3 board needs it.** Building rev 0 against v0.3 drives the spare-pad test onto the DAC's SPI bus and chip select. The check count is the tell: a v0.3 board reporting 27 checks in stage 1 was built with the wrong env; rev 1 reports 24. **Not for v1.0**, where GP13 is an input from the brake block. |
 | `mouse_joystick_rev2` | `MJ_BOARD_REV=2`, for pcb **v1.0** (board file `d5ae4b0` through HEAD; no tag yet). I2C DACs on GP16/GP17, torque ADC on SPI1, `~{BRAKE_FAULT}` GP13, `HV_LATCH` GP24, `~{HV_FAULT}` GP23, two spare pads, **20 stage 1 checks**. The transport is chosen by the revision; `MJ_DAC_I2C` is not needed. **On hardware since 2026-10-05** (unit `E4654C159F274534`: stages 1, 2, A3, A6, and A4/A5 on 2026-10-06). Replaces `mouse_joystick_rev1_i2c`, which described a board that never existed. |
 | `mouse_joystick_qp` | `examples/PyControlLinkQp` only: the stage-4 protocol inside a QP/C++ active object with a QS trace on `FW_TRIG1`, rev 0, `TmcMotion`, pyControl on UART0. qp-arduino comes from its `v7.3.4` tag on GitHub. |
 | `mouse_joystick_qp_rev1` | Same for rev 1. |
 | `mouse_joystick_qp_rev2`, `mouse_joystick_qp_rev2_usb` | Same for pcb v1.0, delivery and bench (USB protocol, tick probe) builds. Since 2026-10-06 the brake sink and the torque bridge are driven through `src/BrakeTorqueHw.hpp`: `caps` reports `brake` and `torque`, `BRAKE` ramps the coil and releases the drive once the current has settled, `TQ` answers, torque rides in `STATUS`, the events, `TRIAL` and the capture. |
-| `mouse_joystick_qp_rev2_fastflash` | The delivery build on the quad-lane stage 2 matched to the board's W25Q128JVZPIQ (`boot2_w25q128jvxq_4`). First run on unit A 2026-10-06: every build before it used the generic 03h stage 2, which fetches each XIP cache miss single-lane with a command and address per word, and on this build's code size that cost the 1 kHz sampler most of its budget (PCB bring-up log, "the tick budget attributed"). |
 | `mouse_joystick_qp_sim_usb` | Same application for a board with no 36 V and no host: simulated motion, protocol over USB CDC. How it was first run on the fixture. |
 | `native` | host tests. |
 

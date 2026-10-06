@@ -80,6 +80,18 @@ v.outcome = ""
 # whether the instrument port, and with it the QS trace, is left on.
 v.wdt_ms = 0
 v.instr = 1
+# Bench knob for the park error (2026-10-06): 1 parks with a move as a trial
+# would; 0 leaves RELEASED with `stop` instead and reads `status` right after
+# and again 300 ms later, so angle (encoder) and xactual (ramp generator) can
+# be compared across the brake release and the driver's re-engage without a
+# move in between; 2 does the same and then parks with a move 300 ms after the
+# stop, to separate the brake's release from the move itself; 3 parks with a
+# move and then runs PROBE_MOVES back to back, printing each TARGET, to tell
+# backlash (a fixed loss per direction reversal) from a loss proportional to
+# distance (encoder) or accumulating per move (motor).
+v.park = 1
+v.probe_i = 0
+PROBE_MOVES = [-5.0, -2.5, 0.0, -2.5, -5.0, 0.0]
 # The state the task is in, kept by hand: pyControl's task API has no
 # "current state" query (found on the pyboard 2026-10-06), and the replies to
 # `hv`, `arm` and the two moves mean different things in different states.
@@ -110,6 +122,7 @@ events = [
     "joystick_L",
     "joystick_R",
     "heartbeat",
+    "status_later",
 ]
 
 initial_state = "identifying"
@@ -197,6 +210,7 @@ def braking(event):
 def watching(event):
     if event == "entry":
         v.phase = "watching"
+        board().status()  # angle vs xactual at RELEASED, printed by _handle
         print("watching: pull past {} deg or push past {} deg within {} ms".format(
             v.pull_degrees, v.push_degrees, v.watch_timeout_ms))
         # Tare first: the reading at rest after RELEASED is -0.2 to -0.35 N.cm
@@ -214,8 +228,21 @@ def parking(event):
     # encoder, emits TRIAL, releases the brake, then moves.
     if event == "entry":
         v.phase = "parking"
-        print("parking at 0 deg")
-        board().move_to(0.0)
+        if v.park == 1 or v.park == 3:
+            print("parking at 0 deg")
+            board().move_to(0.0)
+        else:
+            print("leaving RELEASED with stop, no move; status now and in 300 ms")
+            board().stop()
+            board().status()
+            set_timer("status_later", 300 * ms, output_event=False)
+    elif event == "status_later":
+        board().status()
+        if v.park == 2:
+            print("parking at 0 deg, 300 ms after the stop")
+            board().move_to(0.0)
+        else:
+            timed_goto_state("done", 100 * ms)
 
 
 def done(event):
@@ -271,7 +298,13 @@ def _handle(message):
                 else:
                     goto_state("done")
             elif v.phase == "parking":
-                goto_state("done")
+                if v.park == 3 and v.probe_i < len(PROBE_MOVES):
+                    target = PROBE_MOVES[v.probe_i]
+                    v.probe_i += 1
+                    print("probe move {} to {} deg".format(v.probe_i, target))
+                    board().move_to(target)
+                else:
+                    goto_state("done")
         elif name == "RELEASED":
             goto_state("watching")
         elif name in ("PULL", "PUSH", "NOMOVE", "ABORT"):
@@ -302,6 +335,11 @@ def _handle(message):
 
         elif "mask" in data:
             print("faults {}".format(data))
+
+        elif "xactual" in data:
+            print("status state {} angle {} xactual {} torque {} brake {}".format(
+                data.get("state"), data.get("angle"), data.get("xactual"),
+                data.get("torque"), data.get("brake")))
 
         elif v.phase == "powering":
             goto_state("homing")

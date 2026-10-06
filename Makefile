@@ -3,7 +3,7 @@
 #
 # Override any of these on the command line:
 #   make upload PORT=/dev/ttyACM1
-#   make build EXAMPLE=examples/RP2040SelfTest ENV=mouse_joystick_fastflash
+#   make build EXAMPLE=examples/RP2040SelfTest ENV=mouse_joystick_safeflash
 
 PIXI ?= pixi
 EXAMPLE ?= examples/RP2040SelfTest
