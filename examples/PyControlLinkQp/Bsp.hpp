@@ -6,6 +6,10 @@
 
 #include <stdint.h>
 
+namespace mouse_joystick {
+class BrakeTorqueBackend;
+}
+
 class BSP {
 public:
   // 1 kHz: the sampler rate. TICK_SIG is posted by the alarm interrupt,
@@ -74,4 +78,13 @@ public:
   // (`hv_on`) and forgotten when it goes down. No-op on rev 0.
   static void angleOutput(bool valid, float angle_deg, float lo, float hi,
                           bool hv_on);
+
+  // pcb v1.0's brake sink and torque bridge (rev 2), configured by the same
+  // rail-up phase machine as the angle DAC one tick after it and forgotten
+  // with the rail; null on earlier revisions. The protocol layer polls it.
+  static mouse_joystick::BrakeTorqueBackend *brakeTorque();
+  // Its worst poll since the last call and the number of polls (POLL_STAT);
+  // zeros before pcb v1.0.
+  static uint32_t takeBrakeTorquePollCost(uint32_t *calls, uint32_t *sample_max_us,
+                                          uint32_t *isense_max_us);
 };

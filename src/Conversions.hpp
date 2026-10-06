@@ -7,6 +7,8 @@
 
 #include <stdint.h>
 
+#include "DAC80501Registers.hpp" // the brake setpoint DAC's transfer function
+
 namespace mouse_joystick {
 namespace conversions {
 
@@ -423,6 +425,156 @@ constexpr uint32_t kEnableSettleMaxUs = 150000;
 // much travel, so acceleration from standstill and the encoder's 12.8 microstep
 // quantum cannot trip it. 200 microsteps is about 16 encoder counts.
 constexpr int32_t kFollowWindowMicrosteps = 200;
+
+// =============================================================================
+// pcb v1.0: the brake current sink and the torque bridge.
+// =============================================================================
+// Board facts, cited rather than chosen. The circuits are design blocks in
+// `kicad-libs`: `brake_current_sink_0_49ma_dac80501`
+// (docs/brake-current-sink-design.md) and `torque_bridge_0_3v3_ina821`
+// (docs/torque-sensor-interface-design.md). The measured behaviour belongs in
+// `../mouse-joystick-pcb/docs/bringup-log.md` per board serial; the numbers
+// here are the DESIGN values the first measurement is compared against.
+
+// -----------------------------------------------------------------------------
+// The brake. Placid Industries B5Z-24-1R magnetic particle brake.
+// -----------------------------------------------------------------------------
+// 24 V winding: 467 ohm at 20 C, 49 mA = 100 % input current = 3.5 N.cm of
+// slip torque, 6 ms response. Torque is proportional to current with a
+// direction-dependent hysteresis the datasheet draws as two curves, which is
+// why the firmware contract says to approach every setpoint from zero and why
+// the torque sensor, not the shunt, is the calibration reference. Datasheet:
+// ../mouse-joystick-pcb/docs/datasheets/brake.pdf.
+constexpr float kBrakeCoilOhms = 467.0f;
+constexpr float kBrakeRatedAmps = 0.049f;
+constexpr float kBrakeRatedTorqueNcm = 3.5f;
+constexpr uint32_t kBrakeResponseMs = 6;
+
+// The sink. A DAC80501Z at I2C 0x49 (GAIN 0x0101, 2.5 V full scale) through a
+// 3.2 k / 16.4 k divider sets V_SET across a 10 ohm shunt under a linear pass
+// device from +36V_SW: 2.5 V x 0.19512 / 10 ohm = 48.78 mA full scale, 99.6 %
+// of the brake's rating, 0.744 uA per code. An independent ceiling amplifier
+// limits at V_LIMIT 0.564 V / 10 ohm = 56.4 mA and pulls ~{BRAKE_FAULT} low
+// while it is limiting -- a continuous indication, not a latch.
+constexpr uint16_t kBrakeDacGainRegister =
+    dac80501::kGainRefDiv | dac80501::kGainBuffGain; // 2.5 V full scale
+constexpr float kBrakeSetDividerRatio = 3.2f / 16.4f; // 0.19512
+constexpr float kBrakeShuntOhms = 10.0f;
+constexpr float kBrakeFullScaleAmps =
+    dac80501::fullScaleVolts(kBrakeDacGainRegister) * kBrakeSetDividerRatio /
+    kBrakeShuntOhms; // 0.04878
+constexpr float kBrakeCeilingAmps = 0.564f / kBrakeShuntOhms; // 0.0564
+
+// The monitor. The shunt voltage through a x4.125 amplifier and a 3.2 k /
+// 3.2 k divider reaches BRAKE_ISENSE (GP27, ADC1) at 20.625 V per amp:
+// 0-1.006 V for 0-48.78 mA, 1.163 V at the ceiling. The monitor amplifier's
+// output floor is about 25 mV before the divider, so ~12.5 mV at the pin:
+// readings below that mean "unpowered or zero", not a current.
+constexpr float kBrakeMonitorGain = 4.125f * 0.5f;
+constexpr float kBrakeIsenseVoltsPerAmp = kBrakeShuntOhms * kBrakeMonitorGain; // 20.625
+constexpr float kBrakeIsenseFloorVolts = 0.0125f;
+
+// Commanded coil current for a DAC code.
+constexpr float brakeCodeToAmps(uint16_t code) {
+  return dac80501::codeToVolts(code, kBrakeDacGainRegister) *
+         kBrakeSetDividerRatio / kBrakeShuntOhms;
+}
+
+// Nearest DAC code for a coil current, clamped at full scale. Never more than
+// asked: the brake's rating and the sink's full scale are 0.4 % apart.
+inline uint16_t brakeAmpsToCode(float amps) {
+  return dac80501::voltsToCode(amps * kBrakeShuntOhms / kBrakeSetDividerRatio,
+                               kBrakeDacGainRegister);
+}
+
+constexpr float brakeIsenseVoltsToAmps(float volts) {
+  return volts / kBrakeIsenseVoltsPerAmp;
+}
+
+constexpr float brakeIsenseCountsToAmps(uint16_t counts,
+                                        uint16_t full_scale = kAdcFullScale,
+                                        float reference_volts = kAdcReferenceVolts) {
+  return brakeIsenseVoltsToAmps(
+      countsToVolts(counts, full_scale, reference_volts));
+}
+
+// The datasheet's nominal straight line; the real curve has hysteresis and
+// a per-unit calibration (rig plan phase C4) owns the number that matters.
+constexpr float brakeAmpsToTorqueNcm(float amps) {
+  return amps / kBrakeRatedAmps * kBrakeRatedTorqueNcm;
+}
+
+// -----------------------------------------------------------------------------
+// The torque sensor. Transducer Techniques RTS-5 reaction torque sensor.
+// -----------------------------------------------------------------------------
+// 5 in-oz = 3.5309 N.cm rated, 1.5 mV/V nominal (the two certificates read
+// 1.544 and 1.577 mV/V: a per-sensor constant to store against the board
+// serial it is paired with), 350 ohm bridge, 10 V excitation, 150 % safe
+// overload. Datasheet: ../mouse-joystick-pcb/docs/datasheets/torque-sensor-specs.png.
+constexpr float kTorqueRatedNcm = 3.5309f;
+constexpr float kTorqueSensitivityNominalVPerV = 1.5e-3f;
+constexpr float kTorqueBridgeOhms = 350.0f;
+constexpr float kTorqueExcitationVolts = 10.0f;
+
+// The front end. VEXC 10.000 V (REF5010A), VMID 5.000 V, an INA821 with
+// R_G = 249 + 10 = 259 ohm (G = 1 + 49.4 k / R_G = 191.73) referenced to VMID,
+// then a divide-by-3 to AMP_VOUT. The ADS8689 reads AMP_VOUT at full
+// amplitude through 249 ohm; a further divide-by-2 feeds the BNC and
+// TQ_AOUT_MON. Zero torque is therefore 5 V / 3 = 1.6667 V at the ADC and
+// 0.8333 V at the BNC, and the sign of torque is the sign of the departure
+// from that.
+constexpr float kTorqueInaGain = 1.0f + 49400.0f / 259.0f; // 191.73
+constexpr float kTorqueMidVolts = 5.0f;
+constexpr float kTorqueOutputDivider = 1.0f / 3.0f;
+constexpr float kTorqueBncDivider = 0.5f;
+constexpr float kTorqueZeroVolts = kTorqueMidVolts * kTorqueOutputDivider; // 1.6667
+
+// Volts at AMP_VOUT per N.cm, for the nominal sensitivity: 15 mV x 191.73 / 3
+// over 3.5309 N.cm = 0.2715 V per N.cm, so +/-rated spans 0.708-2.625 V and
+// +/-150 % 0.229-3.105 V, all inside the ADC's 0-5.12 V range.
+constexpr float kTorqueVoltsPerNcm =
+    kTorqueSensitivityNominalVPerV * kTorqueExcitationVolts * kTorqueInaGain *
+    kTorqueOutputDivider / kTorqueRatedNcm;
+
+// The ADS8689 on the 0 to 1.25 x VREF range: 5.12 V over 65536 codes.
+constexpr float kTorqueAdcFullScaleVolts = 1.25f * 4.096f;
+constexpr float kTorqueAdcVoltsPerCode = kTorqueAdcFullScaleVolts / 65536.0f; // 78.125 uV
+constexpr uint16_t kTorqueZeroCodeNominal =
+    static_cast<uint16_t>(kTorqueZeroVolts / kTorqueAdcVoltsPerCode + 0.5f); // 21333
+
+constexpr float torqueAdcCodeToVolts(uint16_t code) {
+  return static_cast<float>(code) * kTorqueAdcVoltsPerCode;
+}
+
+// Torque from the ADC reading, relative to a zero. The zero is a MEASURED
+// code (a tare at rest), falling back to the nominal; the scale is nominal
+// until the per-sensor certificate constant replaces it (rig plan C3).
+constexpr float torqueVoltsToNcm(float volts, float zero_volts = kTorqueZeroVolts,
+                                 float volts_per_ncm = kTorqueVoltsPerNcm) {
+  return (volts - zero_volts) / volts_per_ncm;
+}
+
+constexpr float torqueAdcCodeToNcm(uint16_t code,
+                                   uint16_t zero_code = kTorqueZeroCodeNominal,
+                                   float volts_per_ncm = kTorqueVoltsPerNcm) {
+  return torqueVoltsToNcm(torqueAdcCodeToVolts(code),
+                          torqueAdcCodeToVolts(zero_code), volts_per_ncm);
+}
+
+// Shunt calibration. TQ_CAL_EN (GP18) is meant to switch R2003 75 kohm across
+// one 350 ohm arm, unbalancing the bridge by R / (2 (2 R_cal + R)) =
+// 1.164 mV/V, i.e. 77.6 % of the nominal rated output, which is a 0.744 V
+// step at AMP_VOUT (9523 codes). The 2026-10-04 design review found the
+// switch's N-channel MOSFET has its source at ~5 V and a 3.3 V gate, so it
+// may not turn on; the step is what the bench looks for, and its absence is
+// a board finding, not a firmware one.
+constexpr float kTorqueShuntCalOhms = 75000.0f;
+constexpr float kTorqueShuntCalVoltsPerVolt =
+    kTorqueBridgeOhms / (2.0f * (2.0f * kTorqueShuntCalOhms + kTorqueBridgeOhms));
+constexpr float kTorqueShuntCalStepVolts =
+    kTorqueShuntCalVoltsPerVolt * kTorqueExcitationVolts * kTorqueInaGain *
+    kTorqueOutputDivider; // 0.744 V at AMP_VOUT
+
 
 } // namespace conversions
 

@@ -37,6 +37,8 @@ public:
     uint32_t hold_us = 0;    // PULL needs this long continuously past `pull`
     bool has_maxdur = false;
     uint32_t maxdur_us = 0; // ABORT if motion but no outcome by then
+    bool has_touch = false; // TOUCH once |torque| reaches `touch` (N.cm)
+    double touch = 0.0;
   };
 
   struct Summary {
@@ -50,6 +52,13 @@ public:
     double a_peak = 0.0;     // signed excursion of largest magnitude
     double a_end = 0.0;      // excursion at the outcome, or at the exit
     uint32_t dur_thr_ms = 0; // whole ms at or past `pull` before the outcome
+    // Torque, on a board with the bridge (zeros without one): the TOUCH
+    // instant if it happened, the signed torque of largest magnitude during
+    // the WATCH, and the torque at the outcome or at the exit.
+    bool has_touch = false;
+    uint64_t t_touch = 0;
+    double tq_peak = 0.0;
+    double tq_end = 0.0;
   };
 
   static const char *name(Outcome o) {
@@ -120,6 +129,11 @@ public:
     dur_thr_us_ = 0;
     peak_ = 0.0;
     a_end_ = 0.0;
+    tq_peak_ = 0.0;
+    tq_end_ = 0.0;
+    touched_ = false;
+    touch_pending_ = false;
+    t_touch_ = 0;
     cap_watched_ = true;
     trig_set_ = false;
     if (!ring_running_) {
@@ -143,7 +157,7 @@ public:
   // one time. A caller that arrives late (a coalesced tick) fills the missed
   // grid points with the current angle so sample k stays at t0 + k*dt; a gap
   // longer than the whole ring resynchronises the grid instead.
-  void sample(uint64_t now_us, double angle) {
+  void sample(uint64_t now_us, double angle, double torque = 0.0) {
     if (!ring_running_) {
       return;
     }
@@ -154,6 +168,7 @@ public:
     while (ring_running_ && now_us >= next_sample_us_) {
       const uint32_t slot = written_ % kCaptureMax;
       cap_[slot] = static_cast<float>(angle);
+      cap_tq_[slot] = static_cast<float>(torque);
       // A grid point more than one period behind `now` was missed (a
       // coalesced tick) and is filled with this angle; FETCH reports how
       // many of those a window holds as `lost`.
@@ -172,7 +187,7 @@ public:
   }
 
   // Classify. Returns the outcome to announce, once; kNone otherwise.
-  Outcome evaluate(uint64_t now_us, double angle) {
+  Outcome evaluate(uint64_t now_us, double angle, double torque = 0.0) {
     if (!armed_) {
       return Outcome::kNone;
     }
@@ -183,6 +198,16 @@ public:
     }
     if (fabs(rel) > fabs(peak_)) {
       peak_ = rel;
+    }
+    if (fabs(torque) > fabs(tq_peak_)) {
+      tq_peak_ = torque;
+    }
+    // TOUCH: informational, at most once per WATCH, on the magnitude -- which
+    // sign of torque a pull produces is a harness fact the calibration owns.
+    if (params_.has_touch && !touched_ && fabs(torque) >= params_.touch) {
+      touched_ = true;
+      t_touch_ = now_us;
+      touch_pending_ = true;
     }
     if (above_prev_) {
       dur_thr_us_ += static_cast<uint32_t>(now_us - last_eval_us_);
@@ -217,6 +242,7 @@ public:
       outcome_ = result;
       t_out_ = now_us;
       a_end_ = rel;
+      tq_end_ = torque;
       armed_ = false;
       trial_due_ = true;
       trial_due_at_us_ = now_us + kTrialDelayUs;
@@ -264,6 +290,14 @@ public:
     return best;
   }
 
+  // A TOUCH happened since the last call. The caller announces it before the
+  // outcome of the same sample, if both fell on it.
+  bool consumeTouch() {
+    const bool pending = touch_pending_;
+    touch_pending_ = false;
+    return pending;
+  }
+
   // ---------------------------------------------------------------- TRIAL
 
   // A summary is owed: a WATCH happened in this RELEASED period and has not
@@ -277,7 +311,7 @@ public:
 
   // Take the summary (once). `angle` is the current angle, for `a_end` when
   // there was no outcome.
-  Summary takeSummary(double angle) {
+  Summary takeSummary(double angle, double torque = 0.0) {
     Summary s;
     s.outcome = outcome_;
     s.t_rel = t_rel_;
@@ -289,6 +323,10 @@ public:
     s.a_peak = peak_;
     s.a_end = s.has_out ? a_end_ : excursion(angle);
     s.dur_thr_ms = dur_thr_us_ / 1000u;
+    s.has_touch = touched_;
+    s.t_touch = t_touch_;
+    s.tq_peak = tq_peak_;
+    s.tq_end = s.has_out ? tq_end_ : torque;
     summarized_ = true;
     watched_ = false;
     armed_ = false;
@@ -313,6 +351,9 @@ public:
   }
   double windowSample(uint32_t k) const {
     return cap_[(win_start_ + k) % kCaptureMax];
+  }
+  double windowTorque(uint32_t k) const {
+    return cap_tq_[(win_start_ + k) % kCaptureMax];
   }
 
 private:
@@ -378,6 +419,11 @@ private:
   Outcome outcome_ = Outcome::kNone;
   uint64_t t_out_ = 0;
   double a_end_ = 0.0;
+  double tq_peak_ = 0.0;
+  double tq_end_ = 0.0;
+  bool touched_ = false;
+  bool touch_pending_ = false;
+  uint64_t t_touch_ = 0;
   // the ring
   bool ring_running_ = false;
   bool cap_watched_ = false; // a WATCH armed since this ring started
@@ -395,6 +441,7 @@ private:
   uint32_t win_pre_ = 0; // index of the outcome sample, or the count if none
   uint32_t win_lost_ = 0;
   float cap_[kCaptureMax] = {0};
+  float cap_tq_[kCaptureMax] = {0}; // torque alongside, FETCH's third field
   uint8_t fill_[kCaptureMax / 8] = {0}; // one bit per slot: a grid fill
 };
 

@@ -29,8 +29,14 @@ enum LinkRecords {
   OP_DONE = QP::QS_USER + 4, // operation completed (home?, angle); FW_TRIG0 low
   LINK_WORK =
       QP::QS_USER + 5, // per line: clock-advance, feed, output cost in us
-  ENABLE_SETTLE = QP::QS_USER + 6 // after a driver enable: settle us, snap
-                                  // microsteps, enable count (TmcMotion)
+  ENABLE_SETTLE = QP::QS_USER + 6, // after a driver enable: settle us, snap
+                                   // microsteps, enable count (TmcMotion)
+  BRAKE_STATE = QP::QS_USER + 7,   // the brake's commanded state changed:
+                                   // engaging?, level N.cm, torque N.cm
+  POLL_STAT = QP::QS_USER + 14     // per second: worst TmcMotion poll us, its
+                                   // calls, worst X_ENC read, worst snapshot;
+                                   // worst BrakeTorqueHw poll us, its calls,
+                                   // worst ADS8689 sample, worst ISENSE read
 };
 
 extern QP::QActive *const AO_Link;

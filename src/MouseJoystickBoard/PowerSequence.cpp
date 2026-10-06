@@ -3,6 +3,7 @@
 #include "BoardPins.hpp"
 #include "Conversions.hpp"
 #include "PowerSequence.hpp"
+#include "SafeState.hpp"
 
 namespace mouse_joystick {
 
@@ -411,8 +412,20 @@ PowerSequence::HvCurrent PowerSequence::measureHvCurrent(uint16_t samples) {
     samples = 1;
   }
 
+  // Wait for the rail to actually be dead before zeroing, do not just pause.
+  // A fixed 50 ms stood here and was not enough: +36V_SW's bulk holds the
+  // buck up for about 700 ms after HV_EN drops, powerUp() then refused with
+  // kRailAlreadyLive, and `m` reported `rail: NOT UP -- the delta means
+  // nothing` after every live rail (board 4 and v1.0 unit A, 2026-10-05).
+  // From a cold rail it had always worked, which is how the fault hid.
   powerDown();
-  delay(50);
+  const uint32_t discharge_start_ms = millis();
+  out.rail_discharged = waitForRailOff(kRailOffTimeoutMs);
+  out.discharge_ms = millis() - discharge_start_ms;
+  if (!out.rail_discharged) {
+    return out;
+  }
+  delay(kBulkBleedMarginMs);
   analogReadResolution(conversions::kAdcResolutionBits);
   pinMode(pins::kHvSns, INPUT);
   pinMode(pins::kSwRailSenseDiv2, INPUT);
@@ -504,15 +517,15 @@ bool PowerSequence::connectBus() {
   if (!now.up) {
     return false;
   }
-  pinMode(pins::kBusSwEnN, OUTPUT);
-  digitalWrite(pins::kBusSwEnN, LOW);
+  SafeState::driveOutput(pins::kBusSwEnN, LOW);
   bus_connected_ = true;
   return true;
 }
 
 void PowerSequence::disconnectBus() {
-  pinMode(pins::kBusSwEnN, OUTPUT);
-  digitalWrite(pins::kBusSwEnN, HIGH);
+  // Glitch-free: pinMode(OUTPUT) here closed the switch for 34 us on every
+  // call (pcb v1.0 unit E4654C159F274534, 2026-10-05). See SafeState.
+  SafeState::driveOutput(pins::kBusSwEnN, HIGH);
   bus_connected_ = false;
 }
 

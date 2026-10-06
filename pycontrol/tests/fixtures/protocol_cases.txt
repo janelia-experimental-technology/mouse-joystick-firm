@@ -22,6 +22,10 @@
 #
 #   CASE <name>       begin a case; the board is freshly booted, READY drained,
 #                     clock at 0, serial 0000000000000000, defaults otherwise
+#   CAPS <tok> ...    the hardware this case's board has: brake, torque,
+#                     angout (space-separated; added 2026-10-06 for pcb v1.0).
+#                     Applied before boot, so `caps` reports them and the
+#                     fields carry numbers. Without it the defaults below hold
 #   SEND <line>       feed one command line (the \n is implied)
 #   ADVANCE <us>      advance simulated time by <us> microseconds
 #   ANGLE <deg>       the animal moves the joystick: the encoder reads <deg>
@@ -31,8 +35,9 @@
 #                     stimulus takes effect in any state (the simulator and the
 #                     firmware's simulated backend simply set the encoder), but
 #                     only RELEASED gives it a meaning.
-#   TORQUE <Ncm>      reserved for the torque stimulus; no case uses it until a
-#                     board reports `torque` in its caps.
+#   TORQUE <Ncm>      the bridge reads <Ncm> from now on (a board with CAPS
+#                     torque), and the board services once so the classifier
+#                     sees the sample. Like ANGLE: takes effect in any state
 #   EXPECT <line>     the next output line, in order
 #   END               end of case; no further output may be pending
 #
@@ -42,7 +47,10 @@
 #   serial 0000000000000000   fw 0.0.0   hw rev0   proto 2   axes 1
 #   travel -20.0..20.0 deg    v_max 180.0 deg/s    home takes 50000 us
 #   host timeout 100000 us    home timeout maximum 8000000 us
-#   caps motion+home+instr+hv+watch+fetch+stream+cfg (no brake, torque, angout)
+#   caps motion+home+instr+hv+watch+fetch+stream+cfg (no brake, torque, angout
+#   unless the case says CAPS)
+#   with CAPS brake: BRAKE acks, the brake settles 10000 us later, RELEASED then
+#   with CAPS torque: the reading is 0.0 at boot, TORQUE sets it, TQ zero tares it
 #   boot por, crumb 0 (the reset reason and last breadcrumb are the board's)
 #   deadband 0.5 deg          stream_hz 10          instrumentation on at boot
 #   pull direction = +angle   capture ring 1 kHz from RELEASED; pre_ms 500, post_ms 500
@@ -824,4 +832,143 @@ END
 CASE tq-is-badverb-without-torque-hardware
   SEND tq;1;get
   EXPECT nak;1;badverb
+END
+
+
+# ------------------------------------------- brake and torque (pcb v1.0)
+#
+# A board whose caps include brake and torque: CAPS names them and the board
+# boots with both. These cases pin the one thing the v1.0 bench changed about
+# the protocol's timing: BRAKE is not a step. The brake ramps and settles
+# first (the simulated 10000 us; the firmware's backend reads BRAKE_ISENSE),
+# motion verbs are busy meanwhile, STOP and DISARM cancel it, and the drive is
+# released -- RELEASED dated -- only when it has settled. Torque rides along
+# in every field protocol v1 gives it.
+
+CASE caps-report-brake-and-torque
+  CAPS brake torque
+  SEND id;1
+  EXPECT ack;1;hw=rev0;serial=0000000000000000;fw=0.0.0;proto=2;axes=1;caps=motion+home+instr+hv+watch+fetch+stream+cfg+brake+torque;rxbuf=200;boot=por;crumb=0
+END
+
+# The fields are numbers on a board with the hardware, so field positions do
+# not move and a host never has to guess whether an empty field is a missing
+# sensor or a zero.
+CASE torque-is-reported-and-tared
+  CAPS torque
+  SEND status;1
+  EXPECT ack;1;state=IDLE;angle=0.0;xactual=0.0;torque=0.0;brake=;homed=0;limit=0;faults=0;hv=0;t=0
+  TORQUE 1.5
+  SEND tq;2;get
+  EXPECT ack;2;torque=1.5;raw=1.5;cal=0
+  SEND tq;3;zero
+  EXPECT ack;3
+  SEND tq;4;get
+  EXPECT ack;4;torque=0.0;raw=1.5;cal=0
+  TORQUE 2.0
+  SEND status;5
+  EXPECT ack;5;state=IDLE;angle=0.0;xactual=0.0;torque=0.5;brake=;homed=0;limit=0;faults=0;hv=0;t=0
+  SEND tq;6;cal;on
+  EXPECT ack;6
+  SEND tq;7;get
+  EXPECT ack;7;torque=0.5;raw=2.0;cal=1
+  SEND tq;8;cal;off
+  EXPECT ack;8
+  SEND tq;9;bogus
+  EXPECT nak;9;badargs
+  SEND tq;10
+  EXPECT nak;10;badargs
+END
+
+# BRAKE acks at once; the brake field shows the commanded level while it
+# engages; motion is refused until RELEASED, which lands exactly at the
+# settle; STOP from RELEASED re-engages the drive and the brake comes off.
+CASE brake-engages-then-releases-after-the-settle
+  CAPS brake torque
+  SEND hv;1;on
+  EXPECT ack;1
+  SEND home;2
+  EXPECT ack;2
+  ADVANCE 50000
+  EXPECT ev;HOMED;50000;angle=0.0
+  SEND arm;3
+  EXPECT ack;3
+  SEND brake;4;1.5
+  EXPECT ack;4
+  SEND status;5
+  EXPECT ack;5;state=ARMED;angle=0.0;xactual=0.0;torque=0.0;brake=1.5;homed=1;limit=0;faults=0;hv=1;t=50000
+  SEND moveto;6;-9.0
+  EXPECT nak;6;busy
+  SEND brake;7;2.0
+  EXPECT nak;7;busy
+  ADVANCE 10000
+  EXPECT ev;RELEASED;60000;angle=0.0;torque=0.0;brake=1.5
+  SEND status;8
+  EXPECT ack;8;state=RELEASED;angle=0.0;xactual=0.0;torque=0.0;brake=1.5;homed=1;limit=0;faults=0;hv=1;t=60000
+  SEND stop;9
+  EXPECT ack;9
+  SEND status;10
+  EXPECT ack;10;state=ARMED;angle=0.0;xactual=0.0;torque=0.0;brake=0.0;homed=1;limit=0;faults=0;hv=1;t=60000
+END
+
+# A STOP while the brake is still engaging cancels it: the drive never left,
+# no RELEASED is ever emitted, and the brake field returns to zero.
+CASE stop-during-brake-engagement-cancels-it
+  CAPS brake
+  SEND hv;1;on
+  EXPECT ack;1
+  SEND home;2
+  EXPECT ack;2
+  ADVANCE 50000
+  EXPECT ev;HOMED;50000;angle=0.0
+  SEND arm;3
+  EXPECT ack;3
+  SEND brake;4;2.0
+  EXPECT ack;4
+  SEND stop;5
+  EXPECT ack;5
+  ADVANCE 20000
+  SEND status;6
+  EXPECT ack;6;state=ARMED;angle=0.0;xactual=0.0;torque=;brake=0.0;homed=1;limit=0;faults=0;hv=1;t=70000
+END
+
+# TOUCH fires once when the torque reaches the WATCH's `touch`, before the
+# outcome of the same sample; the TRIAL summary carries t_touch, the signed
+# torque peak and the torque at the outcome; the capture's third field is
+# the torque.
+CASE touch-and-torque-in-the-trial-summary
+  CAPS brake torque
+  SEND cfg;1;wdt_ms=500
+  EXPECT ack;1
+  SEND hv;2;on
+  EXPECT ack;2
+  SEND home;3
+  EXPECT ack;3
+  ADVANCE 50000
+  EXPECT ev;HOMED;50000;angle=0.0
+  SEND arm;4
+  EXPECT ack;4
+  SEND brake;5;1.0
+  EXPECT ack;5
+  ADVANCE 10000
+  EXPECT ev;RELEASED;60000;angle=0.0;torque=0.0;brake=1.0
+  SEND watch;6;pull=5;push=5;timeout=300;touch=0.5
+  EXPECT ack;6
+  ADVANCE 1000
+  TORQUE 0.75
+  EXPECT ev;TOUCH;61000;angle=0.0;torque=0.75
+  ANGLE 6.0
+  EXPECT ev;PULL;61000;angle=6.0;torque=0.75
+  SEND moveto;7;0.0
+  EXPECT ev;TRIAL;61000;outcome=PULL;t_rel=60000;t_touch=61000;t_move=61000;t_out=61000;a0=0.0;a_peak=6.0;a_end=6.0;tq_peak=0.75;tq_out=0.75;dur_thr=0
+  EXPECT ack;7
+  ADVANCE 33333
+  EXPECT ev;TARGET;94333;angle=0.0
+  SEND status;8
+  EXPECT ack;8;state=ARMED;angle=0.0;xactual=0.0;torque=0.75;brake=0.0;homed=1;limit=0;faults=0;hv=1;t=94333
+  SEND fetch;9;0;3
+  EXPECT ack;9;n=2;k0=0;t0=60000;dt_us=1000;pre=1;lost=0
+  EXPECT cap;0;0.0;0.0
+  EXPECT cap;1;0.0;0.0
+  EXPECT cap;end
 END

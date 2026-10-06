@@ -51,6 +51,7 @@
 
 #include <Arduino.h>
 #include <BoardPins.hpp>
+#include <BrakeTorqueBackend.hpp>
 #include <Conversions.hpp>
 #include <SafeState.hpp>
 #include <SelfTest.hpp>
@@ -58,6 +59,9 @@
 #include <DAC80501.hpp>
 #include <SPI.h>
 #include <Wire.h>
+#endif
+#if MJ_BOARD_REV >= 2
+#include <BrakeTorqueHw.hpp>
 #endif
 #include <hardware/timer.h>    // hardware_alarm_*()
 #include <hardware/watchdog.h> // watchdog_enable/update/reboot, scratch
@@ -128,8 +132,10 @@ enum BspRecords { // BSP-level QS user records (the application uses +0..+7)
   SAMPLE_STAT =
       QP::QS_USER +
       11, // per second: ticks posted, coalesced, dropped, max/last cost
-  DAC_STATE = QP::QS_USER + 12, // rev 1 angle DAC phase changed: phase (0 down,
-                                // 1 reset, 2 up), begin failures
+  DAC_STATE = QP::QS_USER + 12, // switched-domain peripherals phase changed:
+                                // 0 down, 1 angle DAC reset, 2 angle DAC up,
+                                // and on pcb v1.0 3 brake DAC reset, 4 brake
+                                // DAC up, 5 torque ADC up; begin failures
   BOOT_INFO = QP::QS_USER + 13  // once after boot: watchdog timeout reboot?,
                                 // forced reboot?, last breadcrumb before it
 };
@@ -714,7 +720,26 @@ dac80501::Dac80501 l_dac(l_dacTransport);
 // rail up, and released again when it goes down. Bring-up is two ticks, not
 // one blocking call: the driver's default begin() sleeps 1 ms after the soft
 // reset, which is the whole sampler budget.
-enum class DacPhase : uint8_t { kDown, kReset, kUp };
+// Phases 0-2 are the angle DAC (DAC_STATE records 0, 1, 2 since 2026-10-02);
+// pcb v1.0 continues with the brake DAC and the torque ADC, one tick each,
+// while the angle output already runs: 3 brake reset sent, 4 brake DAC
+// configured, 5 torque ADC configured (or refused: the backend reports the
+// fault). The analysis tools count DAC_STATE records; these are the numbers
+// they print.
+enum class DacPhase : uint8_t {
+  kDown = 0,
+  kReset = 1,
+  kUp = 2,
+  kBrakeReset = 3,
+  kBrakeUp = 4,
+  kTorqueUp = 5,
+};
+#if MJ_BOARD_REV >= 2
+constexpr DacPhase kPeripheralsReady = DacPhase::kTorqueUp;
+mouse_joystick::BrakeTorqueHw l_brakeTorque(Wire, SPI1);
+#else
+constexpr DacPhase kPeripheralsReady = DacPhase::kUp;
+#endif
 DacPhase l_dacPhase = DacPhase::kDown;
 void dacPhase(DacPhase phase); // sets l_dacPhase and records it
 uint32_t l_dacResetAt_us = 0U;
@@ -742,6 +767,9 @@ void dacBusUp() {
 void dacBusDown() {
   BSP::crumb(16U);    // DAC: releasing the bus
   l_dac.invalidate(); // its GAIN is about to reset with the domain
+#if MJ_BOARD_REV >= 2
+  l_brakeTorque.end(); // the brake DAC and the ADC reset with it, too
+#endif
 #if MJ_DAC_I2C
   Wire.end();
 #else
@@ -789,7 +817,37 @@ void dacStep(uint32_t now_us) {
     }
     break;
   case DacPhase::kUp:
+#if MJ_BOARD_REV >= 2
+    // The brake DAC, on the same bus: soft reset now, configure next tick.
+    static_cast<void>(l_brakeTorque.brakeReset());
+    l_dacResetAt_us = now_us;
+    dacPhase(DacPhase::kBrakeReset);
+#endif
     break;
+#if MJ_BOARD_REV >= 2
+  case DacPhase::kBrakeReset:
+    if ((now_us - l_dacResetAt_us) >= kDacResetSettleUs) {
+      if (l_brakeTorque.brakeConfigure()) { // GAIN 0x0101 written, read back
+        dacPhase(DacPhase::kBrakeUp);
+      } else {
+        ++l_dacBeginFailures;
+        l_dacResetAt_us = now_us; // try again after another settle
+      }
+    }
+    break;
+  case DacPhase::kBrakeUp:
+    // SPI1 and the ADS8689: range written and read back, SDO proven. About
+    // 20 frames, 0.5 ms, once per rail-up. A refusal is the backend's fault
+    // to report (bit 11); the phase moves on either way.
+    static_cast<void>(l_brakeTorque.torqueBegin());
+    dacPhase(DacPhase::kTorqueUp);
+    break;
+  case DacPhase::kTorqueUp:
+    break;
+#else
+  default:
+    break;
+#endif
   }
 }
 } // namespace
@@ -804,9 +862,12 @@ void BSP::angleOutput(bool valid, float angle_deg, float lo, float hi,
     }
     return;
   }
-  if (l_dacPhase != DacPhase::kUp) {
+  if (l_dacPhase < DacPhase::kUp) {
     dacStep(micros());
     return;
+  }
+  if (l_dacPhase != kPeripheralsReady) {
+    dacStep(micros()); // the brake DAC, then the torque ADC, as the output runs
   }
   if (!valid) {
     if (!l_dacParked) {
@@ -833,6 +894,32 @@ void BSP::angleOutput(bool valid, float angle_deg, float lo, float hi,
 #else
 void BSP::angleOutput(bool, float, float, float, bool) {} // rev 0: no DAC
 #endif
+//............................................................................
+mouse_joystick::BrakeTorqueBackend *BSP::brakeTorque() {
+#if MJ_BOARD_REV >= 2
+  return &l_brakeTorque;
+#else
+  return nullptr; // no brake sink or torque bridge before pcb v1.0
+#endif
+}
+//............................................................................
+uint32_t BSP::takeBrakeTorquePollCost(uint32_t *calls, uint32_t *sample_max_us,
+                                      uint32_t *isense_max_us) {
+#if MJ_BOARD_REV >= 2
+  return l_brakeTorque.takePollCostMaxUs(calls, sample_max_us, isense_max_us);
+#else
+  if (calls != nullptr) {
+    *calls = 0U;
+  }
+  if (sample_max_us != nullptr) {
+    *sample_max_us = 0U;
+  }
+  if (isense_max_us != nullptr) {
+    *isense_max_us = 0U;
+  }
+  return 0U;
+#endif
+}
 //............................................................................
 void BSP::instrumentation(bool on) { SafeState::setInstrumentationEnabled(on); }
 //............................................................................

@@ -54,13 +54,13 @@ inline mouse_joystick::ProtocolBoard::Config boardConfig() {
   config.fw_version = mouse_joystick::kFirmwareVersion; // git describe
   config.hw_rev = mouse_joystick::kHwRevName;           // from MJ_BOARD_REV
   // Protocol v1 capabilities of this revision: rev 1 and rev 2 have the angle
-  // DAC. pcb v1.0 (rev 2) carries the brake sink and the torque bridge, but
-  // this firmware does not drive either yet, and `caps` says what is
-  // implemented, not what is fitted: BRAKE stays release-only and TQ answers
-  // badverb until the brake DAC and the ADS8689 paths exist and have run.
+  // DAC; pcb v1.0 (rev 2) carries the brake sink and the torque bridge, which
+  // `BrakeTorqueHw` drives (BSP::brakeTorque(), since 2026-10-06): BRAKE ramps
+  // the coil and releases the drive once settled, TQ answers, torque rides in
+  // the fields. `caps` says what is implemented AND fitted.
   config.has_angout = (MJ_BOARD_REV != 0);
-  config.has_brake = false;
-  config.has_torque = false;
+  config.has_brake = (MJ_BOARD_REV >= 2);
+  config.has_torque = (MJ_BOARD_REV >= 2);
   // v1.0's Digital-50 port has no enable: INSTR is accepted, state is 1.
   config.instr_switchable = (MJ_BOARD_REV < 2);
   // Which encoder direction is "pull": per board, from BoardCalibration.hpp,

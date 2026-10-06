@@ -59,6 +59,12 @@ class Fault:
     SUPPLY_OUT_OF_RANGE = 6
     INTERNAL = 7
     EXT_STOP = 8
+    # Protocol v1, bits 9 and up (uart-protocol.md V1.7): pcb v1.0's brake
+    # sink and torque bridge. Raised by the firmware's hardware backend only.
+    BRAKE_FAULT = 9
+    BRAKE_CURRENT = 10
+    TORQUE_ADC = 11
+    TORQUE_RANGE = 12
 
     RESERVED_FOREVER = 4
 
@@ -71,6 +77,10 @@ class Fault:
         6: "supply_out_of_range",
         7: "internal",
         8: "ext_stop",
+        9: "brake_fault",
+        10: "brake_current",
+        11: "torque_adc",
+        12: "torque_range",
     }
 
 
@@ -125,6 +135,11 @@ class BoardSim:
     WINDOW_MAX_MS = CAPTURE_MAX - 1  # pre_ms, post_ms and their sum
     SAMPLE_US = 1_000
     TRIAL_DELAY_US = 1_000_000
+    # A board with a brake: BRAKE acks, the brake ramps and settles, RELEASED
+    # follows this much later. About what the real sink takes (an 8 ms ramp
+    # plus the coil's lag), rounded to a number a corpus can read; the
+    # firmware's hardware backend decides for itself from BRAKE_ISENSE.
+    BRAKE_SETTLE_US = 10_000
     DEFAULT_PRE_MS = 500
     DEFAULT_POST_MS = 500
     PROFILES = ("present", "retract", "slow")
@@ -199,6 +214,15 @@ class BoardSim:
         self._stream_period_us = 100_000
         self._stream_next_us = 0
         self.brake_level = 0.0
+        # A BRAKE on a board with a brake: acked, the brake settling, the
+        # drive not yet released. RELEASED follows BRAKE_SETTLE_US later.
+        self._brake_pending = False
+        self._brake_settle_at = None
+        # Torque on a board with the bridge: the TORQUE stimulus sets the
+        # reading (0.0 at boot), TQ zero tares it, TQ cal is a switch.
+        self.torque = 0.0
+        self.torque_zero_ncm = 0.0
+        self.torque_cal_on = False
         self._watch = _TrialWatch()
 
         self.cal = {"enc_offset": 1024, "angle_zero": 0.0}
@@ -244,6 +268,8 @@ class BoardSim:
                 next_stop = watch_at
             if self.stream_on and self._stream_next_us < next_stop:
                 next_stop = self._stream_next_us
+            if self._brake_pending and self._brake_settle_at is not None and self._brake_settle_at < next_stop:
+                next_stop = self._brake_settle_at  # a BRAKE settling: RELEASED on time
 
             self.now_us = next_stop
             self._service()
@@ -276,12 +302,22 @@ class BoardSim:
                 self.state = State.ARMED
                 self._emit("TARGET", {"angle": self.angle})
 
+        # BRAKE in progress (a board with a brake): the drive is released only
+        # once the brake is at its setpoint, and RELEASED is dated from here.
+        if self._brake_pending and self._brake_settle_at is not None and self.now_us >= self._brake_settle_at:
+            self._complete_release()
+
         # RELEASED: the classifier and the capture see every sample, in order,
         # and the TRIAL summary follows an outcome by one second if the host has
         # not left RELEASED by then (protocol v1).
         if self._watch.released:
-            self._watch.sample(self.now_us, self.angle)
-            outcome = self._watch.evaluate(self.now_us, self.angle)
+            torque = self._torque_value()
+            self._watch.sample(self.now_us, self.angle, torque)
+            outcome = self._watch.evaluate(self.now_us, self.angle, torque)
+            # TOUCH is informational and may precede the outcome; when both
+            # fall on one sample it goes out first.
+            if self._watch.consume_touch():
+                self._emit_angle_event("TOUCH", self.angle, with_brake=False)
             if outcome is not None:
                 self._emit_angle_event(outcome, self.angle, with_brake=False)
             if self._watch.trial_due_now(self.now_us):
@@ -469,7 +505,7 @@ class BoardSim:
                 "xactual": self.xactual,
                 # Always present, empty without the hardware (protocol v1), so
                 # field positions never move between revisions.
-                "torque": "",
+                "torque": self._torque_field(),
                 "brake": self._brake_field(),
                 "homed": self.homed,
                 "limit": self.limit_asserted,
@@ -564,12 +600,15 @@ class BoardSim:
             return P.encode_nak(seq, P.NAK_FAULTED)
         if not self.hv_on:
             return P.encode_nak(seq, P.NAK_NOHV)
-        if self._motion is not None:
+        if self._motion is not None or self._brake_pending:
             return P.encode_nak(seq, P.NAK_BUSY)
         if self.state == State.RELEASED:
-            self._leave_released()
+            self._close_trial()
             self._resync_from_encoder()
             self.state = State.ARMED
+            # Every home re-energises the drive (the firmware enables the
+            # driver here); the brake comes off after it.
+            self._brake_off()
 
         timeout_us = None
         if args:
@@ -624,6 +663,8 @@ class BoardSim:
         self._watchdog_deadline = None
         self._home_deadline = None
         self.stream_on = False
+        if self._brake_pending:
+            self._brake_off()  # a BRAKE still settling is cancelled; the drive never left
         if self.state == State.RELEASED:
             self._leave_released()
         if self.state in (State.ARMED, State.ACTIVE, State.RELEASED):
@@ -640,6 +681,8 @@ class BoardSim:
             self.xactual = self.angle
             self._motion = None
         self._home_deadline = None
+        if self._brake_pending:
+            self._brake_off()  # a BRAKE still settling is cancelled; the drive never left
         if self.state == State.RELEASED:
             self._leave_released()
         if self.state in (State.ACTIVE, State.RELEASED):
@@ -656,6 +699,8 @@ class BoardSim:
     def _move(self, seq, args, relative):
         if self.state == State.FAULTED:
             return P.encode_nak(seq, P.NAK_FAULTED)
+        if self._brake_pending:
+            return P.encode_nak(seq, P.NAK_BUSY)  # the brake is still engaging
         # "Motion verbs are refused outside ARMED" - and FREEWHEEL, which
         # re-engages implicitly. One command that resyncs, re-engages and moves
         # is better than three the host could be interrupted between.
@@ -718,43 +763,77 @@ class BoardSim:
 
     # ------------------------------------------------------ protocol v1 verbs
 
+    def _torque_value(self):
+        """The latest tared torque sample in N.cm, or None without the bridge."""
+        if not self.has_torque:
+            return None
+        return self.torque - self.torque_zero_ncm
+
+    def _torque_field(self):
+        value = self._torque_value()
+        return "" if value is None else value
+
     def _brake_field(self):
-        if self.has_brake and self.state == State.RELEASED:
-            return self.brake_level
-        return ""
+        # Always present: a number on a board with the brake (the commanded
+        # level while it engages or holds, 0 off), empty without.
+        return self.brake_level if self.has_brake else ""
 
     def _emit_angle_event(self, name, angle, with_brake):
-        data = {"angle": angle, "torque": ""}
+        data = {"angle": angle, "torque": self._torque_field()}
         if with_brake:
             data["brake"] = self._brake_field()
         self._emit(name, data)
 
     def _emit_trial(self):
-        t = self._watch.take_summary(self.angle)
+        t = self._watch.take_summary(self.angle, self._torque_value() or 0.0)
+        has_torque = self.has_torque
         self._emit(
             "TRIAL",
             {
                 "outcome": t["outcome"],
                 "t_rel": t["t_rel"],
-                "t_touch": "",
+                "t_touch": t["t_touch"] if (has_torque and t["t_touch"] is not None) else "",
                 "t_move": t["t_move"] if t["t_move"] is not None else "",
                 "t_out": t["t_out"] if t["t_out"] is not None else "",
                 "a0": t["a0"],
                 "a_peak": t["a_peak"],
                 "a_end": t["a_end"],
-                "tq_peak": "",
-                "tq_out": "",
+                "tq_peak": t["tq_peak"] if has_torque else "",
+                "tq_out": t["tq_end"] if has_torque else "",
                 "dur_thr": t["dur_thr_ms"],
             },
         )
 
-    def _leave_released(self):
-        """Close the RELEASED period: TRIAL if a WATCH happened in it, then the
-        brake off (after the drive is back, which the callers order)."""
+    def _close_trial(self):
+        """Close the RELEASED period's bookkeeping: TRIAL if a WATCH happened
+        in it and was not reported, and stop the classifier."""
         if self._watch.trial_pending():
             self._emit_trial()
         self._watch.leave()
+
+    def _brake_off(self):
+        """The brake off: the level the fields report and a BRAKE still
+        settling. The firmware's backend releases the coil here."""
         self.brake_level = 0.0
+        self._brake_pending = False
+        self._brake_settle_at = None
+
+    def _leave_released(self):
+        """Close RELEASED where the caller does not re-engage the drive (a
+        fault, or this simulator's motion verbs, which model no driver): the
+        bookkeeping, then the brake off. The firmware orders the brake after
+        the drive is back (uart-protocol.md 3a)."""
+        self._close_trial()
+        self._brake_off()
+
+    def _complete_release(self):
+        """The brake is at its setpoint, or there is none: release the drive,
+        become RELEASED, start the classifier's ring, announce it."""
+        self._brake_pending = False
+        self._brake_settle_at = None
+        self.state = State.RELEASED
+        self._watch.release(self.now_us, self.angle, self.pull_sign)
+        self._emit_angle_event("RELEASED", self.angle, with_brake=True)
 
     @staticmethod
     def _kv(arg):
@@ -770,7 +849,7 @@ class BoardSim:
         """
         if self.state == State.FAULTED:
             return P.encode_nak(seq, P.NAK_FAULTED)
-        if self.state == State.ACTIVE:
+        if self.state == State.ACTIVE or self._brake_pending:
             return P.encode_nak(seq, P.NAK_BUSY)
         if self.state != State.ARMED:
             return P.encode_nak(seq, P.NAK_NOTARMED)
@@ -783,16 +862,22 @@ class BoardSim:
         if torque < 0.0:
             return P.encode_nak(seq, P.NAK_OUTOFRANGE)
         self.brake_level = torque if self.has_brake else 0.0
-        self.state = State.RELEASED
-        self._watch.release(self.now_us, self.angle, self.pull_sign)
+        if self.has_brake:
+            # Phases 1 and 2: the brake to its setpoint first; _service()
+            # releases the drive and emits RELEASED once it has settled.
+            # Motion verbs are busy meanwhile; STOP and DISARM cancel it.
+            self._brake_pending = True
+            self._brake_settle_at = self.now_us + self.BRAKE_SETTLE_US
+            return P.encode_ack(seq)
+        # Without a brake there is nothing to wait for: release now.
         self._out(P.encode_ack(seq))
-        self._emit_angle_event("RELEASED", self.angle, with_brake=True)
+        self._complete_release()
         return None
 
     def _cmd_watch(self, seq, args):
         if self.state != State.RELEASED:
             return P.encode_nak(seq, P.NAK_NOTRELEASED)
-        params = {"pull": None, "push": None, "timeout_us": None, "hold_us": 0, "maxdur_us": None}
+        params = {"pull": None, "push": None, "timeout_us": None, "hold_us": 0, "maxdur_us": None, "touch": None}
         for arg in args:
             key, value = self._kv(arg)
             if key is None:
@@ -814,7 +899,7 @@ class BoardSim:
             elif key == "maxdur":
                 params["maxdur_us"] = int(v * 1000)
             elif key == "touch":
-                pass  # torque needs the v1.0 bridge; accepted and inert
+                params["touch"] = v  # meaningful with the v1.0 bridge; accepted and inert without
             else:
                 return P.encode_nak(seq, P.NAK_BADARGS)
         if params["pull"] is None or params["push"] is None or params["timeout_us"] is None:
@@ -909,7 +994,8 @@ class BoardSim:
         )
         for k in range(k0, k0 + n):
             angle = P.format_number(self._watch.window_sample(k))
-            self._out(P.DELIMITER.join([P.CAP, str(k), angle, ""]))
+            torque = P.format_number(self._watch.window_torque(k)) if self.has_torque else ""
+            self._out(P.DELIMITER.join([P.CAP, str(k), angle, torque]))
         self._out(P.DELIMITER.join([P.CAP, "end"]))
         return None
 
@@ -937,9 +1023,29 @@ class BoardSim:
         return P.encode_ack(seq)
 
     def _cmd_tq(self, seq, args):
-        # No board with the torque bridge exists yet; until `torque` is in the
-        # caps the honest answer is the same as for any verb the board lacks.
-        return P.encode_nak(seq, P.NAK_BADVERB)
+        """TQ zero | TQ cal;on|off | TQ get -- boards whose caps include torque.
+        `get` reports the tared reading, the raw one (what a tare removed) and
+        the calibration switch, in N.cm."""
+        if not self.has_torque:
+            return P.encode_nak(seq, P.NAK_BADVERB)
+        if not args:
+            return P.encode_nak(seq, P.NAK_BADARGS)
+        if len(args) == 1 and args[0].lower() == "zero":
+            self.torque_zero_ncm = self.torque
+            return P.encode_ack(seq)
+        if len(args) == 1 and args[0].lower() == "get":
+            return P.encode_ack(
+                seq,
+                {
+                    "torque": self.torque - self.torque_zero_ncm,
+                    "raw": self.torque,
+                    "cal": 1 if self.torque_cal_on else 0,
+                },
+            )
+        if len(args) == 2 and args[0].lower() == "cal" and args[1].lower() in ("on", "off"):
+            self.torque_cal_on = args[1].lower() == "on"
+            return P.encode_ack(seq)
+        return P.encode_nak(seq, P.NAK_BADARGS)
 
     def _cmd_angout(self, seq, args):
         if not self.has_angout:
@@ -1005,6 +1111,7 @@ class BoardSim:
         self.stream_on = False
         if self.state == State.RELEASED:
             self._leave_released()  # the TRIAL summary precedes the FAULT event
+        self._brake_off()  # a BRAKE still settling, too (V1.8: today's default is off)
         self.fault_mask |= 1 << bit
         self.fault_detail[bit] = detail
         self._fault_cause_active[bit] = cause_active
@@ -1044,6 +1151,11 @@ class BoardSim:
         """The corpus's ANGLE stimulus: the encoder reads this from now on, in
         any state; the runner services the board separately."""
         self.angle = float(angle)
+
+    def set_torque(self, torque_ncm):
+        """The corpus's TORQUE stimulus: the bridge reads this from now on (a
+        board with `torque` in its caps); the runner services separately."""
+        self.torque = float(torque_ncm)
 
     def inject_limit(self):
         """Assert the limit switch outside homing: LIMIT event plus a fault."""
@@ -1088,6 +1200,11 @@ class _TrialWatch:
         self.outcome = None
         self.t_out = None
         self.a_end = 0.0
+        self.tq_peak = 0.0
+        self.tq_end = 0.0
+        self.touched = False
+        self.touch_pending = False
+        self.t_touch = None
         # the ring
         self.ring_running = False
         self.cap_watched = False  # a WATCH armed since this ring started
@@ -1105,6 +1222,7 @@ class _TrialWatch:
         self.win_pre = 0
         self.win_lost = 0
         self.cap = [0.0] * BoardSim.CAPTURE_MAX
+        self.cap_tq = [0.0] * BoardSim.CAPTURE_MAX  # torque alongside, FETCH's third field
         self.fill = [False] * BoardSim.CAPTURE_MAX  # a grid fill, per slot
 
     def excursion(self, angle):
@@ -1152,6 +1270,11 @@ class _TrialWatch:
         self.peak = 0.0
         self.a_end = 0.0
         self.t_out = None
+        self.tq_peak = 0.0
+        self.tq_end = 0.0
+        self.touched = False
+        self.touch_pending = False
+        self.t_touch = None
         self.cap_watched = True
         self.trig_set = False
         if not self.ring_running:  # a WATCH after a frozen window restarts the ring
@@ -1162,7 +1285,7 @@ class _TrialWatch:
         self.pre_ms = int(pre_ms)
         self.post_ms = int(post_ms)
 
-    def sample(self, now_us, angle):
+    def sample(self, now_us, angle, torque=0.0):
         """The 1 ms-grid sample into the ring while it runs; idempotent at one
         time. A late caller fills the missed grid points with the current angle
         so sample k stays at t0 + k*dt (the firmware's coalesced tick); a gap
@@ -1174,6 +1297,7 @@ class _TrialWatch:
         while self.ring_running and now_us >= self.next_sample:
             slot = self.written % BoardSim.CAPTURE_MAX
             self.cap[slot] = float(angle)
+            self.cap_tq[slot] = float(torque or 0.0)
             # A grid point more than one period behind `now` was missed (the
             # firmware's coalesced tick) and is filled; FETCH reports `lost`.
             self.fill[slot] = (now_us - self.next_sample) >= BoardSim.SAMPLE_US
@@ -1182,16 +1306,24 @@ class _TrialWatch:
             if self.trig_set and self.written >= self.trig_index + 1 + self.post_ms:
                 self._freeze_window()
 
-    def evaluate(self, now_us, angle):
+    def evaluate(self, now_us, angle, torque=0.0):
         if not self.armed:
             return None
         p = self.params
+        torque = torque or 0.0
         rel = self.excursion(angle)
         if not self.first_motion and abs(rel) > self.deadband:
             self.first_motion = True
             self.t_move = now_us
         if abs(rel) > abs(self.peak):
             self.peak = rel
+        if abs(torque) > abs(self.tq_peak):
+            self.tq_peak = torque
+        # TOUCH: informational, at most once per WATCH, on the magnitude.
+        if p.get("touch") is not None and not self.touched and abs(torque) >= p["touch"]:
+            self.touched = True
+            self.t_touch = now_us
+            self.touch_pending = True
         if self.above_prev:
             self.dur_thr_us += now_us - self.last_eval
         self.last_eval = now_us
@@ -1222,6 +1354,7 @@ class _TrialWatch:
             self.outcome = result
             self.t_out = now_us
             self.a_end = rel
+            self.tq_end = torque
             self.armed = False
             self.trial_due = True
             self.trial_due_at = now_us + BoardSim.TRIAL_DELAY_US
@@ -1252,6 +1385,13 @@ class _TrialWatch:
             return None
         return max(min(candidates), now_us)
 
+    def consume_touch(self):
+        """A TOUCH happened since the last call; announced before the outcome
+        of the same sample, if both fell on it."""
+        pending = self.touch_pending
+        self.touch_pending = False
+        return pending
+
     def trial_pending(self):
         return self.released and self.watched and not self.summarized
 
@@ -1262,7 +1402,7 @@ class _TrialWatch:
     def trial_due_check(self, now_us):
         return self.trial_due_now(now_us)
 
-    def take_summary(self, angle):
+    def take_summary(self, angle, torque=0.0):
         has_out = self.outcome is not None
         summary = {
             "outcome": self.outcome or "NONE",
@@ -1273,6 +1413,9 @@ class _TrialWatch:
             "a_peak": self.peak,
             "a_end": self.a_end if has_out else self.excursion(angle),
             "dur_thr_ms": self.dur_thr_us // 1000,
+            "t_touch": self.t_touch if self.touched else None,
+            "tq_peak": self.tq_peak,
+            "tq_end": self.tq_end if has_out else (torque or 0.0),
         }
         self.summarized = True
         self.watched = False
@@ -1331,3 +1474,6 @@ class _TrialWatch:
 
     def window_sample(self, k):
         return self.cap[(self.win_start + k) % BoardSim.CAPTURE_MAX]
+
+    def window_torque(self, k):
+        return self.cap_tq[(self.win_start + k) % BoardSim.CAPTURE_MAX]

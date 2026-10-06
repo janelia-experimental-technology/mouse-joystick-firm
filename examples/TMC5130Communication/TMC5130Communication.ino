@@ -574,6 +574,16 @@ void measureCurrent(Print &out) {
 
   const PowerSequence::HvCurrent c = PowerSequence::measureHvCurrent(kSamples);
 
+  out.print(F("  rail discharged before the zero: "));
+  if (c.rail_discharged) {
+    out.print(F("yes, in "));
+    out.print(c.discharge_ms);
+    out.println(F(" ms"));
+  } else {
+    out.println(F("NO -- +3.3V_SW never read off; nothing below was measured"));
+    out.println();
+    return;
+  }
   out.print(F("  zero (HV_EN low):  "));
   out.print(c.zero_counts, 2);
   out.println(F(" counts"));

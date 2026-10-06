@@ -49,6 +49,9 @@ private:
   uint8_t m_overBudgetStreak = 0U;
   uint32_t m_enableCount = 0U;
   const char *m_lastState;
+  bool m_brakeEngaging = false;
+  float m_brakeLevel = 0.0f;
+  uint32_t m_lastPollStat_ms = 0U;
   bool m_moving;   // an operation is in progress
   bool m_home;     // ... and it is a homing
   bool m_lastHome; // the last dispatched verb was "home"
@@ -77,7 +80,8 @@ Link Link::instance;
 
 Link::Link()
     : QActive(Q_STATE_CAST(&Link::initial)),
-      m_board(l_motion, app::boardConfig()), m_lastState(nullptr),
+      m_board(l_motion, app::boardConfig(), BSP::brakeTorque()),
+      m_lastState(nullptr),
       m_moving(false), m_home(false), m_lastHome(false) {}
 
 void Link::dictionaries() {
@@ -93,6 +97,8 @@ void Link::dictionaries() {
   QS_USR_DICTIONARY(OP_START);
   QS_USR_DICTIONARY(OP_DONE);
   QS_USR_DICTIONARY(LINK_WORK);
+  QS_USR_DICTIONARY(BRAKE_STATE);
+  QS_USR_DICTIONARY(POLL_STAT);
 #endif
 }
 
@@ -250,6 +256,48 @@ void Link::afterService() {
     m_lastState = state;
     QS_BEGIN_ID(LINK_STATE, m_prio)
     QS_STR(state);
+    QS_END()
+  }
+
+  // Where the tick's time goes, once a second: the two backends' worst polls.
+  if ((millis() - m_lastPollStat_ms) >= 1000U) {
+    m_lastPollStat_ms = millis();
+    uint32_t motion_calls = 0U;
+    uint32_t motion_enc_max = 0U;
+    uint32_t motion_snap_max = 0U;
+    uint32_t bt_calls = 0U;
+    uint32_t bt_sample_max = 0U;
+    uint32_t bt_isense_max = 0U;
+#if MJ_SIM_MOTION
+    const uint32_t motion_max = 0U;
+#else
+    const uint32_t motion_max =
+        l_motion.takePollCostMaxUs(&motion_calls, &motion_enc_max, &motion_snap_max);
+#endif
+    const uint32_t bt_max =
+        BSP::takeBrakeTorquePollCost(&bt_calls, &bt_sample_max, &bt_isense_max);
+    QS_BEGIN_ID(POLL_STAT, m_prio)
+    QS_U32(0U, motion_max);
+    QS_U32(0U, motion_calls);
+    QS_U32(0U, motion_enc_max);  // the X_ENC read (every poll)
+    QS_U32(0U, motion_snap_max); // the five-register snapshot (every tenth)
+    QS_U32(0U, bt_max);
+    QS_U32(0U, bt_calls);
+    QS_U32(0U, bt_sample_max); // the ADS8689 conversion
+    QS_U32(0U, bt_isense_max); // the BRAKE_ISENSE analogRead
+    QS_END()
+  }
+
+  // The brake (pcb v1.0): engaging, or the commanded level, changed.
+  const bool engaging = m_board.brakeEngaging();
+  const float level = static_cast<float>(m_board.brakeLevel());
+  if (engaging != m_brakeEngaging || level != m_brakeLevel) {
+    m_brakeEngaging = engaging;
+    m_brakeLevel = level;
+    QS_BEGIN_ID(BRAKE_STATE, m_prio)
+    QS_U8(0U, engaging ? 1U : 0U);
+    QS_F32(3U, level);
+    QS_F32(3U, static_cast<float>(m_board.torque()));
     QS_END()
   }
 

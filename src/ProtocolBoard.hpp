@@ -29,6 +29,7 @@
 #include <stdint.h>
 #include <string.h>
 
+#include "BrakeTorqueBackend.hpp"
 #include "MotionBackend.hpp"
 #include "Protocol.hpp"
 #include "TrialWatch.hpp"
@@ -63,6 +64,12 @@ constexpr uint8_t kLimitUnexpected = 5;
 constexpr uint8_t kSupplyOutOfRange = 6;
 constexpr uint8_t kInternal = 7;
 constexpr uint8_t kExtStop = 8;
+// Protocol v1, bits 9 and up (uart-protocol.md V1.7), pcb v1.0's brake sink
+// and torque bridge. Raised by the BrakeTorqueBackend through consumeFault().
+constexpr uint8_t kBrakeFault = 9;    // ~{BRAKE_FAULT} asserted, or no brake to drive
+constexpr uint8_t kBrakeCurrent = 10; // BRAKE_ISENSE away from the setpoint too long
+constexpr uint8_t kTorqueAdc = 11;    // ADS8689 not answering
+constexpr uint8_t kTorqueRange = 12;  // bridge saturated
 }  // namespace fault
 
 class ProtocolBoard {
@@ -130,8 +137,13 @@ public:
   // than one with `= Config()`, because a default argument naming a nested type
   // needs the enclosing class to be complete and it is not at this point.
   explicit ProtocolBoard(MotionBackend &motion) : motion_(motion) {}
-  ProtocolBoard(MotionBackend &motion, const Config &config)
-      : cfg_(config), motion_(motion) {}
+  // `brake_torque` is pcb v1.0's brake sink and torque bridge, or null on a
+  // board without them. `cfg.has_brake`/`has_torque` decide what `caps`
+  // reports and whether the `brake`/`torque` fields carry numbers; a config
+  // that claims either with no backend reports zeros and faults BRAKE.
+  ProtocolBoard(MotionBackend &motion, const Config &config,
+                BrakeTorqueBackend *brake_torque = nullptr)
+      : cfg_(config), motion_(motion), brake_torque_(brake_torque) {}
 
   // ------------------------------------------------------------------- clock
   //
@@ -178,6 +190,12 @@ public:
       const uint64_t watch_at = watch_.nextStopUs(now_us_);
       if (watch_at != 0 && watch_at < next_stop) {
         next_stop = watch_at;
+      }
+      if (brake_torque_ != nullptr) { // a BRAKE settling: RELEASED on time
+        const uint64_t brake_at = brake_torque_->nextEventUs();
+        if (brake_at != 0 && brake_at < next_stop) {
+          next_stop = brake_at;
+        }
       }
       if (stream_on_ && stream_next_us_ < next_stop) {
         next_stop = stream_next_us_;
@@ -293,6 +311,12 @@ public:
   bool homed() const { return homed_; }
   bool hvOn() const { return hv_on_; }
   uint32_t faultMask() const { return fault_mask_; }
+  // The brake (protocol v1, a board with one): the commanded level while it
+  // engages or holds in RELEASED, 0 otherwise; and whether a BRAKE is still
+  // settling. The latest tared torque sample, 0.0 without the bridge.
+  double brakeLevel() const { return brake_level_; }
+  bool brakeEngaging() const { return brake_pending_; }
+  double torque() const { return currentTorque(); }
 
 private:
   // ------------------------------------------------------------- line intake
@@ -426,6 +450,9 @@ private:
 
   void service() {
     motion_.poll(now_us_);
+    if (brake_torque_ != nullptr) {
+      brake_torque_->poll(now_us_);
+    }
 
     // A backend fault outranks a completion: if the driver reported a short to
     // ground on the same poll that the move finished, the fault is what
@@ -436,6 +463,18 @@ private:
       raiseFault(fault_bit, fault_detail != nullptr ? fault_detail : "motion",
                  /*cause_active=*/false);
       return;
+    }
+    // The brake and torque parts live on the switched domain: a fault they
+    // report with the rail down (the collapse itself saturates the ADC for a
+    // tick) is consumed and dropped, not raised.
+    if (brake_torque_ != nullptr &&
+        brake_torque_->consumeFault(&fault_bit, &fault_detail)) {
+      if (hv_on_ && !faulted()) {
+        raiseFault(fault_bit,
+                   fault_detail != nullptr ? fault_detail : "brake_torque",
+                   /*cause_active=*/false);
+        return;
+      }
     }
 
     bool was_home = false;
@@ -451,13 +490,27 @@ private:
       }
     }
 
+    // BRAKE in progress (a board with a brake): the drive is released only
+    // once the brake is at its setpoint, and RELEASED is dated from here.
+    if (brake_pending_ && brake_torque_ != nullptr &&
+        brake_torque_->brakeSettled()) {
+      completeRelease();
+    }
+
     // RELEASED: the classifier and the capture see every sample, in order,
     // and the TRIAL summary follows an outcome by one second if the host has
     // not left RELEASED by then (protocol v1).
     if (watch_.released()) {
       const double angle = motion_.angleDeg();
-      watch_.sample(now_us_, angle);
-      const TrialWatch::Outcome outcome = watch_.evaluate(now_us_, angle);
+      const double torque = currentTorque();
+      watch_.sample(now_us_, angle, torque);
+      const TrialWatch::Outcome outcome =
+          watch_.evaluate(now_us_, angle, torque);
+      // TOUCH is informational and may precede the outcome; when both fall
+      // on one sample it goes out first.
+      if (watch_.consumeTouch()) {
+        emitAngleEvent("TOUCH", angle, /*with_brake=*/false);
+      }
       if (outcome != TrialWatch::Outcome::kNone) {
         emitAngleEvent(TrialWatch::name(outcome), angle, /*with_brake=*/false);
       }
@@ -519,6 +572,7 @@ private:
     if (inState(state_name::kReleased)) {
       leaveReleased(); // the TRIAL summary precedes the FAULT event
     }
+    brakeOff(); // a BRAKE still settling, too (V1.8: today's default is off)
     fault_mask_ |= (1u << bit);
     fault_bit_ = bit;
     fault_detail_ = detail;
@@ -556,20 +610,50 @@ private:
   // turns into a fault: a compliant joystick that will not re-engage is not a
   // state to keep answering commands from.
   bool leaveCompliance() {
-    leaveReleased();
+    closeTrial();
     motion_.resyncFromEncoder();
-    return motion_.enableDriver();
+    const bool ok = motion_.enableDriver();
+    // The brake comes off AFTER the drive is back, or the joystick drops in
+    // between (uart-protocol.md 3a). Until 2026-10-06 this ran first, which
+    // no board could show: none had a brake.
+    brakeOff();
+    return ok;
   }
 
-  // Close the RELEASED period: emit the TRIAL summary if a WATCH happened in
-  // it and has not been reported, then release the brake (where there is one;
-  // after the driver is back, which the callers guarantee by ordering).
-  void leaveReleased() {
+  // Close the RELEASED period's bookkeeping: emit the TRIAL summary if a WATCH
+  // happened in it and has not been reported, and stop the classifier.
+  void closeTrial() {
     if (watch_.trialPending()) {
       emitTrial();
     }
     watch_.leave();
+  }
+
+  // The brake off: the level the fields report, a BRAKE still settling, and
+  // the hardware where there is one.
+  void brakeOff() {
     brake_level_ = 0.0;
+    brake_pending_ = false;
+    if (brake_torque_ != nullptr) {
+      brake_torque_->brakeRelease();
+    }
+  }
+
+  // Close RELEASED where the caller does not re-engage the drive (a fault):
+  // the bookkeeping, then the brake off.
+  void leaveReleased() {
+    closeTrial();
+    brakeOff();
+  }
+
+  // The brake is at its setpoint, or there is none: release the drive, become
+  // RELEASED, start the classifier's ring, announce it.
+  void completeRelease() {
+    brake_pending_ = false;
+    motion_.releaseDriver();
+    state_ = state_name::kReleased;
+    watch_.release(now_us_, motion_.angleDeg(), cfg_.pull_sign);
+    emitAngleEvent("RELEASED", motion_.angleDeg(), /*with_brake=*/true);
   }
 
   bool faulted() const { return strcmp(state_, state_name::kFaulted) == 0; }
@@ -799,14 +883,16 @@ private:
       out->nak(cmd.seq, protocol::kNakNoHv);
       return true;
     }
-    if (motion_.isMoving()) {
+    if (motion_.isMoving() || brake_pending_) {
       out->nak(cmd.seq, protocol::kNakBusy);
       return true;
     }
-    if (inState(state_name::kReleased)) {
+    const bool from_released = inState(state_name::kReleased);
+    if (from_released) {
       // No re-engage here: `enableDriver()` is called below for every home, so
-      // adding one would be a redundant SPI round trip.
-      leaveReleased();
+      // adding one would be a redundant SPI round trip. The brake comes off
+      // after it, below.
+      closeTrial();
       motion_.resyncFromEncoder();
       state_ = state_name::kArmed;
     }
@@ -863,6 +949,9 @@ private:
       raiseFault(fault::kInternal, "vsense_not_1", false);
       return false;
     }
+    if (from_released) {
+      brakeOff(); // the drive is back
+    }
     if (!motion_.startHome()) {
       out->nak(cmd.seq, protocol::kNakBusy);
       return true;
@@ -911,6 +1000,9 @@ private:
     watchdog_armed_ = false;
     home_deadline_armed_ = false;
     stream_on_ = false;
+    if (brake_pending_) {
+      brakeOff(); // a BRAKE still settling is cancelled; the drive never left
+    }
     if (inState(state_name::kReleased)) {
       // Re-engage on the way out even though this ends in HOMED rather than
       // ARMED. "Disarmed" has to mean "not accepting motion commands", not
@@ -935,6 +1027,9 @@ private:
     // this safe to send at any time -- including mid-move.
     motion_.abort();
     home_deadline_armed_ = false;
+    if (brake_pending_) {
+      brakeOff(); // a BRAKE still settling is cancelled; the drive never left
+    }
     if (inState(state_name::kReleased)) {
       // "From FREEWHEEL this is how a host takes the joystick back: re-engage
       // the driver holding wherever the animal left it." Re-engaging is the
@@ -959,6 +1054,10 @@ private:
                bool relative) {
     if (faulted()) {
       out->nak(cmd.seq, protocol::kNakFaulted);
+      return true;
+    }
+    if (brake_pending_) {
+      out->nak(cmd.seq, protocol::kNakBusy); // the brake is still engaging
       return true;
     }
     // FREEWHEEL re-engages implicitly. One command that resyncs, re-engages and
@@ -1042,12 +1141,25 @@ private:
     return true;
   }
 
+  // The latest torque sample, tared, in N.cm as the sensor reads it; 0.0 on a
+  // board whose config claims the bridge without a backend.
+  double currentTorque() const {
+    return (cfg_.has_torque && brake_torque_ != nullptr)
+               ? brake_torque_->torqueNcm()
+               : 0.0;
+  }
+  // Always present: a number on a board with the hardware, empty without, so
+  // field positions never move between revisions (protocol v1).
   void appendTorque(protocol::Line *out) const {
-    out->kvStr("torque", ""); // v1.0 boards report the bridge here
+    if (cfg_.has_torque) {
+      out->kvNumber("torque", currentTorque());
+    } else {
+      out->kvStr("torque", "");
+    }
   }
   void appendBrake(protocol::Line *out) const {
-    if (cfg_.has_brake && inState(state_name::kReleased)) {
-      out->kvNumber("brake", brake_level_);
+    if (cfg_.has_brake) {
+      out->kvNumber("brake", brake_level_); // commanded: engaging or held, else 0
     } else {
       out->kvStr("brake", "");
     }
@@ -1066,12 +1178,17 @@ private:
   }
 
   void emitTrial() {
-    const TrialWatch::Summary s = watch_.takeSummary(motion_.angleDeg());
+    const TrialWatch::Summary s =
+        watch_.takeSummary(motion_.angleDeg(), currentTorque());
     protocol::Line line;
     line.beginEvent("TRIAL", now_us_);
     line.kvStr("outcome", TrialWatch::name(s.outcome));
     line.kvU64("t_rel", s.t_rel);
-    line.kvStr("t_touch", ""); // torque events need the v1.0 bridge
+    if (cfg_.has_torque && s.has_touch) {
+      line.kvU64("t_touch", s.t_touch);
+    } else {
+      line.kvStr("t_touch", "");
+    }
     if (s.has_move) {
       line.kvU64("t_move", s.t_move);
     } else {
@@ -1085,8 +1202,13 @@ private:
     line.kvNumber("a0", s.a0);
     line.kvNumber("a_peak", s.a_peak);
     line.kvNumber("a_end", s.a_end);
-    line.kvStr("tq_peak", "");
-    line.kvStr("tq_out", "");
+    if (cfg_.has_torque) {
+      line.kvNumber("tq_peak", s.tq_peak);
+      line.kvNumber("tq_out", s.tq_end);
+    } else {
+      line.kvStr("tq_peak", "");
+      line.kvStr("tq_out", "");
+    }
     line.kvInt("dur_thr", static_cast<long>(s.dur_thr_ms));
     push(line);
   }
@@ -1101,7 +1223,7 @@ private:
       out->nak(cmd.seq, protocol::kNakFaulted);
       return true;
     }
-    if (inState(state_name::kActive)) {
+    if (inState(state_name::kActive) || brake_pending_) {
       out->nak(cmd.seq, protocol::kNakBusy);
       return true;
     }
@@ -1124,17 +1246,30 @@ private:
       out->nak(cmd.seq, protocol::kNakOutOfRange);
       return true;
     }
-    // Phases 1 and 2 (brake DAC to the calibrated code, wait for the coil
-    // current) belong to the v1.0 backend; without a brake there is nothing
-    // to wait for.
     brake_level_ = cfg_.has_brake ? torque : 0.0;
-    motion_.releaseDriver();
-    state_ = state_name::kReleased;
-    watch_.release(now_us_, motion_.angleDeg(), cfg_.pull_sign);
+    if (cfg_.has_brake) {
+      // Phases 1 and 2: the brake to its setpoint first. The backend owns the
+      // torque-to-current law and the ramp (a full-scale step overshoots by
+      // 27 % on pcb v1.0, measured 2026-10-06); service() releases the drive
+      // and emits RELEASED once it reports settled. Motion verbs are busy
+      // meanwhile; STOP and DISARM cancel it.
+      if (brake_torque_ == nullptr || !brake_torque_->brakeEngage(torque)) {
+        brake_level_ = 0.0;
+        out->nak(cmd.seq, protocol::kNakFaulted);
+        push(*out);
+        out->clear();
+        raiseFault(fault::kBrakeFault, "brake_unavailable", false);
+        return false;
+      }
+      brake_pending_ = true;
+      out->beginAck(cmd.seq);
+      return true;
+    }
+    // Without a brake there is nothing to wait for: release now.
     out->beginAck(cmd.seq);
     push(*out);
     out->clear();
-    emitAngleEvent("RELEASED", motion_.angleDeg(), /*with_brake=*/true);
+    completeRelease();
     return false; // already pushed: ack, then RELEASED
   }
 
@@ -1174,7 +1309,9 @@ private:
         p.has_maxdur = true;
         p.maxdur_us = static_cast<uint32_t>(v * 1000.0);
       } else if (strcmp(key, "touch") == 0) {
-        // Torque needs the v1.0 bridge; accepted and inert without it.
+        // Meaningful with the v1.0 bridge; accepted and inert without it.
+        p.has_touch = true;
+        p.touch = v;
       } else {
         out->nak(cmd.seq, protocol::kNakBadArgs);
         return true;
@@ -1312,7 +1449,10 @@ private:
       line.appendInt(k);
       line.appendChar(protocol::kDelimiter);
       line.appendNumber(watch_.windowSample(static_cast<uint32_t>(k)));
-      line.appendChar(protocol::kDelimiter); // torque, empty without the bridge
+      line.appendChar(protocol::kDelimiter);
+      if (cfg_.has_torque) { // empty without the bridge; same field count
+        line.appendNumber(watch_.windowTorque(static_cast<uint32_t>(k)));
+      }
       push(line);
     }
     line.clear();
@@ -1359,11 +1499,38 @@ private:
   }
 
   // TQ zero | cal;on|off | get: v1.0 boards only.
+  // TQ zero | TQ cal;on|off | TQ get -- pcb v1.0 boards (`caps` torque).
+  // `get` reports the tared reading, the raw one (nominal scale about the
+  // nominal zero, what a tare removed) and the calibration switch's state,
+  // all in N.cm; the switch is a verb and not a calibration on v1.0 as built.
   bool cmdTq(const protocol::Command &cmd, protocol::Line *out) {
-    // No board with the torque bridge exists yet; when one does, `caps` gains
-    // `torque` and this grows the three sub-commands. Until then the honest
-    // answer is the same as for any verb the board does not have.
-    out->nak(cmd.seq, protocol::kNakBadVerb);
+    if (!cfg_.has_torque || brake_torque_ == nullptr) {
+      out->nak(cmd.seq, protocol::kNakBadVerb);
+      return true;
+    }
+    if (cmd.arg_count == 0) {
+      out->nak(cmd.seq, protocol::kNakBadArgs);
+      return true;
+    }
+    if (cmd.arg_count == 1 && argEquals(cmd.arg(0), "zero")) {
+      brake_torque_->torqueZero();
+      out->beginAck(cmd.seq);
+      return true;
+    }
+    if (cmd.arg_count == 1 && argEquals(cmd.arg(0), "get")) {
+      out->beginAck(cmd.seq);
+      out->kvNumber("torque", brake_torque_->torqueNcm());
+      out->kvNumber("raw", brake_torque_->torqueRawNcm());
+      out->kvInt("cal", brake_torque_->torqueCalOn() ? 1 : 0);
+      return true;
+    }
+    if (cmd.arg_count == 2 && argEquals(cmd.arg(0), "cal") &&
+        (argEquals(cmd.arg(1), "on") || argEquals(cmd.arg(1), "off"))) {
+      brake_torque_->torqueCal(argEquals(cmd.arg(1), "on"));
+      out->beginAck(cmd.seq);
+      return true;
+    }
+    out->nak(cmd.seq, protocol::kNakBadArgs);
     return true;
   }
 
@@ -1480,6 +1647,10 @@ private:
       case fault::kSupplyOutOfRange: return "supply_out_of_range";
       case fault::kInternal: return "internal";
       case fault::kExtStop: return "ext_stop";
+      case fault::kBrakeFault: return "brake_fault";
+      case fault::kBrakeCurrent: return "brake_current";
+      case fault::kTorqueAdc: return "torque_adc";
+      case fault::kTorqueRange: return "torque_range";
       default: return "reserved";
     }
   }
@@ -1492,6 +1663,7 @@ private:
 
   Config cfg_;
   MotionBackend &motion_;
+  BrakeTorqueBackend *brake_torque_ = nullptr; // null without the hardware
 
   uint64_t now_us_ = 0;
   const char *state_ = state_name::kBoot;
@@ -1512,7 +1684,8 @@ private:
 
   // Protocol v1 state.
   TrialWatch watch_;
-  double brake_level_ = 0.0;
+  double brake_level_ = 0.0;   // commanded N.cm while engaging or RELEASED
+  bool brake_pending_ = false; // BRAKE acked, brake settling, drive not released
   double deadband_deg_ = 0.5;
   uint16_t stream_hz_ = 10;
   bool stream_on_ = false;

@@ -1,0 +1,17 @@
+{
+  "name": "ADS8689",
+  "version": "0.1.0",
+  "description": "Driver for the TI ADS868x family (ADS8681/ADS8685/ADS8689) 16-bit SAR ADC over SPI with a plain-GPIO CONVST/CS. The transport is injected; the register map, 32-bit command framing and transfer function are Arduino-free and host tested. Public headers live one level up in src/ and are reached through the project-wide -Isrc flag. Board-specific scaling deliberately lives in the consuming firmware, not here.",
+  "keywords": "adc, ads8689, ads8681, ads8685, sar, spi",
+  "authors": [
+    {
+      "name": "Peter Polidoro",
+      "email": "peter@polidoro.io"
+    }
+  ],
+  "frameworks": "arduino",
+  "platforms": "raspberrypi",
+  "build": {
+    "srcDir": "."
+  }
+}

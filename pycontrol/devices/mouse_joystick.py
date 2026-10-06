@@ -330,8 +330,22 @@ class MouseJoystick:
         return self._send("angscale", deg_lo, deg_hi)
 
     def torque_zero(self):
+        """Tare the torque reading at rest (`tq;s;zero`). v1.0 boards only."""
         assert self.has("torque"), "! MouseJoystick: this board has no torque sensor."
         return self._send("tq", "zero")
+
+    def torque_get(self):
+        """`tq;s;get` -> ack with torque (tared), raw (untared) in N.cm and
+        cal (the shunt-calibration switch, 0 or 1)."""
+        assert self.has("torque"), "! MouseJoystick: this board has no torque sensor."
+        return self._send("tq", "get")
+
+    def torque_cal(self, on):
+        """The torque bridge's shunt-calibration switch. On pcb v1.0 as built
+        the switch is inert (bring-up log, 2026-10-06), so this is a verb and
+        not a calibration there; the board accepts it either way."""
+        assert self.has("torque"), "! MouseJoystick: this board has no torque sensor."
+        return self._send("tq", "cal", "ON" if on else "OFF")
 
     @staticmethod
     def _num(value):

@@ -82,6 +82,18 @@ public:
   static void setTrigger0(bool level);
   static void setTrigger1(bool level);
 
+  // Make `pin` an output that is ALREADY at `level`, with no intermediate
+  // low. Arduino's pinMode(OUTPUT) runs the SDK's gpio_init(), which clears
+  // the output register before the pad becomes an output, so a pin meant to
+  // idle high drives LOW until the digitalWrite() that follows -- 34 us,
+  // measured on ~{BUS_SW_EN} (Digital-50 CH27) at every boot and every
+  // disconnectBus() of pcb v1.0 unit E4654C159F274534 on 2026-10-05. On the
+  // bus switch that is a 34 us closure of the isolation nobody commanded; the
+  // MCU pins behind it are inputs at that moment, so it was harmless, and it
+  // is still the one thing this file's contract says must never happen. Use
+  // this for every output whose idle level is high.
+  static void driveOutput(uint8_t pin, bool level);
+
 private:
   static bool instrumentation_enabled_;
 };

@@ -262,6 +262,9 @@ public:
     bool zero_was_fault; // the zero itself read the fault level -- suspect
     bool live_was_fault;
     bool rail_up;
+    bool rail_discharged;  // +3.3V_SW read off before the zero was taken; if
+                           // not, nothing below it was measured
+    uint32_t discharge_ms; // how long that took (bulk bleed, ~700 ms)
   };
 
   // Averages `samples` reads at each point. DIAG_EN is high for both, which is

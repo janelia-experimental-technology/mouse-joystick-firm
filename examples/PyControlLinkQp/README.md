@@ -54,7 +54,8 @@ one-line changes.
 | `LINK_STATE` | name | `ProtocolBoard`'s state changed |
 | `OP_START` / `OP_DONE` | homing flag, angle | an operation started / completed; `FW_TRIG0` follows |
 | `LINK_WORK` | advance µs, feed µs, output µs | where a dispatched line's time went |
-| `DAC_STATE` | phase (0 down, 1 reset, 2 up), begin failures | the rev 1 angle DAC's bring-up after `hv=1` and its release when the rail drops |
+| `DAC_STATE` | phase (0 down, 1 angle DAC reset, 2 angle DAC up; pcb v1.0: 3 brake DAC reset, 4 brake DAC up, 5 torque ADC up), begin failures | the switched-domain peripherals' bring-up after `hv=1`, one phase per tick, and their release when the rail drops |
+| `BRAKE_STATE` | engaging flag, commanded level N·cm, torque N·cm | the brake's commanded state changed (pcb v1.0): `BRAKE` accepted (engaging), the drive released (engaging clears, the level holds), the brake off |
 | `BOOT_INFO` | watchdog timeout?, forced reboot?, last breadcrumb | once after boot: why the chip booted and where the previous run was when the hardware watchdog bit |
 | `SAMPLE_STAT` | ticks, handled, coalesced, dropped, max µs, last µs, skipped (idle gap), skipped (decimated), decimated flag | the 1 kHz sampler: ticks the alarm posted, ticks the AO ran, samples lost to a tick still in flight or to a full queue, and the cost of the tick handler (poll, classifier, capture, DAC write), every second |
 | `TRACE_STAT` | high-water, buffer-full count, size, ticks | QS buffer use, every second |

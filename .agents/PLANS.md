@@ -91,20 +91,80 @@ section 9, Phase A.
       meter fit is still owed. I2C set to 400 kHz in both bench consoles (the
       QP build already had it); the live loop's worst iteration went 1082 →
       732 µs. Uncommitted.
-- [ ] A4 needs code that does not exist yet: a second `Dac80501` on `Wire` at
-      `kBrakeDacI2cAddress` with the same `GAIN 0x0101`, a bench console that
-      sets a code and reads `BRAKE_ISENSE` (0–1.006 V for 0–48.78 mA) and
-      `~{BRAKE_FAULT}`. The DAC80501**Z** resets to zero code, so the coil is
-      at 0 mA from rail-up until written. Put it in `AngleOutput` as a brake
-      section or in a new `examples/BrakeAndTorque`; `BoardPins.hpp` owns
-      every number.
-- [ ] A5 needs an ADS8689 driver (16-bit, 100 kSPS, SPI mode 0, 32-bit frames;
-      after reset write `RANGE_SEL` to the 0–1.25×VREF range, 78.125 µV/LSB,
-      because the reset range is ±12.288 V; conversion starts on the CONVST
-      rising edge; `R2012` holds CIPO low). The ADC sees `AMP_VOUT`, the
-      torque node before the ÷2 divider (nominal 0.67–2.66 V for ±rated),
-      `TQ_CAL_EN` switches `R2003` 75 kΩ across one bridge arm. Then `TQ`,
-      `caps` `torque`, torque in `STATUS`/`TRIAL`/capture, fault bits 11–12.
+- [x] A4 (2026-10-06, unit A): `examples/BrakeAndTorque` (new; the console
+      for A4 and A5 together, line-oriented commands, `tools/board_console.py`
+      drives it) configures the brake `Dac80501` at 0x49 with `GAIN 0x0101`
+      read back, sweeps, steps and reads `BRAKE_ISENSE`/`~{BRAKE_FAULT}`.
+      Brake chain **linear, full scale 1.0065 V = 48.80 mA** (design 1.006 V),
+      ±0.07 % FS above half scale, the 12 V gate drive sufficient. **Finding:
+      a step above ~60 % overshoots — 62 mA (127 %) for ~5 ms at full
+      scale — and `~{BRAKE_FAULT}` never asserts**, although 62 mA is above
+      the 56.4 mA ceiling. Board question filed in the PCB plan; firmware
+      consequence: `BRAKE` ramps its setpoint (≥ 6 ms to full scale) and
+      checks `BRAKE_ISENSE` against it rather than trusting bit 9. Numbers
+      in the PCB bring-up log; `docs/brake-torque-bringup.md` here.
+- [x] A5 (2026-10-06, unit A): ADS8689 driver written (`src/ADS8689*.hpp`,
+      `src/ADS8689/`, 22 host tests), `RANGE_SEL` 0x0B written and read
+      back, SDO proven by the `DATA_VAL` loopback patterns before any
+      conversion is trusted; the frames decoded on the Digital-50 taps.
+      Torque at rest 1.5956 V (69 mV below the ideal zero: mechanism preload
+      or offset, tare covers it), **noise 95–112 µV rms at 1 kHz**, 1000.1 Hz
+      live loop at a 295 µs worst tick, no brake-to-torque coupling at
+      0.1 mV. **The shunt-cal switch is inert** (0.0 codes of a 0.744 V step),
+      as the 2026-10-04 design review predicted; `TQ cal` stays a verb and
+      not a calibration.
+- [x] **Brake and torque in the protocol (2026-10-06, both ends, run on unit
+      A).** `src/BrakeTorqueBackend.hpp` is the seam (with the simulated
+      backend the corpus runs against); `src/BrakeTorqueHw.hpp` the real one
+      (brake DAC at 0x49 with a setpoint ramped at 8 ms to full scale,
+      `BRAKE_ISENSE` supervision for bit 10, the fault pin for bit 9, the
+      ADS8689 sampled on the tick, bits 11–12). `ProtocolBoard`: `caps`
+      `brake`/`torque`, `BRAKE` acks then waits for the backend to settle
+      before releasing the drive and emitting `RELEASED` (motion verbs busy
+      meanwhile, `STOP`/`DISARM` cancel), the drive re-engages BEFORE the
+      brake comes off on every way out of `RELEASED` (3a; the old order was
+      wrong and no board could show it), `TQ zero|cal|get`, `torque` in
+      `STATUS`/events/`TRIAL` (`t_touch`, `tq_peak`, `tq_out`)/capture,
+      `TOUCH` on the torque magnitude. Mirrored in `board_sim.py`; corpus
+      grammar gained `CAPS <tokens>` and a live `TORQUE` stimulus, 5 new
+      cases; device class `torque_get()`/`torque_cal()`. 154 Unity, 178
+      pytest. On unit A (`mouse_joystick_qp_rev2_usb`, driven by
+      `qp-arduino-example/tools/brake_torque_steps.py`): `RELEASED` 11.6 ms
+      after `brake 1.0` and 15–17 ms after `brake 3.4`, torque −0.30 N·cm on
+      the nominal zero then tared, `NOMOVE` at 3000.1 ms, `TRIAL` with torque
+      fields, `FETCH` with the torque column, clean `hv off`. Decisions the
+      spec left open are written up as uart-protocol.md V1.11. Numbers in the
+      PCB bring-up log ("brake and torque in the protocol build").
+- [ ] **The 1 kHz sampler is decimated whenever the rail is up on v1.0**, and
+      was already on 2026-10-05 (`last` 110–750 µs, `max` 0.9–1.5 ms without
+      the brake/torque poll; 0.26–1.2 ms and 2.1–2.5 ms with it, 1.2 ms in
+      `RELEASED` with a `WATCH` armed). The primitives are cheap (ADS8689
+      sample 37 µs, `BRAKE_ISENSE` 4.8 µs, DAC write 110 µs, console `M`);
+      `delayMicroseconds()` in the ADS8689 transport was the first suspect
+      and was not it (busy wait now, no change). **Attributed with
+      `POLL_STAT` (QS_USER+14, per second: each backend's worst poll, its
+      calls, and its worst primitive), run `…-0942-unitA-qp-brake-torque`:
+      with the rail up EVERY primitive shows 100–500 µs maxima — the X_ENC
+      read 350–555 µs, the five-register snapshot 400–670, the ADS8689 sample
+      230–480, even the `BRAKE_ISENSE` `analogRead` 110–230 µs — against 30,
+      150, 37 and 4.8 µs on the bench console.** A 5 µs ADC read cannot take
+      230 µs by itself: this is interrupt time landing inside whichever bus
+      primitive is running. The bench builds carry the protocol over USB CDC,
+      and the Arduino core services tinyusb from a 1 kHz interrupt
+      (`tud_task()` at IRQ level), so the heartbeat and the replies are the
+      prime suspect; the QS PIO UART's ISR is the other. Next: an A/B with
+      the heartbeat slowed and the trace off, then the delivery build over
+      UART0 with the pyboard (which has almost no USB traffic) — the tick
+      budget must be judged on that build, not on `_usb`. Until then the
+      brake ramp's steps are coarser than designed (three writes instead of
+      eight for 3.4 N·cm) though still below the overshoot threshold, and
+      `lost=` in a trial's capture will not be 0 under load.
+- [x] `SafeState::driveOutput()` writes the level before the direction
+      (SDK calls, no `gpio_init()`): the 34 µs `~{BUS_SW_EN}` boot glitch is
+      gone, no edge on CH27 across a warm reboot (2026-10-06).
+      `measureHvCurrent()` now waits for the rail to read off (and reports
+      how long it took) instead of pausing 50 ms, so stage 2's `m` works
+      after a live rail; not yet re-run on hardware.
 - [x] A6 (2026-10-05, unit A): rail 3 ms / charged 34 ms, TMC 0x11, `vsense`
       1, switch witnessed, homed, **5 of 5 at 2.0 counts**, reversal dead band
       89 µsteps as on board 4 (mechanism, not board), `L` 1000.1 Hz but worst
@@ -175,6 +235,20 @@ items. Preserve selected manufactured-tag/serial context rather than assuming
 historical firmware wiring matches current PCB development.
 
 ## Status
+
+**2026-10-06: v1.0 unit A stages A4 and A5 passed with the new
+`examples/BrakeAndTorque`** (brake sink 0–48.80 mA linear; ADS8689 alive at
+95–112 µV rms; both buses decoded on the Digital-50 taps), **and the
+protocol build gained `brake` and `torque` the same day, run on unit A**
+(ramped `BRAKE` → `RELEASED` in 11.6 / 15–17 ms, `TQ`, torque in every
+field, `NOMOVE`/`TRIAL`/`FETCH` with torque; `uart-protocol.md` V1.11 has
+the decisions). Two board findings — the brake step overshoot with a silent
+`~{BRAKE_FAULT}`, and the inert `TQ_CAL_EN` switch — are filed in the PCB
+plan. Host tests 154 Unity + 178 pytest, every example/env build green.
+Open: the sampler's tick budget with the rail up (decimated since
+2026-10-05, worse with the new poll; being attributed with `POLL_STAT`), and
+the pyboard was not on USB this session, so the UART0 path and Gate E remain
+owed. Bench state and next steps: `.agents/handoff.local.md`.
 
 **2026-10-05: HEAD (`ec3b36d`) regressed on board 4 (pcb v0.3) before the v1.0
 boards arrive — no firmware regression.** Every stage tool ran on

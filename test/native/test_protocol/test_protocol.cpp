@@ -26,28 +26,44 @@
 #include <string>
 #include <vector>
 
+#include "BrakeTorqueBackend.hpp"
 #include "MotionBackend.hpp"
 #include "Protocol.hpp"
 #include "ProtocolBoard.hpp"
 
 using mouse_joystick::ProtocolBoard;
+using mouse_joystick::SimulatedBrakeTorque;
 using mouse_joystick::SimulatedMotion;
 namespace P = mouse_joystick::protocol;
 
-// The board holds its backend by reference, so the two have to be owned
-// together. Declaration order matters: `motion` is constructed first.
+// The board holds its backends by reference, so the three have to be owned
+// together. Declaration order matters: the backends are constructed first.
+// `caps` are the corpus's CAPS tokens (brake, torque, angout): the board
+// boots with those hardware facts, as the Python simulator does.
 struct Rig {
   SimulatedMotion motion;
+  SimulatedBrakeTorque brake_torque;
   ProtocolBoard board;
 
-  Rig() : board(motion, corpusConfig()) {
+  Rig() : board(motion, corpusConfig(std::set<std::string>()), &brake_torque) {
     board.boot();
     board.clearOutput();  // READY drained, as the corpus assumes
   }
+  explicit Rig(const std::set<std::string> &caps)
+      : board(motion, corpusConfig(caps), &brake_torque) {
+    board.boot();
+    board.clearOutput();
+  }
 
   static ProtocolBoard::Config corpusConfig() {
+    return corpusConfig(std::set<std::string>());
+  }
+  static ProtocolBoard::Config corpusConfig(const std::set<std::string> &caps) {
     ProtocolBoard::Config cfg;
     cfg.serial = "0000000000000000";  // the corpus header's stated default
+    cfg.has_brake = caps.count("brake") != 0;
+    cfg.has_torque = caps.count("torque") != 0;
+    cfg.has_angout = caps.count("angout") != 0;
     return cfg;
   }
 };
@@ -1066,6 +1082,7 @@ struct Step {
 struct Case {
   std::string name;
   int line_no = 0;
+  std::set<std::string> caps;  // CAPS: the hardware the board boots with
   std::vector<Step> steps;
 };
 
@@ -1148,6 +1165,19 @@ static void loadCorpus(void) {
       open_case = false;
     } else if (!open_case) {
       continue;  // reported as a structural failure below
+    } else if (keyword == "CAPS") {
+      // Space-separated capability tokens the board boots with.
+      size_t pos = 0;
+      while (pos < rest.size()) {
+        size_t end = rest.find(' ', pos);
+        if (end == std::string::npos) {
+          end = rest.size();
+        }
+        if (end > pos) {
+          current.caps.insert(rest.substr(pos, end - pos));
+        }
+        pos = end + 1;
+      }
     } else if (keyword == "SEND") {
       Step step;
       step.kind = "send";
@@ -1168,8 +1198,10 @@ static void loadCorpus(void) {
       step.angle = strtod(rest.c_str(), nullptr);
       current.steps.push_back(step);
     } else if (keyword == "TORQUE") {
+      // The torque the bridge reads from now on (a board with CAPS torque);
+      // the board services once so the classifier sees it.
       Step step;
-      step.kind = "torque"; // reserved: no board reports torque yet
+      step.kind = "torque";
       step.angle = strtod(rest.c_str(), nullptr);
       current.steps.push_back(step);
     } else if (keyword == "EXPECT") {
@@ -1219,7 +1251,7 @@ void test_every_case_expects_something(void) {
 
 void test_the_firmware_reproduces_every_corpus_case(void) {
   for (const Case &c : g_cases) {
-    Rig rig;
+    Rig rig(c.caps);
     ProtocolBoard &board = rig.board;
 
     std::vector<std::string> pending;
@@ -1253,7 +1285,15 @@ void test_the_firmware_reproduces_every_corpus_case(void) {
         }
         TEST_ASSERT_FALSE_MESSAGE(board.outputOverflowed(), where);
       } else if (step.kind == "torque") {
-        // reserved: nothing to set on a board without the bridge
+        // The bridge reads this from now on; one service step at the current
+        // time so the classifier sees the sample.
+        board.clearOutput();
+        rig.brake_torque.setTorqueNcm(step.angle);
+        board.advance(0);
+        for (uint8_t i = 0; i < board.outputCount(); ++i) {
+          pending.push_back(board.output(i));
+        }
+        TEST_ASSERT_FALSE_MESSAGE(board.outputOverflowed(), where);
       } else if (step.kind == "expect") {
         TEST_ASSERT_FALSE_MESSAGE(pending.empty(), where);
         std::string actual = pending.front();

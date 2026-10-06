@@ -291,6 +291,24 @@ def test_float_arguments_are_encoded_stably(device, link):
     assert link.written[-1] == "move;3;0.0\n"
 
 
+def test_torque_verbs_are_gated_on_the_capability(device, link):
+    """TQ exists only on a board whose caps say torque; the class refuses to
+    send it elsewhere rather than let the board answer badverb."""
+    with pytest.raises(AssertionError):
+        device.torque_get()
+    device.apply_identity({"proto": "2", "axes": "1", "serial": "X", "fw": "0.0.0",
+                           "caps": "motion+home+instr+hv+watch+fetch+stream+cfg+brake+torque"})
+    assert device.has("torque") and device.has("brake")
+    device.torque_get()
+    assert link.written[-1] == "tq;1;get\n"
+    device.torque_zero()
+    assert link.written[-1] == "tq;2;zero\n"
+    device.torque_cal(True)
+    assert link.written[-1] == "tq;3;cal;ON\n"
+    device.torque_cal(False)
+    assert link.written[-1] == "tq;4;cal;OFF\n"
+
+
 # --------------------------------------------------------------- buffering
 
 

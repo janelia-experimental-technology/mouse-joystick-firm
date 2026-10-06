@@ -1,4 +1,5 @@
 #include <Arduino.h>
+#include <hardware/gpio.h>
 
 #include "BoardPins.hpp"
 #include "SafeState.hpp"
@@ -13,14 +14,22 @@ bool readBare(uint8_t pin) {
   return digitalRead(pin) == HIGH;
 }
 
-void driveOutput(uint8_t pin, bool level) {
-  pinMode(pin, OUTPUT);
-  digitalWrite(pin, level ? HIGH : LOW);
-}
-
 } // namespace
 
 bool SafeState::instrumentation_enabled_ = false;
+
+void SafeState::driveOutput(uint8_t pin, bool level) {
+  // Level into the output register first, then the direction, and never
+  // gpio_init(): that is the call that clears the register and made
+  // ~{BUS_SW_EN} dip for 34 us at boot. The function select and the pull
+  // disable are what pinMode(OUTPUT) would also have done. digitalWrite()
+  // keeps working afterwards: the core's record of this pin's mode is left at
+  // its default, for which digitalWrite() is a plain gpio_put().
+  gpio_set_function(pin, GPIO_FUNC_SIO);
+  gpio_put(pin, level ? 1u : 0u);
+  gpio_set_dir(pin, GPIO_OUT);
+  gpio_disable_pulls(pin);
+}
 
 ResetStateReads SafeState::readResetState() {
   ResetStateReads reads;

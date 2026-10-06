@@ -33,6 +33,7 @@ class Case:
     def __init__(self, name, line_no):
         self.name = name
         self.line_no = line_no
+        self.caps = set()  # CAPS: the hardware the board boots with
         self.steps = []  # (kind, payload) where kind is send | advance | expect
 
     def __repr__(self):
@@ -61,7 +62,9 @@ def parse_corpus(text):
             current = None
         else:
             assert current is not None, "%s outside a CASE at line %d" % (keyword, line_no)
-            if keyword == "SEND":
+            if keyword == "CAPS":
+                current.caps |= set(rest.split())
+            elif keyword == "SEND":
                 # `\r` is written as an escape so the corpus stays one line per
                 # step and survives an editor that strips trailing whitespace.
                 current.steps.append(("send", rest.replace("\\r", "\r")))
@@ -70,7 +73,7 @@ def parse_corpus(text):
             elif keyword == "ANGLE":
                 current.steps.append(("angle", float(rest)))
             elif keyword == "TORQUE":
-                current.steps.append(("torque", float(rest)))  # reserved
+                current.steps.append(("torque", float(rest)))
             elif keyword == "EXPECT":
                 current.steps.append(("expect", rest))
             else:
@@ -105,6 +108,11 @@ def test_every_case_expects_something():
 @pytest.mark.parametrize("case", CASES, ids=lambda c: c.name)
 def test_simulator_reproduces_corpus_case(case):
     board = BoardSim(serial=CORPUS_SERIAL)
+    # The hardware facts of the simulated revision, before boot, as the
+    # firmware's test rig sets them from the same tokens.
+    board.has_brake = "brake" in case.caps
+    board.has_torque = "torque" in case.caps
+    board.has_angout = "angout" in case.caps
     board.boot()
 
     pending = []
@@ -119,7 +127,10 @@ def test_simulator_reproduces_corpus_case(case):
             board.set_encoder_angle(payload)
             pending += board.advance(0)
         elif kind == "torque":
-            pass  # reserved: no board reports torque yet
+            # The bridge reads this from now on; one service step at the current
+            # time so the classifier sees the sample.
+            board.set_torque(payload)
+            pending += board.advance(0)
         elif kind == "expect":
             assert pending, "%s step %d: expected %r but no output was pending" % (
                 case.name,

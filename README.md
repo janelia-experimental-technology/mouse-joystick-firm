@@ -89,6 +89,7 @@ else. The stages follow that boundary:
 | 3 | Motion, encoder, homing | applied | closed | enabled | `examples/MotionAndHoming` — **passed** |
 | 4 | pyControl UART protocol | applied | closed | as needed | `examples/PyControlLink` — **passed on hardware** 2026-09-03 |
 | 5 | Analog angle output | applied | closed | untouched | `examples/AngleOutput` — writes verified 2026-09-09; **output not yet measured, needs a DMM** |
+| A4/A5 | Brake sink, torque bridge (pcb v1.0) | applied | closed | untouched | `examples/BrakeAndTorque` — **passed on v1.0 unit A 2026-10-06**: brake 0–48.80 mA linear, ADS8689 reading at 95–112 µV rms; see `docs/brake-torque-bringup.md` |
 
 **Stage 5 needs a v0.3 or later board and `env:mouse_joystick_rev1`.** It also
 needs a meter: `ANGLE_OUT` reaches no RP2040 ADC, and over SPI the DAC cannot be
@@ -282,6 +283,8 @@ examples/TMC5130Communication/ stage 2: raw SPI, no driver library
 examples/MotionAndHoming/      stage 3: motion, encoder, homing, over TMC51X0
 examples/PyControlLink/        stage 4: the pyControl UART protocol
 examples/AngleOutput/          stage 5: the analog angle output. rev1 only
+examples/BrakeAndTorque/       stages A4/A5: the brake current sink and the
+                               torque bridge. pcb v1.0 (rev2) only
 src/                           board support library
   BoardPins.hpp                GPIO allocation, single source of truth
   Conversions.hpp              ADC and motion scaling, Arduino-free so the
@@ -292,10 +295,23 @@ src/                           board support library
                                ordering interlock. Arduino-free, host tested
                                against a fake transport
   DAC80501.hpp                 DACx0501 Arduino transports, SPI and I2C
+  ADS8689Registers.hpp         ADS8689 register map, 32-bit framing and
+                               transfer function. Arduino-free, host tested
+  ADS8689Device.hpp            ADS8689 device logic: range written and read
+                               back before any conversion is believed, the
+                               two-frame register read. Host tested
+  ADS8689.hpp, ADS8689/        the SPI transport with a plain-GPIO CONVST/CS,
+                               a SEPARATE library like DAC80501
   DAC80501/                    a SEPARATE library, not board support: this part
                                is placed twice at pcb v1.0 and is intended to
                                be extracted to its own repository once a second
                                consumer exists
+  BrakeTorqueBackend.hpp       the seam between the protocol and pcb v1.0's
+                               brake sink and torque bridge, with the
+                               simulated backend the corpus runs against
+  BrakeTorqueHw.hpp            the real one: brake DAC at 0x49 with a ramped
+                               setpoint, BRAKE_ISENSE supervision, the
+                               ADS8689 sampled on the tick. Firmware only
   SafeState.hpp                safe idle state
   PowerSequence.hpp            the switched rail; the only thing that touches
                                HV_EN
@@ -307,6 +323,7 @@ test/native/                   host tests for the Arduino-free arithmetic
 tools/pio_task.py              example selection without editing platformio.ini
 docs/rp2040-bringup.md         stage 1: the procedure, and each failure's meaning
 docs/motion-bringup.md         stage 3: the same, plus the rig's measured facts
+docs/brake-torque-bringup.md   stages A4/A5: the brake sink and torque bridge
 .agents/                       agent guidance and plans
 ```
 
@@ -321,10 +338,10 @@ between them does not invalidate a cache. Same arrangement as `TMC51X0`.
 | `mouse_joystick` | `MJ_BOARD_REV=0`, for pcb **v0.1 and v0.2 only**. Universal `boot2_generic_03h` stage 2 — slower XIP, but boots regardless of the flash's quad-enable bit, which is what a first-article board wants. |
 | `mouse_joystick_fastflash` | same board, quad-lane stage 2 matched to the W25Q128JV. Use once stage 1 has passed. |
 | `mouse_joystick_rev1` | `MJ_BOARD_REV=1`, for pcb **v0.3 only**, where GP10/GP11/GP13 carry the angle DAC on SPI1. **This is not a future-only env — a v0.3 board needs it.** Building rev 0 against v0.3 drives the spare-pad test onto the DAC's SPI bus and chip select. The check count is the tell: a v0.3 board reporting 27 checks in stage 1 was built with the wrong env; rev 1 reports 24. **Not for v1.0**, where GP13 is an input from the brake block. |
-| `mouse_joystick_rev2` | `MJ_BOARD_REV=2`, for pcb **v1.0** (board file `d5ae4b0` through HEAD; no tag yet). I2C DACs on GP16/GP17, torque ADC on SPI1, `~{BRAKE_FAULT}` GP13, `HV_LATCH` GP24, `~{HV_FAULT}` GP23, two spare pads, **20 stage 1 checks**. The transport is chosen by the revision; `MJ_DAC_I2C` is not needed. **Untested on hardware** as of 2026-10-04. Replaces `mouse_joystick_rev1_i2c`, which described a board that never existed. |
+| `mouse_joystick_rev2` | `MJ_BOARD_REV=2`, for pcb **v1.0** (board file `d5ae4b0` through HEAD; no tag yet). I2C DACs on GP16/GP17, torque ADC on SPI1, `~{BRAKE_FAULT}` GP13, `HV_LATCH` GP24, `~{HV_FAULT}` GP23, two spare pads, **20 stage 1 checks**. The transport is chosen by the revision; `MJ_DAC_I2C` is not needed. **On hardware since 2026-10-05** (unit `E4654C159F274534`: stages 1, 2, A3, A6, and A4/A5 on 2026-10-06). Replaces `mouse_joystick_rev1_i2c`, which described a board that never existed. |
 | `mouse_joystick_qp` | `examples/PyControlLinkQp` only: the stage-4 protocol inside a QP/C++ active object with a QS trace on `FW_TRIG1`, rev 0, `TmcMotion`, pyControl on UART0. qp-arduino comes from its `v7.3.4` tag on GitHub. |
 | `mouse_joystick_qp_rev1` | Same for rev 1. |
-| `mouse_joystick_qp_rev2`, `mouse_joystick_qp_rev2_usb` | Same for pcb v1.0, delivery and bench (USB protocol, tick probe) builds. The brake and torque blocks are not driven yet: `caps` lacks `brake` and `torque`. |
+| `mouse_joystick_qp_rev2`, `mouse_joystick_qp_rev2_usb` | Same for pcb v1.0, delivery and bench (USB protocol, tick probe) builds. Since 2026-10-06 the brake sink and the torque bridge are driven through `src/BrakeTorqueHw.hpp`: `caps` reports `brake` and `torque`, `BRAKE` ramps the coil and releases the drive once the current has settled, `TQ` answers, torque rides in `STATUS`, the events, `TRIAL` and the capture. |
 | `mouse_joystick_qp_sim_usb` | Same application for a board with no 36 V and no host: simulated motion, protocol over USB CDC. How it was first run on the fixture. |
 | `native` | host tests. |
 

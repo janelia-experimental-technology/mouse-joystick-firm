@@ -130,6 +130,43 @@ public:
     if (!bus_up_) {
       return;
     }
+    const uint32_t poll_t0 = micros();
+    pollBus();
+    const uint32_t cost = micros() - poll_t0;
+    ++poll_calls_;
+    if (cost > poll_cost_max_us_) {
+      poll_cost_max_us_ = cost;
+    }
+  }
+
+  // Bring-up accounting (2026-10-06): the worst `poll()` since the last read
+  // and how many there were, for the POLL_STAT trace record. Reset on read.
+  uint32_t takePollCostMaxUs(uint32_t *calls, uint32_t *enc_max_us = nullptr,
+                             uint32_t *snapshot_max_us = nullptr) {
+    const uint32_t m = poll_cost_max_us_;
+    if (calls != nullptr) {
+      *calls = poll_calls_;
+    }
+    if (enc_max_us != nullptr) {
+      *enc_max_us = enc_read_max_us_;
+    }
+    if (snapshot_max_us != nullptr) {
+      *snapshot_max_us = snapshot_max_us_;
+    }
+    poll_cost_max_us_ = 0;
+    poll_calls_ = 0;
+    enc_read_max_us_ = 0;
+    snapshot_max_us_ = 0;
+    return m;
+  }
+
+private:
+  uint32_t poll_cost_max_us_ = 0;
+  uint32_t poll_calls_ = 0;
+  uint32_t enc_read_max_us_ = 0;
+  uint32_t snapshot_max_us_ = 0;
+
+  void pollBus() {
 
     // Every poll reads the encoder (X_ENC, one register, two datagrams),
     // because the encoder moves when the animal moves the joystick and
@@ -141,11 +178,21 @@ public:
     // note about read-and-clear flags: RAMP_STAT is read once per snapshot.
     ++poll_count_;
     if ((poll_count_ % kFullSnapshotEvery) != 0u) {
+      const uint32_t e0 = micros();
       angle_deg_ = conversions::microstepsToDegrees(
           stepper_.encoder.readActualPosition());
+      const uint32_t e_cost = micros() - e0;
+      if (e_cost > enc_read_max_us_) {
+        enc_read_max_us_ = e_cost;
+      }
       return;
     }
+    const uint32_t sn0 = micros();
     const MotionSnapshot s = MotionSetup::snapshot(stepper_);
+    const uint32_t sn_cost = micros() - sn0;
+    if (sn_cost > snapshot_max_us_) {
+      snapshot_max_us_ = sn_cost;
+    }
     angle_deg_ = conversions::microstepsToDegrees(s.encoder);
     xactual_deg_ = conversions::microstepsToDegrees(s.position);
 
@@ -199,6 +246,7 @@ public:
     }
   }
 
+public:
   bool isMoving() const override { return phase_ != Phase::kIdle; }
 
   bool consumeCompletion(bool *was_home) override {
