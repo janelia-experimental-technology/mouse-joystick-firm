@@ -347,6 +347,24 @@ section 9, Phase A.
       left torque sensor reads it negative. Both boards pass under one
       hardware definition on their own ports; a task driving both at once is
       the researcher's.
+- [x] **The rig's files fit the pyboard the way the GUI uploads them
+      (2026-10-07, 10:30).** Measured: 33.8 KB free after "Load framework",
+      the six drivers the rig definition pulls in take 22.3 KB, so the
+      hardware definition and task must fit in ~10 KB verbatim; the
+      originals (15.5 KB, 95 % comments; 10.2 KB, 47 %) failed on the
+      definition at 0 bytes free. On the rig branch the definition's prose
+      moved verbatim to `notes/hardware_definition_joystick_notes.md`
+      (the `.py` is 2.1 KB, code AST unchanged), the task's long header to
+      `notes/261007_mouse_joystick_researcher_guide.md` (6.9 KB, plus a
+      `clear_fault()` at `run_start`); the GUI path then leaves 7.7 KB
+      free. The researcher guide is the deliverable for the session.
+- [x] **400-trial soak (2026-10-07, 10:40–11:14):** the rig task on the
+      right joystick unattended, 400 `NOMOVE`, 0 `nak`, 0 `FAULT`, every
+      present and park within one count (park 0.0 × 399), period 5.08 ±
+      0.02 s with no drift, 53 190 link lines (PCB bring-up log, "400 trials
+      unattended"; evidence `…-1040-unitA-soak/`). Not exercised: a lever in
+      a hand, both boards at once, an hour or more; an overnight run is the
+      next size up when the rig is idle.
 - [ ] **Left joystick: the torque sensor rests 1.55 N·cm above its nominal
       zero** (unit A: 0.07 below), forty times the zero-balance spec; a
       mechanical preload at the sensor or lever. The tare hides it; the
