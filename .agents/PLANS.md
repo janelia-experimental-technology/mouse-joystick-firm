@@ -296,6 +296,70 @@ section 9, Phase A.
       the ~100 ms second correction at the price of the last count; at
       IRUN 17 the torque per microstep doubles. Decide with the thermal
       survey; the constant is `kMoveSettleToleranceMicrosteps`.
+- [x] **The rig's trial task, dry run (2026-10-07, 08:40):**
+      `joystick-rig/feat/mouse-joystick`'s `hardware_definition_joystick.py`
+      and `tasks/rig1/joystick_trial.py` with `home_each_trial = 0`, run
+      from their checkout (`tools/pycontrol_run.py --hwd-path/--task-dir`,
+      the rig's `opto_led.py` symlinked into pyControl's `devices/`) against
+      unit A on the right joystick: eight trials, every present and park
+      within one count, no fault (PCB bring-up log, "the rig's trial task,
+      dry run"; evidence `…-0840-unitA-rig-trial-dryrun/`). The pyboard's
+      flash was full of device files pyControl never deletes
+      (`pycontrol/README.md`, "A fourth thing"). What remains for the rig
+      session is the solenoid cable on port 5 and the researcher.
+- [x] **The reward path and unit A's pull sign (2026-10-07, 08:53–08:59):**
+      with the solenoid on port 5 a hand pull was first classified `PUSH`
+      (pull sign +1), the park against the held lever faulted
+      `not_following`; `BoardCalibration.hpp` gained
+      `{"E4654C159F274534", -1.0}`, and the next pull was `PULL` → the
+      task's 50 ms solenoid pulse → `TRIAL outcome=PULL` → park at 0.0
+      (PCB bring-up log, "the reward path and the pull sign"; evidence
+      `…-0855-unitA-solenoid-pull/`). Unit B's sign is to be measured the
+      same way (a hand pull during `WATCH`; `PUSH` means flip it).
+- [ ] **A lever held through the park faults the board (2026-10-07).**
+      Correct for the stall detector, fatal for a session: `TRIAL` comes 1 s
+      after the outcome, the task parks, a held lever stalls the drive at
+      IRUN 8 → `not_following` → rail off. Decide with the researcher
+      (`uart-protocol.md` V1.9): the board defers the move while the torque
+      says the lever is held (a `nak;busy` or a wait), or the task recovers
+      (`CLRFAULT` → `HV ON` → `HOME`). The rig task has no recovery path yet.
+- [ ] **One `badverb` 5 ms after a `FAULT` (2026-10-07, `pull1_60s`):** the
+      task's first `faults` request was refused `nak;326;badverb`, the retry
+      was acknowledged; the verb dispatches by exact match. Most likely a
+      corrupted byte on the way in around the switched-domain collapse; no
+      capture was running. Capture CH3 (board RX) at the next fault before
+      changing anything.
+- [x] **Unit B (board 7, `E4654C159F404534`, the LEFT joystick), stages 1
+      through A5 (2026-10-07, 09:07–09:31)** after Peter's capacitor rework:
+      20/0 self-test checks, two direct-LATCH power-ups with 5/0 register
+      checks and 29.9 mA idle, the angle DAC with `GAIN` read back
+      (0.829/1.649 V mid/full on the monitor), the left joystick's switch at
+      the positive end and active high with the encoder tracking (no config
+      flip), homed, homing spread 9 counts (runs 3–5 within one), live loop
+      350 µs, brake sweep linear to 49.11 mA with the same silent 128 %
+      full-scale overshoot as unit A, torque 103 µV rms at 1000.1 Hz. The
+      second LA5032 (`conn=1.67`) is on its Digital-50, straight cable, map
+      proven by beacon. PCB bring-up log, six new unit B sections; evidence
+      `…-0908-unitB-bringup/`. **Gate E passed on Breakout port 1 at 09:37**
+      (the same sequence as unit A's to tens of ms), and the hand pull was
+      `PUSH` then `PULL` once `{"E4654C159F404534", -1.0}` was in the
+      calibration table: both joysticks pull toward decreasing angle, the
+      left torque sensor reads it negative. Both boards pass under one
+      hardware definition on their own ports; a task driving both at once is
+      the researcher's.
+- [ ] **Left joystick: the torque sensor rests 1.55 N·cm above its nominal
+      zero** (unit A: 0.07 below), forty times the zero-balance spec; a
+      mechanical preload at the sensor or lever. The tare hides it; the
+      mounting wants a look before absolute torque is trusted. Also a small
+      brake-to-torque coupling (−0.006 N·cm at 49 mA) unit A does not show.
+      Peter / the rig.
+- [ ] **The uploader's bootloader step fails on unit B** three times out of
+      four ("The RP2040 device returned an error: <unknown>", error 157,
+      after the 1200-baud touch has put it in BOOTSEL); unit A takes the same
+      `pixi run upload` every time. Copying the UF2 to the mounted `RPI-RP2`
+      drive works every time. Two RP2040s on the bus, a different hub port,
+      or picotool's device pick — undiagnosed; the UF2 path is the
+      workaround (`tools/pio_task.py` could fall back to it).
 - [x] **Gate E (2026-10-06), passed on v1.0 unit A:** `tools/pycontrol_run.py` runs a task on the
       pyboard headlessly through pyControl's own `Pycboard` API (the GUI's
       path, no GUI); `pixi run -e pycontrol pycontrol-run`. Two things

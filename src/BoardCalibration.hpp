@@ -27,6 +27,20 @@ constexpr PullSign kPullSigns[] = {
     // pilot/c_pilot.txt: ev;PUSH, a_peak=-5.041 from a0=-0.724), so its pull
     // is the decreasing-angle direction.
     {"E4654C159F171E34", -1.0},
+    // Board 6, pcb v1.0 unit A, the RIGHT joystick of Rig 1: a hand pull from
+    // the presented -4.95 deg was classified PUSH with pull_sign +1 on
+    // 2026-10-07 (qp-arduino-example/evidence/2026-10-07-0855-unitA-solenoid-
+    // pull/pilot/pull1_60s.txt: ev;PUSH at -9.991, TRIAL a_peak=-5.041 from
+    // a0=-4.95), so its pull is the decreasing-angle direction too: away from
+    // the home switch, further into the travel.
+    {"E4654C159F274534", -1.0},
+    // Board 7, pcb v1.0 unit B, the LEFT joystick of Rig 1: the same hand
+    // pull from the presented -5.041 deg was classified PUSH with pull_sign
+    // +1 on 2026-10-07 (qp-arduino-example/evidence/2026-10-07-0908-unitB-
+    // bringup/pilot/pull_left_60s.txt: ev;PUSH at -10.174), so its pull is
+    // the decreasing-angle direction as well. Its torque sensor reads the
+    // pull NEGATIVE where unit A's reads positive; TOUCH uses the magnitude.
+    {"E4654C159F404534", -1.0},
 };
 
 constexpr double kPullSignUnmeasured = 1.0;

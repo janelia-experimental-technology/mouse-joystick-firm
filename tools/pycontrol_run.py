@@ -5,6 +5,7 @@ board API -- the same path the GUI uses, with no GUI.
     pixi run -e pycontrol python tools/pycontrol_run.py --port /dev/ttyACM1 \
         --hwd mouse_joystick_bringup --task mouse_joystick_check --seconds 60 \
         [--set board=right --set do_brake=1] [--load-framework] [--out run.json]
+        [--hwd-path <file.py> --task-dir <dir>]   # e.g. the rig's own files
 
 Gate E (`../mouse-joystick-pcb/docs/validation-plan.md`) asks for an unforked
 upstream pyControl loading this repository's device class through its normal
@@ -35,6 +36,10 @@ def main():
     ap.add_argument("--pycontrol-dir", default=os.environ.get("PYCONTROL_DIR", "~/Repositories/github/pycontrol-code"))
     ap.add_argument("--hwd", default="mouse_joystick_bringup", help="hardware definition name (pycontrol/hardware_definitions, uploaded from dist/)")
     ap.add_argument("--task", default="mouse_joystick_check", help="task name (pycontrol/tasks, uploaded from dist/)")
+    ap.add_argument("--hwd-path", default=None,
+                    help="a hardware definition file to upload instead of dist/'s (e.g. the rig's own, from its checkout)")
+    ap.add_argument("--task-dir", default=None,
+                    help="the directory holding <task>.py, instead of dist/tasks (e.g. the rig's tasks/rig1)")
     ap.add_argument("--seconds", type=float, default=60.0)
     ap.add_argument("--set", action="append", default=[], metavar="VAR=VALUE",
                     help="set a task variable before the run (Python literal or string)")
@@ -68,8 +73,13 @@ def main():
         print(text, end=end, flush=True)
         record("board_print", text)
 
-    hwd_path = repo / "pycontrol" / "dist" / "hardware_definitions" / (args.hwd + ".py")
-    tasks_dir = repo / "pycontrol" / "dist" / "tasks"
+    # The rig's own hardware definition and task can be run from their
+    # checkout (2026-10-07): the device files still come from pyControl's
+    # devices folder, where pycontrol-link points at this repo's dist/.
+    hwd_path = Path(args.hwd_path).expanduser().resolve() if args.hwd_path else \
+        repo / "pycontrol" / "dist" / "hardware_definitions" / (args.hwd + ".py")
+    tasks_dir = Path(args.task_dir).expanduser().resolve() if args.task_dir else \
+        repo / "pycontrol" / "dist" / "tasks"
     print(f"pyControl v{VERSION} at {pycontrol_dir}; hardware definition {hwd_path.name}; task {args.task}")
 
     board = Pycboard(args.port, print_func=say)

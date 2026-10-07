@@ -133,6 +133,23 @@ the sources only; the rig delivery ships `dist/` plus this README.
    means different things in different states (`TARGET` in `moving` vs
    `parking`, the `ack` in `powering` vs `arming`).
 
+### A fourth thing, 2026-10-07: pyControl never deletes a device file
+
+`Pycboard.transfer_device_files()` uploads with `remove_files=False`, so every
+device file ever pulled onto the pyboard stays until "Load framework" wipes
+the folder, and an upload that dies of "Insufficient space" leaves the file it
+was writing truncated (a 512-byte `frame_trigger.py` on 2026-10-07, which
+would have failed to import). The rig's hardware definition found 0 bytes
+free that morning: `MCP.py` and `rotary_encoder.py` from 2026-10-06's first
+attempt were still there. Check with `os.statvfs('/flash')` through
+`Pycboard.exec()`, remove with `Pycboard.remove_file('devices/<name>.py')`,
+and upload the rig's files lean (`tools/pycontrol_lean.py`'s `lean_source()`
+works on any file; the rig's definition is 15 KB verbatim, 706 bytes lean).
+`tools/pycontrol_run.py --hwd-path <file> --task-dir <dir>` runs a hardware
+definition and task from another checkout — the rig's — with the device
+files still coming from pyControl's `devices/` folder, where `pycontrol-link`
+points at `dist/` and where the rig's `opto_led.py` had to be symlinked too.
+
 ## Gate E Passed On v1.0 Unit A (2026-10-06)
 
 `pixi run -e pycontrol pycontrol-run <pyboard port> mouse_joystick_bringup
