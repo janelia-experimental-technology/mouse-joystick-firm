@@ -162,7 +162,11 @@ the trace's tick statistics (the firmware plan, "tick budget"), and the park
 after a trial ending ~1° short on the encoder with the driver reporting its
 target reached, in both runs -- a direction reversal after the move to −5°,
 so most likely the coupling's backlash; a trial that needs the park position
-exact should home first.
+exact should home first. (Measured and fixed the next day: lost motion on
+every direction reversal, and since 2026-10-07 the board settles on the
+encoder after each move before `TARGET` — `uart-protocol.md` V1.13, the PCB
+bring-up log "the encoder settle after a move"; the park lands within a
+count and `home_each_trial` is off in the rig task.)
 
 Two follow-ups the same day, both asked for by Peter after the runs:
 

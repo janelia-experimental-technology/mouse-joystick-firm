@@ -33,10 +33,14 @@ enum LinkRecords {
                                    // microsteps, enable count (TmcMotion)
   BRAKE_STATE = QP::QS_USER + 7,   // the brake's commanded state changed:
                                    // engaging?, level N.cm, torque N.cm
-  POLL_STAT = QP::QS_USER + 14     // per second: worst TmcMotion poll us, its
+  POLL_STAT = QP::QS_USER + 14,    // per second: worst TmcMotion poll us, its
                                    // calls, worst X_ENC read, worst snapshot;
                                    // worst BrakeTorqueHw poll us, its calls,
                                    // worst ADS8689 sample, worst ISENSE read
+  MOVE_SETTLE = QP::QS_USER + 15   // a move settled on the encoder (V1.13):
+                                   // residual at the ramp generator's first
+                                   // arrival and at TARGET (microsteps),
+                                   // correction legs, us from arrival to TARGET
 };
 
 extern QP::QActive *const AO_Link;

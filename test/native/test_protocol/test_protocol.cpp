@@ -1259,6 +1259,13 @@ static void loadCorpus(void) {
       step.kind = "torque";
       step.angle = strtod(rest.c_str(), nullptr);
       current.steps.push_back(step);
+    } else if (keyword == "SLIP") {
+      // The next move lands this far short on the encoder (V1.13); no
+      // service step, the stimulus is consumed by the move.
+      Step step;
+      step.kind = "slip";
+      step.angle = strtod(rest.c_str(), nullptr);
+      current.steps.push_back(step);
     } else if (keyword == "EXPECT") {
       Step step;
       step.kind = "expect";
@@ -1349,6 +1356,8 @@ void test_the_firmware_reproduces_every_corpus_case(void) {
           pending.push_back(board.output(i));
         }
         TEST_ASSERT_FALSE_MESSAGE(board.outputOverflowed(), where);
+      } else if (step.kind == "slip") {
+        rig.motion.setNextMoveSlipDeg(step.angle);
       } else if (step.kind == "expect") {
         TEST_ASSERT_FALSE_MESSAGE(pending.empty(), where);
         std::string actual = pending.front();

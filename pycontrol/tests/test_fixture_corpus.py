@@ -74,6 +74,8 @@ def parse_corpus(text):
                 current.steps.append(("angle", float(rest)))
             elif keyword == "TORQUE":
                 current.steps.append(("torque", float(rest)))
+            elif keyword == "SLIP":
+                current.steps.append(("slip", float(rest)))
             elif keyword == "EXPECT":
                 current.steps.append(("expect", rest))
             else:
@@ -131,6 +133,10 @@ def test_simulator_reproduces_corpus_case(case):
             # time so the classifier sees the sample.
             board.set_torque(payload)
             pending += board.advance(0)
+        elif kind == "slip":
+            # The next move lands this far short on the encoder (V1.13). No
+            # service step: the stimulus is consumed by the move.
+            board.set_next_move_slip(payload)
         elif kind == "expect":
             assert pending, "%s step %d: expected %r but no output was pending" % (
                 case.name,

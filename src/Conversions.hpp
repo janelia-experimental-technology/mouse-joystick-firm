@@ -426,6 +426,29 @@ constexpr uint32_t kEnableSettleMaxUs = 150000;
 // quantum cannot trip it. 200 microsteps is about 16 encoder counts.
 constexpr int32_t kFollowWindowMicrosteps = 200;
 
+// Settling on the encoder after a move (2026-10-07; uart-protocol.md V1.13).
+// Measured on pcb v1.0 unit A on 2026-10-06 (the PCB bring-up log, "the park
+// error measured"): with the ramp generator at its target the encoder landed
+// 0.35-0.77 deg short on every direction reversal and within 0.07 deg on a
+// same-direction move, independent of distance and not accumulating -- the
+// rotor's torque angle under the mechanism's friction at the bring-up current
+// plus lost motion in the drive train, not the encoder and not a step loss.
+// So a move is commanded relative to the encoder (XTARGET = XACTUAL +
+// (target - X_ENC)) and, once the ramp generator reports the target, the
+// firmware waits for X_ENC to stand still (within one count for
+// kMoveSettleStableUs, bounded at kMoveSettleMaxUs), then commands a
+// correction of the residual when it exceeds one encoder count, at most
+// kMoveSettleMaxCorrections times. TARGET carries the encoder's angle either
+// way. XACTUAL is never rewritten for this: a resync deletes the stall
+// detector (uart-protocol.md finding 5).
+constexpr int32_t kMoveSettleToleranceMicrosteps = 13; // one encoder count
+constexpr uint32_t kMoveSettleStableUs = 10000;
+constexpr uint32_t kMoveSettleMaxUs = 100000;
+constexpr uint8_t kMoveSettleMaxCorrections = 2;
+// The same tolerance in degrees, for the simulated backends (0.0914 deg).
+constexpr float kMoveSettleToleranceDeg =
+    microstepsToDegrees(kMoveSettleToleranceMicrosteps);
+
 // =============================================================================
 // pcb v1.0: the brake current sink and the torque bridge.
 // =============================================================================

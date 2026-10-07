@@ -275,6 +275,27 @@ section 9, Phase A.
       in `uart-protocol.md`; (2) same-direction approach (overshoot and
       return); (3) `IRUN` toward 17 when the thermal survey allows. Until
       then both tasks home before every trial.
+      **Option (1) done 2026-10-07 (uart-protocol.md V1.13), measured on
+      unit A (PCB bring-up log, "the encoder settle after a move"; evidence
+      `…-2026-10-07-0807-unitA-encoder-settle/`):** `TmcMotion` commands
+      moves relative to the encoder, waits after `position_reached` for
+      `X_ENC` to stand still (one count for 10 ms, bounded 100 ms), corrects
+      a residual above one count up to twice (`Conversions.hpp`
+      `kMoveSettle*`), reports `MOVE_SETTLE` in the QP trace; both simulators
+      mirror it with the corpus `SLIP` stimulus and three cases (156 Unity,
+      188 pytest, all 15 example/env builds). The same probe chain twice: all 16 `TARGET`s within 0.18°
+      (before: eight of eight short by 0.22–0.99°), the park at 0.00 and
+      +0.08; a reversal costs 150–260 ms more, an uncorrected move 10 ms.
+      The rig task's `home_each_trial` default is 0 now.
+- [ ] **Settle tolerance, one count or two (2026-10-07).** `MOVE_SETTLE`
+      shows the first correction removing most of a reversal's 0.6–1.0° and
+      1–2 counts remaining that a 13–25 microstep correction cannot move
+      against static friction at IRUN 8 (the ramp frame advances, the rotor
+      does not, and the next same-direction move overshoots by what was
+      stuck: probe 3 arrived 0.36° past). A two-count tolerance would skip
+      the ~100 ms second correction at the price of the last count; at
+      IRUN 17 the torque per microstep doubles. Decide with the thermal
+      survey; the constant is `kMoveSettleToleranceMicrosteps`.
 - [x] **Gate E (2026-10-06), passed on v1.0 unit A:** `tools/pycontrol_run.py` runs a task on the
       pyboard headlessly through pyControl's own `Pycboard` API (the GUI's
       path, no GUI); `pixi run -e pycontrol pycontrol-run`. Two things
@@ -304,7 +325,8 @@ section 9, Phase A.
       (−0.2 to −0.35 N·cm, the PCB plan's third finding) trips a 0.3 N·cm
       `touch` with nobody there — tare before `watch`; and the park after a
       trial ends ~1° short on the encoder (backlash on the direction
-      reversal) — home first when the park position matters.
+      reversal) — home first when the park position matters (fixed
+      2026-10-07, V1.13: the board settles on the encoder after every move).
 
 ## Parallel Observability Workstream — Updated 2026-09-30
 

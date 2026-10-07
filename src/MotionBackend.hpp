@@ -23,6 +23,8 @@
 
 #include <stdint.h>
 
+#include "Conversions.hpp" // the settle tolerance the simulation shares
+
 namespace mouse_joystick {
 
 // The firmware maximum for one homing cycle; the real backend's own bound
@@ -175,19 +177,43 @@ public:
 
   void poll(uint64_t now_us) override {
     now_us_ = now_us;
-    if (moving_ && now_us_ >= end_us_) {
-      moving_ = false;
-      angle_ = target_;
-      // Under commanded motion the encoder tracks the ramp generator. That they
-      // agree here is what makes their disagreement elsewhere mean something.
-      xactual_ = angle_;
-      if (is_home_) {
-        angle_ = 0.0;
-        xactual_ = 0.0;
-      }
-      completion_pending_ = true;
-      completion_was_home_ = is_home_;
+    if (!moving_ || now_us_ < end_us_) {
+      return;
     }
+    moving_ = false;
+    if (is_home_) {
+      // Homing writes both frames (TmcMotion's clearance datum).
+      angle_ = 0.0;
+      xactual_ = 0.0;
+      offset_ = 0.0;
+      completion_pending_ = true;
+      completion_was_home_ = true;
+      return;
+    }
+    // The ramp generator is at its target. Under commanded motion the encoder
+    // tracks it, so it is too -- unless the SLIP stimulus said otherwise: then
+    // it stopped short in the direction of travel and the two frames now
+    // differ by that much, which is what pcb v1.0 unit A did on every
+    // direction reversal (2026-10-06). The board then does what TmcMotion
+    // does (uart-protocol.md V1.13): judge the residual and command a
+    // correction of it, at most twice, before reporting TARGET. The judgement
+    // is immediate here; the firmware's wait for the encoder to stand still
+    // is a hardware matter, so every corpus TARGET without a SLIP is on time.
+    const double direction = (target_ >= start_) ? 1.0 : -1.0;
+    angle_ = target_ - direction * leg_slip_;
+    offset_ += direction * leg_slip_;
+    leg_slip_ = 0.0;
+    xactual_ = angle_ + offset_;
+    const double residual = target_ - angle_;
+    const double magnitude = (residual < 0.0) ? -residual : residual;
+    if (magnitude > conversions::kMoveSettleToleranceDeg &&
+        corrections_ < conversions::kMoveSettleMaxCorrections) {
+      ++corrections_;
+      start(false, target_, durationUs(magnitude));
+      return;
+    }
+    completion_pending_ = true;
+    completion_was_home_ = false;
   }
 
   bool isMoving() const override { return moving_; }
@@ -215,19 +241,17 @@ public:
     if (distance < 0.0) {
       distance = -distance;
     }
-    uint32_t duration_us = 0;
-    if (cfg_.v_max_deg_s > 0.0) {
-      duration_us =
-          static_cast<uint32_t>(distance / cfg_.v_max_deg_s * 1000000.0);
-    }
-    start(false, target_deg, duration_us);
+    corrections_ = 0;
+    leg_slip_ = next_slip_deg_; // the SLIP stimulus applies to this move only
+    next_slip_deg_ = 0.0;
+    start(false, target_deg, durationUs(distance));
     return true;
   }
 
   void abort() override {
     if (moving_) {
       angle_ = interpolate();
-      xactual_ = angle_;
+      xactual_ = angle_ + offset_;
       moving_ = false;
     }
     completion_pending_ = false;
@@ -235,7 +259,10 @@ public:
 
   double angleDeg() const override { return angle_; }
   double xactualDeg() const override { return xactual_; }
-  void resyncFromEncoder() override { xactual_ = angle_; }
+  void resyncFromEncoder() override {
+    xactual_ = angle_;
+    offset_ = 0.0;
+  }
 
   bool enableDriver() override { return cfg_.driver_enable_ok; }
   void releaseDriver() override {}
@@ -248,7 +275,19 @@ public:
   // involvement, so the encoder and the ramp generator genuinely diverge.
   void setEncoderAngleDeg(double deg) { angle_ = deg; }
 
+  // Test hook (the corpus's SLIP stimulus): the next commanded move lands
+  // this far short on the encoder, in its direction of travel, with the ramp
+  // generator at its target.
+  void setNextMoveSlipDeg(double deg) { next_slip_deg_ = deg; }
+
 private:
+  uint32_t durationUs(double distance_deg) const {
+    if (cfg_.v_max_deg_s <= 0.0) {
+      return 0;
+    }
+    return static_cast<uint32_t>(distance_deg / cfg_.v_max_deg_s * 1000000.0);
+  }
+
   void start(bool is_home, double target, uint32_t duration_us) {
     moving_ = true;
     is_home_ = is_home;
@@ -285,6 +324,13 @@ private:
 
   double angle_ = 0.0;
   double xactual_ = 0.0;
+  // xactual_ - angle_ between moves: the ramp generator's frame standing
+  // ahead of the encoder's by the lost motion a correction absorbed. Zero
+  // until a SLIP, zero again after a home or a resync.
+  double offset_ = 0.0;
+  double next_slip_deg_ = 0.0; // SLIP: for the next startMoveTo()
+  double leg_slip_ = 0.0;      // the slip of the leg in flight
+  uint8_t corrections_ = 0;    // correction legs so far in this move
 
   bool moving_ = false;
   bool is_home_ = false;

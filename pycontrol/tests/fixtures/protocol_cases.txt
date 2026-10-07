@@ -38,6 +38,12 @@
 #   TORQUE <Ncm>      the bridge reads <Ncm> from now on (a board with CAPS
 #                     torque), and the board services once so the classifier
 #                     sees the sample. Like ANGLE: takes effect in any state
+#   SLIP <deg>        the next commanded move lands <deg> short on the encoder,
+#                     in its direction of travel, with the ramp generator at
+#                     its target: the lost motion pcb v1.0 unit A showed on
+#                     every direction reversal (2026-10-06). Added 2026-10-07
+#                     for V1.13: the board corrects the residual before TARGET.
+#                     No service step; the stimulus is consumed by the move
 #   EXPECT <line>     the next output line, in order
 #   END               end of case; no further output may be pending
 #
@@ -54,6 +60,11 @@
 #   boot por, crumb 0 (the reset reason and last breadcrumb are the board's)
 #   deadband 0.5 deg          stream_hz 10          instrumentation on at boot
 #   pull direction = +angle   capture ring 1 kHz from RELEASED; pre_ms 500, post_ms 500
+#   a move whose encoder residual at arrival exceeds one encoder count
+#   (0.0914 deg) is corrected, at most twice, before TARGET (V1.13); the
+#   residual is judged at the instant of arrival (the firmware's wait for the
+#   encoder to stand still is a hardware matter), so a move without a SLIP
+#   reports TARGET on time
 #
 # Timestamps and durations are exact: `t` is the board's 64-bit microsecond
 # clock, and every deadline (watchdog, home bound, hold, timeout, maxdur, the
@@ -1081,4 +1092,87 @@ CASE touch-and-torque-in-the-trial-summary
   EXPECT cap;0;0.0;0.0
   EXPECT cap;1;0.0;0.0
   EXPECT cap;end
+END
+
+
+# --------------------------------------------------------- 2026-10-07 V1.13
+
+# TARGET means the encoder arrived. The ramp generator reaching its target is
+# not the joystick reaching it: on pcb v1.0 unit A every direction reversal
+# left the encoder 0.35-0.77 deg short with the ramp generator satisfied (the
+# PCB bring-up log, "the park error measured"). So the board judges the
+# residual between the encoder and the commanded target once the ramp
+# generator arrives, commands a correction of it (at most twice), and TARGET
+# follows the corrected move with the encoder's angle. 9 deg at 180 deg/s is
+# 50000 us; the 0.9 deg correction is 5000 us more. Until it lands the state is
+# ACTIVE and STATUS shows the two frames apart by the lost motion; afterwards
+# the ramp generator's frame stays ahead by it (xactual), the encoder is at
+# the target (angle), and the next move is commanded relative to the encoder,
+# so it lands on time and on target with the frames still apart.
+CASE target-waits-for-the-encoder-after-lost-motion
+  SEND hv;1;on
+  EXPECT ack;1
+  SEND home;2
+  EXPECT ack;2
+  ADVANCE 50000
+  EXPECT ev;HOMED;50000;angle=0.0
+  SEND arm;3
+  EXPECT ack;3
+  SLIP 0.9
+  SEND moveto;4;9.0
+  EXPECT ack;4
+  ADVANCE 50000
+  SEND status;5
+  EXPECT ack;5;state=ACTIVE;angle=8.1;xactual=9.0;torque=;brake=;homed=1;limit=0;faults=0;hv=1;t=100000
+  ADVANCE 5000
+  EXPECT ev;TARGET;105000;angle=9.0
+  SEND status;6
+  EXPECT ack;6;state=ARMED;angle=9.0;xactual=9.9;torque=;brake=;homed=1;limit=0;faults=0;hv=1;t=105000
+  SEND moveto;7;0.0
+  EXPECT ack;7
+  ADVANCE 50000
+  EXPECT ev;TARGET;155000;angle=0.0
+  SEND status;8
+  EXPECT ack;8;state=ARMED;angle=0.0;xactual=0.9;torque=;brake=;homed=1;limit=0;faults=0;hv=1;t=155000
+END
+
+# A residual within one encoder count is not corrected: TARGET is on time and
+# carries the encoder's angle, not the target.
+CASE a-residual-within-one-count-is-not-corrected
+  SEND hv;1;on
+  EXPECT ack;1
+  SEND home;2
+  EXPECT ack;2
+  ADVANCE 50000
+  EXPECT ev;HOMED;50000;angle=0.0
+  SEND arm;3
+  EXPECT ack;3
+  SLIP 0.08
+  SEND moveto;4;9.0
+  EXPECT ack;4
+  ADVANCE 50000
+  EXPECT ev;TARGET;100000;angle=8.92
+  SEND status;5
+  EXPECT ack;5;state=ARMED;angle=8.92;xactual=9.0;torque=;brake=;homed=1;limit=0;faults=0;hv=1;t=100000
+END
+
+# A STOP during the correction leg holds where the encoder is, as during any
+# move, and the resync on leaving ACTIVE brings the frames together.
+CASE stop-during-a-correction-resyncs-the-frames
+  SEND hv;1;on
+  EXPECT ack;1
+  SEND home;2
+  EXPECT ack;2
+  ADVANCE 50000
+  EXPECT ev;HOMED;50000;angle=0.0
+  SEND arm;3
+  EXPECT ack;3
+  SLIP 0.9
+  SEND moveto;4;9.0
+  EXPECT ack;4
+  ADVANCE 52500
+  SEND stop;5
+  EXPECT ack;5
+  SEND status;6
+  EXPECT ack;6;state=ARMED;angle=8.55;xactual=8.55;torque=;brake=;homed=1;limit=0;faults=0;hv=1;t=102500
 END

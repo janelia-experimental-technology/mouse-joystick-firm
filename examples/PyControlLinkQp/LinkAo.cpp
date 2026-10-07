@@ -65,6 +65,7 @@ private:
   uint8_t m_overBudgetStreak = 0U;
   uint16_t m_underBudgetStreak = 0U; // handled ticks well inside the budget
   uint32_t m_enableCount = 0U;
+  uint32_t m_settleCount = 0U;
   const char *m_lastState;
   bool m_brakeEngaging = false;
   float m_brakeLevel = 0.0f;
@@ -116,6 +117,7 @@ void Link::dictionaries() {
   QS_USR_DICTIONARY(LINK_WORK);
   QS_USR_DICTIONARY(BRAKE_STATE);
   QS_USR_DICTIONARY(POLL_STAT);
+  QS_USR_DICTIONARY(MOVE_SETTLE);
 #endif
 }
 
@@ -325,6 +327,15 @@ void Link::afterService() {
     QS_U32(0U, l_motion.enableSettleUs());
     QS_I32(0U, l_motion.enableSnapMicrosteps());
     QS_U16(0U, static_cast<uint16_t>(m_enableCount));
+    QS_END()
+  }
+  if (l_motion.settleCount() != m_settleCount) { // a move settled (V1.13)
+    m_settleCount = l_motion.settleCount();
+    QS_BEGIN_ID(MOVE_SETTLE, m_prio)
+    QS_I32(0U, l_motion.settleResidualFirstMicrosteps());
+    QS_I32(0U, l_motion.settleResidualLastMicrosteps());
+    QS_U8(0U, l_motion.settleCorrections());
+    QS_U32(0U, l_motion.settleUs());
     QS_END()
   }
 #endif

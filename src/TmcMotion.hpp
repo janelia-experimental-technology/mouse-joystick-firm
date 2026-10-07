@@ -218,11 +218,16 @@ private:
     ++poll_count_;
     if ((poll_count_ % kFullSnapshotEvery) != 0u) {
       const uint32_t e0 = micros();
-      angle_deg_ = conversions::microstepsToDegrees(
-          stepper_.encoder.readActualPosition());
+      const int32_t encoder = stepper_.encoder.readActualPosition();
+      angle_deg_ = conversions::microstepsToDegrees(encoder);
       const uint32_t e_cost = micros() - e0;
       if (e_cost > enc_read_max_us_) {
         enc_read_max_us_ = e_cost;
+      }
+      // Settling after a move watches the encoder on every poll, not only on
+      // the snapshot: the stand-still test is a 10 ms one (V1.13).
+      if (phase_ == Phase::kMoveSettle) {
+        pollSettle(encoder);
       }
       return;
     }
@@ -270,6 +275,9 @@ private:
     switch (phase_) {
       case Phase::kMove:
         pollMove(s, ramp);
+        break;
+      case Phase::kMoveSettle:
+        pollSettle(s.encoder);
         break;
       case Phase::kHomeBackoff:
         pollHomeBackoff(s, ramp);
@@ -361,8 +369,18 @@ public:
     }
     started_us_ = now_us_;
     MotionSetup::setJogVelocity(stepper_);
+    // Commanded relative to the encoder, not absolute in the ramp generator's
+    // frame (2026-10-07, uart-protocol.md V1.13). After a settled move the two
+    // frames differ by the lost motion the correction absorbed; an absolute
+    // XTARGET would put that difference into the next move, and a small move
+    // could even run the wrong way. XACTUAL is not rewritten: the follow check
+    // still sees commanded against measured travel.
+    move_target_microsteps_ =
+        conversions::degreesToMicrosteps(static_cast<float>(target_deg));
     move_start_position_ = stepper_.controller.readActualPosition();
-    commandTo(conversions::degreesToMicrosteps(static_cast<float>(target_deg)));
+    const int32_t encoder = stepper_.encoder.readActualPosition();
+    commandTo(move_start_position_ + (move_target_microsteps_ - encoder));
+    move_corrections_ = 0;
     phase_ = Phase::kMove;
     return true;
   }
@@ -491,6 +509,19 @@ public:
   int32_t enableSnapMicrosteps() const { return enable_snap_microsteps_; }
   uint32_t enableCount() const { return enable_count_; }
 
+  // What the last settled move did (uart-protocol.md V1.13), for the
+  // MOVE_SETTLE trace record: how many moves have settled, the residual
+  // between the encoder and the target when the ramp generator first arrived
+  // and when TARGET was reported (microsteps; 12.8 per encoder count), the
+  // corrections it took, and the time from that first arrival to TARGET.
+  uint32_t settleCount() const { return settle_count_; }
+  int32_t settleResidualFirstMicrosteps() const {
+    return settle_residual_first_;
+  }
+  int32_t settleResidualLastMicrosteps() const { return settle_residual_last_; }
+  uint8_t settleCorrections() const { return settle_corrections_last_; }
+  uint32_t settleUs() const { return settle_us_last_; }
+
   void releaseDriver() override {
     // Stop first, then release, so the joystick is not handed to the animal
     // mid-ramp. On a board with the electronic brake this ordering is not
@@ -514,6 +545,7 @@ private:
   enum class Phase : uint8_t {
     kIdle,
     kMove,
+    kMoveSettle, // the ramp generator arrived; the encoder is being judged
     kHomeBackoff,
     kHomeApproach,
     kHomeClearance,
@@ -669,7 +701,7 @@ private:
       return;
     }
     if (ramp.position_reached()) {
-      finish(/*was_home=*/false);
+      beginSettle(s.encoder);
       return;
     }
     // The mechanism stopped following the ramp generator: an end stop, a stall,
@@ -684,6 +716,60 @@ private:
     if (timedOut(cfg_.move_timeout_us)) {
       fail(fault::kOverTravel, "move_timeout");
     }
+  }
+
+  // The ramp generator has reached its target. Before TARGET is reported the
+  // encoder gets a bounded wait to stand still, and the residual between it
+  // and the commanded target then decides whether a correction move follows
+  // (uart-protocol.md V1.13; the measurement is the PCB bring-up log's "the
+  // park error measured", 2026-10-06: 0.35-0.77 deg short on every direction
+  // reversal with the ramp generator satisfied).
+  void beginSettle(int32_t encoder) {
+    if (move_corrections_ == 0) {
+      settle_started_us_ = now_us_;
+      settle_residual_first_ = move_target_microsteps_ - encoder;
+    }
+    settle_last_encoder_ = encoder;
+    settle_stable_since_us_ = now_us_;
+    settle_leg_started_us_ = now_us_;
+    phase_ = Phase::kMoveSettle;
+  }
+
+  void pollSettle(int32_t encoder) {
+    const int32_t d = encoder - settle_last_encoder_;
+    if (d > conversions::kMoveSettleToleranceMicrosteps ||
+        d < -conversions::kMoveSettleToleranceMicrosteps) {
+      settle_last_encoder_ = encoder;
+      settle_stable_since_us_ = now_us_;
+    }
+    const bool stable =
+        (now_us_ - settle_stable_since_us_) >= conversions::kMoveSettleStableUs;
+    const bool bounded =
+        (now_us_ - settle_leg_started_us_) >= conversions::kMoveSettleMaxUs;
+    if (!stable && !bounded) {
+      if (timedOut(cfg_.move_timeout_us)) {
+        fail(fault::kOverTravel, "move_timeout");
+      }
+      return;
+    }
+    const int32_t residual = move_target_microsteps_ - encoder;
+    const int32_t magnitude = (residual < 0) ? -residual : residual;
+    if (magnitude > conversions::kMoveSettleToleranceMicrosteps &&
+        move_corrections_ < conversions::kMoveSettleMaxCorrections) {
+      ++move_corrections_;
+      // The correction: the residual, from where the ramp generator stands
+      // (its target). The frames keep their difference; XACTUAL is not
+      // touched, so the follow check still judges this leg.
+      move_start_position_ = stepper_.controller.readActualPosition();
+      commandTo(move_start_position_ + residual);
+      phase_ = Phase::kMove;
+      return;
+    }
+    settle_residual_last_ = residual;
+    settle_corrections_last_ = move_corrections_;
+    settle_us_last_ = static_cast<uint32_t>(now_us_ - settle_started_us_);
+    ++settle_count_;
+    finish(/*was_home=*/false);
   }
 
   void pollHomeBackoff(const MotionSnapshot &s,
@@ -848,6 +934,17 @@ private:
   Phase phase_ = Phase::kIdle;
 
   int32_t move_start_position_ = 0;
+  int32_t move_target_microsteps_ = 0; // the commanded target, encoder frame
+  uint8_t move_corrections_ = 0;       // correction legs so far in this move
+  uint64_t settle_started_us_ = 0;     // the ramp generator's first arrival
+  uint64_t settle_leg_started_us_ = 0; // this leg's arrival
+  uint64_t settle_stable_since_us_ = 0;
+  int32_t settle_last_encoder_ = 0;
+  int32_t settle_residual_first_ = 0;
+  int32_t settle_residual_last_ = 0;
+  uint8_t settle_corrections_last_ = 0;
+  uint32_t settle_us_last_ = 0;
+  uint32_t settle_count_ = 0;
   int32_t window_position_ = 0;
   int32_t window_encoder_ = 0;
   float follow_ratio_ = 0.0f;

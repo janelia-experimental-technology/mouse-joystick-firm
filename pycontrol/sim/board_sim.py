@@ -140,6 +140,12 @@ class BoardSim:
     # plus the coil's lag), rounded to a number a corpus can read; the
     # firmware's hardware backend decides for itself from BRAKE_ISENSE.
     BRAKE_SETTLE_US = 10_000
+    # Settling on the encoder after a move (uart-protocol.md V1.13, 2026-10-07):
+    # a residual above one encoder count (12.8 of 51200 microsteps per
+    # revolution, 0.0914 deg) is corrected, at most twice, before TARGET. The
+    # firmware's constants are Conversions.hpp's kMoveSettle*.
+    SETTLE_TOLERANCE_DEG = 13 * 360.0 / 51200.0
+    SETTLE_MAX_CORRECTIONS = 2
     DEFAULT_PRE_MS = 500
     DEFAULT_POST_MS = 500
     PROFILES = ("present", "retract", "slow")
@@ -187,6 +193,11 @@ class BoardSim:
         # from a pull. Reconciling the two is `_resync_from_encoder`.
         self.angle = 0.0
         self.xactual = 0.0
+        # xactual - angle between moves: the ramp generator's frame standing
+        # ahead of the encoder's by the lost motion a correction absorbed
+        # (V1.13). Zero until a SLIP, zero again after a home or a resync.
+        self._offset = 0.0
+        self._slip_deg = 0.0  # the SLIP stimulus, for the next move only
         self.homed = False
         self.limit_asserted = False
         self.fault_mask = 0
@@ -286,21 +297,17 @@ class BoardSim:
         if self._motion is not None and self.now_us >= self._motion["end_us"]:
             motion = self._motion
             self._motion = None
-            self.angle = motion["target"]
-            # Under commanded motion the encoder tracks the ramp generator; that
-            # they agree here is what makes their disagreement elsewhere mean
-            # something.
-            self.xactual = self.angle
             if motion["kind"] == "home":
+                # Homing writes both frames (the firmware's clearance datum).
                 self._home_deadline = None
                 self.homed = True
                 self.angle = 0.0
                 self.xactual = 0.0
+                self._offset = 0.0
                 self.state = State.HOMED
                 self._emit("HOMED", {"angle": self.angle})
             else:
-                self.state = State.ARMED
-                self._emit("TARGET", {"angle": self.angle})
+                self._arrive(motion)
 
         # BRAKE in progress (a board with a brake): the drive is released only
         # once the brake is at its setpoint, and RELEASED is dated from here.
@@ -684,7 +691,7 @@ class BoardSim:
         # animal left it.
         if self._motion is not None:
             self.angle = self._interpolate()
-            self.xactual = self.angle
+            self.xactual = self.angle + self._offset
             self._motion = None
         self._home_deadline = None
         if self._brake_pending:
@@ -736,17 +743,49 @@ class BoardSim:
             # OVER_TRAVEL fault. The fault is for a position that got there.
             return P.encode_nak(seq, P.NAK_OUTOFRANGE)
 
+        self._motion = self._leg(target, slip=self._slip_deg, corrections=0)
+        self._slip_deg = 0.0  # the SLIP stimulus applies to this move only
+        self.state = State.ACTIVE
+        return P.encode_ack(seq)
+
+    def _leg(self, target, slip, corrections):
+        """One leg of a move at v_max from the encoder's angle to `target`."""
         distance = abs(target - self.angle)
         duration = int(distance / self.v_max * 1_000_000) if self.v_max else 0
-        self._motion = {
+        return {
             "kind": "move",
             "start": self.angle,
             "target": target,
             "start_us": self.now_us,
             "end_us": self.now_us + max(duration, 1),
+            "slip": slip,
+            "corrections": corrections,
         }
-        self.state = State.ACTIVE
-        return P.encode_ack(seq)
+
+    def _arrive(self, motion):
+        """The ramp generator reached a move's target (uart-protocol.md V1.13).
+
+        Under commanded motion the encoder tracks the ramp generator, so it is
+        at the target too - unless the SLIP stimulus said otherwise: then it
+        stopped short in the direction of travel and the two frames now differ
+        by that much, which is what pcb v1.0 unit A did on every direction
+        reversal (2026-10-06, "the park error measured"). The board then does
+        what `TmcMotion` does: judge the residual between the encoder and the
+        target and command a correction leg of it, at most twice, before
+        reporting TARGET with the encoder's angle. The judgement is immediate
+        here; the firmware's wait for the encoder to stand still is a hardware
+        matter, so every corpus TARGET without a SLIP is on time.
+        """
+        direction = 1.0 if motion["target"] >= motion["start"] else -1.0
+        self.angle = motion["target"] - direction * motion["slip"]
+        self._offset += direction * motion["slip"]
+        self.xactual = self.angle + self._offset
+        residual = motion["target"] - self.angle
+        if abs(residual) > self.SETTLE_TOLERANCE_DEG and motion["corrections"] < self.SETTLE_MAX_CORRECTIONS:
+            self._motion = self._leg(motion["target"], slip=0.0, corrections=motion["corrections"] + 1)
+            return  # still ACTIVE; TARGET follows the correction
+        self.state = State.ARMED
+        self._emit("TARGET", {"angle": self.angle})
 
     def _resync_from_encoder(self):
         """Reload the ramp generator's position from the encoder.
@@ -766,6 +805,7 @@ class BoardSim:
           compliant  divergence means the animal pulled  -> resync on exit
         """
         self.xactual = self.angle
+        self._offset = 0.0
 
     # ------------------------------------------------------ protocol v1 verbs
 
@@ -1162,6 +1202,12 @@ class BoardSim:
         """The corpus's TORQUE stimulus: the bridge reads this from now on (a
         board with `torque` in its caps); the runner services separately."""
         self.torque = float(torque_ncm)
+
+    def set_next_move_slip(self, degrees):
+        """The corpus's SLIP stimulus: the next commanded move lands this far
+        short on the encoder, in its direction of travel, with the ramp
+        generator at its target (V1.13)."""
+        self._slip_deg = float(degrees)
 
     def inject_limit(self):
         """Assert the limit switch outside homing: LIMIT event plus a fault."""
