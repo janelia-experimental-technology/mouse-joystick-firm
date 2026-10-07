@@ -150,6 +150,26 @@ definition and task from another checkout — the rig's — with the device
 files still coming from pyControl's `devices/` folder, where `pycontrol-link`
 points at `dist/` and where the rig's `opto_led.py` had to be symlinked too.
 
+### A fifth thing, 2026-10-07: do not kill the host process to stop a run
+
+The pyboard runs the task on its own, but it prints every event over USB
+CDC, and MicroPython's USB write blocks once the host stops draining it. So
+killing `tools/pycontrol_run.py` mid-run stalls the task within a few
+lines, the heartbeat stops with it, and the board trips its host-loss
+watchdog (`host_timeout`, rail off, `FAULTED`) about 100 ms later, which is
+what the board is for but not what was meant. To stop early, send pyControl's
+stop signal first (`Pycboard.stop_framework()`, a single `\x03` on the
+pyboard's serial port): the framework runs `run_end` (stop, disarm, rail
+off) and exits; then end the host. `mouse_joystick_check` now sends
+`clrfault` before `id` so a board left `FAULTED` by a run that ended badly
+is usable by the next one (a `clrfault` on a clean board is a plain ack).
+
+Also from the same morning: **three lines queued behind `home` cost one of
+them a `badframe`** — `home` blocks the board for ~130 ms (the handoff's
+`hv on`/`home` blocking note) and the task had sent `angscale` and
+`angout` right behind it. Sent behind the non-blocking present move instead
+they are fine. Keep configuration lines away from the two blocking verbs.
+
 ## Gate E Passed On v1.0 Unit A (2026-10-06)
 
 `pixi run -e pycontrol pycontrol-run <pyboard port> mouse_joystick_bringup

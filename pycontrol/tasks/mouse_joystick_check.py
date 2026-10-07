@@ -91,6 +91,19 @@ v.instr = 1
 # distance (encoder) or accumulating per move (motor).
 v.park = 1
 v.probe_i = 0
+# Bench knobs for the oscilloscope (2026-10-07): hold = 1 stops after RELEASED
+# and stays there, brake set and drive released, printing status every
+# status_period_ms, until the run ends (no watch, no TRIAL, no park), so a
+# hand can move the joystick against the brake while the angle and torque
+# BNCs are on a scope; angout = 1 turns the angle output on (ANGSCALE
+# ang_lo..ang_hi, the board's travel: LIMITS travel_lo/travel_hi, -10.125..0
+# on pcb v1.0 with the rig firmware), sent right behind the present move
+# (acks in `moving` are ignored; behind `home` one of them was lost).
+v.hold = 0
+v.status_period_ms = 2000
+v.angout = 0
+v.ang_lo = -10.125
+v.ang_hi = 0.0
 PROBE_MOVES = [-5.0, -2.5, 0.0, -2.5, -5.0, 0.0]
 # The state the task is in, kept by hand: pyControl's task API has no
 # "current state" query (found on the pyboard 2026-10-06), and the replies to
@@ -109,6 +122,7 @@ states = [
     "moving",
     "braking",
     "watching",
+    "holding",
     "parking",
     "done",
     "faulted",
@@ -139,6 +153,11 @@ def board():
 
 def run_start():
     set_timer("heartbeat", v.heartbeat_interval * ms, output_event=False)
+    # A board left FAULTED by the previous run (a host that died mid-session
+    # trips its host-loss watchdog) would refuse `hv on`; `clrfault` on a
+    # clean board is a plain ack. Sent BEFORE `id` so its ack lands while the
+    # phase is still `identifying`, where no ack is interpreted.
+    board().clear_fault()
     print("identifying the {} board".format(v.board))
     board().identify()
 
@@ -195,6 +214,14 @@ def moving(event):
         v.phase = "moving"
         print("presenting: moving to {} deg".format(v.move_degrees))
         board().move_to(v.move_degrees)
+        if v.angout:
+            # Sent behind the move, not behind `home`: the home blocks the
+            # board ~130 ms and three lines queued behind it cost one a
+            # `badframe` on 2026-10-07; a move is non-blocking. The acks in
+            # `moving` are ignored (an ack in `arming` would be read as arm's).
+            board().angle_scale(v.ang_lo, v.ang_hi)
+            board().angle_output(True)
+            print("angle output on, {} to {} deg onto the BNC".format(v.ang_lo, v.ang_hi))
 
 
 def braking(event):
@@ -221,6 +248,20 @@ def watching(event):
         if board().has("torque"):
             board().torque_zero()
         board().watch(v.pull_degrees, v.push_degrees, v.watch_timeout_ms, touch_ncm=v.touch_ncm)
+
+
+def holding(event):
+    # RELEASED with the brake at v.brake_ncm and no watch: the joystick is
+    # the hand's until the run ends (run_end stops, disarms, drops the rail).
+    if event == "entry":
+        v.phase = "holding"
+        print("holding RELEASED with brake {} N.cm; move the joystick by hand; status every {} ms".format(
+            v.brake_ncm, v.status_period_ms))
+        board().status()
+        set_timer("status_later", v.status_period_ms * ms, output_event=False)
+    elif event == "status_later":
+        board().status()
+        set_timer("status_later", v.status_period_ms * ms, output_event=False)
 
 
 def parking(event):
@@ -306,7 +347,7 @@ def _handle(message):
                 else:
                     goto_state("done")
         elif name == "RELEASED":
-            goto_state("watching")
+            goto_state("holding" if v.hold else "watching")
         elif name in ("PULL", "PUSH", "NOMOVE", "ABORT"):
             v.outcome = name
             print("outcome {} at angle {} torque {}".format(name, data.get("angle"), data.get("torque")))
