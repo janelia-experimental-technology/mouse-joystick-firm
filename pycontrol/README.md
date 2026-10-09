@@ -42,6 +42,66 @@ The bench controller was upgraded 1.22.2 -> 1.26.1 on 2026-09-03 (standard
 `PYBV11` build, not `THREAD`). **The rig's controller has not been checked.**
 Full account in `../../mouse-joystick-pcb/docs/pycontrol-interface.md`.
 
+## Setting Up Another Controller (and what the delivered one carries)
+
+Read off the Rig 1 controller on 2026-10-09, the morning it left the bench,
+through the raw REPL. Nothing on it is unique: every file comes from a
+repository, so a replacement controller is built from the recipe below and
+needs nothing copied from this one.
+
+| Item | Value |
+| --- | --- |
+| Hardware | pyboard PYBv1.1 (STM32F405RG) on a pyControl Breakout 1.2; no modification to either |
+| USB serial / `machine.unique_id()` | `397734803233` / `b'M\x00B\x00\x0bQ323459'` |
+| MicroPython | `v1.26.1 on 2025-09-11`, build `PYBV11` (standard, not THREAD); upgraded from 1.22.2 on 2026-09-03 |
+| pyControl framework | 2.1.1 (`pyControl/`: `__init__` 137, `audio` 3775, `framework` 7099, `hardware` 21922, `state_machine` 4357, `timer` 2691, `utility` 6061 bytes) |
+| `devices/` | `__init__` 276, `breakout_1_2` 927, `frame_trigger` 1093, `uart_handler` 871 (pyControl's own); `mouse_joystick` 7256, `mouse_joystick_protocol` 7666 (this repository's lean copies, as on the `joystick-rig` branch); `opto_led` 4207 (`joystick-rig`) |
+| `hardware_definition.py` | 2157 bytes: `joystick-rig` `hardware_definition_joystick.py` |
+| `task_file.py` | 6905 bytes: `joystick-rig` `tasks/rig1/joystick_trial.py` |
+| `boot.py`, `main.py` | stock (454 and 34 bytes, nothing enabled) |
+| Flash | 190 blocks of 512 bytes (95 KB), 15 free (7.5 KB) with everything above loaded |
+
+The researcher's GUI replaces the hardware definition, the task and the
+device files on first use (the guide in `joystick-rig`), so only the
+MicroPython version is state the GUI cannot restore.
+
+### Recipe for a new Breakout 1.2 controller
+
+1. **Check the interpreter first**, over the pyboard's USB REPL:
+   `import sys; sys.implementation.version` must be `(1, 26, …)` or newer.
+   pyControl 2.1.1's `UART_handler` asserts on it and the joystick device
+   class cannot be instantiated below 1.26 (the section above).
+2. **If it is older, flash MicroPython 1.26.1, standard `PYBV11` build**
+   (micropython.org/download/PYBV11, the `.dfu` file). Back the filesystem
+   up first (`mpremote connect <port> fs cp -r :/flash <dir>`, or mount the
+   board as mass storage and copy). Put the board into DFU mode with
+   `machine.bootloader()` at the REPL (or jumper BOOT0 to 3V3 and press
+   reset), then `dfu-util --alt 0 -D PYBV11-<date>-v1.26.1.dfu` (or
+   MicroPython's `pydfu.py -u`). The firmware writes flash sector 0 and
+   sectors 5 and up; the filesystem lives in sectors 1–4 and survives, which
+   was verified on the bench controller. The tool used on 2026-09-03 was not
+   recorded; both of the above work.
+3. **pyControl 2.1.1 on the host** (the researcher's machine, or the
+   `pycontrol-code` checkout here), then **Config → Load framework**. This
+   wipes the device files and the hardware definition on the board, which is
+   wanted: pyControl never removes a device file otherwise, and stale ones
+   are what fill the flash.
+4. **Device files** into pyControl's `devices/` folder: `mouse_joystick.py`
+   and `mouse_joystick_protocol.py` (this repository's `dist/devices/`,
+   identical to the copies on the `joystick-rig` branch) and the rig's
+   `opto_led.py`. `frame_trigger.py` and `breakout_1_2.py` ship with pyControl.
+5. **Load the hardware definition**, `joystick-rig`'s
+   `hardware_definition_joystick.py` (left joystick port 1, right port 4,
+   solenoid port 5, camera trigger BNC_1, Rsync DAC_2), then **upload the
+   task** `tasks/rig1/joystick_trial.py`. Expect about 7.5 KB free
+   afterwards. "Insufficient space on pyboard filesystem" means a stale
+   device file: repeat from step 3.
+6. **Verify** with two trials and nobody at the joystick, as in
+   `instrument-control/docs/rig-day.md` ("Rehearsal before the move"):
+   `tools/pycontrol_run.py --hwd-path … --task-dir … --task joystick_trial
+   --set n_trials=2`; each board answers its identity, homes, presents at −5°,
+   reports `NOMOVE`, parks at 0°.
+
 ## Layout
 
 | Path | Runs on | Delivered by |
