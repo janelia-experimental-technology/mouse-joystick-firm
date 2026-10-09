@@ -346,6 +346,28 @@ def test_poll_returns_nothing_when_the_board_is_silent(device):
     assert device.poll() == []
 
 
+def test_poll_survives_line_noise_and_loses_only_its_line(device, link):
+    """A byte above 0x7F cannot come from the board, whose protocol is ASCII;
+    it comes from the link (a board resetting mid-byte, a plug seated live).
+    MicroPython's `decode` raises UnicodeError on it, and an exception inside
+    poll() ends the pyControl run without `run_end`: rail up, heartbeat gone,
+    the board's watchdog left to drop the rail (review comment on
+    joystick-rig PR #8, 2026-10-09). The noise may cost the line it lands in,
+    which decodes as `bad`; the replies on either side must come through.
+    """
+    device.ping()  # ack;1 is queued whole
+    link.inject(b"\xff\xfe")  # noise, then the next reply shares its line
+    device.status()  # ack;2;... now begins with the noise
+    device.ping()  # ack;3, clean
+
+    messages = device.poll()
+
+    kinds = [m[0] for m in messages]
+    assert kinds == [P.KIND_ACK, P.KIND_BAD, P.KIND_ACK]
+    assert messages[0][1] == 1 and messages[2][1] == 3
+    assert device.poll() == [], "nothing of the noise may linger in the buffer"
+
+
 def test_events_and_replies_arrive_on_the_same_channel(device, link):
     """A host waiting for an ack has to cope with an event arriving alongside it.
 

@@ -147,7 +147,18 @@ class MouseJoystick:
         data = self._read_available()
         if data:
             if isinstance(data, (bytes, bytearray)):
-                data = data.decode("utf-8")
+                try:
+                    data = data.decode("utf-8")
+                except UnicodeError:
+                    # The protocol is ASCII, so a byte above 0x7F is line noise
+                    # (a board resetting mid-byte, a plug seated live), and
+                    # MicroPython's decode raises on it. Raised out of poll()
+                    # it would end the pyControl run without run_end: rail up,
+                    # heartbeat gone, the board's watchdog left to tidy up
+                    # (review of 2026-10-09). Each bad byte becomes '?' so
+                    # only its own line decodes as `bad`; the lines around it
+                    # survive. Slow path, taken only on noise.
+                    data = "".join(chr(b) if b < 128 else "?" for b in data)
             self._rx += data
 
         messages = []

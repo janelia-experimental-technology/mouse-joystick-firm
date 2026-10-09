@@ -31,7 +31,7 @@ class SimLink:
         self.handler = None
         self.init_kwargs = None
         self.written = []
-        self._pending = ""
+        self._pending = b""  # bytes, as the wire is: noise can be injected
 
     # -- machine.UART surface -------------------------------------------------
 
@@ -57,7 +57,7 @@ class SimLink:
             limit = min(limit, int(nbytes))
         data = self._pending[:limit]
         self._pending = self._pending[limit:]
-        return data.encode("utf-8")
+        return data
 
     def any(self):
         return len(self._pending)
@@ -68,9 +68,13 @@ class SimLink:
         """Advance the simulated board's clock and queue anything it emits."""
         self._absorb(self.sim.advance(us))
 
+    def inject(self, raw):
+        """Queue raw bytes as if the wire had delivered them: line noise."""
+        self._pending += bytes(raw)
+
     def _absorb(self, lines):
         for line in lines:
-            self._pending += line + "\n"
+            self._pending += (line + "\n").encode("utf-8")
 
 
 def install(link):
