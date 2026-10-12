@@ -41,3 +41,4 @@ results, 14:10:
     linkloss_b_board_state_after.log: over the restored link, board 9 answered faults mask=1 host_timeout, hv=0, status state=FAULTED angle=-4.591 xactual=-5.224 homed=1 (the lever relaxed from -5.041 once the rail dropped)
     linkloss_c_recovery.log/.json: the next normal session (watch 2000 ms): run_start's clrfault cleared the fault; HOMED 1.06 s, TARGET -5.041, RELEASED, NOMOVE, TRIAL, park 0.0, session complete
   end of session 15:40
+  scripts/: the stdlib REPL helpers that drove the session (version, backup, id probe, faults probe) with a README of the tool chain used
