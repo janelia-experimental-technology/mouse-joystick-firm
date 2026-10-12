@@ -94,6 +94,14 @@ and exits. The symptom is a GUI that does not open with nothing on the
 terminal. [`pycontrol/README.md`](pycontrol/README.md) covers the device
 class, what the rig's controller carries and how to set up another one.
 
+`tools/sim_task.py` runs a pyControl task on the host against the board
+simulator, with a chosen reply dropped or corrupted, so a task's handling of
+a lost line can be exercised without a pyboard or a board:
+
+```sh
+pixi run -e pycontrol python tools/sim_task.py path/to/joystick_trial.py drop-trial 1
+```
+
 ## Bring-Up Is Staged
 
 The board has two power domains with a bus switch between the MCU and everything
