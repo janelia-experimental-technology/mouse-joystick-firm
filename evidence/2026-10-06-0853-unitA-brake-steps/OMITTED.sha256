@@ -1,0 +1,4 @@
+# Raw captures not copied into this repository (sha256, bytes, path).
+# The files are in the qp-arduino-example repository under evidence/2026-10-06-0853-unitA-brake-steps/ (see docs/development.md) and available on request.
+3877e35f5b1c6897caaf87e6cc976fc417cca39e662f5c574e94af2c0a42f068          693  captures/p0_reboot.vcd
+7f950fd75382d9082c02003b30da91f7218b51abfde999e2e86e98069420b259        31417  captures/p1_steps.vcd

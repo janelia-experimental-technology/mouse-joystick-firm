@@ -1,0 +1,162 @@
+
+================================================================
+ mouse-joystick-pcb  RP2040 self test
+================================================================
+ 36 V input absent, switched domain off, GPIO bus isolated.
+ This test cannot reach the TMC5130A and does not try.
+
+[1] identity
+    flash unique id: E4654C159F171E34
+    ^ this is the board serial. Calibration belongs to it, not
+      to a joystick position, and two boards in one rig are
+      independently suspect.
+    usb manufacturer: Orb Weaver
+    usb product: mouse-joystick-pcb
+    built: Oct  5 2026 11:29:57
+    targets board revision: rev 1  (pcb v0.3, angle output DAC on SPI1)
+    GP10, GP11 and GP13 carry the DAC bus, so they are NOT
+      exercised as spare pads: 9 pads here against 12 on
+      rev 0, and 24 checks against 27. pcb HEAD is v1.0,
+      which is rev 2, not this.
+
+[2] reset
+    reason: software (3)
+    watchdog caused reboot: yes
+
+[3] clocks
+    clk_ref  (xosc): 12000 kHz
+    clk_sys        : 133000 kHz
+    clk_peri       : 48000 kHz
+    clk_usb        : 48000 kHz
+    clk_adc        : 48000 kHz
+    clk_sys measured against clk_ref: 133000 kHz
+    [ ok ] clk_sys within 1% of 133000 kHz
+    note: the counter measures clk_sys *against* the 12 MHz
+      crystal, so it proves the PLL, not the crystal. The
+      crystal's own absolute proof is that you are reading this
+      at all: USB full speed needs 48 MHz within 0.25%, derived
+      from XOSC. Use the 'k' command to measure it against your
+      host clock.
+
+[4] qspi flash (U502 W25Q128JVZPIQ, 16 MiB expected)
+    [ ok ] unique id read back plausible (flash responds)
+    declared size: 16 MiB
+    [ ok ] declared size is 16 MiB
+    offset +2 MiB:
+    [ ok ] does not alias offset 0
+    offset +4 MiB:
+    [ ok ] does not alias offset 0
+    offset +8 MiB:
+    [ ok ] does not alias offset 0
+
+[5] ram
+    heap total/used/free: 252228/100/252128
+    [ ok ] 16 KiB heap allocation
+    [ ok ] pattern walk over 16 KiB
+
+[6] resistor-defined levels
+    Captured at boot, internal pulls off, before anything drove
+      a pin, so each level comes from a board resistor. A failure
+      here is a missing part, not firmware. v0.3 refdes.
+    GP9  ~{BUS_SW_EN}    = high
+    [ ok ] R601 7.87k holds the GPIO bus isolated
+    GP24 ~{INSTR_BUF_OE} = high
+    [ ok ] buffer OE pull-ups hold the instrument port silent
+    GP1  PYC_UART_RX     = high
+    [ ok ] R403 10k holds the pyControl RX idle high
+    GP29 ~{HV_FAULT}     = high
+    [ ok ] R1905 10k present and no latched 36 V fault
+
+[7] spare pads
+    Routed nowhere, so an internal pull must win in both
+      directions. A pad that will not move is shorted; one that
+      reads wrong either way is an open or a bridged neighbour.
+    [ ok ] GP12 pull-up->1 pull-down->0
+    [ ok ] GP15 pull-up->1 pull-down->0
+    [ ok ] GP16 pull-up->1 pull-down->0
+    [ ok ] GP17 pull-up->1 pull-down->0
+    [ ok ] GP18 pull-up->1 pull-down->0
+    [ ok ] GP20 pull-up->1 pull-down->0
+    [ ok ] GP22 pull-up->1 pull-down->0
+    [ ok ] GP23 pull-up->1 pull-down->0
+    [ ok ] GP27 pull-up->1 pull-down->0
+
+[8] adc
+    GP26 SW_RAIL_SENSE_DIV_2: 12 counts = 0.0097 V divided = 0.0193 V on +3.3V_SW
+    [ ok ] +3.3V_SW is off (below 0.30 V)
+    GP28 HV_SNS: 10 counts = 0.0081 V across R1907 249R
+    [ ok ] no 36 V load current (HV_SNS below 0.10 V)
+    note: HV_SNS reads zero regardless while HV_DIAG_EN is low.
+      Stage 1 keeps it low on purpose, so this check confirms the
+      quiet state rather than the sense chain.
+    internal temperature: 28.5 C
+    [ ok ] die temperature plausible (ADC and ADC_AVDD alive)
+
+----------------------------------------------------------------
+ result: 24 checks, 0 failed
+----------------------------------------------------------------
+ Record these numbers in mouse-joystick-pcb/docs/bringup-log.md
+ against this board's serial. Numbers with units, not pass marks.
+
+commands
+  ?  this menu
+  r  re-run the full self test
+  a  read the ADC channels once
+  t  pulse FW_TRIG0/FW_TRIG1 into InstrumentPort-40
+  I  beacon the board serial on the triggers, so a
+     capture identifies which board it came from
+  i  toggle the instrumentation buffers, which silences
+     or restores the 1 Hz FW_TRIG0 heartbeat
+  k  10 s clock tick stream, for host-side crystal check
+  u  pyControl UART loopback (needs DIO-A shorted to DIO-B)
+  B  reboot into BOOTSEL for reflashing
+  R  reboot
+
+There is deliberately no command to enable HV_EN or the GPIO
+isolation bus switch. Stage 1 cannot energise anything.
+
+
+##### send 'a' at +14.1 s
+[8] adc
+    GP26 SW_RAIL_SENSE_DIV_2: 12 counts = 0.0097 V divided = 0.0193 V on +3.3V_SW
+    [ ok ] +3.3V_SW is off (below 0.30 V)
+    GP28 HV_SNS: 13 counts = 0.0105 V across R1907 249R
+    [ ok ] no 36 V load current (HV_SNS below 0.10 V)
+    note: HV_SNS reads zero regardless while HV_DIAG_EN is low.
+      Stage 1 keeps it low on purpose, so this check confirms the
+      quiet state rather than the sense chain.
+    internal temperature: 28.5 C
+    [ ok ] die temperature plausible (ADC and ADC_AVDD alive)
+
+##### send 't' at +16.2 s
+Pulsing FW_TRIG0 (GP25) and FW_TRIG1 (GP21): 1000 cycles at 200 us period.
+Watch InstrumentPort-40 TRIG0 and TRIG1. FW_TRIG1 runs at half
+the rate of FW_TRIG0, so a capture that shows one without the
+other has a buffer or port problem rather than a pin problem.
+Done.
+
+##### send 'I' at +18.5 s
+Beaconing board identity on InstrumentPort-40: E4654C159F171E34
+  TRIG1 (ch17) high 50 ms starts a frame; TRIG0 (ch16) then
+  clocks 64 bits MSB first, each valid on TRIG1 at the
+  rising edge. Trigger the capture on ch17 rising.
+  3 frames, 134 ms each.
+  No 36 V and no bus needed: U1801 runs from +3.3V_MCU, so
+  this reaches the port with the switched domain dark.
+Done.
+
+##### send 'k' at +21.0 s
+Emitting one line per second for 10 s. Timestamp these at the host and compare.
+A 12 MHz crystal off by 1% shows up as 10 ms of drift per
+second; the on-chip counter cannot see that error at all.
+tick 1  rp2040 micros elapsed: 1000166
+tick 2  rp2040 micros elapsed: 2000118
+tick 3  rp2040 micros elapsed: 3000126
+tick 4  rp2040 micros elapsed: 4000102
+tick 5  rp2040 micros elapsed: 5000107
+tick 6  rp2040 micros elapsed: 6000092
+tick 7  rp2040 micros elapsed: 7000129
+tick 8  rp2040 micros elapsed: 8000106
+tick 9  rp2040 micros elapsed: 9000102
+tick 10  rp2040 micros elapsed: 10000094
+Done.

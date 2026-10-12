@@ -237,7 +237,7 @@ mouse_joystick_check 50` (the `Pycboard` path pyControl's GUI uses, no GUI)
 uploaded the lean device files, the hardware definition and the task to the
 PYBV11 (MicroPython 1.26.1, pyControl framework 2.1.1) and ran the sequence
 against unit A over the RJ-45 on Breakout 1.2 port 4, twice (runs
-`qp-arduino-example/evidence/2026-10-06-1019-unitA-gate-e/` and `-1037-`):
+`evidence/2026-10-06-1019-unitA-gate-e/` and `-1037-`):
 
 | Task time | What happened (run 1037, board freshly booted) |
 | --- | --- |

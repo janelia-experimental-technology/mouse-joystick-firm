@@ -1,0 +1,20 @@
+##### unit A brake/torque session start 2026-10-06T08:48:35-04:00
+##### warming the guix shell 2026-10-06T08:48:35-04:00
+##### guix shell ready 2026-10-06T08:48:35-04:00
+##### unit A at /dev/serial/by-id/usb-Orb_Weaver_mouse-joystick-pcb_E4654C159F274534-if00 2026-10-06T08:48:35-04:00
+##### capture p0_reboot running for 8000 ms at 10m on CH0,CH1,CH24,CH27,CH30,CH31 2026-10-06T08:48:38-04:00
+##### waiting for capture p0_reboot 2026-10-06T08:48:41-04:00
+##### capture p0_reboot complete: 320316 bytes 2026-10-06T08:48:45-04:00
+##### capture p1_bringup running for 20000 ms at 10m on CH0,CH1,CH16,CH17,CH18,CH19,CH20,CH21,CH22,CH23,CH24,CH27 2026-10-06T08:48:48-04:00
+##### waiting for capture p1_bringup 2026-10-06T08:48:58-04:00
+##### capture p1_bringup complete: 799953 bytes 2026-10-06T08:49:10-04:00
+##### capture p2_brake running for 60000 ms at 1m on CH0,CH1,CH16,CH17,CH18,CH19,CH20,CH21,CH22,CH23,CH24,CH27 2026-10-06T08:49:13-04:00
+##### waiting for capture p2_brake 2026-10-06T08:49:32-04:00
+##### capture p2_brake complete: 240846 bytes 2026-10-06T08:50:12-04:00
+##### capture p3_torque running for 30000 ms at 10m on CH0,CH1,CH16,CH17,CH18,CH19,CH20,CH21,CH22,CH23,CH24,CH27 2026-10-06T08:50:15-04:00
+##### waiting for capture p3_torque 2026-10-06T08:50:36-04:00
+##### capture p3_torque complete: 1330214 bytes 2026-10-06T08:50:49-04:00
+##### capture p4_live running for 45000 ms at 10m on CH0,CH1,CH16,CH17,CH18,CH19,CH20,CH21,CH22,CH23,CH24,CH27 2026-10-06T08:50:53-04:00
+##### waiting for capture p4_live 2026-10-06T08:51:16-04:00
+##### capture p4_live complete: 2305549 bytes 2026-10-06T08:51:45-04:00
+##### session done; the rail is off by x. Transcribe consoles/*.log into mouse-joystick-pcb/docs/bringup-log.md under v1.0 unit A. 2026-10-06T08:51:54-04:00

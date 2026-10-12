@@ -1,0 +1,3 @@
+# Raw captures not copied into this repository (sha256, bytes, path).
+# The files are in the qp-arduino-example repository under evidence/2026-10-06-1001-unitA-uart0-protocol/ (see docs/development.md) and available on request.
+1ddec72ec1255635bfc3d7b1296b0f9a9d32dec35e1af895cd5811aaf36c8047      2943754  captures/uart0_protocol.sr

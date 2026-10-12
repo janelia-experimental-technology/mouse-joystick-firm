@@ -1,0 +1,93 @@
+{
+  "name": "la1",
+  "capture_file": "la1.sr",
+  "path": "evidence/which/captures/la1.sr",
+  "meta_file": "la1.meta.json",
+  "ok": true,
+  "error": null,
+  "no_trigger": false,
+  "started_at": "2026-10-09T09:20:11-04:00",
+  "finished_at": "2026-10-09T09:20:14-04:00",
+  "wall_s": 3.223,
+  "trigger": null,
+  "pre_trigger_pct": null,
+  "profile": {
+    "name": "mouse-joystick-pcb-v1.0-digital50-pycontrol",
+    "path": "fixtures/mouse-joystick-pcb-v1.0/profile.toml",
+    "source": "instrument-control fixtures/mouse-joystick-pcb-v1.0/profile.toml (original, 2026-10-07)"
+  },
+  "board": {
+    "repository": "mouse-joystick-pcb",
+    "revision": "v1.0",
+    "port": "digital-50",
+    "port_map": "docs/interface-map.md#instrument_port_digital_50_dut_ffc_boundary_vertical",
+    "known_serials": [
+      "E4654C159F274534",
+      "E4654C159F404534"
+    ]
+  },
+  "firmware": {
+    "repository": "mouse-joystick-firm",
+    "build": "examples/PyControlLinkQp",
+    "environment": "mouse_joystick_qp_rev2",
+    "revision": "51322e7",
+    "trace_records": "examples/PyControlLinkQp/LinkAo.hpp (LinkRecords), Bsp.cpp (BspRecords)",
+    "link_codec": "pycontrol/devices/mouse_joystick_protocol.py",
+    "link_spec": "mouse-joystick-pcb/docs/uart-protocol.md (Protocol v1 Proposal, proto=2)"
+  },
+  "adapter": {
+    "mapping": "straight",
+    "revision": "v2.0"
+  },
+  "analyzer": {
+    "driver": "kingst-la2016",
+    "conn": "1.18",
+    "topology": "1-5.1",
+    "driver_spec": "kingst-la2016:conn=1.18",
+    "selected_by": "--analyzer topology"
+  },
+  "roles": {
+    "marker0": "CH0",
+    "marker1": "CH1",
+    "trace": "CH1",
+    "link_tx": "CH2",
+    "link_rx": "CH3",
+    "beacon_clock": "CH0",
+    "beacon_data": "CH1"
+  },
+  "channels": [
+    "CH0",
+    "CH1",
+    "CH2",
+    "CH3"
+  ],
+  "samplerate_hz": 1000000,
+  "seconds": 3.0,
+  "samples_requested": 3000000,
+  "samples_captured": 3000716,
+  "duration_s": 3.000716,
+  "channels_captured": [
+    "CH0",
+    "CH1",
+    "CH2",
+    "CH3"
+  ],
+  "command": [
+    "/gnu/store/npcjawnwlwalb3c5z9p78chdkk996lsy-profile/bin/sigrok-cli",
+    "-d",
+    "kingst-la2016:conn=1.18",
+    "-C",
+    "CH0,CH1,CH2,CH3",
+    "-c",
+    "samplerate=1000000",
+    "--samples",
+    "3000000",
+    "-o",
+    "evidence/which/captures/la1.sr",
+    "-O",
+    "srzip"
+  ],
+  "returncode": 0,
+  "stderr": "",
+  "warnings": []
+}

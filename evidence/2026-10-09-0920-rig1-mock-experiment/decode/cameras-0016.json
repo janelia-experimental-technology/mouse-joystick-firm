@@ -1,0 +1,621 @@
+{
+  "name": "cameras-0016",
+  "decoded_at": "2026-10-09T09:24:52-04:00",
+  "profile": {
+    "name": "camera-gpio-interface-pcb-v1.0-digital50",
+    "path": "fixtures/camera-gpio-interface-pcb-v1.0/profile.toml"
+  },
+  "capture": {
+    "path": "evidence/2026-10-09-rig1/captures/cameras-0016.sr",
+    "version": "2",
+    "sigrok_version": "0.6.0",
+    "samplerate_hz": 2000000,
+    "unitsize": 4,
+    "channels": [
+      "CH0",
+      "CH1",
+      "CH2",
+      "CH3",
+      "CH4",
+      "CH5",
+      "CH6",
+      "CH7",
+      "CH8",
+      "CH9",
+      "CH10",
+      "CH11",
+      "CH12",
+      "CH13",
+      "CH14",
+      "CH15",
+      "CH16",
+      "CH17"
+    ],
+    "sample_count": 30001496,
+    "duration_s": 15.000748,
+    "chunks": 29
+  },
+  "evidence_dir": "evidence/2026-10-09-rig1",
+  "roles_present": {
+    "trig_in": "CH0",
+    "sync_in": "CH1",
+    "sync_out": "CH2",
+    "cam1_l0": "CH3",
+    "cam1_l1": "CH4",
+    "cam1_l2": "CH5",
+    "cam1_l3": "CH6",
+    "cam1_out": "CH7",
+    "cam2_l0": "CH8",
+    "cam2_l1": "CH9",
+    "cam2_l2": "CH10",
+    "cam2_l3": "CH11",
+    "cam2_out": "CH12",
+    "cam3_l0": "CH13",
+    "cam3_l1": "CH14",
+    "cam3_l2": "CH15",
+    "cam3_l3": "CH16",
+    "cam3_out": "CH17"
+  },
+  "roles_missing": {},
+  "outputs": {
+    "markers": "evidence/2026-10-09-rig1/markers/cameras-0016.jsonl"
+  },
+  "warnings": [],
+  "pulses": {
+    "trig_in": {
+      "rising": 0,
+      "falling": 0,
+      "pulses": 0,
+      "high_fraction": 0.0,
+      "idle_level": 0,
+      "clipped_at_start": false,
+      "clipped_at_end": false,
+      "channel": "CH0",
+      "signal": "TRIG_IN_INST",
+      "required": true,
+      "expected_rate_hz": [
+        140.0,
+        160.0
+      ],
+      "expected_width_s": [
+        0.003,
+        0.0037
+      ]
+    },
+    "sync_in": {
+      "rising": 0,
+      "falling": 0,
+      "pulses": 0,
+      "high_fraction": 0.0,
+      "idle_level": 0,
+      "clipped_at_start": false,
+      "clipped_at_end": false,
+      "channel": "CH1",
+      "signal": "SYNC_IN_INST",
+      "required": true,
+      "expected_rate_hz": [
+        0.4,
+        10.0
+      ],
+      "expected_width_s": [
+        0.024,
+        0.026
+      ]
+    },
+    "sync_out": {
+      "rising": 0,
+      "falling": 0,
+      "pulses": 0,
+      "high_fraction": 0.0,
+      "idle_level": 0,
+      "clipped_at_start": false,
+      "clipped_at_end": false,
+      "channel": "CH2",
+      "signal": "SYNC_OUT_INST",
+      "required": true,
+      "follows": {
+        "source": "sync_in",
+        "source_edges": 0,
+        "pair_window_s": 0.001,
+        "max_delay_s": 1e-06,
+        "polarity": "same",
+        "matched": 0,
+        "missing": 0,
+        "extra": 0
+      }
+    },
+    "cam1_l3": {
+      "rising": 0,
+      "falling": 0,
+      "pulses": 0,
+      "high_fraction": 0.0,
+      "idle_level": 0,
+      "clipped_at_start": false,
+      "clipped_at_end": false,
+      "channel": "CH6",
+      "signal": "CAM1_L3_INST",
+      "required": true,
+      "follows": {
+        "source": "trig_in",
+        "source_edges": 0,
+        "pair_window_s": 0.001,
+        "max_delay_s": 1e-06,
+        "polarity": "same",
+        "matched": 0,
+        "missing": 0,
+        "extra": 0
+      }
+    },
+    "cam2_l3": {
+      "rising": 0,
+      "falling": 0,
+      "pulses": 0,
+      "high_fraction": 0.0,
+      "idle_level": 0,
+      "clipped_at_start": false,
+      "clipped_at_end": false,
+      "channel": "CH11",
+      "signal": "CAM2_L3_INST",
+      "required": true,
+      "follows": {
+        "source": "trig_in",
+        "source_edges": 0,
+        "pair_window_s": 0.001,
+        "max_delay_s": 1e-06,
+        "polarity": "same",
+        "matched": 0,
+        "missing": 0,
+        "extra": 0
+      }
+    },
+    "cam3_l3": {
+      "rising": 0,
+      "falling": 0,
+      "pulses": 0,
+      "high_fraction": 0.0,
+      "idle_level": 0,
+      "clipped_at_start": false,
+      "clipped_at_end": false,
+      "channel": "CH16",
+      "signal": "CAM3_L3_INST",
+      "required": true,
+      "follows": {
+        "source": "trig_in",
+        "source_edges": 0,
+        "pair_window_s": 0.001,
+        "max_delay_s": 1e-06,
+        "polarity": "same",
+        "matched": 0,
+        "missing": 0,
+        "extra": 0
+      }
+    },
+    "cam1_l0": {
+      "rising": 0,
+      "falling": 0,
+      "pulses": 0,
+      "high_fraction": 0.0,
+      "idle_level": 0,
+      "clipped_at_start": false,
+      "clipped_at_end": false,
+      "channel": "CH3",
+      "signal": "CAM1_L0_INST",
+      "required": true,
+      "follows": {
+        "source": "sync_in",
+        "source_edges": 0,
+        "pair_window_s": 0.001,
+        "max_delay_s": 1e-06,
+        "polarity": "same",
+        "matched": 0,
+        "missing": 0,
+        "extra": 0
+      }
+    },
+    "cam2_l0": {
+      "rising": 0,
+      "falling": 0,
+      "pulses": 0,
+      "high_fraction": 0.0,
+      "idle_level": 0,
+      "clipped_at_start": false,
+      "clipped_at_end": false,
+      "channel": "CH8",
+      "signal": "CAM2_L0_INST",
+      "required": true,
+      "follows": {
+        "source": "sync_in",
+        "source_edges": 0,
+        "pair_window_s": 0.001,
+        "max_delay_s": 1e-06,
+        "polarity": "same",
+        "matched": 0,
+        "missing": 0,
+        "extra": 0
+      }
+    },
+    "cam3_l0": {
+      "rising": 0,
+      "falling": 0,
+      "pulses": 0,
+      "high_fraction": 0.0,
+      "idle_level": 0,
+      "clipped_at_start": false,
+      "clipped_at_end": false,
+      "channel": "CH13",
+      "signal": "CAM3_L0_INST",
+      "required": true,
+      "follows": {
+        "source": "sync_in",
+        "source_edges": 0,
+        "pair_window_s": 0.001,
+        "max_delay_s": 1e-06,
+        "polarity": "same",
+        "matched": 0,
+        "missing": 0,
+        "extra": 0
+      }
+    },
+    "cam1_l2": {
+      "rising": 0,
+      "falling": 0,
+      "pulses": 0,
+      "high_fraction": 1.0,
+      "idle_level": 1,
+      "clipped_at_start": true,
+      "clipped_at_end": true,
+      "channel": "CH5",
+      "signal": "CAM1_L2_INST",
+      "required": false
+    },
+    "cam1_out": {
+      "rising": 0,
+      "falling": 0,
+      "pulses": 0,
+      "high_fraction": 1.0,
+      "idle_level": 1,
+      "clipped_at_start": true,
+      "clipped_at_end": true,
+      "channel": "CH7",
+      "signal": "CAM1_OUT_INST",
+      "required": false,
+      "follows": {
+        "source": "cam1_l2",
+        "source_edges": 0,
+        "pair_window_s": 0.001,
+        "max_delay_s": 1e-06,
+        "polarity": "same",
+        "matched": 0,
+        "missing": 0,
+        "extra": 0
+      }
+    },
+    "cam2_l2": {
+      "rising": 0,
+      "falling": 0,
+      "pulses": 0,
+      "high_fraction": 1.0,
+      "idle_level": 1,
+      "clipped_at_start": true,
+      "clipped_at_end": true,
+      "channel": "CH10",
+      "signal": "CAM2_L2_INST",
+      "required": false
+    },
+    "cam2_out": {
+      "rising": 0,
+      "falling": 0,
+      "pulses": 0,
+      "high_fraction": 1.0,
+      "idle_level": 1,
+      "clipped_at_start": true,
+      "clipped_at_end": true,
+      "channel": "CH12",
+      "signal": "CAM2_OUT_INST",
+      "required": false,
+      "follows": {
+        "source": "cam2_l2",
+        "source_edges": 0,
+        "pair_window_s": 0.001,
+        "max_delay_s": 1e-06,
+        "polarity": "same",
+        "matched": 0,
+        "missing": 0,
+        "extra": 0
+      }
+    },
+    "cam3_l2": {
+      "rising": 0,
+      "falling": 0,
+      "pulses": 0,
+      "high_fraction": 1.0,
+      "idle_level": 1,
+      "clipped_at_start": true,
+      "clipped_at_end": true,
+      "channel": "CH15",
+      "signal": "CAM3_L2_INST",
+      "required": false
+    },
+    "cam3_out": {
+      "rising": 0,
+      "falling": 0,
+      "pulses": 0,
+      "high_fraction": 1.0,
+      "idle_level": 1,
+      "clipped_at_start": true,
+      "clipped_at_end": true,
+      "channel": "CH17",
+      "signal": "CAM3_OUT_INST",
+      "required": false,
+      "follows": {
+        "source": "cam3_l2",
+        "source_edges": 0,
+        "pair_window_s": 0.001,
+        "max_delay_s": 1e-06,
+        "polarity": "same",
+        "matched": 0,
+        "missing": 0,
+        "extra": 0
+      }
+    },
+    "cam1_l1": {
+      "rising": 0,
+      "falling": 0,
+      "pulses": 0,
+      "high_fraction": 0.0,
+      "idle_level": 0,
+      "clipped_at_start": false,
+      "clipped_at_end": false,
+      "channel": "CH4",
+      "signal": "CAM1_L1_INST",
+      "required": false
+    },
+    "cam2_l1": {
+      "rising": 0,
+      "falling": 0,
+      "pulses": 0,
+      "high_fraction": 0.0,
+      "idle_level": 0,
+      "clipped_at_start": false,
+      "clipped_at_end": false,
+      "channel": "CH9",
+      "signal": "CAM2_L1_INST",
+      "required": false
+    },
+    "cam3_l1": {
+      "rising": 0,
+      "falling": 0,
+      "pulses": 0,
+      "high_fraction": 0.0,
+      "idle_level": 0,
+      "clipped_at_start": false,
+      "clipped_at_end": false,
+      "channel": "CH14",
+      "signal": "CAM3_L1_INST",
+      "required": false
+    }
+  },
+  "health": {
+    "board": "cameras-0016",
+    "window": null,
+    "t_wall": "2026-10-09T09:24:58-04:00",
+    "window_start_wall": null,
+    "duration_s": 15.000748,
+    "gap_before_s": null,
+    "gap_kind": "sampling",
+    "status": "silent",
+    "reasons": [
+      "no pulses on any pulse role"
+    ],
+    "link": {
+      "present": false,
+      "lines": 0,
+      "lines_per_s": null,
+      "active_span_s": null,
+      "heartbeat_hz": null,
+      "heartbeat_ok": null,
+      "naks": 0,
+      "faults": 0,
+      "trials": 0,
+      "outcomes": {},
+      "events": {},
+      "errors": 0,
+      "longest_silence_s": null
+    },
+    "trace": {
+      "present": false,
+      "alive": false,
+      "bytes": 0,
+      "frame_errors": 0,
+      "records": 0,
+      "records_per_s": null,
+      "longest_gap_s": null
+    },
+    "markers": {},
+    "pulses": {
+      "trig_in": {
+        "pulses": 0,
+        "rate_hz": null,
+        "width_median_s": null
+      },
+      "sync_in": {
+        "pulses": 0,
+        "rate_hz": null,
+        "width_median_s": null
+      },
+      "sync_out": {
+        "pulses": 0,
+        "rate_hz": null,
+        "width_median_s": null,
+        "follows": {
+          "source": "sync_in",
+          "matched": 0,
+          "missing": 0,
+          "extra": 0,
+          "polarity": "same"
+        }
+      },
+      "cam1_l3": {
+        "pulses": 0,
+        "rate_hz": null,
+        "width_median_s": null,
+        "follows": {
+          "source": "trig_in",
+          "matched": 0,
+          "missing": 0,
+          "extra": 0,
+          "polarity": "same"
+        }
+      },
+      "cam2_l3": {
+        "pulses": 0,
+        "rate_hz": null,
+        "width_median_s": null,
+        "follows": {
+          "source": "trig_in",
+          "matched": 0,
+          "missing": 0,
+          "extra": 0,
+          "polarity": "same"
+        }
+      },
+      "cam3_l3": {
+        "pulses": 0,
+        "rate_hz": null,
+        "width_median_s": null,
+        "follows": {
+          "source": "trig_in",
+          "matched": 0,
+          "missing": 0,
+          "extra": 0,
+          "polarity": "same"
+        }
+      },
+      "cam1_l0": {
+        "pulses": 0,
+        "rate_hz": null,
+        "width_median_s": null,
+        "follows": {
+          "source": "sync_in",
+          "matched": 0,
+          "missing": 0,
+          "extra": 0,
+          "polarity": "same"
+        }
+      },
+      "cam2_l0": {
+        "pulses": 0,
+        "rate_hz": null,
+        "width_median_s": null,
+        "follows": {
+          "source": "sync_in",
+          "matched": 0,
+          "missing": 0,
+          "extra": 0,
+          "polarity": "same"
+        }
+      },
+      "cam3_l0": {
+        "pulses": 0,
+        "rate_hz": null,
+        "width_median_s": null,
+        "follows": {
+          "source": "sync_in",
+          "matched": 0,
+          "missing": 0,
+          "extra": 0,
+          "polarity": "same"
+        }
+      },
+      "cam1_l2": {
+        "pulses": 0,
+        "rate_hz": null,
+        "width_median_s": null
+      },
+      "cam1_out": {
+        "pulses": 0,
+        "rate_hz": null,
+        "width_median_s": null,
+        "follows": {
+          "source": "cam1_l2",
+          "matched": 0,
+          "missing": 0,
+          "extra": 0,
+          "polarity": "same"
+        }
+      },
+      "cam2_l2": {
+        "pulses": 0,
+        "rate_hz": null,
+        "width_median_s": null
+      },
+      "cam2_out": {
+        "pulses": 0,
+        "rate_hz": null,
+        "width_median_s": null,
+        "follows": {
+          "source": "cam2_l2",
+          "matched": 0,
+          "missing": 0,
+          "extra": 0,
+          "polarity": "same"
+        }
+      },
+      "cam3_l2": {
+        "pulses": 0,
+        "rate_hz": null,
+        "width_median_s": null
+      },
+      "cam3_out": {
+        "pulses": 0,
+        "rate_hz": null,
+        "width_median_s": null,
+        "follows": {
+          "source": "cam3_l2",
+          "matched": 0,
+          "missing": 0,
+          "extra": 0,
+          "polarity": "same"
+        }
+      },
+      "cam1_l1": {
+        "pulses": 0,
+        "rate_hz": null,
+        "width_median_s": null
+      },
+      "cam2_l1": {
+        "pulses": 0,
+        "rate_hz": null,
+        "width_median_s": null
+      },
+      "cam3_l1": {
+        "pulses": 0,
+        "rate_hz": null,
+        "width_median_s": null
+      }
+    },
+    "coverage": {},
+    "last_event": null,
+    "capture": "evidence/2026-10-09-rig1/captures/cameras-0016.sr",
+    "warnings": [],
+    "totals": {
+      "windows": 1,
+      "captured_s": 15.001,
+      "gap_s": 0.0,
+      "armed_idle_s": 0.0,
+      "lines": 0,
+      "faults": 0,
+      "naks": 0,
+      "trials": 0,
+      "frame_errors": 0,
+      "outcomes": {},
+      "statuses": {
+        "silent": 1
+      },
+      "trace_records": 0,
+      "unseen_lines_min": 0,
+      "unseen_lines_max": 0,
+      "reboots": 0
+    }
+  }
+}

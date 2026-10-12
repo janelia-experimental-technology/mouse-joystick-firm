@@ -65,6 +65,12 @@ has the procedure. If `picotool` refuses to write, copy the built UF2,
 onto the `RPI-RP2` drive the bootloader presents. The board announces its
 firmware version in the protocol's `ID` reply.
 
+On USB a board enumerates as manufacturer `Janelia Research Campus`, product
+`mouse-joystick-pcb`, with the RP2040 flash unique id as its serial, so on
+Linux `/dev/serial/by-id/usb-Janelia_Research_Campus_mouse-joystick-pcb_<serial>-if00`
+names a specific board regardless of plug order. Boards flashed before
+2026-10-12 report the manufacturer as `Orb Weaver` until reflashed.
+
 ### The pyControl host side
 
 The pyControl host side is a **separate pixi environment** with no PlatformIO
@@ -380,6 +386,17 @@ Measured behaviour goes in
 [mouse-joystick-pcb/docs/bringup-log.md](https://github.com/peterpolidoro/mouse-joystick-pcb/blob/main/docs/bringup-log.md),
 under the board's serial, as numbers with units. Two boards in one rig are
 independently calibrated and independently suspect.
+
+## Verification Evidence
+
+[`evidence/`](evidence/README.md) holds the record of the v1.0 boards'
+verification: the console logs, protocol transcripts, pyControl session
+outputs, trace analyses and small logic-analyzer captures from every bench
+and rig run between the first v1.0 power-up on 2026-10-05 and the installed
+rig's first observed experiment on 2026-10-09, with the firmware commit and
+board serial of each. The numbers they support are written up in the board
+repository's [bring-up log](https://github.com/peterpolidoro/mouse-joystick-pcb/blob/main/docs/bringup-log.md);
+the per-board calibration they produced is `src/BoardCalibration.hpp`.
 
 ## Related Repositories
 

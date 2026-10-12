@@ -1,0 +1,6172 @@
+{
+ "pycontrol": "2.1.1",
+ "hwd": "mouse_joystick_bringup",
+ "task": "mouse_joystick_check",
+ "log": [
+  {
+   "t_ns": 1701273590,
+   "kind": "board_print",
+   "text": "\nMicropython version: 1.261"
+  },
+  {
+   "t_ns": 1701293860,
+   "kind": "board_print",
+   "text": "Framework version: 2.1.1"
+  },
+  {
+   "t_ns": 1706909240,
+   "kind": "board_print",
+   "text": "\nTransferring hardware definition to pyboard."
+  },
+  {
+   "t_ns": 3318734872,
+   "kind": "board_print",
+   "text": " OK"
+  },
+  {
+   "t_ns": 4893488128,
+   "kind": "board_print",
+   "text": "\nTransferring state machine mouse_joystick_check to pyboard. "
+  },
+  {
+   "t_ns": 5151044932,
+   "kind": "board_print",
+   "text": "OK"
+  },
+  {
+   "t_ns": 5561532891,
+   "kind": "board_print",
+   "text": "0.000\tvariable\trun_start\t{\n\t\t\t\"board\": right\n\t\t\t\"brake_ncm\": 1.0\n\t\t\t\"do_brake\": 1\n\t\t\t\"do_move\": 1\n\t\t\t\"heartbeat_interval\": 40\n\t\t\t\"instr\": 1\n\t\t\t\"move_degrees\": -5.0\n\t\t\t\"outcome\": \n\t\t\t\"phase\": identifying\n\t\t\t\"pull_degrees\": 5.0\n\t\t\t\"push_degrees\": 5.0\n\t\t\t\"serial\": \n\t\t\t\"touch_ncm\": 0.3\n\t\t\t\"watch_timeout_ms\": 10000\n\t\t\t\"wdt_ms\": 0\n\t\t\t}\n0.000\tprint\ttask\tidentifying the right board\n0.001\tstate\t\tidentifying\n"
+  },
+  {
+   "t_ns": 5582151349,
+   "kind": "board_print",
+   "text": "0.019\tevent\tinput\tjoystick_R\n0.024\tprint\ttask\tboard serial E4654C159F274534 fw 9b6d2ef-dirty hw rev2 proto 2 caps motion+home+instr+hv+watch+fetch+stream+cfg+angout+brake+torque\n0.024\tstate\t\tpowering\n0.024\tprint\ttask\traising the motor rail\n"
+  },
+  {
+   "t_ns": 5765193538,
+   "kind": "board_print",
+   "text": "0.202\tevent\tinput\tjoystick_R\n0.203\tstate\t\thoming\n0.203\tprint\ttask\thoming\n"
+  },
+  {
+   "t_ns": 5775516579,
+   "kind": "board_print",
+   "text": "0.213\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 5795994808,
+   "kind": "board_print",
+   "text": "0.239\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 5806306233,
+   "kind": "board_print",
+   "text": "0.251\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 5847084771,
+   "kind": "board_print",
+   "text": "0.291\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 5887808294,
+   "kind": "board_print",
+   "text": "0.332\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 5928636252,
+   "kind": "board_print",
+   "text": "0.373\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 5969386395,
+   "kind": "board_print",
+   "text": "0.414\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 6010199483,
+   "kind": "board_print",
+   "text": "0.455\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 6061188748,
+   "kind": "board_print",
+   "text": "0.496\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 6102005409,
+   "kind": "board_print",
+   "text": "0.537\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 6142809579,
+   "kind": "board_print",
+   "text": "0.580\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 6183557182,
+   "kind": "board_print",
+   "text": "0.619\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 6224475278,
+   "kind": "board_print",
+   "text": "0.660\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 6265012566,
+   "kind": "board_print",
+   "text": "0.701\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 6305706885,
+   "kind": "board_print",
+   "text": "0.742\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 6346451571,
+   "kind": "board_print",
+   "text": "0.783\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 6387168849,
+   "kind": "board_print",
+   "text": "0.824\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 6427943007,
+   "kind": "board_print",
+   "text": "0.865\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 6468623945,
+   "kind": "board_print",
+   "text": "0.906\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 6509031027,
+   "kind": "board_print",
+   "text": "0.947\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 6549686244,
+   "kind": "board_print",
+   "text": "0.988\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 6590376982,
+   "kind": "board_print",
+   "text": "1.030\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 6611007861,
+   "kind": "board_print",
+   "text": "1.050\tevent\tinput\tjoystick_R\n1.052\tprint\ttask\tev HOMED t=12724104 {'angle': '0.0'}\n1.052\tstate\t\tarming\n"
+  },
+  {
+   "t_ns": 6641810110,
+   "kind": "board_print",
+   "text": "1.080\tevent\tinput\tjoystick_R\n1.081\tstate\t\tmoving\n1.081\tprint\ttask\tpresenting: moving to -5.0 deg\n1.083\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 6652137019,
+   "kind": "board_print",
+   "text": "1.088\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 6672594009,
+   "kind": "board_print",
+   "text": "1.112\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 6713249538,
+   "kind": "board_print",
+   "text": "1.152\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 6753992699,
+   "kind": "board_print",
+   "text": "1.193\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 6794713403,
+   "kind": "board_print",
+   "text": "1.234\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 6835275400,
+   "kind": "board_print",
+   "text": "1.275\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 6875920194,
+   "kind": "board_print",
+   "text": "1.316\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 6916683864,
+   "kind": "board_print",
+   "text": "1.358\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 6957410267,
+   "kind": "board_print",
+   "text": "1.398\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 6998190578,
+   "kind": "board_print",
+   "text": "1.439\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 7008788924,
+   "kind": "board_print",
+   "text": "1.445\tevent\tinput\tjoystick_R\n1.447\tprint\ttask\tev TARGET t=13119104 {'angle': '-4.95'}\n1.447\tstate\t\tbraking\n"
+  },
+  {
+   "t_ns": 7019111356,
+   "kind": "board_print",
+   "text": "1.447\tprint\ttask\tbrake 1.0 N.cm, then release\n1.456\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 7039843805,
+   "kind": "board_print",
+   "text": "1.468\tevent\tinput\tjoystick_R\n1.471\tprint\ttask\tev RELEASED t=13139114 {'angle': '-4.95', 'torque': '-0.209', 'brake': '1.0'}\n1.471\tstate\t\twatching\n1.472\tprint\ttask\twatching: pull past 5.0 deg or push past 5.0 deg within 10000 ms\n1.480\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 7050200279,
+   "kind": "board_print",
+   "text": "1.487\tevent\tinput\tjoystick_R\n1.491\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 7090975258,
+   "kind": "board_print",
+   "text": "1.528\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 7131799867,
+   "kind": "board_print",
+   "text": "1.569\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 7172414818,
+   "kind": "board_print",
+   "text": "1.609\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 7213105451,
+   "kind": "board_print",
+   "text": "1.650\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 7253817774,
+   "kind": "board_print",
+   "text": "1.692\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 7294657372,
+   "kind": "board_print",
+   "text": "1.731\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 7335285232,
+   "kind": "board_print",
+   "text": "1.773\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 7376035361,
+   "kind": "board_print",
+   "text": "1.815\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 7416867439,
+   "kind": "board_print",
+   "text": "1.857\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 7457562132,
+   "kind": "board_print",
+   "text": "1.898\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 7498320179,
+   "kind": "board_print",
+   "text": "1.938\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 7539054362,
+   "kind": "board_print",
+   "text": "1.979\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 7579795908,
+   "kind": "board_print",
+   "text": "2.020\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 7620484110,
+   "kind": "board_print",
+   "text": "2.061\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 7661310688,
+   "kind": "board_print",
+   "text": "2.102\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 7701998949,
+   "kind": "board_print",
+   "text": "2.143\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 7742799407,
+   "kind": "board_print",
+   "text": "2.184\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 7783516030,
+   "kind": "board_print",
+   "text": "2.225\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 7824244817,
+   "kind": "board_print",
+   "text": "2.266\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 7864964077,
+   "kind": "board_print",
+   "text": "2.308\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 7905685654,
+   "kind": "board_print",
+   "text": "2.348\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 7946432705,
+   "kind": "board_print",
+   "text": "2.389\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 7987125013,
+   "kind": "board_print",
+   "text": "2.430\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 8027907373,
+   "kind": "board_print",
+   "text": "2.471\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 8068675470,
+   "kind": "board_print",
+   "text": "2.512\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 8109451501,
+   "kind": "board_print",
+   "text": "2.553\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 8150180105,
+   "kind": "board_print",
+   "text": "2.594\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 8190951103,
+   "kind": "board_print",
+   "text": "2.635\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 8231724412,
+   "kind": "board_print",
+   "text": "2.675\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 8272566787,
+   "kind": "board_print",
+   "text": "2.715\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 8313212507,
+   "kind": "board_print",
+   "text": "2.757\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 8364203510,
+   "kind": "board_print",
+   "text": "2.799\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 8405063567,
+   "kind": "board_print",
+   "text": "2.841\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 8445796565,
+   "kind": "board_print",
+   "text": "2.881\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 8486574222,
+   "kind": "board_print",
+   "text": "2.923\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 8527351752,
+   "kind": "board_print",
+   "text": "2.963\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 8568131523,
+   "kind": "board_print",
+   "text": "3.004\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 8609010950,
+   "kind": "board_print",
+   "text": "3.044\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 8649713850,
+   "kind": "board_print",
+   "text": "3.086\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 8690331729,
+   "kind": "board_print",
+   "text": "3.127\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 8731035491,
+   "kind": "board_print",
+   "text": "3.168\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 8771746622,
+   "kind": "board_print",
+   "text": "3.209\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 8812641378,
+   "kind": "board_print",
+   "text": "3.250\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 8853259752,
+   "kind": "board_print",
+   "text": "3.289\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 8894048655,
+   "kind": "board_print",
+   "text": "3.332\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 8934830186,
+   "kind": "board_print",
+   "text": "3.374\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 8975542957,
+   "kind": "board_print",
+   "text": "3.414\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 9016130312,
+   "kind": "board_print",
+   "text": "3.456\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 9056515219,
+   "kind": "board_print",
+   "text": "3.496\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 9096928757,
+   "kind": "board_print",
+   "text": "3.537\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 9137339378,
+   "kind": "board_print",
+   "text": "3.578\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 9177707451,
+   "kind": "board_print",
+   "text": "3.619\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 9218051178,
+   "kind": "board_print",
+   "text": "3.660\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 9258411440,
+   "kind": "board_print",
+   "text": "3.701\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 9298813147,
+   "kind": "board_print",
+   "text": "3.742\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 9339242544,
+   "kind": "board_print",
+   "text": "3.783\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 9389710044,
+   "kind": "board_print",
+   "text": "3.824\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 9430098892,
+   "kind": "board_print",
+   "text": "3.865\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 9470497017,
+   "kind": "board_print",
+   "text": "3.905\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 9510883742,
+   "kind": "board_print",
+   "text": "3.947\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 9551275481,
+   "kind": "board_print",
+   "text": "3.989\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 9591959776,
+   "kind": "board_print",
+   "text": "4.030\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 9632673602,
+   "kind": "board_print",
+   "text": "4.070\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 9673385544,
+   "kind": "board_print",
+   "text": "4.111\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 9714112242,
+   "kind": "board_print",
+   "text": "4.153\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 9754733748,
+   "kind": "board_print",
+   "text": "4.193\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 9795437734,
+   "kind": "board_print",
+   "text": "4.234\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 9836047047,
+   "kind": "board_print",
+   "text": "4.275\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 9876862822,
+   "kind": "board_print",
+   "text": "4.316\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 9917690141,
+   "kind": "board_print",
+   "text": "4.357\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 9958491401,
+   "kind": "board_print",
+   "text": "4.398\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 9999319501,
+   "kind": "board_print",
+   "text": "4.440\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 10040150389,
+   "kind": "board_print",
+   "text": "4.481\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 10080881583,
+   "kind": "board_print",
+   "text": "4.521\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 10121648671,
+   "kind": "board_print",
+   "text": "4.562\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 10162391364,
+   "kind": "board_print",
+   "text": "4.603\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 10203061031,
+   "kind": "board_print",
+   "text": "4.644\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 10243773713,
+   "kind": "board_print",
+   "text": "4.685\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 10284638341,
+   "kind": "board_print",
+   "text": "4.725\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 10325294173,
+   "kind": "board_print",
+   "text": "4.767\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 10366041344,
+   "kind": "board_print",
+   "text": "4.808\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 10406873825,
+   "kind": "board_print",
+   "text": "4.848\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 10447567569,
+   "kind": "board_print",
+   "text": "4.889\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 10488102670,
+   "kind": "board_print",
+   "text": "4.931\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 10528912019,
+   "kind": "board_print",
+   "text": "4.973\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 10569603197,
+   "kind": "board_print",
+   "text": "5.014\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 10610469566,
+   "kind": "board_print",
+   "text": "5.054\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 10651371300,
+   "kind": "board_print",
+   "text": "5.095\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 10692216407,
+   "kind": "board_print",
+   "text": "5.136\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 10732873981,
+   "kind": "board_print",
+   "text": "5.177\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 10773613970,
+   "kind": "board_print",
+   "text": "5.218\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 10814214471,
+   "kind": "board_print",
+   "text": "5.259\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 10864825389,
+   "kind": "board_print",
+   "text": "5.300\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 10905617934,
+   "kind": "board_print",
+   "text": "5.341\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 10946187614,
+   "kind": "board_print",
+   "text": "5.383\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 10987023967,
+   "kind": "board_print",
+   "text": "5.424\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 11027874572,
+   "kind": "board_print",
+   "text": "5.465\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 11068686144,
+   "kind": "board_print",
+   "text": "5.505\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 11109506934,
+   "kind": "board_print",
+   "text": "5.546\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 11150434736,
+   "kind": "board_print",
+   "text": "5.587\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 11191257829,
+   "kind": "board_print",
+   "text": "5.628\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 11232196447,
+   "kind": "board_print",
+   "text": "5.669\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 11273132783,
+   "kind": "board_print",
+   "text": "5.710\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 11313996121,
+   "kind": "board_print",
+   "text": "5.751\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 11354950417,
+   "kind": "board_print",
+   "text": "5.792\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 11395824094,
+   "kind": "board_print",
+   "text": "5.833\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 11436781551,
+   "kind": "board_print",
+   "text": "5.873\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 11477673223,
+   "kind": "board_print",
+   "text": "5.915\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 11519160470,
+   "kind": "board_print",
+   "text": "5.955\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 11560001163,
+   "kind": "board_print",
+   "text": "5.997\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 11600892965,
+   "kind": "board_print",
+   "text": "6.039\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 11641836498,
+   "kind": "board_print",
+   "text": "6.080\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 11682683491,
+   "kind": "board_print",
+   "text": "6.120\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 11723393348,
+   "kind": "board_print",
+   "text": "6.161\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 11764269811,
+   "kind": "board_print",
+   "text": "6.202\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 11805029967,
+   "kind": "board_print",
+   "text": "6.244\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 11845877304,
+   "kind": "board_print",
+   "text": "6.284\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 11886826574,
+   "kind": "board_print",
+   "text": "6.325\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 11927778968,
+   "kind": "board_print",
+   "text": "6.366\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 11968717667,
+   "kind": "board_print",
+   "text": "6.407\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 12009535534,
+   "kind": "board_print",
+   "text": "6.449\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 12050430482,
+   "kind": "board_print",
+   "text": "6.488\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 12091225543,
+   "kind": "board_print",
+   "text": "6.529\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 12132044121,
+   "kind": "board_print",
+   "text": "6.571\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 12172735574,
+   "kind": "board_print",
+   "text": "6.613\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 12213481346,
+   "kind": "board_print",
+   "text": "6.654\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 12254369283,
+   "kind": "board_print",
+   "text": "6.694\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 12295215591,
+   "kind": "board_print",
+   "text": "6.735\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 12336046619,
+   "kind": "board_print",
+   "text": "6.776\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 12376797871,
+   "kind": "board_print",
+   "text": "6.817\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 12417580724,
+   "kind": "board_print",
+   "text": "6.858\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 12458349083,
+   "kind": "board_print",
+   "text": "6.899\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 12499109995,
+   "kind": "board_print",
+   "text": "6.940\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 12539851488,
+   "kind": "board_print",
+   "text": "6.980\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 12580666990,
+   "kind": "board_print",
+   "text": "7.023\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 12621439654,
+   "kind": "board_print",
+   "text": "7.063\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 12662310023,
+   "kind": "board_print",
+   "text": "7.105\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 12702951456,
+   "kind": "board_print",
+   "text": "7.145\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 12743750998,
+   "kind": "board_print",
+   "text": "7.186\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 12784665619,
+   "kind": "board_print",
+   "text": "7.227\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 12825403651,
+   "kind": "board_print",
+   "text": "7.268\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 12866143101,
+   "kind": "board_print",
+   "text": "7.309\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 12906789092,
+   "kind": "board_print",
+   "text": "7.350\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 12947526803,
+   "kind": "board_print",
+   "text": "7.391\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 12988206417,
+   "kind": "board_print",
+   "text": "7.431\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 13028895485,
+   "kind": "board_print",
+   "text": "7.473\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 13079765010,
+   "kind": "board_print",
+   "text": "7.515\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 13110271829,
+   "kind": "board_print",
+   "text": "7.555\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 13161144044,
+   "kind": "board_print",
+   "text": "7.597\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 13201790772,
+   "kind": "board_print",
+   "text": "7.637\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 13242632334,
+   "kind": "board_print",
+   "text": "7.678\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 13283370016,
+   "kind": "board_print",
+   "text": "7.719\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 13324000150,
+   "kind": "board_print",
+   "text": "7.760\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 13364790048,
+   "kind": "board_print",
+   "text": "7.801\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 13405446529,
+   "kind": "board_print",
+   "text": "7.842\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 13446249080,
+   "kind": "board_print",
+   "text": "7.883\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 13487127184,
+   "kind": "board_print",
+   "text": "7.924\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 13527804971,
+   "kind": "board_print",
+   "text": "7.964\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 13568604536,
+   "kind": "board_print",
+   "text": "8.006\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 13609326775,
+   "kind": "board_print",
+   "text": "8.048\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 13650089692,
+   "kind": "board_print",
+   "text": "8.089\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 13690736007,
+   "kind": "board_print",
+   "text": "8.129\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 13731410912,
+   "kind": "board_print",
+   "text": "8.170\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 13772130841,
+   "kind": "board_print",
+   "text": "8.211\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 13812874570,
+   "kind": "board_print",
+   "text": "8.252\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 13853669317,
+   "kind": "board_print",
+   "text": "8.293\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 13894411530,
+   "kind": "board_print",
+   "text": "8.333\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 13935145958,
+   "kind": "board_print",
+   "text": "8.375\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 13975802507,
+   "kind": "board_print",
+   "text": "8.415\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 14016610389,
+   "kind": "board_print",
+   "text": "8.457\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 14057323178,
+   "kind": "board_print",
+   "text": "8.499\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 14098074310,
+   "kind": "board_print",
+   "text": "8.539\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 14138849267,
+   "kind": "board_print",
+   "text": "8.580\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 14179494677,
+   "kind": "board_print",
+   "text": "8.621\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 14220295169,
+   "kind": "board_print",
+   "text": "8.662\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 14261057949,
+   "kind": "board_print",
+   "text": "8.703\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 14301719349,
+   "kind": "board_print",
+   "text": "8.743\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 14342559132,
+   "kind": "board_print",
+   "text": "8.785\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 14383340069,
+   "kind": "board_print",
+   "text": "8.826\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 14424021488,
+   "kind": "board_print",
+   "text": "8.867\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 14464784122,
+   "kind": "board_print",
+   "text": "8.908\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 14505345558,
+   "kind": "board_print",
+   "text": "8.948\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 14546054454,
+   "kind": "board_print",
+   "text": "8.990\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 14596878092,
+   "kind": "board_print",
+   "text": "9.032\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 14637590610,
+   "kind": "board_print",
+   "text": "9.073\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 14678287636,
+   "kind": "board_print",
+   "text": "9.113\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 14708915621,
+   "kind": "board_print",
+   "text": "9.153\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 14759680934,
+   "kind": "board_print",
+   "text": "9.195\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 14800394285,
+   "kind": "board_print",
+   "text": "9.236\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 14840960815,
+   "kind": "board_print",
+   "text": "9.277\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 14881696804,
+   "kind": "board_print",
+   "text": "9.318\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 14922467085,
+   "kind": "board_print",
+   "text": "9.359\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 14963163582,
+   "kind": "board_print",
+   "text": "9.400\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 15003907195,
+   "kind": "board_print",
+   "text": "9.440\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 15044646538,
+   "kind": "board_print",
+   "text": "9.482\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 15085277083,
+   "kind": "board_print",
+   "text": "9.524\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 15125960675,
+   "kind": "board_print",
+   "text": "9.565\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 15166784465,
+   "kind": "board_print",
+   "text": "9.605\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 15207520269,
+   "kind": "board_print",
+   "text": "9.646\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 15248272767,
+   "kind": "board_print",
+   "text": "9.687\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 15288923407,
+   "kind": "board_print",
+   "text": "9.728\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 15329621036,
+   "kind": "board_print",
+   "text": "9.770\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 15370362481,
+   "kind": "board_print",
+   "text": "9.810\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 15421146636,
+   "kind": "board_print",
+   "text": "9.851\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 15451780763,
+   "kind": "board_print",
+   "text": "9.892\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 15492579663,
+   "kind": "board_print",
+   "text": "9.934\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 15533327652,
+   "kind": "board_print",
+   "text": "9.973\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 15574156389,
+   "kind": "board_print",
+   "text": "10.015\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 15614862006,
+   "kind": "board_print",
+   "text": "10.057\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 15655672114,
+   "kind": "board_print",
+   "text": "10.097\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 15696575249,
+   "kind": "board_print",
+   "text": "10.139\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 15737251058,
+   "kind": "board_print",
+   "text": "10.180\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 15777982938,
+   "kind": "board_print",
+   "text": "10.220\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 15818769930,
+   "kind": "board_print",
+   "text": "10.261\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 15859495213,
+   "kind": "board_print",
+   "text": "10.302\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 15900293028,
+   "kind": "board_print",
+   "text": "10.344\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 15941124982,
+   "kind": "board_print",
+   "text": "10.384\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 15981993274,
+   "kind": "board_print",
+   "text": "10.424\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 16022788835,
+   "kind": "board_print",
+   "text": "10.467\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 16063560829,
+   "kind": "board_print",
+   "text": "10.508\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 16104351154,
+   "kind": "board_print",
+   "text": "10.548\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 16145211441,
+   "kind": "board_print",
+   "text": "10.589\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 16186059229,
+   "kind": "board_print",
+   "text": "10.630\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 16226879729,
+   "kind": "board_print",
+   "text": "10.671\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 16277827055,
+   "kind": "board_print",
+   "text": "10.712\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 16318658262,
+   "kind": "board_print",
+   "text": "10.753\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 16359449690,
+   "kind": "board_print",
+   "text": "10.795\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 16400328973,
+   "kind": "board_print",
+   "text": "10.835\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 16441110696,
+   "kind": "board_print",
+   "text": "10.876\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 16481935838,
+   "kind": "board_print",
+   "text": "10.918\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 16522800903,
+   "kind": "board_print",
+   "text": "10.959\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 16563531655,
+   "kind": "board_print",
+   "text": "10.999\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 16604423991,
+   "kind": "board_print",
+   "text": "11.040\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 16645066109,
+   "kind": "board_print",
+   "text": "11.081\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 16685903625,
+   "kind": "board_print",
+   "text": "11.122\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 16726507107,
+   "kind": "board_print",
+   "text": "11.163\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 16767276433,
+   "kind": "board_print",
+   "text": "11.204\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 16807966279,
+   "kind": "board_print",
+   "text": "11.245\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 16848740908,
+   "kind": "board_print",
+   "text": "11.286\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 16889452572,
+   "kind": "board_print",
+   "text": "11.326\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 16930270221,
+   "kind": "board_print",
+   "text": "11.370\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 16971157774,
+   "kind": "board_print",
+   "text": "11.410\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 17011861306,
+   "kind": "board_print",
+   "text": "11.450\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 17052921469,
+   "kind": "board_print",
+   "text": "11.487\tevent\tinput\tjoystick_R\n11.489\tprint\ttask\tev NOMOVE t=23158998 {'angle': '-4.774', 'torque': '0.117'}\n11.489\tprint\ttask\toutcome NOMOVE at angle -4.774 torque 0.117\n11.491\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 17093549383,
+   "kind": "board_print",
+   "text": "11.532\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 17134379067,
+   "kind": "board_print",
+   "text": "11.572\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 17175145928,
+   "kind": "board_print",
+   "text": "11.612\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 17215933941,
+   "kind": "board_print",
+   "text": "11.655\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 17256796103,
+   "kind": "board_print",
+   "text": "11.696\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 17297602234,
+   "kind": "board_print",
+   "text": "11.736\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 17338345668,
+   "kind": "board_print",
+   "text": "11.777\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 17379080361,
+   "kind": "board_print",
+   "text": "11.818\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 17419807717,
+   "kind": "board_print",
+   "text": "11.859\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 17470842018,
+   "kind": "board_print",
+   "text": "11.901\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 17501490399,
+   "kind": "board_print",
+   "text": "11.942\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 17542302692,
+   "kind": "board_print",
+   "text": "11.981\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 17582958644,
+   "kind": "board_print",
+   "text": "12.023\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 17623766563,
+   "kind": "board_print",
+   "text": "12.063\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 17664540689,
+   "kind": "board_print",
+   "text": "12.105\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 17705176989,
+   "kind": "board_print",
+   "text": "12.145\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 17745987092,
+   "kind": "board_print",
+   "text": "12.186\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 17786916713,
+   "kind": "board_print",
+   "text": "12.228\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 17827669526,
+   "kind": "board_print",
+   "text": "12.269\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 17868576245,
+   "kind": "board_print",
+   "text": "12.309\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 17909150963,
+   "kind": "board_print",
+   "text": "12.350\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 17949905797,
+   "kind": "board_print",
+   "text": "12.392\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 17990620187,
+   "kind": "board_print",
+   "text": "12.432\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 18031232289,
+   "kind": "board_print",
+   "text": "12.474\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 18062030435,
+   "kind": "board_print",
+   "text": "12.496\tevent\tinput\tjoystick_R\n12.501\tprint\ttask\tev TRIAL t=24158998 {'a_peak': '0.176', 'tq_out': '0.117', 't_rel': '13139114', 't_touch': '', 'a0': '-4.95', 'dur_thr': '0', 't_move': '', 't_out': '23158998', 'tq_peak': '0.194', 'outcome': 'NOMOVE', 'a_end': '0.176'}\n12.501\tstate\t\tparking\n12.501\tprint\ttask\tparking at 0 deg\n"
+  },
+  {
+   "t_ns": 18092747319,
+   "kind": "board_print",
+   "text": "12.532\tevent\tinput\tjoystick_R\n12.536\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 18113161948,
+   "kind": "board_print",
+   "text": "12.556\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 18153842735,
+   "kind": "board_print",
+   "text": "12.596\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 18194554399,
+   "kind": "board_print",
+   "text": "12.637\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 18235243996,
+   "kind": "board_print",
+   "text": "12.678\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 18275913696,
+   "kind": "board_print",
+   "text": "12.719\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 18316618687,
+   "kind": "board_print",
+   "text": "12.760\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 18357323295,
+   "kind": "board_print",
+   "text": "12.802\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 18398073737,
+   "kind": "board_print",
+   "text": "12.842\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 18428859633,
+   "kind": "board_print",
+   "text": "12.868\tevent\tinput\tjoystick_R\n12.870\tprint\ttask\tev TARGET t=24542095 {'angle': '-0.991'}\n12.870\tstate\t\tdone\n12.870\tprint\ttask\tbring-up sequence complete; serial E4654C159F274534 outcome NOMOVE\n"
+  },
+  {
+   "t_ns": 18439172236,
+   "kind": "board_print",
+   "text": "12.883\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 18490061416,
+   "kind": "board_print",
+   "text": "12.925\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 18520705649,
+   "kind": "board_print",
+   "text": "12.965\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 18571409517,
+   "kind": "board_print",
+   "text": "13.006\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 18612160602,
+   "kind": "board_print",
+   "text": "13.048\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 18653001870,
+   "kind": "board_print",
+   "text": "13.088\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 18693615178,
+   "kind": "board_print",
+   "text": "13.129\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 18734305647,
+   "kind": "board_print",
+   "text": "13.170\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 18775052835,
+   "kind": "board_print",
+   "text": "13.211\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 18815707714,
+   "kind": "board_print",
+   "text": "13.252\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 18856722890,
+   "kind": "board_print",
+   "text": "13.293\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 18897452514,
+   "kind": "board_print",
+   "text": "13.335\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 18938224504,
+   "kind": "board_print",
+   "text": "13.375\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 18978814857,
+   "kind": "board_print",
+   "text": "13.416\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 19019582826,
+   "kind": "board_print",
+   "text": "13.457\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 19060327454,
+   "kind": "board_print",
+   "text": "13.498\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 19101041716,
+   "kind": "board_print",
+   "text": "13.539\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 19141661181,
+   "kind": "board_print",
+   "text": "13.580\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 19182365469,
+   "kind": "board_print",
+   "text": "13.621\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 19223084145,
+   "kind": "board_print",
+   "text": "13.662\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 19263717607,
+   "kind": "board_print",
+   "text": "13.703\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 19304547451,
+   "kind": "board_print",
+   "text": "13.744\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 19345273070,
+   "kind": "board_print",
+   "text": "13.786\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 19386052366,
+   "kind": "board_print",
+   "text": "13.826\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 19426768062,
+   "kind": "board_print",
+   "text": "13.867\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 19467484123,
+   "kind": "board_print",
+   "text": "13.908\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 19508292743,
+   "kind": "board_print",
+   "text": "13.949\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 19548991881,
+   "kind": "board_print",
+   "text": "13.990\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 19589709449,
+   "kind": "board_print",
+   "text": "14.031\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 19630460857,
+   "kind": "board_print",
+   "text": "14.073\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 19671209410,
+   "kind": "board_print",
+   "text": "14.113\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 19711929832,
+   "kind": "board_print",
+   "text": "14.154\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 19752565962,
+   "kind": "board_print",
+   "text": "14.196\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 19793137438,
+   "kind": "board_print",
+   "text": "14.236\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 19833821814,
+   "kind": "board_print",
+   "text": "14.277\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 19874582312,
+   "kind": "board_print",
+   "text": "14.318\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 19915257771,
+   "kind": "board_print",
+   "text": "14.359\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 19955877253,
+   "kind": "board_print",
+   "text": "14.400\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 19996530698,
+   "kind": "board_print",
+   "text": "14.441\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 20047379585,
+   "kind": "board_print",
+   "text": "14.483\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 20087987713,
+   "kind": "board_print",
+   "text": "14.523\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 20128717229,
+   "kind": "board_print",
+   "text": "14.564\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 20169473758,
+   "kind": "board_print",
+   "text": "14.606\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 20210223749,
+   "kind": "board_print",
+   "text": "14.646\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 20250915046,
+   "kind": "board_print",
+   "text": "14.687\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 20291698316,
+   "kind": "board_print",
+   "text": "14.728\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 20332489017,
+   "kind": "board_print",
+   "text": "14.770\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 20373113890,
+   "kind": "board_print",
+   "text": "14.810\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 20413776501,
+   "kind": "board_print",
+   "text": "14.851\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 20454608988,
+   "kind": "board_print",
+   "text": "14.892\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 20495351687,
+   "kind": "board_print",
+   "text": "14.933\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 20536001793,
+   "kind": "board_print",
+   "text": "14.974\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 20576918576,
+   "kind": "board_print",
+   "text": "15.016\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 20617661342,
+   "kind": "board_print",
+   "text": "15.056\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 20658483365,
+   "kind": "board_print",
+   "text": "15.097\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 20699014308,
+   "kind": "board_print",
+   "text": "15.138\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 20739647823,
+   "kind": "board_print",
+   "text": "15.179\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 20780294769,
+   "kind": "board_print",
+   "text": "15.220\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 20820916296,
+   "kind": "board_print",
+   "text": "15.261\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 20861509106,
+   "kind": "board_print",
+   "text": "15.303\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 20902211822,
+   "kind": "board_print",
+   "text": "15.343\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 20943010301,
+   "kind": "board_print",
+   "text": "15.384\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 20983739830,
+   "kind": "board_print",
+   "text": "15.426\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 21024560712,
+   "kind": "board_print",
+   "text": "15.466\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 21065281867,
+   "kind": "board_print",
+   "text": "15.507\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 21106067008,
+   "kind": "board_print",
+   "text": "15.548\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 21146784772,
+   "kind": "board_print",
+   "text": "15.589\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 21187524386,
+   "kind": "board_print",
+   "text": "15.630\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 21228277229,
+   "kind": "board_print",
+   "text": "15.671\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 21268922241,
+   "kind": "board_print",
+   "text": "15.713\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 21309731014,
+   "kind": "board_print",
+   "text": "15.753\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 21350427354,
+   "kind": "board_print",
+   "text": "15.794\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 21401340463,
+   "kind": "board_print",
+   "text": "15.835\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 21442111531,
+   "kind": "board_print",
+   "text": "15.877\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 21472733207,
+   "kind": "board_print",
+   "text": "15.917\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 21513406854,
+   "kind": "board_print",
+   "text": "15.958\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 21564336718,
+   "kind": "board_print",
+   "text": "15.999\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 21605159172,
+   "kind": "board_print",
+   "text": "16.040\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 21645902313,
+   "kind": "board_print",
+   "text": "16.081\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 21686734709,
+   "kind": "board_print",
+   "text": "16.123\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 21727417794,
+   "kind": "board_print",
+   "text": "16.163\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 21768155337,
+   "kind": "board_print",
+   "text": "16.204\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 21808990666,
+   "kind": "board_print",
+   "text": "16.245\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 21849730580,
+   "kind": "board_print",
+   "text": "16.287\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 21890478373,
+   "kind": "board_print",
+   "text": "16.327\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 21931228231,
+   "kind": "board_print",
+   "text": "16.369\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 21971855730,
+   "kind": "board_print",
+   "text": "16.409\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 22012675772,
+   "kind": "board_print",
+   "text": "16.450\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 22053343169,
+   "kind": "board_print",
+   "text": "16.491\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 22094170464,
+   "kind": "board_print",
+   "text": "16.533\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 22134932524,
+   "kind": "board_print",
+   "text": "16.573\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 22175664714,
+   "kind": "board_print",
+   "text": "16.614\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 22216417619,
+   "kind": "board_print",
+   "text": "16.655\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 22257105402,
+   "kind": "board_print",
+   "text": "16.697\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 22297765845,
+   "kind": "board_print",
+   "text": "16.737\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 22338440693,
+   "kind": "board_print",
+   "text": "16.778\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 22379250672,
+   "kind": "board_print",
+   "text": "16.820\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 22420027702,
+   "kind": "board_print",
+   "text": "16.860\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 22460759440,
+   "kind": "board_print",
+   "text": "16.901\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 22501390893,
+   "kind": "board_print",
+   "text": "16.942\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 22542124733,
+   "kind": "board_print",
+   "text": "16.983\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 22582853914,
+   "kind": "board_print",
+   "text": "17.024\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 22623489300,
+   "kind": "board_print",
+   "text": "17.065\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 22664226000,
+   "kind": "board_print",
+   "text": "17.107\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 22704992841,
+   "kind": "board_print",
+   "text": "17.147\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 22745642350,
+   "kind": "board_print",
+   "text": "17.188\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 22786363703,
+   "kind": "board_print",
+   "text": "17.229\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 22827037572,
+   "kind": "board_print",
+   "text": "17.270\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 22867771433,
+   "kind": "board_print",
+   "text": "17.311\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 22908611489,
+   "kind": "board_print",
+   "text": "17.352\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 22949351393,
+   "kind": "board_print",
+   "text": "17.394\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 22990074421,
+   "kind": "board_print",
+   "text": "17.434\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 23030864967,
+   "kind": "board_print",
+   "text": "17.475\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 23081783974,
+   "kind": "board_print",
+   "text": "17.517\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 23112403365,
+   "kind": "board_print",
+   "text": "17.557\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 23153250144,
+   "kind": "board_print",
+   "text": "17.598\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 23204272334,
+   "kind": "board_print",
+   "text": "17.639\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 23245117396,
+   "kind": "board_print",
+   "text": "17.680\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 23285935252,
+   "kind": "board_print",
+   "text": "17.721\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 23326800871,
+   "kind": "board_print",
+   "text": "17.762\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 23367411451,
+   "kind": "board_print",
+   "text": "17.803\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 23408100842,
+   "kind": "board_print",
+   "text": "17.844\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 23448813116,
+   "kind": "board_print",
+   "text": "17.885\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 23489601700,
+   "kind": "board_print",
+   "text": "17.927\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 23530370258,
+   "kind": "board_print",
+   "text": "17.967\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 23570999955,
+   "kind": "board_print",
+   "text": "18.008\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 23611674545,
+   "kind": "board_print",
+   "text": "18.049\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 23652275658,
+   "kind": "board_print",
+   "text": "18.090\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 23692839414,
+   "kind": "board_print",
+   "text": "18.131\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 23733468199,
+   "kind": "board_print",
+   "text": "18.172\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 23774239631,
+   "kind": "board_print",
+   "text": "18.214\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 23814923052,
+   "kind": "board_print",
+   "text": "18.254\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 23855624230,
+   "kind": "board_print",
+   "text": "18.295\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 23896404039,
+   "kind": "board_print",
+   "text": "18.336\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 23937088680,
+   "kind": "board_print",
+   "text": "18.377\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 23977666413,
+   "kind": "board_print",
+   "text": "18.418\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 24018435102,
+   "kind": "board_print",
+   "text": "18.459\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 24059184499,
+   "kind": "board_print",
+   "text": "18.500\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 24099944187,
+   "kind": "board_print",
+   "text": "18.541\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 24140719858,
+   "kind": "board_print",
+   "text": "18.582\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 24181377456,
+   "kind": "board_print",
+   "text": "18.624\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 24222003372,
+   "kind": "board_print",
+   "text": "18.664\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 24262642809,
+   "kind": "board_print",
+   "text": "18.705\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 24303321145,
+   "kind": "board_print",
+   "text": "18.747\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 24344026380,
+   "kind": "board_print",
+   "text": "18.788\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 24384753809,
+   "kind": "board_print",
+   "text": "18.828\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 24425527844,
+   "kind": "board_print",
+   "text": "18.869\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 24466301622,
+   "kind": "board_print",
+   "text": "18.911\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 24507150368,
+   "kind": "board_print",
+   "text": "18.951\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 24547875834,
+   "kind": "board_print",
+   "text": "18.992\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 24588695752,
+   "kind": "board_print",
+   "text": "19.033\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 24629555545,
+   "kind": "board_print",
+   "text": "19.074\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 24670255711,
+   "kind": "board_print",
+   "text": "19.115\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 24721167335,
+   "kind": "board_print",
+   "text": "19.156\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 24761910556,
+   "kind": "board_print",
+   "text": "19.198\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 24802736328,
+   "kind": "board_print",
+   "text": "19.238\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 24843436580,
+   "kind": "board_print",
+   "text": "19.279\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 24884119108,
+   "kind": "board_print",
+   "text": "19.320\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 24925010001,
+   "kind": "board_print",
+   "text": "19.361\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 24965765186,
+   "kind": "board_print",
+   "text": "19.402\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 25006652558,
+   "kind": "board_print",
+   "text": "19.443\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 25047368167,
+   "kind": "board_print",
+   "text": "19.485\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 25088122983,
+   "kind": "board_print",
+   "text": "19.525\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 25128997727,
+   "kind": "board_print",
+   "text": "19.566\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 25169838551,
+   "kind": "board_print",
+   "text": "19.608\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 25210644271,
+   "kind": "board_print",
+   "text": "19.649\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 25251448674,
+   "kind": "board_print",
+   "text": "19.689\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 25292258694,
+   "kind": "board_print",
+   "text": "19.730\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 25332934527,
+   "kind": "board_print",
+   "text": "19.771\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 25373585676,
+   "kind": "board_print",
+   "text": "19.812\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 25414402858,
+   "kind": "board_print",
+   "text": "19.853\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 25455081461,
+   "kind": "board_print",
+   "text": "19.894\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 25495723805,
+   "kind": "board_print",
+   "text": "19.935\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 25536497571,
+   "kind": "board_print",
+   "text": "19.976\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 25577166825,
+   "kind": "board_print",
+   "text": "20.017\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 25617840753,
+   "kind": "board_print",
+   "text": "20.059\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 25658641254,
+   "kind": "board_print",
+   "text": "20.099\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 25699317745,
+   "kind": "board_print",
+   "text": "20.140\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 25750120193,
+   "kind": "board_print",
+   "text": "20.181\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 25780704815,
+   "kind": "board_print",
+   "text": "20.222\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 25821370339,
+   "kind": "board_print",
+   "text": "20.263\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 25862107640,
+   "kind": "board_print",
+   "text": "20.304\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 25902839809,
+   "kind": "board_print",
+   "text": "20.346\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 25943647491,
+   "kind": "board_print",
+   "text": "20.386\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 25984462604,
+   "kind": "board_print",
+   "text": "20.427\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 26025096423,
+   "kind": "board_print",
+   "text": "20.469\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 26065636015,
+   "kind": "board_print",
+   "text": "20.509\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 26106364510,
+   "kind": "board_print",
+   "text": "20.550\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 26147098610,
+   "kind": "board_print",
+   "text": "20.591\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 26187837435,
+   "kind": "board_print",
+   "text": "20.632\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 26228637786,
+   "kind": "board_print",
+   "text": "20.673\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 26269307979,
+   "kind": "board_print",
+   "text": "20.714\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 26320196741,
+   "kind": "board_print",
+   "text": "20.755\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 26360906147,
+   "kind": "board_print",
+   "text": "20.797\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 26401693049,
+   "kind": "board_print",
+   "text": "20.837\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 26442460742,
+   "kind": "board_print",
+   "text": "20.879\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 26483225431,
+   "kind": "board_print",
+   "text": "20.919\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 26524029791,
+   "kind": "board_print",
+   "text": "20.960\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 26564822116,
+   "kind": "board_print",
+   "text": "21.001\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 26605497383,
+   "kind": "board_print",
+   "text": "21.042\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 26646353611,
+   "kind": "board_print",
+   "text": "21.083\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 26687085950,
+   "kind": "board_print",
+   "text": "21.124\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 26727810577,
+   "kind": "board_print",
+   "text": "21.166\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 26768515164,
+   "kind": "board_print",
+   "text": "21.206\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 26809208585,
+   "kind": "board_print",
+   "text": "21.247\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 26849894357,
+   "kind": "board_print",
+   "text": "21.289\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 26890610782,
+   "kind": "board_print",
+   "text": "21.329\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 26931322234,
+   "kind": "board_print",
+   "text": "21.370\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 26971975993,
+   "kind": "board_print",
+   "text": "21.411\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 27012724039,
+   "kind": "board_print",
+   "text": "21.452\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 27053405149,
+   "kind": "board_print",
+   "text": "21.493\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 27094152508,
+   "kind": "board_print",
+   "text": "21.534\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 27134856939,
+   "kind": "board_print",
+   "text": "21.576\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 27175682682,
+   "kind": "board_print",
+   "text": "21.616\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 27216603521,
+   "kind": "board_print",
+   "text": "21.657\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 27257238126,
+   "kind": "board_print",
+   "text": "21.699\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 27297862171,
+   "kind": "board_print",
+   "text": "21.739\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 27338539900,
+   "kind": "board_print",
+   "text": "21.780\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 27379178838,
+   "kind": "board_print",
+   "text": "21.822\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 27419843148,
+   "kind": "board_print",
+   "text": "21.862\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 27460646932,
+   "kind": "board_print",
+   "text": "21.903\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 27501438158,
+   "kind": "board_print",
+   "text": "21.944\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 27542230873,
+   "kind": "board_print",
+   "text": "21.986\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 27582911244,
+   "kind": "board_print",
+   "text": "22.026\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 27623527777,
+   "kind": "board_print",
+   "text": "22.067\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 27664231244,
+   "kind": "board_print",
+   "text": "22.109\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 27715054911,
+   "kind": "board_print",
+   "text": "22.150\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 27745590240,
+   "kind": "board_print",
+   "text": "22.190\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 27786393310,
+   "kind": "board_print",
+   "text": "22.231\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 27837141341,
+   "kind": "board_print",
+   "text": "22.272\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 27877873514,
+   "kind": "board_print",
+   "text": "22.313\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 27918588711,
+   "kind": "board_print",
+   "text": "22.354\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 27959225834,
+   "kind": "board_print",
+   "text": "22.395\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 27999957786,
+   "kind": "board_print",
+   "text": "22.436\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 28040732289,
+   "kind": "board_print",
+   "text": "22.477\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 28081453836,
+   "kind": "board_print",
+   "text": "22.518\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 28122300947,
+   "kind": "board_print",
+   "text": "22.560\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 28163072793,
+   "kind": "board_print",
+   "text": "22.600\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 28203781537,
+   "kind": "board_print",
+   "text": "22.641\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 28244692745,
+   "kind": "board_print",
+   "text": "22.683\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 28285323999,
+   "kind": "board_print",
+   "text": "22.723\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 28326157695,
+   "kind": "board_print",
+   "text": "22.764\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 28366832191,
+   "kind": "board_print",
+   "text": "22.805\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 28407485200,
+   "kind": "board_print",
+   "text": "22.846\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 28448212803,
+   "kind": "board_print",
+   "text": "22.887\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 28488901812,
+   "kind": "board_print",
+   "text": "22.928\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 28529762830,
+   "kind": "board_print",
+   "text": "22.970\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 28570476107,
+   "kind": "board_print",
+   "text": "23.011\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 28611223587,
+   "kind": "board_print",
+   "text": "23.051\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 28652037535,
+   "kind": "board_print",
+   "text": "23.092\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 28692759322,
+   "kind": "board_print",
+   "text": "23.133\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 28733461813,
+   "kind": "board_print",
+   "text": "23.174\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 28774078795,
+   "kind": "board_print",
+   "text": "23.215\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 28814819472,
+   "kind": "board_print",
+   "text": "23.257\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 28855444968,
+   "kind": "board_print",
+   "text": "23.297\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 28896168420,
+   "kind": "board_print",
+   "text": "23.339\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 28936898430,
+   "kind": "board_print",
+   "text": "23.380\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 28977581958,
+   "kind": "board_print",
+   "text": "23.420\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 29018377723,
+   "kind": "board_print",
+   "text": "23.461\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 29059106412,
+   "kind": "board_print",
+   "text": "23.502\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 29099712289,
+   "kind": "board_print",
+   "text": "23.544\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 29140404274,
+   "kind": "board_print",
+   "text": "23.584\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 29181075263,
+   "kind": "board_print",
+   "text": "23.625\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 29221838905,
+   "kind": "board_print",
+   "text": "23.666\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 29262651866,
+   "kind": "board_print",
+   "text": "23.707\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 29303369816,
+   "kind": "board_print",
+   "text": "23.748\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 29354209804,
+   "kind": "board_print",
+   "text": "23.790\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 29394921224,
+   "kind": "board_print",
+   "text": "23.830\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 29435587162,
+   "kind": "board_print",
+   "text": "23.871\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 29476381804,
+   "kind": "board_print",
+   "text": "23.913\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 29517151340,
+   "kind": "board_print",
+   "text": "23.953\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 29557845556,
+   "kind": "board_print",
+   "text": "23.994\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 29598596401,
+   "kind": "board_print",
+   "text": "24.035\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 29639306344,
+   "kind": "board_print",
+   "text": "24.076\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 29679966379,
+   "kind": "board_print",
+   "text": "24.117\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 29720682392,
+   "kind": "board_print",
+   "text": "24.158\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 29761404991,
+   "kind": "board_print",
+   "text": "24.200\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 29802185876,
+   "kind": "board_print",
+   "text": "24.240\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 29842827754,
+   "kind": "board_print",
+   "text": "24.281\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 29883610034,
+   "kind": "board_print",
+   "text": "24.322\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 29924435820,
+   "kind": "board_print",
+   "text": "24.364\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 29964972270,
+   "kind": "board_print",
+   "text": "24.404\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 30005708103,
+   "kind": "board_print",
+   "text": "24.445\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 30046557292,
+   "kind": "board_print",
+   "text": "24.486\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 30087263012,
+   "kind": "board_print",
+   "text": "24.527\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 30127998263,
+   "kind": "board_print",
+   "text": "24.568\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 30168738362,
+   "kind": "board_print",
+   "text": "24.609\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 30209472505,
+   "kind": "board_print",
+   "text": "24.651\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 30250287594,
+   "kind": "board_print",
+   "text": "24.691\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 30291136709,
+   "kind": "board_print",
+   "text": "24.733\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 30331816188,
+   "kind": "board_print",
+   "text": "24.773\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 30372491719,
+   "kind": "board_print",
+   "text": "24.814\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 30413157474,
+   "kind": "board_print",
+   "text": "24.855\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 30453842423,
+   "kind": "board_print",
+   "text": "24.896\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 30494673594,
+   "kind": "board_print",
+   "text": "24.937\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 30535360144,
+   "kind": "board_print",
+   "text": "24.978\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 30576110118,
+   "kind": "board_print",
+   "text": "25.019\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 30616877168,
+   "kind": "board_print",
+   "text": "25.061\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 30657556376,
+   "kind": "board_print",
+   "text": "25.101\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 30698281976,
+   "kind": "board_print",
+   "text": "25.142\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 30738895003,
+   "kind": "board_print",
+   "text": "25.184\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 30779355082,
+   "kind": "board_print",
+   "text": "25.224\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 30830198418,
+   "kind": "board_print",
+   "text": "25.265\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 30870983563,
+   "kind": "board_print",
+   "text": "25.306\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 30911608278,
+   "kind": "board_print",
+   "text": "25.347\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 30952225233,
+   "kind": "board_print",
+   "text": "25.388\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 30992953075,
+   "kind": "board_print",
+   "text": "25.429\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 31033752824,
+   "kind": "board_print",
+   "text": "25.471\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 31074575790,
+   "kind": "board_print",
+   "text": "25.511\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 31115260139,
+   "kind": "board_print",
+   "text": "25.552\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 31155898568,
+   "kind": "board_print",
+   "text": "25.594\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 31196662466,
+   "kind": "board_print",
+   "text": "25.634\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 31237329126,
+   "kind": "board_print",
+   "text": "25.675\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 31278113472,
+   "kind": "board_print",
+   "text": "25.716\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 31318816560,
+   "kind": "board_print",
+   "text": "25.757\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 31359518678,
+   "kind": "board_print",
+   "text": "25.798\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 31400280723,
+   "kind": "board_print",
+   "text": "25.839\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 31440980352,
+   "kind": "board_print",
+   "text": "25.881\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 31481551504,
+   "kind": "board_print",
+   "text": "25.921\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 31522270603,
+   "kind": "board_print",
+   "text": "25.962\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 31562974495,
+   "kind": "board_print",
+   "text": "26.004\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 31603711233,
+   "kind": "board_print",
+   "text": "26.044\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 31644534316,
+   "kind": "board_print",
+   "text": "26.085\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 31685304628,
+   "kind": "board_print",
+   "text": "26.126\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 31726012413,
+   "kind": "board_print",
+   "text": "26.167\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 31766719827,
+   "kind": "board_print",
+   "text": "26.208\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 31807468439,
+   "kind": "board_print",
+   "text": "26.249\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 31848133489,
+   "kind": "board_print",
+   "text": "26.291\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 31889007847,
+   "kind": "board_print",
+   "text": "26.331\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 31929880307,
+   "kind": "board_print",
+   "text": "26.372\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 31970690940,
+   "kind": "board_print",
+   "text": "26.414\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 32011509065,
+   "kind": "board_print",
+   "text": "26.454\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 32052194762,
+   "kind": "board_print",
+   "text": "26.495\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 32092975265,
+   "kind": "board_print",
+   "text": "26.536\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 32133758847,
+   "kind": "board_print",
+   "text": "26.577\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 32174592948,
+   "kind": "board_print",
+   "text": "26.618\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 32215364130,
+   "kind": "board_print",
+   "text": "26.659\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 32266423810,
+   "kind": "board_print",
+   "text": "26.701\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 32296998957,
+   "kind": "board_print",
+   "text": "26.741\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 32347950489,
+   "kind": "board_print",
+   "text": "26.783\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 32378577689,
+   "kind": "board_print",
+   "text": "26.823\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 32419390527,
+   "kind": "board_print",
+   "text": "26.864\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 32460255715,
+   "kind": "board_print",
+   "text": "26.905\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 32511080618,
+   "kind": "board_print",
+   "text": "26.946\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 32551786293,
+   "kind": "board_print",
+   "text": "26.988\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 32592681581,
+   "kind": "board_print",
+   "text": "27.028\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 32633354541,
+   "kind": "board_print",
+   "text": "27.070\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 32674033219,
+   "kind": "board_print",
+   "text": "27.110\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 32714724565,
+   "kind": "board_print",
+   "text": "27.151\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 32755451387,
+   "kind": "board_print",
+   "text": "27.192\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 32796220882,
+   "kind": "board_print",
+   "text": "27.233\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 32836908759,
+   "kind": "board_print",
+   "text": "27.275\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 32877587715,
+   "kind": "board_print",
+   "text": "27.315\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 32918252780,
+   "kind": "board_print",
+   "text": "27.356\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 32958938986,
+   "kind": "board_print",
+   "text": "27.397\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 32999546555,
+   "kind": "board_print",
+   "text": "27.438\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 33040273894,
+   "kind": "board_print",
+   "text": "27.479\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 33081024868,
+   "kind": "board_print",
+   "text": "27.521\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 33121695850,
+   "kind": "board_print",
+   "text": "27.561\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 33162428043,
+   "kind": "board_print",
+   "text": "27.602\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 33203113812,
+   "kind": "board_print",
+   "text": "27.643\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 33243799412,
+   "kind": "board_print",
+   "text": "27.685\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 33284504498,
+   "kind": "board_print",
+   "text": "27.725\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 33325126236,
+   "kind": "board_print",
+   "text": "27.766\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 33365724813,
+   "kind": "board_print",
+   "text": "27.807\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 33406281304,
+   "kind": "board_print",
+   "text": "27.848\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 33447003430,
+   "kind": "board_print",
+   "text": "27.889\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 33487634683,
+   "kind": "board_print",
+   "text": "27.931\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 33528195828,
+   "kind": "board_print",
+   "text": "27.972\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 33568694937,
+   "kind": "board_print",
+   "text": "28.012\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 33609328442,
+   "kind": "board_print",
+   "text": "28.054\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 33650220067,
+   "kind": "board_print",
+   "text": "28.094\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 33690876847,
+   "kind": "board_print",
+   "text": "28.135\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 33731595649,
+   "kind": "board_print",
+   "text": "28.176\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 33772409492,
+   "kind": "board_print",
+   "text": "28.217\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 33813138063,
+   "kind": "board_print",
+   "text": "28.258\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 33864007629,
+   "kind": "board_print",
+   "text": "28.299\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 33904757067,
+   "kind": "board_print",
+   "text": "28.340\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 33945385114,
+   "kind": "board_print",
+   "text": "28.382\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 33986139830,
+   "kind": "board_print",
+   "text": "28.422\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 34026884821,
+   "kind": "board_print",
+   "text": "28.463\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 34067742531,
+   "kind": "board_print",
+   "text": "28.504\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 34108584141,
+   "kind": "board_print",
+   "text": "28.545\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 34149404376,
+   "kind": "board_print",
+   "text": "28.586\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 34190176811,
+   "kind": "board_print",
+   "text": "28.627\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 34230834896,
+   "kind": "board_print",
+   "text": "28.669\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 34271582284,
+   "kind": "board_print",
+   "text": "28.709\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 34312486117,
+   "kind": "board_print",
+   "text": "28.751\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 34353290939,
+   "kind": "board_print",
+   "text": "28.791\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 34394104018,
+   "kind": "board_print",
+   "text": "28.832\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 34434881393,
+   "kind": "board_print",
+   "text": "28.873\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 34475499726,
+   "kind": "board_print",
+   "text": "28.914\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 34516195520,
+   "kind": "board_print",
+   "text": "28.955\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 34556904787,
+   "kind": "board_print",
+   "text": "28.996\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 34597512414,
+   "kind": "board_print",
+   "text": "29.038\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 34638415823,
+   "kind": "board_print",
+   "text": "29.078\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 34679075282,
+   "kind": "board_print",
+   "text": "29.119\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 34719859138,
+   "kind": "board_print",
+   "text": "29.160\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 34760674121,
+   "kind": "board_print",
+   "text": "29.202\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 34801397657,
+   "kind": "board_print",
+   "text": "29.242\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 34842125445,
+   "kind": "board_print",
+   "text": "29.283\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 34882963559,
+   "kind": "board_print",
+   "text": "29.325\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 34923725582,
+   "kind": "board_print",
+   "text": "29.366\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 34964592419,
+   "kind": "board_print",
+   "text": "29.406\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 35005265855,
+   "kind": "board_print",
+   "text": "29.447\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 35045892958,
+   "kind": "board_print",
+   "text": "29.488\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 35086590985,
+   "kind": "board_print",
+   "text": "29.529\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 35127219206,
+   "kind": "board_print",
+   "text": "29.570\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 35167887233,
+   "kind": "board_print",
+   "text": "29.612\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 35208674115,
+   "kind": "board_print",
+   "text": "29.652\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 35249358611,
+   "kind": "board_print",
+   "text": "29.693\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 35290186369,
+   "kind": "board_print",
+   "text": "29.735\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 35330996507,
+   "kind": "board_print",
+   "text": "29.775\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 35371786491,
+   "kind": "board_print",
+   "text": "29.816\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 35412603611,
+   "kind": "board_print",
+   "text": "29.857\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 35453380756,
+   "kind": "board_print",
+   "text": "29.898\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 35504226331,
+   "kind": "board_print",
+   "text": "29.939\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 35544931766,
+   "kind": "board_print",
+   "text": "29.980\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 35585622214,
+   "kind": "board_print",
+   "text": "30.022\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 35626381001,
+   "kind": "board_print",
+   "text": "30.062\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 35667243686,
+   "kind": "board_print",
+   "text": "30.104\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 35708028691,
+   "kind": "board_print",
+   "text": "30.144\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 35748673257,
+   "kind": "board_print",
+   "text": "30.185\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 35789339076,
+   "kind": "board_print",
+   "text": "30.226\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 35830049256,
+   "kind": "board_print",
+   "text": "30.267\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 35870895446,
+   "kind": "board_print",
+   "text": "30.308\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 35911657594,
+   "kind": "board_print",
+   "text": "30.350\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 35952327858,
+   "kind": "board_print",
+   "text": "30.390\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 35993021386,
+   "kind": "board_print",
+   "text": "30.432\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 36033632209,
+   "kind": "board_print",
+   "text": "30.472\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 36074478200,
+   "kind": "board_print",
+   "text": "30.513\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 36115139944,
+   "kind": "board_print",
+   "text": "30.555\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 36155839987,
+   "kind": "board_print",
+   "text": "30.595\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 36196485163,
+   "kind": "board_print",
+   "text": "30.636\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 36237172737,
+   "kind": "board_print",
+   "text": "30.677\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 36277839494,
+   "kind": "board_print",
+   "text": "30.718\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 36318655458,
+   "kind": "board_print",
+   "text": "30.759\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 36359275244,
+   "kind": "board_print",
+   "text": "30.800\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 36399917335,
+   "kind": "board_print",
+   "text": "30.842\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 36440703517,
+   "kind": "board_print",
+   "text": "30.882\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 36481479270,
+   "kind": "board_print",
+   "text": "30.923\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 36522246779,
+   "kind": "board_print",
+   "text": "30.964\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 36562894167,
+   "kind": "board_print",
+   "text": "31.005\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 36613749130,
+   "kind": "board_print",
+   "text": "31.046\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 36644459538,
+   "kind": "board_print",
+   "text": "31.087\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 36685208040,
+   "kind": "board_print",
+   "text": "31.129\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 36725785739,
+   "kind": "board_print",
+   "text": "31.169\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 36766556883,
+   "kind": "board_print",
+   "text": "31.210\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 36807327744,
+   "kind": "board_print",
+   "text": "31.252\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 36848113262,
+   "kind": "board_print",
+   "text": "31.292\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 36899046550,
+   "kind": "board_print",
+   "text": "31.334\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 36929568674,
+   "kind": "board_print",
+   "text": "31.374\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 36970373190,
+   "kind": "board_print",
+   "text": "31.415\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 37011112315,
+   "kind": "board_print",
+   "text": "31.456\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 37062082721,
+   "kind": "board_print",
+   "text": "31.497\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 37102828534,
+   "kind": "board_print",
+   "text": "31.538\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 37143530781,
+   "kind": "board_print",
+   "text": "31.579\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 37184432895,
+   "kind": "board_print",
+   "text": "31.620\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 37225058177,
+   "kind": "board_print",
+   "text": "31.662\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 37265508893,
+   "kind": "board_print",
+   "text": "31.703\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 37305917664,
+   "kind": "board_print",
+   "text": "31.743\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 37346328053,
+   "kind": "board_print",
+   "text": "31.784\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 37386730341,
+   "kind": "board_print",
+   "text": "31.825\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 37427107771,
+   "kind": "board_print",
+   "text": "31.866\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 37467483070,
+   "kind": "board_print",
+   "text": "31.907\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 37507855428,
+   "kind": "board_print",
+   "text": "31.949\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 37548258874,
+   "kind": "board_print",
+   "text": "31.989\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 37588646694,
+   "kind": "board_print",
+   "text": "32.030\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 37629014602,
+   "kind": "board_print",
+   "text": "32.072\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 37669403622,
+   "kind": "board_print",
+   "text": "32.113\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 37709778875,
+   "kind": "board_print",
+   "text": "32.153\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 37750193082,
+   "kind": "board_print",
+   "text": "32.194\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 37800659607,
+   "kind": "board_print",
+   "text": "32.236\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 37831005861,
+   "kind": "board_print",
+   "text": "32.276\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 37881483775,
+   "kind": "board_print",
+   "text": "32.317\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 37921874611,
+   "kind": "board_print",
+   "text": "32.358\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 37962244641,
+   "kind": "board_print",
+   "text": "32.399\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 38002611083,
+   "kind": "board_print",
+   "text": "32.440\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 38042974556,
+   "kind": "board_print",
+   "text": "32.481\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 38083329716,
+   "kind": "board_print",
+   "text": "32.523\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 38123756704,
+   "kind": "board_print",
+   "text": "32.563\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 38164192005,
+   "kind": "board_print",
+   "text": "32.604\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 38204618247,
+   "kind": "board_print",
+   "text": "32.645\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 38245032837,
+   "kind": "board_print",
+   "text": "32.686\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 38285481128,
+   "kind": "board_print",
+   "text": "32.727\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 38325998889,
+   "kind": "board_print",
+   "text": "32.768\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 38366485816,
+   "kind": "board_print",
+   "text": "32.809\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 38406928049,
+   "kind": "board_print",
+   "text": "32.850\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 38447361644,
+   "kind": "board_print",
+   "text": "32.891\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 38497899438,
+   "kind": "board_print",
+   "text": "32.933\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 38528538966,
+   "kind": "board_print",
+   "text": "32.973\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 38569310247,
+   "kind": "board_print",
+   "text": "33.014\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 38620332198,
+   "kind": "board_print",
+   "text": "33.055\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 38661122863,
+   "kind": "board_print",
+   "text": "33.096\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 38701982052,
+   "kind": "board_print",
+   "text": "33.137\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 38742803567,
+   "kind": "board_print",
+   "text": "33.178\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 38783619482,
+   "kind": "board_print",
+   "text": "33.219\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 38824474613,
+   "kind": "board_print",
+   "text": "33.260\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 38865247281,
+   "kind": "board_print",
+   "text": "33.301\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 38905987000,
+   "kind": "board_print",
+   "text": "33.343\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 38946863494,
+   "kind": "board_print",
+   "text": "33.383\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 38987668559,
+   "kind": "board_print",
+   "text": "33.425\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 39028434527,
+   "kind": "board_print",
+   "text": "33.465\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 39069166315,
+   "kind": "board_print",
+   "text": "33.507\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 39109994108,
+   "kind": "board_print",
+   "text": "33.547\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 39150590551,
+   "kind": "board_print",
+   "text": "33.588\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 39191397874,
+   "kind": "board_print",
+   "text": "33.629\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 39232325314,
+   "kind": "board_print",
+   "text": "33.670\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 39273018933,
+   "kind": "board_print",
+   "text": "33.711\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 39313780431,
+   "kind": "board_print",
+   "text": "33.752\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 39354655397,
+   "kind": "board_print",
+   "text": "33.794\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 39395412880,
+   "kind": "board_print",
+   "text": "33.834\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 39436160910,
+   "kind": "board_print",
+   "text": "33.875\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 39476863027,
+   "kind": "board_print",
+   "text": "33.916\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 39517682054,
+   "kind": "board_print",
+   "text": "33.957\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 39558538693,
+   "kind": "board_print",
+   "text": "33.998\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 39599381411,
+   "kind": "board_print",
+   "text": "34.039\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 39640077638,
+   "kind": "board_print",
+   "text": "34.081\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 39680854076,
+   "kind": "board_print",
+   "text": "34.121\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 39721586717,
+   "kind": "board_print",
+   "text": "34.162\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 39762435834,
+   "kind": "board_print",
+   "text": "34.204\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 39803281792,
+   "kind": "board_print",
+   "text": "34.244\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 39844094584,
+   "kind": "board_print",
+   "text": "34.285\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 39884975943,
+   "kind": "board_print",
+   "text": "34.326\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 39925659219,
+   "kind": "board_print",
+   "text": "34.367\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 39966339082,
+   "kind": "board_print",
+   "text": "34.408\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 40006974429,
+   "kind": "board_print",
+   "text": "34.449\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 40047535526,
+   "kind": "board_print",
+   "text": "34.490\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 40088273699,
+   "kind": "board_print",
+   "text": "34.532\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 40128993516,
+   "kind": "board_print",
+   "text": "34.572\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 40169680368,
+   "kind": "board_print",
+   "text": "34.614\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 40210502031,
+   "kind": "board_print",
+   "text": "34.654\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 40251212644,
+   "kind": "board_print",
+   "text": "34.695\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 40301968096,
+   "kind": "board_print",
+   "text": "34.737\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 40332653223,
+   "kind": "board_print",
+   "text": "34.777\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 40373252917,
+   "kind": "board_print",
+   "text": "34.818\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 40424116492,
+   "kind": "board_print",
+   "text": "34.859\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 40464919920,
+   "kind": "board_print",
+   "text": "34.900\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 40505634933,
+   "kind": "board_print",
+   "text": "34.941\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 40546432254,
+   "kind": "board_print",
+   "text": "34.982\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 40587198327,
+   "kind": "board_print",
+   "text": "35.024\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 40627942779,
+   "kind": "board_print",
+   "text": "35.064\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 40668756581,
+   "kind": "board_print",
+   "text": "35.105\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 40709563612,
+   "kind": "board_print",
+   "text": "35.145\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 40750342767,
+   "kind": "board_print",
+   "text": "35.187\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 40791145600,
+   "kind": "board_print",
+   "text": "35.228\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 40831797817,
+   "kind": "board_print",
+   "text": "35.270\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 40872660504,
+   "kind": "board_print",
+   "text": "35.310\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 40913361621,
+   "kind": "board_print",
+   "text": "35.351\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 40954049832,
+   "kind": "board_print",
+   "text": "35.392\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 40994893143,
+   "kind": "board_print",
+   "text": "35.434\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 41035741472,
+   "kind": "board_print",
+   "text": "35.474\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 41076588073,
+   "kind": "board_print",
+   "text": "35.514\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 41117344715,
+   "kind": "board_print",
+   "text": "35.556\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 41158179801,
+   "kind": "board_print",
+   "text": "35.597\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 41199017674,
+   "kind": "board_print",
+   "text": "35.638\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 41239713395,
+   "kind": "board_print",
+   "text": "35.679\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 41280498471,
+   "kind": "board_print",
+   "text": "35.720\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 41321170776,
+   "kind": "board_print",
+   "text": "35.762\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 41361916156,
+   "kind": "board_print",
+   "text": "35.803\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 41402733952,
+   "kind": "board_print",
+   "text": "35.843\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 41443415502,
+   "kind": "board_print",
+   "text": "35.884\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 41484077515,
+   "kind": "board_print",
+   "text": "35.925\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 41524830101,
+   "kind": "board_print",
+   "text": "35.966\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 41565499005,
+   "kind": "board_print",
+   "text": "36.007\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 41606283727,
+   "kind": "board_print",
+   "text": "36.048\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 41646951456,
+   "kind": "board_print",
+   "text": "36.089\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 41687755953,
+   "kind": "board_print",
+   "text": "36.130\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 41728445628,
+   "kind": "board_print",
+   "text": "36.171\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 41769182940,
+   "kind": "board_print",
+   "text": "36.212\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 41809920513,
+   "kind": "board_print",
+   "text": "36.253\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 41850998284,
+   "kind": "board_print",
+   "text": "36.295\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 41891781087,
+   "kind": "board_print",
+   "text": "36.335\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 41932620354,
+   "kind": "board_print",
+   "text": "36.376\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 41973358420,
+   "kind": "board_print",
+   "text": "36.417\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 42014117417,
+   "kind": "board_print",
+   "text": "36.458\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 42054932683,
+   "kind": "board_print",
+   "text": "36.499\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 42095641895,
+   "kind": "board_print",
+   "text": "36.540\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 42136424825,
+   "kind": "board_print",
+   "text": "36.581\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 42177142553,
+   "kind": "board_print",
+   "text": "36.622\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 42228150598,
+   "kind": "board_print",
+   "text": "36.664\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 42268957856,
+   "kind": "board_print",
+   "text": "36.704\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 42309780181,
+   "kind": "board_print",
+   "text": "36.745\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 42350630434,
+   "kind": "board_print",
+   "text": "36.787\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 42391409628,
+   "kind": "board_print",
+   "text": "36.827\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 42432286870,
+   "kind": "board_print",
+   "text": "36.868\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 42473081512,
+   "kind": "board_print",
+   "text": "36.910\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 42513961041,
+   "kind": "board_print",
+   "text": "36.950\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 42554674866,
+   "kind": "board_print",
+   "text": "36.991\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 42595450345,
+   "kind": "board_print",
+   "text": "37.032\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 42636145831,
+   "kind": "board_print",
+   "text": "37.073\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 42677067510,
+   "kind": "board_print",
+   "text": "37.115\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 42717816722,
+   "kind": "board_print",
+   "text": "37.155\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 42758717188,
+   "kind": "board_print",
+   "text": "37.197\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 42799530438,
+   "kind": "board_print",
+   "text": "37.237\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 42840261688,
+   "kind": "board_print",
+   "text": "37.278\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 42881037760,
+   "kind": "board_print",
+   "text": "37.319\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 42921736384,
+   "kind": "board_print",
+   "text": "37.360\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 42962580865,
+   "kind": "board_print",
+   "text": "37.401\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 43003394360,
+   "kind": "board_print",
+   "text": "37.442\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 43044137921,
+   "kind": "board_print",
+   "text": "37.483\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 43084803632,
+   "kind": "board_print",
+   "text": "37.525\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 43125487127,
+   "kind": "board_print",
+   "text": "37.565\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 43166179730,
+   "kind": "board_print",
+   "text": "37.606\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 43207025996,
+   "kind": "board_print",
+   "text": "37.647\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 43247885155,
+   "kind": "board_print",
+   "text": "37.688\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 43288784357,
+   "kind": "board_print",
+   "text": "37.729\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 43329497459,
+   "kind": "board_print",
+   "text": "37.770\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 43370063088,
+   "kind": "board_print",
+   "text": "37.811\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 43410796631,
+   "kind": "board_print",
+   "text": "37.852\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 43451562877,
+   "kind": "board_print",
+   "text": "37.893\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 43492344994,
+   "kind": "board_print",
+   "text": "37.935\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 43533124708,
+   "kind": "board_print",
+   "text": "37.975\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 43573884333,
+   "kind": "board_print",
+   "text": "38.016\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 43614720253,
+   "kind": "board_print",
+   "text": "38.057\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 43655515367,
+   "kind": "board_print",
+   "text": "38.098\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 43696204040,
+   "kind": "board_print",
+   "text": "38.139\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 43736878565,
+   "kind": "board_print",
+   "text": "38.180\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 43777629000,
+   "kind": "board_print",
+   "text": "38.221\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 43818209083,
+   "kind": "board_print",
+   "text": "38.262\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 43869187170,
+   "kind": "board_print",
+   "text": "38.304\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 43899827756,
+   "kind": "board_print",
+   "text": "38.344\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 43950840995,
+   "kind": "board_print",
+   "text": "38.386\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 43991579691,
+   "kind": "board_print",
+   "text": "38.426\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 44022196692,
+   "kind": "board_print",
+   "text": "38.466\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 44073067551,
+   "kind": "board_print",
+   "text": "38.508\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 44113739064,
+   "kind": "board_print",
+   "text": "38.549\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 44154505954,
+   "kind": "board_print",
+   "text": "38.590\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 44195176425,
+   "kind": "board_print",
+   "text": "38.631\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 44235903017,
+   "kind": "board_print",
+   "text": "38.672\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 44276710602,
+   "kind": "board_print",
+   "text": "38.714\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 44317574796,
+   "kind": "board_print",
+   "text": "38.754\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 44358326278,
+   "kind": "board_print",
+   "text": "38.795\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 44399146089,
+   "kind": "board_print",
+   "text": "38.836\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 44440025051,
+   "kind": "board_print",
+   "text": "38.877\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 44480722853,
+   "kind": "board_print",
+   "text": "38.918\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 44521515183,
+   "kind": "board_print",
+   "text": "38.959\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 44562321974,
+   "kind": "board_print",
+   "text": "39.000\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 44603097666,
+   "kind": "board_print",
+   "text": "39.041\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 44643866827,
+   "kind": "board_print",
+   "text": "39.082\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 44684714448,
+   "kind": "board_print",
+   "text": "39.124\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 44725358071,
+   "kind": "board_print",
+   "text": "39.164\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 44766142850,
+   "kind": "board_print",
+   "text": "39.205\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 44806957920,
+   "kind": "board_print",
+   "text": "39.247\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 44847661097,
+   "kind": "board_print",
+   "text": "39.287\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 44888594381,
+   "kind": "board_print",
+   "text": "39.328\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 44929420240,
+   "kind": "board_print",
+   "text": "39.369\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 44970235394,
+   "kind": "board_print",
+   "text": "39.410\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 45010974157,
+   "kind": "board_print",
+   "text": "39.451\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 45051587335,
+   "kind": "board_print",
+   "text": "39.492\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 45092449546,
+   "kind": "board_print",
+   "text": "39.533\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 45133071276,
+   "kind": "board_print",
+   "text": "39.575\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 45173768802,
+   "kind": "board_print",
+   "text": "39.615\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 45214444271,
+   "kind": "board_print",
+   "text": "39.656\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 45255253110,
+   "kind": "board_print",
+   "text": "39.697\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 45306120418,
+   "kind": "board_print",
+   "text": "39.738\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 45336621099,
+   "kind": "board_print",
+   "text": "39.780\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 45377246681,
+   "kind": "board_print",
+   "text": "39.820\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 45418015391,
+   "kind": "board_print",
+   "text": "39.861\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 45458875214,
+   "kind": "board_print",
+   "text": "39.902\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 45499621854,
+   "kind": "board_print",
+   "text": "39.943\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 45540419778,
+   "kind": "board_print",
+   "text": "39.985\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 45581206060,
+   "kind": "board_print",
+   "text": "40.025\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 45621999468,
+   "kind": "board_print",
+   "text": "40.066\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 45662692624,
+   "kind": "board_print",
+   "text": "40.107\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 45713616500,
+   "kind": "board_print",
+   "text": "40.148\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 45744265092,
+   "kind": "board_print",
+   "text": "40.188\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 45795090646,
+   "kind": "board_print",
+   "text": "40.230\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 45835887560,
+   "kind": "board_print",
+   "text": "40.271\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 45876663618,
+   "kind": "board_print",
+   "text": "40.312\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 45917369807,
+   "kind": "board_print",
+   "text": "40.354\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 45958158323,
+   "kind": "board_print",
+   "text": "40.394\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 45998927983,
+   "kind": "board_print",
+   "text": "40.435\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 46039586589,
+   "kind": "board_print",
+   "text": "40.476\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 46080318221,
+   "kind": "board_print",
+   "text": "40.517\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 46121036820,
+   "kind": "board_print",
+   "text": "40.558\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 46161709604,
+   "kind": "board_print",
+   "text": "40.600\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 46202471976,
+   "kind": "board_print",
+   "text": "40.640\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 46243254876,
+   "kind": "board_print",
+   "text": "40.681\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 46284029993,
+   "kind": "board_print",
+   "text": "40.722\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 46324764039,
+   "kind": "board_print",
+   "text": "40.763\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 46365419993,
+   "kind": "board_print",
+   "text": "40.805\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 46406184805,
+   "kind": "board_print",
+   "text": "40.845\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 46446956232,
+   "kind": "board_print",
+   "text": "40.886\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 46487699658,
+   "kind": "board_print",
+   "text": "40.927\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 46528500067,
+   "kind": "board_print",
+   "text": "40.968\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 46569281272,
+   "kind": "board_print",
+   "text": "41.010\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 46610186667,
+   "kind": "board_print",
+   "text": "41.050\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 46650960272,
+   "kind": "board_print",
+   "text": "41.091\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 46691636266,
+   "kind": "board_print",
+   "text": "41.132\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 46732437502,
+   "kind": "board_print",
+   "text": "41.173\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 46773152224,
+   "kind": "board_print",
+   "text": "41.214\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 46813942726,
+   "kind": "board_print",
+   "text": "41.256\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 46854595640,
+   "kind": "board_print",
+   "text": "41.296\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 46895302326,
+   "kind": "board_print",
+   "text": "41.338\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 46935921476,
+   "kind": "board_print",
+   "text": "41.379\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 46976642317,
+   "kind": "board_print",
+   "text": "41.419\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 47017383829,
+   "kind": "board_print",
+   "text": "41.461\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 47058028382,
+   "kind": "board_print",
+   "text": "41.501\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 47098743509,
+   "kind": "board_print",
+   "text": "41.543\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 47139504062,
+   "kind": "board_print",
+   "text": "41.583\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 47180196079,
+   "kind": "board_print",
+   "text": "41.624\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 47231111849,
+   "kind": "board_print",
+   "text": "41.666\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 47271794873,
+   "kind": "board_print",
+   "text": "41.707\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 47312560632,
+   "kind": "board_print",
+   "text": "41.748\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 47353326877,
+   "kind": "board_print",
+   "text": "41.789\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 47394034795,
+   "kind": "board_print",
+   "text": "41.830\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 47434826911,
+   "kind": "board_print",
+   "text": "41.871\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 47475524300,
+   "kind": "board_print",
+   "text": "41.912\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 47516286473,
+   "kind": "board_print",
+   "text": "41.953\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 47557153531,
+   "kind": "board_print",
+   "text": "41.993\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 47597995378,
+   "kind": "board_print",
+   "text": "42.034\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 47638859247,
+   "kind": "board_print",
+   "text": "42.076\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 47679624128,
+   "kind": "board_print",
+   "text": "42.117\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 47720496911,
+   "kind": "board_print",
+   "text": "42.158\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 47761167283,
+   "kind": "board_print",
+   "text": "42.199\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 47801846460,
+   "kind": "board_print",
+   "text": "42.239\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 47842687105,
+   "kind": "board_print",
+   "text": "42.281\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 47883419425,
+   "kind": "board_print",
+   "text": "42.321\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 47924180237,
+   "kind": "board_print",
+   "text": "42.363\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 47965101259,
+   "kind": "board_print",
+   "text": "42.403\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 48005832948,
+   "kind": "board_print",
+   "text": "42.444\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 48046613642,
+   "kind": "board_print",
+   "text": "42.486\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 48087367789,
+   "kind": "board_print",
+   "text": "42.526\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 48128174376,
+   "kind": "board_print",
+   "text": "42.568\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 48168977640,
+   "kind": "board_print",
+   "text": "42.609\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 48209787861,
+   "kind": "board_print",
+   "text": "42.649\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 48250514757,
+   "kind": "board_print",
+   "text": "42.691\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 48291136952,
+   "kind": "board_print",
+   "text": "42.731\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 48331889599,
+   "kind": "board_print",
+   "text": "42.773\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 48372659302,
+   "kind": "board_print",
+   "text": "42.813\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 48413557560,
+   "kind": "board_print",
+   "text": "42.854\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 48454355381,
+   "kind": "board_print",
+   "text": "42.896\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 48495289294,
+   "kind": "board_print",
+   "text": "42.937\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 48536013922,
+   "kind": "board_print",
+   "text": "42.977\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 48576672658,
+   "kind": "board_print",
+   "text": "43.018\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 48617390012,
+   "kind": "board_print",
+   "text": "43.060\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 48658228173,
+   "kind": "board_print",
+   "text": "43.101\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 48699138478,
+   "kind": "board_print",
+   "text": "43.141\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 48739926349,
+   "kind": "board_print",
+   "text": "43.182\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 48780669780,
+   "kind": "board_print",
+   "text": "43.223\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 48821329863,
+   "kind": "board_print",
+   "text": "43.264\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 48862181375,
+   "kind": "board_print",
+   "text": "43.306\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 48902903854,
+   "kind": "board_print",
+   "text": "43.347\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 48943658808,
+   "kind": "board_print",
+   "text": "43.388\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 48984393387,
+   "kind": "board_print",
+   "text": "43.428\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 49035252688,
+   "kind": "board_print",
+   "text": "43.470\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 49065695868,
+   "kind": "board_print",
+   "text": "43.510\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 49106438743,
+   "kind": "board_print",
+   "text": "43.551\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 49157321728,
+   "kind": "board_print",
+   "text": "43.592\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 49198127105,
+   "kind": "board_print",
+   "text": "43.633\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 49238796529,
+   "kind": "board_print",
+   "text": "43.674\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 49279468501,
+   "kind": "board_print",
+   "text": "43.716\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 49320158285,
+   "kind": "board_print",
+   "text": "43.756\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 49360844779,
+   "kind": "board_print",
+   "text": "43.797\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 49401530205,
+   "kind": "board_print",
+   "text": "43.839\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 49442237879,
+   "kind": "board_print",
+   "text": "43.880\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 49482984383,
+   "kind": "board_print",
+   "text": "43.921\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 49523610223,
+   "kind": "board_print",
+   "text": "43.961\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 49564248855,
+   "kind": "board_print",
+   "text": "44.003\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 49605003016,
+   "kind": "board_print",
+   "text": "44.044\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 49645709246,
+   "kind": "board_print",
+   "text": "44.085\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 49686466965,
+   "kind": "board_print",
+   "text": "44.126\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 49727088951,
+   "kind": "board_print",
+   "text": "44.167\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 49767881392,
+   "kind": "board_print",
+   "text": "44.208\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 49808676161,
+   "kind": "board_print",
+   "text": "44.248\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 49849285815,
+   "kind": "board_print",
+   "text": "44.290\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 49889992378,
+   "kind": "board_print",
+   "text": "44.330\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 49930791600,
+   "kind": "board_print",
+   "text": "44.371\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 49971491104,
+   "kind": "board_print",
+   "text": "44.413\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 50012294860,
+   "kind": "board_print",
+   "text": "44.453\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 50052999777,
+   "kind": "board_print",
+   "text": "44.494\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 50093778588,
+   "kind": "board_print",
+   "text": "44.536\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 50134569541,
+   "kind": "board_print",
+   "text": "44.577\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 50175270511,
+   "kind": "board_print",
+   "text": "44.618\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 50216082355,
+   "kind": "board_print",
+   "text": "44.659\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 50256796493,
+   "kind": "board_print",
+   "text": "44.699\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 50297519551,
+   "kind": "board_print",
+   "text": "44.741\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 50338323500,
+   "kind": "board_print",
+   "text": "44.781\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 50379097835,
+   "kind": "board_print",
+   "text": "44.822\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 50419880552,
+   "kind": "board_print",
+   "text": "44.864\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 50460735348,
+   "kind": "board_print",
+   "text": "44.904\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 50501492746,
+   "kind": "board_print",
+   "text": "44.945\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 50542264353,
+   "kind": "board_print",
+   "text": "44.987\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 50593221266,
+   "kind": "board_print",
+   "text": "45.028\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 50634164137,
+   "kind": "board_print",
+   "text": "45.069\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 50674968697,
+   "kind": "board_print",
+   "text": "45.110\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 50715813210,
+   "kind": "board_print",
+   "text": "45.151\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 50746385542,
+   "kind": "board_print",
+   "text": "45.191\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 50797280360,
+   "kind": "board_print",
+   "text": "45.232\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 50837916241,
+   "kind": "board_print",
+   "text": "45.274\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 50878783965,
+   "kind": "board_print",
+   "text": "45.314\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 50919636216,
+   "kind": "board_print",
+   "text": "45.355\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 50960742109,
+   "kind": "board_print",
+   "text": "45.397\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 51001683110,
+   "kind": "board_print",
+   "text": "45.438\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 51042636032,
+   "kind": "board_print",
+   "text": "45.479\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 51083497969,
+   "kind": "board_print",
+   "text": "45.520\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 51124395198,
+   "kind": "board_print",
+   "text": "45.560\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 51165331947,
+   "kind": "board_print",
+   "text": "45.601\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 51206281177,
+   "kind": "board_print",
+   "text": "45.642\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 51247205008,
+   "kind": "board_print",
+   "text": "45.683\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 51288057957,
+   "kind": "board_print",
+   "text": "45.724\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 51329030543,
+   "kind": "board_print",
+   "text": "45.766\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 51369832604,
+   "kind": "board_print",
+   "text": "45.807\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 51410700538,
+   "kind": "board_print",
+   "text": "45.848\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 51451487221,
+   "kind": "board_print",
+   "text": "45.889\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 51492425659,
+   "kind": "board_print",
+   "text": "45.929\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 51533118703,
+   "kind": "board_print",
+   "text": "45.971\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 51573883680,
+   "kind": "board_print",
+   "text": "46.011\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 51614728241,
+   "kind": "board_print",
+   "text": "46.053\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 51655453374,
+   "kind": "board_print",
+   "text": "46.093\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 51696317630,
+   "kind": "board_print",
+   "text": "46.135\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 51737185706,
+   "kind": "board_print",
+   "text": "46.176\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 51777953178,
+   "kind": "board_print",
+   "text": "46.217\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 51818785134,
+   "kind": "board_print",
+   "text": "46.257\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 51859566367,
+   "kind": "board_print",
+   "text": "46.299\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 51900532548,
+   "kind": "board_print",
+   "text": "46.340\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 51941281807,
+   "kind": "board_print",
+   "text": "46.381\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 51982115276,
+   "kind": "board_print",
+   "text": "46.422\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 52022807492,
+   "kind": "board_print",
+   "text": "46.463\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 52063681537,
+   "kind": "board_print",
+   "text": "46.503\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 52104795531,
+   "kind": "board_print",
+   "text": "46.545\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 52145587710,
+   "kind": "board_print",
+   "text": "46.586\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 52186440848,
+   "kind": "board_print",
+   "text": "46.626\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 52227267606,
+   "kind": "board_print",
+   "text": "46.668\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 52268111033,
+   "kind": "board_print",
+   "text": "46.709\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 52308957690,
+   "kind": "board_print",
+   "text": "46.749\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 52349774718,
+   "kind": "board_print",
+   "text": "46.790\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 52390699005,
+   "kind": "board_print",
+   "text": "46.831\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 52431637670,
+   "kind": "board_print",
+   "text": "46.873\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 52472511986,
+   "kind": "board_print",
+   "text": "46.914\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 52513373931,
+   "kind": "board_print",
+   "text": "46.955\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 52554304648,
+   "kind": "board_print",
+   "text": "46.995\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 52595147745,
+   "kind": "board_print",
+   "text": "47.037\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 52636078219,
+   "kind": "board_print",
+   "text": "47.078\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 52676898695,
+   "kind": "board_print",
+   "text": "47.119\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 52717841311,
+   "kind": "board_print",
+   "text": "47.160\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 52758596080,
+   "kind": "board_print",
+   "text": "47.201\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 52799374432,
+   "kind": "board_print",
+   "text": "47.242\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 52840190948,
+   "kind": "board_print",
+   "text": "47.283\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 52880891394,
+   "kind": "board_print",
+   "text": "47.324\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 52921671796,
+   "kind": "board_print",
+   "text": "47.365\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 52962531392,
+   "kind": "board_print",
+   "text": "47.406\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 53003469029,
+   "kind": "board_print",
+   "text": "47.446\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 53044316039,
+   "kind": "board_print",
+   "text": "47.487\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 53085093519,
+   "kind": "board_print",
+   "text": "47.529\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 53125999280,
+   "kind": "board_print",
+   "text": "47.570\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 53166819314,
+   "kind": "board_print",
+   "text": "47.610\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 53207596196,
+   "kind": "board_print",
+   "text": "47.652\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 53248557753,
+   "kind": "board_print",
+   "text": "47.693\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 53299595297,
+   "kind": "board_print",
+   "text": "47.734\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 53330326505,
+   "kind": "board_print",
+   "text": "47.775\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 53381251179,
+   "kind": "board_print",
+   "text": "47.816\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 53422165338,
+   "kind": "board_print",
+   "text": "47.857\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 53463067776,
+   "kind": "board_print",
+   "text": "47.898\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 53503859420,
+   "kind": "board_print",
+   "text": "47.938\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 53534515849,
+   "kind": "board_print",
+   "text": "47.979\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 53585497347,
+   "kind": "board_print",
+   "text": "48.021\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 53626505020,
+   "kind": "board_print",
+   "text": "48.061\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 53667362879,
+   "kind": "board_print",
+   "text": "48.102\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 53708065988,
+   "kind": "board_print",
+   "text": "48.144\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 53749097732,
+   "kind": "board_print",
+   "text": "48.184\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 53789922396,
+   "kind": "board_print",
+   "text": "48.226\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 53830796929,
+   "kind": "board_print",
+   "text": "48.266\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 53871544656,
+   "kind": "board_print",
+   "text": "48.308\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 53912432293,
+   "kind": "board_print",
+   "text": "48.349\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 53953292360,
+   "kind": "board_print",
+   "text": "48.390\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 53994062170,
+   "kind": "board_print",
+   "text": "48.431\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 54034884399,
+   "kind": "board_print",
+   "text": "48.472\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 54075568048,
+   "kind": "board_print",
+   "text": "48.513\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 54116465322,
+   "kind": "board_print",
+   "text": "48.553\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 54157169961,
+   "kind": "board_print",
+   "text": "48.595\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 54197916027,
+   "kind": "board_print",
+   "text": "48.635\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 54238816566,
+   "kind": "board_print",
+   "text": "48.676\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 54279530401,
+   "kind": "board_print",
+   "text": "48.717\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 54320581440,
+   "kind": "board_print",
+   "text": "48.759\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 54361359799,
+   "kind": "board_print",
+   "text": "48.800\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 54402192863,
+   "kind": "board_print",
+   "text": "48.841\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 54443043814,
+   "kind": "board_print",
+   "text": "48.882\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 54483966478,
+   "kind": "board_print",
+   "text": "48.922\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 54524851760,
+   "kind": "board_print",
+   "text": "48.964\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 54565792317,
+   "kind": "board_print",
+   "text": "49.005\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 54606699375,
+   "kind": "board_print",
+   "text": "49.046\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 54647611376,
+   "kind": "board_print",
+   "text": "49.086\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 54688506758,
+   "kind": "board_print",
+   "text": "49.128\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 54729283818,
+   "kind": "board_print",
+   "text": "49.169\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 54770220452,
+   "kind": "board_print",
+   "text": "49.210\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 54811018844,
+   "kind": "board_print",
+   "text": "49.251\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 54851881728,
+   "kind": "board_print",
+   "text": "49.291\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 54892719332,
+   "kind": "board_print",
+   "text": "49.332\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 54933666526,
+   "kind": "board_print",
+   "text": "49.374\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 54974505975,
+   "kind": "board_print",
+   "text": "49.415\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 55015347806,
+   "kind": "board_print",
+   "text": "49.455\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 55056244092,
+   "kind": "board_print",
+   "text": "49.497\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 55097091151,
+   "kind": "board_print",
+   "text": "49.537\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 55138026301,
+   "kind": "board_print",
+   "text": "49.579\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 55178881153,
+   "kind": "board_print",
+   "text": "49.620\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 55219701345,
+   "kind": "board_print",
+   "text": "49.661\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 55260502529,
+   "kind": "board_print",
+   "text": "49.701\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 55301237541,
+   "kind": "board_print",
+   "text": "49.742\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 55342002853,
+   "kind": "board_print",
+   "text": "49.783\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 55382734419,
+   "kind": "board_print",
+   "text": "49.824\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 55423442370,
+   "kind": "board_print",
+   "text": "49.866\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 55464337502,
+   "kind": "board_print",
+   "text": "49.906\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 55505139415,
+   "kind": "board_print",
+   "text": "49.948\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 55545925326,
+   "kind": "board_print",
+   "text": "49.988\tevent\tinput\tjoystick_R\n"
+  },
+  {
+   "t_ns": 56057104742,
+   "kind": "board_print",
+   "text": "50.003\tvariable\trun_end\t{\n\t\t\t\"board\": right\n\t\t\t\"brake_ncm\": 1.0\n\t\t\t\"do_brake\": 1\n\t\t\t\"do_move\": 1\n\t\t\t\"heartbeat_interval\": 40\n\t\t\t\"instr\": 1\n\t\t\t\"move_degrees\": -5.0\n\t\t\t\"outcome\": NOMOVE\n\t\t\t\"phase\": done\n\t\t\t\"pull_degrees\": 5.0\n\t\t\t\"push_degrees\": 5.0\n\t\t\t\"serial\": E4654C159F274534\n\t\t\t\"touch_ncm\": 0.3\n\t\t\t\"watch_timeout_ms\": 10000\n\t\t\t\"wdt_ms\": 0\n\t\t\t}\n"
+  }
+ ]
+}

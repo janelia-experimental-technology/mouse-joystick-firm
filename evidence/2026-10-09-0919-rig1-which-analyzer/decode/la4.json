@@ -1,0 +1,278 @@
+{
+  "name": "la4",
+  "decoded_at": "2026-10-09T09:20:15-04:00",
+  "profile": {
+    "name": "mouse-joystick-pcb-v1.0-digital50-pycontrol",
+    "path": "fixtures/mouse-joystick-pcb-v1.0/profile.toml"
+  },
+  "capture": {
+    "path": "evidence/which/captures/la4.sr",
+    "version": "2",
+    "sigrok_version": "0.6.0",
+    "samplerate_hz": 1000000,
+    "unitsize": 4,
+    "channels": [
+      "CH0",
+      "CH1",
+      "CH2",
+      "CH3"
+    ],
+    "sample_count": 3001041,
+    "duration_s": 3.001041,
+    "chunks": 3
+  },
+  "evidence_dir": "evidence/which",
+  "roles_present": {
+    "marker0": "CH0",
+    "marker1": "CH1",
+    "trace": "CH1",
+    "link_tx": "CH2",
+    "link_rx": "CH3",
+    "beacon_clock": "CH0",
+    "beacon_data": "CH1"
+  },
+  "roles_missing": {
+    "enc_a": "CH28",
+    "enc_b": "CH29",
+    "limit": "CH15",
+    "hv_en": "CH24",
+    "tmc_sck": "CH8",
+    "tmc_cs": "CH9",
+    "tmc_copi": "CH10",
+    "tmc_cipo": "CH11",
+    "tmc_drv_en": "CH14",
+    "bus_sw_en": "CH27"
+  },
+  "outputs": {
+    "trace_bytes": "evidence/which/trace/la4.qs.bin",
+    "trace_qspy": "evidence/which/trace/la4.qspy.txt",
+    "trace_records": "evidence/which/trace/la4.records.jsonl",
+    "markers": "evidence/which/markers/la4.jsonl"
+  },
+  "warnings": [],
+  "link": {
+    "streams": {
+      "link_rx": {
+        "channel": "CH3",
+        "bytes": 0,
+        "frame_errors": 0,
+        "parity_errors": 0,
+        "lines": 0,
+        "unterminated": 0,
+        "lines_with_errors": 0
+      },
+      "link_tx": {
+        "channel": "CH2",
+        "bytes": 0,
+        "frame_errors": 0,
+        "parity_errors": 0,
+        "lines": 0,
+        "unterminated": 0,
+        "lines_with_errors": 0
+      }
+    },
+    "lines": 0,
+    "commands": {},
+    "replies": {},
+    "events": {},
+    "malformed": 0,
+    "naks": [],
+    "faults": [],
+    "trials": [],
+    "last_event": null,
+    "heartbeat": {
+      "verb": "ping",
+      "count": 0
+    }
+  },
+  "trace": {
+    "channel": "CH1",
+    "baud": 115200,
+    "format": "8N1",
+    "bytes": 861,
+    "frame_errors": 0,
+    "parity_errors": 0,
+    "first_s": 0.209888,
+    "last_s": 2.226797,
+    "longest_gap_s": 0.983272,
+    "lines": 0,
+    "unterminated": 0,
+    "lines_with_errors": 0,
+    "decoder": "qspy",
+    "counters": {
+      "lines_rx": {
+        "record": "LINK_STAT",
+        "field": 0,
+        "kind": "count",
+        "counts": "link_rx",
+        "samples": 3,
+        "first": 270,
+        "last": 270,
+        "min": 270,
+        "max": 270,
+        "monotonic": true
+      },
+      "lines_dropped_pool": {
+        "record": "LINK_STAT",
+        "field": 1,
+        "kind": "error",
+        "counts": null,
+        "samples": 3,
+        "first": 0,
+        "last": 0,
+        "min": 0,
+        "max": 0,
+        "monotonic": true
+      },
+      "lines_dropped_queue": {
+        "record": "LINK_STAT",
+        "field": 2,
+        "kind": "error",
+        "counts": null,
+        "samples": 3,
+        "first": 0,
+        "last": 0,
+        "min": 0,
+        "max": 0,
+        "monotonic": true
+      },
+      "replies_dropped": {
+        "record": "LINK_STAT",
+        "field": 3,
+        "kind": "error",
+        "counts": null,
+        "samples": 3,
+        "first": 0,
+        "last": 0,
+        "min": 0,
+        "max": 0,
+        "monotonic": true
+      },
+      "lines_overlong": {
+        "record": "LINK_STAT",
+        "field": 4,
+        "kind": "error",
+        "counts": null,
+        "samples": 3,
+        "first": 0,
+        "last": 0,
+        "min": 0,
+        "max": 0,
+        "monotonic": true
+      }
+    },
+    "qspy": {
+      "executable": "/home/peter/Repositories/orb-weaver/qp-arduino/.tools/quantum-leaps/qtools-7.3.4/bin/qspy",
+      "returncode": 0,
+      "records": 13,
+      "counts": {
+        "TRACE_STAT": 3,
+        "SAMPLE_STAT": 3,
+        "LINK_STAT": 3,
+        "POLL_STAT": 3,
+        "BOOT_INFO": 1
+      },
+      "dictionaries": {
+        "Obj-Dict": 3,
+        "Usr-Dict": 16,
+        "Sig-Dict": 2,
+        "Fun-Dict": 1
+      },
+      "other_lines": 0,
+      "unnamed_records": 0
+    }
+  },
+  "markers": {
+    "marker0": {
+      "channel": "CH0",
+      "signal": "FW_TRIG0",
+      "rising": 0,
+      "falling": 0,
+      "edges_listed": true,
+      "pulses": 0
+    },
+    "marker1": {
+      "channel": "CH1",
+      "signal": "FW_TRIG1",
+      "rising": 1984,
+      "falling": 1984,
+      "edges_listed": false,
+      "note": "shares its channel with a UART role; edges are serial bits"
+    }
+  },
+  "beacon": {
+    "serial": null,
+    "reason": "the clock line never rose in this capture: no beacon. Check that the firmware beacons on request (some builds beacon only at boot: wait and power-cycle the board), the profile's channels, the cable and buffer power."
+  },
+  "health": {
+    "board": "la4",
+    "window": null,
+    "t_wall": "2026-10-09T09:20:15-04:00",
+    "window_start_wall": null,
+    "duration_s": 3.001041,
+    "gap_before_s": null,
+    "gap_kind": "sampling",
+    "status": "silent",
+    "reasons": [
+      "no link traffic in this window; the trace is alive (no host, or between sessions)"
+    ],
+    "link": {
+      "present": true,
+      "lines": 0,
+      "lines_per_s": null,
+      "active_span_s": null,
+      "heartbeat_hz": null,
+      "heartbeat_ok": null,
+      "naks": 0,
+      "faults": 0,
+      "trials": 0,
+      "outcomes": {},
+      "events": {},
+      "errors": 0,
+      "longest_silence_s": null
+    },
+    "trace": {
+      "present": true,
+      "alive": true,
+      "bytes": 861,
+      "frame_errors": 0,
+      "records": 13,
+      "records_per_s": 4.332,
+      "longest_gap_s": 0.983272
+    },
+    "markers": {
+      "marker0": {
+        "pulses": 0,
+        "rising": 0
+      },
+      "marker1": {
+        "pulses": 1984,
+        "rising": 1984
+      }
+    },
+    "pulses": {},
+    "coverage": {},
+    "last_event": null,
+    "capture": "evidence/which/captures/la4.sr",
+    "warnings": [],
+    "totals": {
+      "windows": 1,
+      "captured_s": 3.001,
+      "gap_s": 0.0,
+      "armed_idle_s": 0.0,
+      "lines": 0,
+      "faults": 0,
+      "naks": 0,
+      "trials": 0,
+      "frame_errors": 0,
+      "outcomes": {},
+      "statuses": {
+        "silent": 1
+      },
+      "trace_records": 13,
+      "unseen_lines_min": 0,
+      "unseen_lines_max": 0,
+      "reboots": 0
+    }
+  }
+}

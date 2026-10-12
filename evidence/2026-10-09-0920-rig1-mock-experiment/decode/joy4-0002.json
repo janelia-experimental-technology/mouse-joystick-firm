@@ -1,0 +1,390 @@
+{
+  "name": "joy4-0002",
+  "decoded_at": "2026-10-09T09:23:38-04:00",
+  "profile": {
+    "name": "mouse-joystick-pcb-v1.0-digital50-pycontrol",
+    "path": "fixtures/mouse-joystick-pcb-v1.0/profile.toml"
+  },
+  "capture": {
+    "path": "evidence/2026-10-09-rig1/captures/joy4-0002.sr",
+    "version": "2",
+    "sigrok_version": "0.6.0",
+    "samplerate_hz": 2000000,
+    "unitsize": 4,
+    "channels": [
+      "CH0",
+      "CH1",
+      "CH2",
+      "CH3"
+    ],
+    "sample_count": 29164690,
+    "duration_s": 14.582345,
+    "chunks": 28
+  },
+  "evidence_dir": "evidence/2026-10-09-rig1",
+  "roles_present": {
+    "marker0": "CH0",
+    "marker1": "CH1",
+    "trace": "CH1",
+    "link_tx": "CH2",
+    "link_rx": "CH3",
+    "beacon_clock": "CH0",
+    "beacon_data": "CH1"
+  },
+  "roles_missing": {
+    "enc_a": "CH28",
+    "enc_b": "CH29",
+    "limit": "CH15",
+    "hv_en": "CH24",
+    "tmc_sck": "CH8",
+    "tmc_cs": "CH9",
+    "tmc_copi": "CH10",
+    "tmc_cipo": "CH11",
+    "tmc_drv_en": "CH14",
+    "bus_sw_en": "CH27"
+  },
+  "outputs": {
+    "link": "evidence/2026-10-09-rig1/link/joy4-0002.jsonl",
+    "trace_bytes": "evidence/2026-10-09-rig1/trace/joy4-0002.qs.bin",
+    "trace_qspy": "evidence/2026-10-09-rig1/trace/joy4-0002.qspy.txt",
+    "trace_records": "evidence/2026-10-09-rig1/trace/joy4-0002.records.jsonl",
+    "markers": "evidence/2026-10-09-rig1/markers/joy4-0002.jsonl"
+  },
+  "warnings": [],
+  "link": {
+    "streams": {
+      "link_rx": {
+        "channel": "CH3",
+        "bytes": 2373,
+        "frame_errors": 0,
+        "parity_errors": 0,
+        "first_s": 2.556893,
+        "last_s": 12.575895,
+        "longest_gap_s": 0.045141,
+        "lines": 261,
+        "unterminated": 0,
+        "lines_with_errors": 0
+      },
+      "link_tx": {
+        "channel": "CH2",
+        "bytes": 2823,
+        "frame_errors": 0,
+        "parity_errors": 0,
+        "first_s": 2.559287,
+        "last_s": 12.581347,
+        "longest_gap_s": 0.17328,
+        "lines": 272,
+        "unterminated": 0,
+        "lines_with_errors": 0
+      }
+    },
+    "lines": 533,
+    "commands": {
+      "ping": 243,
+      "moveto": 4,
+      "hv": 2,
+      "brake": 2,
+      "tq": 2,
+      "watch": 2,
+      "clrfault": 1,
+      "id": 1,
+      "home": 1,
+      "arm": 1,
+      "stop": 1,
+      "disarm": 1
+    },
+    "replies": {
+      "ack": 261
+    },
+    "events": {
+      "TARGET": 4,
+      "RELEASED": 2,
+      "NOMOVE": 2,
+      "TRIAL": 2,
+      "HOMED": 1
+    },
+    "malformed": 0,
+    "naks": [],
+    "faults": [],
+    "trials": [
+      {
+        "t": 7.140225,
+        "kv": {
+          "outcome": "NOMOVE",
+          "t_rel": "4552411972",
+          "t_touch": "",
+          "t_move": "",
+          "t_out": "4554429476",
+          "a0": "-5.041",
+          "a_peak": "0.091",
+          "a_end": "0.091",
+          "tq_peak": "0.06",
+          "tq_out": "0.025",
+          "dur_thr": "0"
+        },
+        "outcome": "NOMOVE"
+      },
+      {
+        "t": 12.047114,
+        "kv": {
+          "outcome": "NOMOVE",
+          "t_rel": "4557313940",
+          "t_touch": "",
+          "t_move": "",
+          "t_out": "4559336729",
+          "a0": "-4.95",
+          "a_peak": "0.0",
+          "a_end": "0.0",
+          "tq_peak": "0.068",
+          "tq_out": "0.035",
+          "dur_thr": "0"
+        },
+        "outcome": "NOMOVE"
+      }
+    ],
+    "last_event": {
+      "event": "TARGET",
+      "t": 12.549045,
+      "kv": {
+        "angle": "-0.091"
+      }
+    },
+    "first_s": 2.556893,
+    "last_s": 12.581347,
+    "active_span_s": 10.024454,
+    "lines_per_s": 53.17,
+    "longest_silence_s": 0.042928,
+    "heartbeat": {
+      "verb": "ping",
+      "count": 243,
+      "rate_hz": 24.358,
+      "interval_max_s": 0.04583,
+      "expected_hz": [
+        10.0,
+        25.0
+      ],
+      "within_expected": true
+    }
+  },
+  "trace": {
+    "channel": "CH1",
+    "baud": 115200,
+    "format": "8N1",
+    "bytes": 19757,
+    "frame_errors": 0,
+    "parity_errors": 0,
+    "first_s": 0.709601,
+    "last_s": 13.762225,
+    "longest_gap_s": 0.983245,
+    "lines": 0,
+    "unterminated": 0,
+    "lines_with_errors": 0,
+    "decoder": "qspy",
+    "counters": {
+      "lines_rx": {
+        "record": "LINK_STAT",
+        "field": 0,
+        "kind": "count",
+        "counts": "link_rx",
+        "samples": 14,
+        "first": 270,
+        "last": 531,
+        "min": 270,
+        "max": 531,
+        "monotonic": true
+      },
+      "lines_dropped_pool": {
+        "record": "LINK_STAT",
+        "field": 1,
+        "kind": "error",
+        "counts": null,
+        "samples": 14,
+        "first": 0,
+        "last": 0,
+        "min": 0,
+        "max": 0,
+        "monotonic": true
+      },
+      "lines_dropped_queue": {
+        "record": "LINK_STAT",
+        "field": 2,
+        "kind": "error",
+        "counts": null,
+        "samples": 14,
+        "first": 0,
+        "last": 0,
+        "min": 0,
+        "max": 0,
+        "monotonic": true
+      },
+      "replies_dropped": {
+        "record": "LINK_STAT",
+        "field": 3,
+        "kind": "error",
+        "counts": null,
+        "samples": 14,
+        "first": 0,
+        "last": 0,
+        "min": 0,
+        "max": 0,
+        "monotonic": true
+      },
+      "lines_overlong": {
+        "record": "LINK_STAT",
+        "field": 4,
+        "kind": "error",
+        "counts": null,
+        "samples": 14,
+        "first": 0,
+        "last": 0,
+        "min": 0,
+        "max": 0,
+        "monotonic": true
+      }
+    },
+    "qspy": {
+      "executable": "/home/peter/Repositories/orb-weaver/qp-arduino/.tools/quantum-leaps/qtools-7.3.4/bin/qspy",
+      "returncode": 0,
+      "records": 894,
+      "counts": {
+        "LINK_TX": 272,
+        "LINK_RX": 261,
+        "LINK_WORK": 261,
+        "TRACE_STAT": 14,
+        "SAMPLE_STAT": 14,
+        "LINK_STAT": 14,
+        "POLL_STAT": 14,
+        "LINK_STATE": 12,
+        "DAC_STATE": 6,
+        "BRAKE_STATE": 6,
+        "OP_START": 5,
+        "OP_DONE": 5,
+        "ENABLE_SETTLE": 4,
+        "MOVE_SETTLE": 4,
+        "BOOT_INFO": 2
+      },
+      "dictionaries": {
+        "Obj-Dict": 6,
+        "Usr-Dict": 32,
+        "Sig-Dict": 4,
+        "Fun-Dict": 2
+      },
+      "other_lines": 0,
+      "unnamed_records": 0
+    }
+  },
+  "markers": {
+    "marker0": {
+      "channel": "CH0",
+      "signal": "FW_TRIG0",
+      "rising": 157,
+      "falling": 157,
+      "edges_listed": true,
+      "pulses": 157,
+      "high_total_s": 2.504764,
+      "width_min_s": 2.5e-05,
+      "width_median_s": 2.6e-05,
+      "width_max_s": 0.707578,
+      "clipped_at_start": false,
+      "clipped_at_end": false
+    },
+    "marker1": {
+      "channel": "CH1",
+      "signal": "FW_TRIG1",
+      "rising": 48591,
+      "falling": 48591,
+      "edges_listed": false,
+      "note": "shares its channel with a UART role; edges are serial bits"
+    }
+  },
+  "beacon": {
+    "serial": null,
+    "reason": "the first clock edge comes 872.4 ms after the frame start; a beacon's follows within 200 ms"
+  },
+  "health": {
+    "board": "joy4-0002",
+    "window": null,
+    "t_wall": "2026-10-09T09:23:40-04:00",
+    "window_start_wall": null,
+    "duration_s": 14.582345,
+    "gap_before_s": null,
+    "gap_kind": "sampling",
+    "status": "ok",
+    "reasons": [],
+    "link": {
+      "present": true,
+      "lines": 533,
+      "lines_per_s": 53.17,
+      "active_span_s": 10.024454,
+      "heartbeat_hz": 24.358,
+      "heartbeat_ok": true,
+      "naks": 0,
+      "faults": 0,
+      "trials": 2,
+      "outcomes": {
+        "NOMOVE": 2
+      },
+      "events": {
+        "TARGET": 4,
+        "RELEASED": 2,
+        "NOMOVE": 2,
+        "TRIAL": 2,
+        "HOMED": 1
+      },
+      "errors": 0,
+      "longest_silence_s": 0.042928
+    },
+    "trace": {
+      "present": true,
+      "alive": true,
+      "bytes": 19757,
+      "frame_errors": 0,
+      "records": 894,
+      "records_per_s": 61.307,
+      "longest_gap_s": 0.983245
+    },
+    "markers": {
+      "marker0": {
+        "pulses": 157,
+        "rising": 157
+      },
+      "marker1": {
+        "pulses": 48591,
+        "rising": 48591
+      }
+    },
+    "pulses": {},
+    "coverage": {},
+    "last_event": {
+      "event": "TARGET",
+      "t": 12.549045,
+      "kv": {
+        "angle": "-0.091"
+      },
+      "window": "joy4-0002"
+    },
+    "capture": "evidence/2026-10-09-rig1/captures/joy4-0002.sr",
+    "warnings": [],
+    "totals": {
+      "windows": 1,
+      "captured_s": 14.582,
+      "gap_s": 0.0,
+      "armed_idle_s": 0.0,
+      "lines": 533,
+      "faults": 0,
+      "naks": 0,
+      "trials": 2,
+      "frame_errors": 0,
+      "outcomes": {
+        "NOMOVE": 2
+      },
+      "statuses": {
+        "ok": 1
+      },
+      "trace_records": 894,
+      "unseen_lines_min": 0,
+      "unseen_lines_max": 0,
+      "reboots": 0
+    }
+  }
+}

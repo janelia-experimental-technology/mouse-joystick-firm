@@ -1,0 +1,645 @@
+pyControl v2.1.1 at /home/peter/Repositories/github/pycontrol-code; hardware definition mouse_joystick_bringup.py; task mouse_joystick_check
+
+Micropython version: 1.261
+Framework version: 2.1.1
+pyboard unique id b'M\x00B\x00\x0bQ323459', MicroPython 1.261, framework True 2.1.1
+
+Transferring hardware definition to pyboard. OK
+
+Transferring state machine mouse_joystick_check to pyboard. OK
+variables: {'heartbeat_interval': 40, 'board': 'right', 'touch_ncm': 0.3, 'brake_ncm': 1.0, 'do_brake': 1, 'park': 1, 'instr': 1, 'wdt_ms': 0, 'do_move': 1, 'push_degrees': 5.0, 'move_degrees': -5.0, 'serial': '', 'outcome': '', 'phase': 'identifying', 'probe_i': 0, 'watch_timeout_ms': 10000, 'pull_degrees': 5.0}
+set park = 3: True
+0.000	variable	run_start	{
+			"board": right
+			"brake_ncm": 1.0
+			"do_brake": 1
+			"do_move": 1
+			"heartbeat_interval": 40
+			"instr": 1
+			"move_degrees": -5.0
+			"outcome": 
+			"park": 3
+			"phase": identifying
+			"probe_i": 0
+			"pull_degrees": 5.0
+			"push_degrees": 5.0
+			"serial": 
+			"touch_ncm": 0.3
+			"watch_timeout_ms": 10000
+			"wdt_ms": 0
+			}
+0.000	print	task	identifying the right board
+0.001	state		identifying
+0.017	event	input	joystick_R
+0.021	print	task	board serial E4654C159F274534 fw 23b7bb0-dirty hw rev2 proto 2 caps motion+home+instr+hv+watch+fetch+stream+cfg+angout+brake+torque
+0.022	state		powering
+0.022	print	task	raising the motor rail
+0.189	event	input	joystick_R
+0.191	state		homing
+0.191	print	task	homing
+0.195	event	input	joystick_R
+0.217	event	input	joystick_R
+0.218	event	input	joystick_R
+0.247	event	input	joystick_R
+0.289	event	input	joystick_R
+0.330	event	input	joystick_R
+0.371	event	input	joystick_R
+0.412	event	input	joystick_R
+0.453	event	input	joystick_R
+0.494	event	input	joystick_R
+0.535	event	input	joystick_R
+0.576	event	input	joystick_R
+0.617	event	input	joystick_R
+0.658	event	input	joystick_R
+0.699	event	input	joystick_R
+0.740	event	input	joystick_R
+0.781	event	input	joystick_R
+0.822	event	input	joystick_R
+0.862	event	input	joystick_R
+0.904	event	input	joystick_R
+0.945	event	input	joystick_R
+0.986	event	input	joystick_R
+1.014	event	input	joystick_R
+1.015	print	task	ev HOMED t=315043229 {'angle': '0.0'}
+1.016	state		arming
+1.040	event	input	joystick_R
+1.041	state		moving
+1.042	print	task	presenting: moving to -5.0 deg
+1.041	event	input	joystick_R
+1.047	event	input	joystick_R
+1.068	event	input	joystick_R
+1.109	event	input	joystick_R
+1.149	event	input	joystick_R
+1.190	event	input	joystick_R
+1.232	event	input	joystick_R
+1.273	event	input	joystick_R
+1.314	event	input	joystick_R
+1.355	event	input	joystick_R
+1.392	event	input	joystick_R
+1.394	print	task	ev TARGET t=315421233 {'angle': '-5.041'}
+1.394	state		braking
+1.394	print	task	brake 1.0 N.cm, then release
+1.399	event	input	joystick_R
+1.404	event	input	joystick_R
+1.412	event	input	joystick_R
+1.415	print	task	ev RELEASED t=315439233 {'angle': '-5.041', 'torque': '0.185', 'brake': '1.0'}
+1.415	state		watching
+1.417	print	task	watching: pull past 5.0 deg or push past 5.0 deg within 10000 ms
+1.430	event	input	joystick_R
+1.435	print	task	status state RELEASED angle -4.774 xactual -4.999 torque 0.07 brake 1.0
+1.441	event	input	joystick_R
+1.482	event	input	joystick_R
+1.524	event	input	joystick_R
+1.564	event	input	joystick_R
+1.605	event	input	joystick_R
+1.646	event	input	joystick_R
+1.687	event	input	joystick_R
+1.728	event	input	joystick_R
+1.769	event	input	joystick_R
+1.810	event	input	joystick_R
+1.851	event	input	joystick_R
+1.892	event	input	joystick_R
+1.934	event	input	joystick_R
+1.974	event	input	joystick_R
+2.015	event	input	joystick_R
+2.057	event	input	joystick_R
+2.097	event	input	joystick_R
+2.138	event	input	joystick_R
+2.180	event	input	joystick_R
+2.220	event	input	joystick_R
+2.261	event	input	joystick_R
+2.303	event	input	joystick_R
+2.343	event	input	joystick_R
+2.385	event	input	joystick_R
+2.426	event	input	joystick_R
+2.466	event	input	joystick_R
+2.507	event	input	joystick_R
+2.548	event	input	joystick_R
+2.589	event	input	joystick_R
+2.631	event	input	joystick_R
+2.672	event	input	joystick_R
+2.712	event	input	joystick_R
+2.753	event	input	joystick_R
+2.795	event	input	joystick_R
+2.835	event	input	joystick_R
+2.877	event	input	joystick_R
+2.917	event	input	joystick_R
+2.958	event	input	joystick_R
+2.999	event	input	joystick_R
+3.040	event	input	joystick_R
+3.081	event	input	joystick_R
+3.123	event	input	joystick_R
+3.168	event	input	joystick_R
+3.209	event	input	joystick_R
+3.250	event	input	joystick_R
+3.291	event	input	joystick_R
+3.332	event	input	joystick_R
+3.373	event	input	joystick_R
+3.414	event	input	joystick_R
+3.456	event	input	joystick_R
+3.496	event	input	joystick_R
+3.538	event	input	joystick_R
+3.578	event	input	joystick_R
+3.619	event	input	joystick_R
+3.660	event	input	joystick_R
+3.701	event	input	joystick_R
+3.743	event	input	joystick_R
+3.783	event	input	joystick_R
+3.825	event	input	joystick_R
+3.865	event	input	joystick_R
+3.907	event	input	joystick_R
+3.948	event	input	joystick_R
+3.989	event	input	joystick_R
+4.029	event	input	joystick_R
+4.071	event	input	joystick_R
+4.111	event	input	joystick_R
+4.152	event	input	joystick_R
+4.194	event	input	joystick_R
+4.234	event	input	joystick_R
+4.276	event	input	joystick_R
+4.316	event	input	joystick_R
+4.358	event	input	joystick_R
+4.398	event	input	joystick_R
+4.439	event	input	joystick_R
+4.481	event	input	joystick_R
+4.521	event	input	joystick_R
+4.563	event	input	joystick_R
+4.603	event	input	joystick_R
+4.645	event	input	joystick_R
+4.685	event	input	joystick_R
+4.727	event	input	joystick_R
+4.768	event	input	joystick_R
+4.808	event	input	joystick_R
+4.850	event	input	joystick_R
+4.890	event	input	joystick_R
+4.932	event	input	joystick_R
+4.973	event	input	joystick_R
+5.013	event	input	joystick_R
+5.055	event	input	joystick_R
+5.096	event	input	joystick_R
+5.137	event	input	joystick_R
+5.177	event	input	joystick_R
+5.219	event	input	joystick_R
+5.259	event	input	joystick_R
+5.300	event	input	joystick_R
+5.342	event	input	joystick_R
+5.382	event	input	joystick_R
+5.424	event	input	joystick_R
+5.464	event	input	joystick_R
+5.506	event	input	joystick_R
+5.546	event	input	joystick_R
+5.588	event	input	joystick_R
+5.629	event	input	joystick_R
+5.670	event	input	joystick_R
+5.710	event	input	joystick_R
+5.752	event	input	joystick_R
+5.792	event	input	joystick_R
+5.834	event	input	joystick_R
+5.874	event	input	joystick_R
+5.916	event	input	joystick_R
+5.956	event	input	joystick_R
+5.998	event	input	joystick_R
+6.038	event	input	joystick_R
+6.080	event	input	joystick_R
+6.120	event	input	joystick_R
+6.162	event	input	joystick_R
+6.203	event	input	joystick_R
+6.243	event	input	joystick_R
+6.285	event	input	joystick_R
+6.325	event	input	joystick_R
+6.367	event	input	joystick_R
+6.407	event	input	joystick_R
+6.449	event	input	joystick_R
+6.489	event	input	joystick_R
+6.531	event	input	joystick_R
+6.572	event	input	joystick_R
+6.613	event	input	joystick_R
+6.653	event	input	joystick_R
+6.695	event	input	joystick_R
+6.736	event	input	joystick_R
+6.776	event	input	joystick_R
+6.818	event	input	joystick_R
+6.858	event	input	joystick_R
+6.900	event	input	joystick_R
+6.941	event	input	joystick_R
+6.981	event	input	joystick_R
+7.023	event	input	joystick_R
+7.063	event	input	joystick_R
+7.105	event	input	joystick_R
+7.145	event	input	joystick_R
+7.186	event	input	joystick_R
+7.228	event	input	joystick_R
+7.269	event	input	joystick_R
+7.310	event	input	joystick_R
+7.350	event	input	joystick_R
+7.392	event	input	joystick_R
+7.432	event	input	joystick_R
+7.474	event	input	joystick_R
+7.515	event	input	joystick_R
+7.555	event	input	joystick_R
+7.597	event	input	joystick_R
+7.637	event	input	joystick_R
+7.679	event	input	joystick_R
+7.719	event	input	joystick_R
+7.760	event	input	joystick_R
+7.802	event	input	joystick_R
+7.842	event	input	joystick_R
+7.884	event	input	joystick_R
+7.924	event	input	joystick_R
+7.966	event	input	joystick_R
+8.007	event	input	joystick_R
+8.048	event	input	joystick_R
+8.088	event	input	joystick_R
+8.130	event	input	joystick_R
+8.170	event	input	joystick_R
+8.212	event	input	joystick_R
+8.252	event	input	joystick_R
+8.294	event	input	joystick_R
+8.335	event	input	joystick_R
+8.375	event	input	joystick_R
+8.417	event	input	joystick_R
+8.457	event	input	joystick_R
+8.499	event	input	joystick_R
+8.539	event	input	joystick_R
+8.581	event	input	joystick_R
+8.621	event	input	joystick_R
+8.663	event	input	joystick_R
+8.703	event	input	joystick_R
+8.745	event	input	joystick_R
+8.785	event	input	joystick_R
+8.826	event	input	joystick_R
+8.868	event	input	joystick_R
+8.908	event	input	joystick_R
+8.950	event	input	joystick_R
+8.991	event	input	joystick_R
+9.031	event	input	joystick_R
+9.073	event	input	joystick_R
+9.114	event	input	joystick_R
+9.154	event	input	joystick_R
+9.196	event	input	joystick_R
+9.236	event	input	joystick_R
+9.278	event	input	joystick_R
+9.318	event	input	joystick_R
+9.359	event	input	joystick_R
+9.401	event	input	joystick_R
+9.441	event	input	joystick_R
+9.483	event	input	joystick_R
+9.523	event	input	joystick_R
+9.565	event	input	joystick_R
+9.605	event	input	joystick_R
+9.647	event	input	joystick_R
+9.687	event	input	joystick_R
+9.729	event	input	joystick_R
+9.769	event	input	joystick_R
+9.811	event	input	joystick_R
+9.851	event	input	joystick_R
+9.893	event	input	joystick_R
+9.933	event	input	joystick_R
+9.975	event	input	joystick_R
+10.015	event	input	joystick_R
+10.057	event	input	joystick_R
+10.097	event	input	joystick_R
+10.139	event	input	joystick_R
+10.180	event	input	joystick_R
+10.221	event	input	joystick_R
+10.262	event	input	joystick_R
+10.302	event	input	joystick_R
+10.344	event	input	joystick_R
+10.384	event	input	joystick_R
+10.426	event	input	joystick_R
+10.466	event	input	joystick_R
+10.508	event	input	joystick_R
+10.549	event	input	joystick_R
+10.590	event	input	joystick_R
+10.630	event	input	joystick_R
+10.672	event	input	joystick_R
+10.712	event	input	joystick_R
+10.754	event	input	joystick_R
+10.795	event	input	joystick_R
+10.836	event	input	joystick_R
+10.877	event	input	joystick_R
+10.917	event	input	joystick_R
+10.959	event	input	joystick_R
+11.000	event	input	joystick_R
+11.041	event	input	joystick_R
+11.082	event	input	joystick_R
+11.123	event	input	joystick_R
+11.163	event	input	joystick_R
+11.205	event	input	joystick_R
+11.246	event	input	joystick_R
+11.287	event	input	joystick_R
+11.327	event	input	joystick_R
+11.369	event	input	joystick_R
+11.409	event	input	joystick_R
+11.431	event	input	joystick_R
+11.433	print	task	ev NOMOVE t=325459101 {'angle': '-4.774', 'torque': '0.121'}
+11.434	print	task	outcome NOMOVE at angle -4.774 torque 0.121
+11.450	event	input	joystick_R
+11.492	event	input	joystick_R
+11.532	event	input	joystick_R
+11.573	event	input	joystick_R
+11.615	event	input	joystick_R
+11.655	event	input	joystick_R
+11.696	event	input	joystick_R
+11.738	event	input	joystick_R
+11.778	event	input	joystick_R
+11.819	event	input	joystick_R
+11.861	event	input	joystick_R
+11.902	event	input	joystick_R
+11.942	event	input	joystick_R
+11.984	event	input	joystick_R
+12.025	event	input	joystick_R
+12.065	event	input	joystick_R
+12.106	event	input	joystick_R
+12.147	event	input	joystick_R
+12.189	event	input	joystick_R
+12.230	event	input	joystick_R
+12.270	event	input	joystick_R
+12.311	event	input	joystick_R
+12.352	event	input	joystick_R
+12.394	event	input	joystick_R
+12.441	event	input	joystick_R
+12.447	print	task	ev TRIAL t=326459101 {'a_peak': '0.267', 'tq_out': '0.121', 't_rel': '315439233', 't_touch': '', 'a0': '-5.041', 'dur_thr': '0', 't_move': '', 't_out': '325459101', 'tq_peak': '0.203', 'outcome': 'NOMOVE', 'a_end': '0.267'}
+12.447	state		parking
+12.447	print	task	parking at 0 deg
+12.474	event	input	joystick_R
+12.476	event	input	joystick_R
+12.516	event	input	joystick_R
+12.558	event	input	joystick_R
+12.598	event	input	joystick_R
+12.639	event	input	joystick_R
+12.680	event	input	joystick_R
+12.721	event	input	joystick_R
+12.762	event	input	joystick_R
+12.803	event	input	joystick_R
+12.807	event	input	joystick_R
+12.809	print	task	ev TARGET t=326836245 {'angle': '-0.991'}
+12.809	print	task	probe move 1 to -5.0 deg
+12.814	event	input	joystick_R
+12.845	event	input	joystick_R
+12.886	event	input	joystick_R
+12.926	event	input	joystick_R
+12.967	event	input	joystick_R
+13.008	event	input	joystick_R
+13.049	event	input	joystick_R
+13.091	event	input	joystick_R
+13.131	event	input	joystick_R
+13.162	event	input	joystick_R
+13.163	print	task	ev TARGET t=327191220 {'angle': '-5.224'}
+13.164	print	task	probe move 2 to -2.5 deg
+13.170	event	input	joystick_R
+13.176	event	input	joystick_R
+13.213	event	input	joystick_R
+13.254	event	input	joystick_R
+13.295	event	input	joystick_R
+13.335	event	input	joystick_R
+13.376	event	input	joystick_R
+13.421	event	input	joystick_R
+13.423	print	task	ev TARGET t=327449284 {'angle': '-3.333'}
+13.424	print	task	probe move 3 to 0.0 deg
+13.429	event	input	joystick_R
+13.459	event	input	joystick_R
+13.500	event	input	joystick_R
+13.541	event	input	joystick_R
+13.582	event	input	joystick_R
+13.623	event	input	joystick_R
+13.664	event	input	joystick_R
+13.678	event	input	joystick_R
+13.679	print	task	ev TARGET t=327707226 {'angle': '-0.816'}
+13.680	print	task	probe move 4 to -2.5 deg
+13.685	event	input	joystick_R
+13.705	event	input	joystick_R
+13.746	event	input	joystick_R
+13.787	event	input	joystick_R
+13.828	event	input	joystick_R
+13.869	event	input	joystick_R
+13.910	event	input	joystick_R
+13.935	event	input	joystick_R
+13.936	print	task	ev TARGET t=327964225 {'angle': '-2.974'}
+13.937	print	task	probe move 5 to -5.0 deg
+13.943	event	input	joystick_R
+13.952	event	input	joystick_R
+13.992	event	input	joystick_R
+14.033	event	input	joystick_R
+14.074	event	input	joystick_R
+14.115	event	input	joystick_R
+14.156	event	input	joystick_R
+14.193	event	input	joystick_R
+14.194	print	task	ev TARGET t=328222229 {'angle': '-5.4'}
+14.195	print	task	probe move 6 to 0.0 deg
+14.199	event	input	joystick_R
+14.201	event	input	joystick_R
+14.242	event	input	joystick_R
+14.282	event	input	joystick_R
+14.323	event	input	joystick_R
+14.364	event	input	joystick_R
+14.405	event	input	joystick_R
+14.446	event	input	joystick_R
+14.487	event	input	joystick_R
+14.528	event	input	joystick_R
+14.538	event	input	joystick_R
+14.539	print	task	ev TARGET t=328567226 {'angle': '-0.9'}
+14.540	state		done
+14.540	print	task	bring-up sequence complete; serial E4654C159F274534 outcome NOMOVE
+14.569	event	input	joystick_R
+14.613	event	input	joystick_R
+14.654	event	input	joystick_R
+14.695	event	input	joystick_R
+14.736	event	input	joystick_R
+14.777	event	input	joystick_R
+14.818	event	input	joystick_R
+14.859	event	input	joystick_R
+14.901	event	input	joystick_R
+14.941	event	input	joystick_R
+14.982	event	input	joystick_R
+15.023	event	input	joystick_R
+15.064	event	input	joystick_R
+15.105	event	input	joystick_R
+15.146	event	input	joystick_R
+15.187	event	input	joystick_R
+15.228	event	input	joystick_R
+15.269	event	input	joystick_R
+15.310	event	input	joystick_R
+15.351	event	input	joystick_R
+15.391	event	input	joystick_R
+15.433	event	input	joystick_R
+15.474	event	input	joystick_R
+15.515	event	input	joystick_R
+15.556	event	input	joystick_R
+15.597	event	input	joystick_R
+15.638	event	input	joystick_R
+15.679	event	input	joystick_R
+15.720	event	input	joystick_R
+15.760	event	input	joystick_R
+15.801	event	input	joystick_R
+15.843	event	input	joystick_R
+15.884	event	input	joystick_R
+15.925	event	input	joystick_R
+15.966	event	input	joystick_R
+16.008	event	input	joystick_R
+16.047	event	input	joystick_R
+16.089	event	input	joystick_R
+16.130	event	input	joystick_R
+16.171	event	input	joystick_R
+16.212	event	input	joystick_R
+16.253	event	input	joystick_R
+16.294	event	input	joystick_R
+16.335	event	input	joystick_R
+16.376	event	input	joystick_R
+16.416	event	input	joystick_R
+16.457	event	input	joystick_R
+16.499	event	input	joystick_R
+16.540	event	input	joystick_R
+16.581	event	input	joystick_R
+16.622	event	input	joystick_R
+16.663	event	input	joystick_R
+16.704	event	input	joystick_R
+16.745	event	input	joystick_R
+16.786	event	input	joystick_R
+16.826	event	input	joystick_R
+16.868	event	input	joystick_R
+16.909	event	input	joystick_R
+16.950	event	input	joystick_R
+16.991	event	input	joystick_R
+17.032	event	input	joystick_R
+17.073	event	input	joystick_R
+17.114	event	input	joystick_R
+17.154	event	input	joystick_R
+17.195	event	input	joystick_R
+17.237	event	input	joystick_R
+17.278	event	input	joystick_R
+17.319	event	input	joystick_R
+17.360	event	input	joystick_R
+17.401	event	input	joystick_R
+17.441	event	input	joystick_R
+17.482	event	input	joystick_R
+17.524	event	input	joystick_R
+17.565	event	input	joystick_R
+17.606	event	input	joystick_R
+17.647	event	input	joystick_R
+17.688	event	input	joystick_R
+17.729	event	input	joystick_R
+17.770	event	input	joystick_R
+17.810	event	input	joystick_R
+17.852	event	input	joystick_R
+17.893	event	input	joystick_R
+17.934	event	input	joystick_R
+17.975	event	input	joystick_R
+18.016	event	input	joystick_R
+18.057	event	input	joystick_R
+18.098	event	input	joystick_R
+18.139	event	input	joystick_R
+18.179	event	input	joystick_R
+18.220	event	input	joystick_R
+18.262	event	input	joystick_R
+18.303	event	input	joystick_R
+18.344	event	input	joystick_R
+18.385	event	input	joystick_R
+18.426	event	input	joystick_R
+18.466	event	input	joystick_R
+18.507	event	input	joystick_R
+18.549	event	input	joystick_R
+18.590	event	input	joystick_R
+18.631	event	input	joystick_R
+18.672	event	input	joystick_R
+18.713	event	input	joystick_R
+18.754	event	input	joystick_R
+18.795	event	input	joystick_R
+18.835	event	input	joystick_R
+18.876	event	input	joystick_R
+18.918	event	input	joystick_R
+18.959	event	input	joystick_R
+19.000	event	input	joystick_R
+19.041	event	input	joystick_R
+19.082	event	input	joystick_R
+19.123	event	input	joystick_R
+19.164	event	input	joystick_R
+19.204	event	input	joystick_R
+19.245	event	input	joystick_R
+19.286	event	input	joystick_R
+19.328	event	input	joystick_R
+19.369	event	input	joystick_R
+19.410	event	input	joystick_R
+19.451	event	input	joystick_R
+19.492	event	input	joystick_R
+19.533	event	input	joystick_R
+19.573	event	input	joystick_R
+19.614	event	input	joystick_R
+19.656	event	input	joystick_R
+19.697	event	input	joystick_R
+19.738	event	input	joystick_R
+19.779	event	input	joystick_R
+19.820	event	input	joystick_R
+19.861	event	input	joystick_R
+19.901	event	input	joystick_R
+19.942	event	input	joystick_R
+19.984	event	input	joystick_R
+20.025	event	input	joystick_R
+20.066	event	input	joystick_R
+20.107	event	input	joystick_R
+20.148	event	input	joystick_R
+20.188	event	input	joystick_R
+20.229	event	input	joystick_R
+20.271	event	input	joystick_R
+20.312	event	input	joystick_R
+20.353	event	input	joystick_R
+20.394	event	input	joystick_R
+20.435	event	input	joystick_R
+20.476	event	input	joystick_R
+20.517	event	input	joystick_R
+20.558	event	input	joystick_R
+20.598	event	input	joystick_R
+20.639	event	input	joystick_R
+20.681	event	input	joystick_R
+20.722	event	input	joystick_R
+20.763	event	input	joystick_R
+20.804	event	input	joystick_R
+20.845	event	input	joystick_R
+20.885	event	input	joystick_R
+20.926	event	input	joystick_R
+20.968	event	input	joystick_R
+21.009	event	input	joystick_R
+21.050	event	input	joystick_R
+21.091	event	input	joystick_R
+21.132	event	input	joystick_R
+21.173	event	input	joystick_R
+21.214	event	input	joystick_R
+21.254	event	input	joystick_R
+21.295	event	input	joystick_R
+21.336	event	input	joystick_R
+21.378	event	input	joystick_R
+21.419	event	input	joystick_R
+21.460	event	input	joystick_R
+21.501	event	input	joystick_R
+21.542	event	input	joystick_R
+21.583	event	input	joystick_R
+21.624	event	input	joystick_R
+21.664	event	input	joystick_R
+21.706	event	input	joystick_R
+21.747	event	input	joystick_R
+21.788	event	input	joystick_R
+21.829	event	input	joystick_R
+21.870	event	input	joystick_R
+21.911	event	input	joystick_R
+21.951	event	input	joystick_R
+21.993	event	input	joystick_R
+21.999	variable	run_end	{
+			"board": right
+			"brake_ncm": 1.0
+			"do_brake": 1
+			"do_move": 1
+			"heartbeat_interval": 40
+			"instr": 1
+			"move_degrees": -5.0
+			"outcome": NOMOVE
+			"park": 3
+			"phase": done
+			"probe_i": 6
+			"pull_degrees": 5.0
+			"push_degrees": 5.0
+			"serial": E4654C159F274534
+			"touch_ncm": 0.3
+			"watch_timeout_ms": 10000
+			"wdt_ms": 0
+			}
+-> /home/peter/Repositories/orb-weaver/qp-arduino-example/evidence/2026-10-06-1407-unitA-park-error/pilot/park3.json

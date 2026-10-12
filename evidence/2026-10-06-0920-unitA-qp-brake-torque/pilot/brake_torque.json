@@ -1,0 +1,487 @@
+{
+ "summary": {
+  "steps": [],
+  "brake": [],
+  "id": {
+   "hw": "rev2",
+   "serial": "E4654C159F274534",
+   "fw": "80fdf3b-dirty",
+   "proto": "2",
+   "axes": "1",
+   "caps": "motion+home+instr+hv+watch+fetch+stream+cfg+angout+brake+torque",
+   "rxbuf": "200",
+   "boot": "reboot",
+   "crumb": "0"
+  },
+  "tq_before": {
+   "torque": "0.0",
+   "raw": "0.0",
+   "cal": "0"
+  },
+  "tq_after_zero": {
+   "torque": "0.0",
+   "raw": "0.0",
+   "cal": "0"
+  },
+  "status_hv_on": {
+   "state": "IDLE",
+   "angle": "0.0",
+   "xactual": "0.0",
+   "torque": "-0.261",
+   "brake": "0.0",
+   "homed": "0",
+   "limit": "0",
+   "faults": "0",
+   "hv": "1",
+   "t": "8163819"
+  },
+  "abort": "no ev;RELEASED within 2.0 s"
+ },
+ "log": [
+  {
+   "t_ns": 83135990464649,
+   "dir": "tx",
+   "line": "id;1"
+  },
+  {
+   "t_ns": 83136291799855,
+   "dir": "rx",
+   "line": "Done."
+  },
+  {
+   "t_ns": 83136291816047,
+   "dir": "rx",
+   "line": "mouse-joystick-pcb -- pyControl protocol link over QP/C++"
+  },
+  {
+   "t_ns": 83136291821048,
+   "dir": "rx",
+   "line": "[1] identity"
+  },
+  {
+   "t_ns": 83136291824966,
+   "dir": "rx",
+   "line": "    flash unique id: E4654C159F274534"
+  },
+  {
+   "t_ns": 83136291828988,
+   "dir": "rx",
+   "line": "    ^ this is the board serial. Calibration belongs to it, not"
+  },
+  {
+   "t_ns": 83136291832580,
+   "dir": "rx",
+   "line": "      to a joystick position, and two boards in one rig are"
+  },
+  {
+   "t_ns": 83136291835547,
+   "dir": "rx",
+   "line": "      independently suspect."
+  },
+  {
+   "t_ns": 83136291847764,
+   "dir": "rx",
+   "line": "    usb manufacturer: Orb Weaver"
+  },
+  {
+   "t_ns": 83136291851517,
+   "dir": "rx",
+   "line": "    usb product: mouse-joystick-pcb"
+  },
+  {
+   "t_ns": 83136291854687,
+   "dir": "rx",
+   "line": "    built: Oct  6 2026 09:20:05"
+  },
+  {
+   "t_ns": 83136291858412,
+   "dir": "rx",
+   "line": "    targets board revision: rev 2  (pcb v1.0: I2C DACs, torque ADC, brake, LATCH on GP24)"
+  },
+  {
+   "t_ns": 83136291861805,
+   "dir": "rx",
+   "line": "    Only GP20 and GP22 are spare. GP10-13, GP15-18 reach the"
+  },
+  {
+   "t_ns": 83136291864920,
+   "dir": "rx",
+   "line": "      torque, brake and DAC blocks through the bus switch and"
+  },
+  {
+   "t_ns": 83136291867559,
+   "dir": "rx",
+   "line": "      are left alone: 2 pads, 20 checks. ~{HV_FAULT} is"
+  },
+  {
+   "t_ns": 83136291870597,
+   "dir": "rx",
+   "line": "      GP23 here; GP29 is an ADC input. Confirmed on"
+  },
+  {
+   "t_ns": 83136291873449,
+   "dir": "rx",
+   "line": "      hardware 2026-10-05: 20 checks on E4654C159F274534."
+  },
+  {
+   "t_ns": 83136291876490,
+   "dir": "rx",
+   "line": "Protocol on THIS port (bench build). The 36 V rail is OFF."
+  },
+  {
+   "t_ns": 83136291879587,
+   "dir": "rx",
+   "line": "QS trace: FW_TRIG1, transmit only."
+  },
+  {
+   "t_ns": 83136291882084,
+   "dir": "rx",
+   "line": "Boot: forced reboot, last breadcrumb 0"
+  },
+  {
+   "t_ns": 83136342120342,
+   "dir": "rx",
+   "line": "ev;READY;7528194;fw=80fdf3b-dirty;proto=2;serial=E4654C159F274534"
+  },
+  {
+   "t_ns": 83136342126862,
+   "dir": "rx",
+   "line": "ack;1;hw=rev2;serial=E4654C159F274534;fw=80fdf3b-dirty;proto=2;axes=1;caps=motion+home+instr+hv+watch+fetch+stream+cfg+angout+brake+torque;rxbuf=200;boot=reboot;crumb=0"
+  },
+  {
+   "t_ns": 83136342225967,
+   "dir": "tx",
+   "line": "status;2"
+  },
+  {
+   "t_ns": 83136392601133,
+   "dir": "rx",
+   "line": "ack;2;state=IDLE;angle=0.0;xactual=0.0;torque=0.0;brake=0.0;homed=0;limit=0;faults=0;hv=0;t=7559623"
+  },
+  {
+   "t_ns": 83136392659916,
+   "dir": "tx",
+   "line": "tq;3;get"
+  },
+  {
+   "t_ns": 83136443025530,
+   "dir": "rx",
+   "line": "ack;3;torque=0.0;raw=0.0;cal=0"
+  },
+  {
+   "t_ns": 83136443081774,
+   "dir": "tx",
+   "line": "tq;4;zero"
+  },
+  {
+   "t_ns": 83136493442714,
+   "dir": "rx",
+   "line": "ack;4"
+  },
+  {
+   "t_ns": 83136493467539,
+   "dir": "tx",
+   "line": "tq;5;get"
+  },
+  {
+   "t_ns": 83136543833780,
+   "dir": "rx",
+   "line": "ack;5;torque=0.0;raw=0.0;cal=0"
+  },
+  {
+   "t_ns": 83136543901595,
+   "dir": "tx",
+   "line": "hv;6;on"
+  },
+  {
+   "t_ns": 83136744959684,
+   "dir": "rx",
+   "line": "ack;6"
+  },
+  {
+   "t_ns": 83136945176861,
+   "dir": "tx",
+   "line": "status;7"
+  },
+  {
+   "t_ns": 83136995541103,
+   "dir": "rx",
+   "line": "ack;7;state=IDLE;angle=0.0;xactual=0.0;torque=-0.261;brake=0.0;homed=0;limit=0;faults=0;hv=1;t=8163819"
+  },
+  {
+   "t_ns": 83136995601788,
+   "dir": "tx",
+   "line": "home;8"
+  },
+  {
+   "t_ns": 83137096133821,
+   "dir": "rx",
+   "line": "ack;8"
+  },
+  {
+   "t_ns": 83138121545845,
+   "dir": "rx",
+   "line": "ev;HOMED;9317688;angle=0.0"
+  },
+  {
+   "t_ns": 83138121590173,
+   "dir": "tx",
+   "line": "arm;9"
+  },
+  {
+   "t_ns": 83138171892790,
+   "dir": "rx",
+   "line": "ack;9"
+  },
+  {
+   "t_ns": 83138172425450,
+   "dir": "tx",
+   "line": "ping;10"
+  },
+  {
+   "t_ns": 83138222777549,
+   "dir": "rx",
+   "line": "ack;10"
+  },
+  {
+   "t_ns": 83138222880323,
+   "dir": "tx",
+   "line": "brake;11;1.000"
+  },
+  {
+   "t_ns": 83138273191366,
+   "dir": "rx",
+   "line": "ack;11"
+  },
+  {
+   "t_ns": 83138273197441,
+   "dir": "rx",
+   "line": "ev;RELEASED;9451680;angle=0.0;torque=-0.256;brake=1.0"
+  },
+  {
+   "t_ns": 83138323524288,
+   "dir": "tx",
+   "line": "ping;12"
+  },
+  {
+   "t_ns": 83138373888325,
+   "dir": "rx",
+   "line": "ev;FAULT;9541041;code=0;detail=host_timeout"
+  },
+  {
+   "t_ns": 83138373894740,
+   "dir": "rx",
+   "line": "ack;12"
+  },
+  {
+   "t_ns": 83138424239026,
+   "dir": "tx",
+   "line": "ping;13"
+  },
+  {
+   "t_ns": 83138474545955,
+   "dir": "rx",
+   "line": "ack;13"
+  },
+  {
+   "t_ns": 83138524868578,
+   "dir": "tx",
+   "line": "ping;14"
+  },
+  {
+   "t_ns": 83138575181212,
+   "dir": "rx",
+   "line": "ack;14"
+  },
+  {
+   "t_ns": 83138625518088,
+   "dir": "tx",
+   "line": "ping;15"
+  },
+  {
+   "t_ns": 83138675862274,
+   "dir": "rx",
+   "line": "ack;15"
+  },
+  {
+   "t_ns": 83138726181530,
+   "dir": "tx",
+   "line": "ping;16"
+  },
+  {
+   "t_ns": 83138776498454,
+   "dir": "rx",
+   "line": "ack;16"
+  },
+  {
+   "t_ns": 83138826825972,
+   "dir": "tx",
+   "line": "ping;17"
+  },
+  {
+   "t_ns": 83138877164925,
+   "dir": "rx",
+   "line": "ack;17"
+  },
+  {
+   "t_ns": 83138927495089,
+   "dir": "tx",
+   "line": "ping;18"
+  },
+  {
+   "t_ns": 83138977860310,
+   "dir": "rx",
+   "line": "ack;18"
+  },
+  {
+   "t_ns": 83139028205801,
+   "dir": "tx",
+   "line": "ping;19"
+  },
+  {
+   "t_ns": 83139078524841,
+   "dir": "rx",
+   "line": "ack;19"
+  },
+  {
+   "t_ns": 83139128801502,
+   "dir": "tx",
+   "line": "ping;20"
+  },
+  {
+   "t_ns": 83139179148297,
+   "dir": "rx",
+   "line": "ack;20"
+  },
+  {
+   "t_ns": 83139229478519,
+   "dir": "tx",
+   "line": "ping;21"
+  },
+  {
+   "t_ns": 83139279786380,
+   "dir": "rx",
+   "line": "ack;21"
+  },
+  {
+   "t_ns": 83139330108706,
+   "dir": "tx",
+   "line": "ping;22"
+  },
+  {
+   "t_ns": 83139380353622,
+   "dir": "rx",
+   "line": "ack;22"
+  },
+  {
+   "t_ns": 83139430678046,
+   "dir": "tx",
+   "line": "ping;23"
+  },
+  {
+   "t_ns": 83139480921115,
+   "dir": "rx",
+   "line": "ack;23"
+  },
+  {
+   "t_ns": 83139531265929,
+   "dir": "tx",
+   "line": "ping;24"
+  },
+  {
+   "t_ns": 83139581592737,
+   "dir": "rx",
+   "line": "ack;24"
+  },
+  {
+   "t_ns": 83139631920574,
+   "dir": "tx",
+   "line": "ping;25"
+  },
+  {
+   "t_ns": 83139682245254,
+   "dir": "rx",
+   "line": "ack;25"
+  },
+  {
+   "t_ns": 83139732507902,
+   "dir": "tx",
+   "line": "ping;26"
+  },
+  {
+   "t_ns": 83139782868963,
+   "dir": "rx",
+   "line": "ack;26"
+  },
+  {
+   "t_ns": 83139833191312,
+   "dir": "tx",
+   "line": "ping;27"
+  },
+  {
+   "t_ns": 83139883519604,
+   "dir": "rx",
+   "line": "ack;27"
+  },
+  {
+   "t_ns": 83139933845687,
+   "dir": "tx",
+   "line": "ping;28"
+  },
+  {
+   "t_ns": 83139984135945,
+   "dir": "rx",
+   "line": "ack;28"
+  },
+  {
+   "t_ns": 83140034456949,
+   "dir": "tx",
+   "line": "ping;29"
+  },
+  {
+   "t_ns": 83140084727166,
+   "dir": "rx",
+   "line": "ack;29"
+  },
+  {
+   "t_ns": 83140135006281,
+   "dir": "tx",
+   "line": "ping;30"
+  },
+  {
+   "t_ns": 83140185377366,
+   "dir": "rx",
+   "line": "ack;30"
+  },
+  {
+   "t_ns": 83140235696602,
+   "dir": "tx",
+   "line": "ping;31"
+  },
+  {
+   "t_ns": 83140285980295,
+   "dir": "rx",
+   "line": "ack;31"
+  },
+  {
+   "t_ns": 83140336296657,
+   "dir": "tx",
+   "line": "ping;32"
+  },
+  {
+   "t_ns": 83140386665531,
+   "dir": "rx",
+   "line": "ack;32"
+  },
+  {
+   "t_ns": 83140386834793,
+   "dir": "tx",
+   "line": "hv;33;off"
+  },
+  {
+   "t_ns": 83140437220519,
+   "dir": "rx",
+   "line": "ack;33"
+  }
+ ]
+}

@@ -1,0 +1,22 @@
+ WARN the lock file is up-to-date but uses an older format (v6), run `pixi lock` to upgrade to v7 for improved reproducibility
+[1] rail
+    [ ok ] +3.3V_SW up in 4 ms, peak 3.2895 V, bulk charged / latch-off armed at 36 ms
+[2] bus switch
+    [ ok ] closed. The DACs, the brake fault line and the
+           torque ADC are now reachable.
+[3] I2C0
+    angle DAC 0x48: ACK   brake DAC 0x49: ACK
+[4] brake DAC configuration
+    GAIN 0x101 written: [ ok ] read back and matched
+    DEVID 0x115 plausible, resets to zero scale (coil at 0 mA until written)
+    REF-ALARM clear
+    full scale 48.780 mA, one code 0.744 uA. Coil at code 0.
+    BRAKE_ISENSE 0.0113 V (14.2 counts) = 0.55 mA   ~BRAKE_FAULT high (not limiting)
+[5] SPI1 and the ADS8689
+    SCK GP10, COPI GP11, CIPO GP12, CONVST/CS GP15, 2 MHz, mode 0
+    RANGE_SEL written 0xB (0 to 1.25 x VREF = 0-5.12 V), read back 0xB  [ ok ]
+    loopback all-ones 0xFFFF, all-zeros 0x0  [ ok ] SDO proven
+    DATAOUT_CTL back to 0x0, DEVICE_ID 0x10, RST_PWRCTL 0x0
+    one code 78.125 uV; nominal zero 1.6667 V = code 21333; 0.2715 V per N.cm nominal
+    first reading: 20424.0 codes = 1.59563 V at AMP_VOUT, 0.79781 V at the BNC, -0.2616 N.cm (nominal zero)
+

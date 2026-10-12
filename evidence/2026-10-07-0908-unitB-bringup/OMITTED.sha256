@@ -1,0 +1,4 @@
+# Raw captures not copied into this repository (sha256, bytes, path).
+# The files are in the qp-arduino-example repository under evidence/2026-10-07-0908-unitB-bringup/ (see docs/development.md) and available on request.
+4dddde8347f7b3939bfac7c96eccab3308372c8842eaa4c3323cd74838ace0aa      1599337  captures/a4_brake_unitB.sr
+3450437862366edcfc94948c5bb0bcb668a25ce46471fb870abca0cd1a0586fe      2823526  captures/a5_torque_unitB.sr

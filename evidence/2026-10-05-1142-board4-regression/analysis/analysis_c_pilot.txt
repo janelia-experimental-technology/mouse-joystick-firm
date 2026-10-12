@@ -1,0 +1,324 @@
+{
+  "qspy": "/home/peter/Repositories/orb-weaver/qp-arduino-example/evidence/2026-10-05-1142-board4-regression/qspy/c_pilot-offline-decode.txt",
+  "board": {
+    "counts": {
+      "USER+008": 10,
+      "USER+011": 10,
+      "USER+010": 10,
+      "USER+013": 1,
+      "USER+000": 135,
+      "USER+001": 143,
+      "USER+005": 135,
+      "USER+006": 2,
+      "USER+003": 9,
+      "USER+004": 8,
+      "USER+002": 16,
+      "LINK_RX": 455,
+      "LINK_TX": 589,
+      "LINK_WORK": 455,
+      "LINK_STATE": 34,
+      "OP_DONE": 15,
+      "OP_START": 14,
+      "TRACE_STAT": 170,
+      "SAMPLE_STAT": 170,
+      "LINK_STAT": 170,
+      "BOOT_INFO": 17,
+      "ENABLE_SETTLE": 2,
+      "DAC_STATE": 1
+    },
+    "turnaround_us": {
+      "ping": {
+        "n": 398,
+        "min": 263,
+        "p50": 692,
+        "p99": 1172,
+        "max": 1357,
+        "mean": 735.8241206030151,
+        "stdev": 145.28893140583966
+      },
+      "status": {
+        "n": 18,
+        "min": 769,
+        "p50": 1021,
+        "p99": 1566,
+        "max": 1566,
+        "mean": 1019.7222222222222,
+        "stdev": 167.2475894380529
+      },
+      "moveto": {
+        "n": 14,
+        "min": 1581,
+        "p50": 1729,
+        "p99": 54759,
+        "max": 54759,
+        "mean": 5490.785714285715,
+        "stdev": 13664.71306571665
+      },
+      "other": {
+        "n": 25,
+        "min": 455,
+        "p50": 1785,
+        "p99": 23264,
+        "max": 23264,
+        "mean": 2488.88,
+        "stdev": 4258.0468228519985
+      }
+    },
+    "port_write_cost_us": {
+      "n": 589,
+      "min": 13,
+      "p50": 74,
+      "p99": 296,
+      "max": 401,
+      "mean": 86.16808149405773,
+      "stdev": 43.302982796451325
+    },
+    "rx_without_reply_in_trace": 0,
+    "op_duration_us": {
+      "home": null,
+      "move": {
+        "n": 14,
+        "min": 77159,
+        "p50": 435379,
+        "p99": 437339,
+        "max": 437339,
+        "mean": 389750.28571428574,
+        "stdev": 111889.50323321446
+      }
+    },
+    "states": [
+      "ARMED",
+      "ACTIVE",
+      "ARMED",
+      "ACTIVE",
+      "ARMED",
+      "ACTIVE",
+      "ARMED",
+      "ACTIVE",
+      "ARMED",
+      "ACTIVE",
+      "ARMED",
+      "ACTIVE",
+      "ARMED",
+      "ACTIVE",
+      "ARMED",
+      "ACTIVE",
+      "ARMED",
+      "ACTIVE",
+      "ARMED",
+      "ACTIVE",
+      "ARMED",
+      "ACTIVE",
+      "ARMED",
+      "ACTIVE",
+      "ARMED",
+      "ACTIVE",
+      "ARMED",
+      "RELEASED",
+      "ACTIVE",
+      "ARMED",
+      "HOMED",
+      "ARMED",
+      "FAULTED",
+      "IDLE"
+    ],
+    "trace_stat": {
+      "count": 170,
+      "high_water_max": 1544,
+      "high_water_p50": 111,
+      "buffer_full_total": 0
+    },
+    "link_stat_last": {
+      "lines_rx": 715,
+      "dropped_pool": 0,
+      "dropped_queue": 0,
+      "replies_dropped": 0,
+      "overlong": 0,
+      "queue_min_free": 9,
+      "pool_min_free": 1
+    },
+    "link_stat_min_free": {
+      "queue": 9,
+      "pool": 1
+    },
+    "work_us": {
+      "advance": {
+        "n": 455,
+        "min": 37,
+        "p50": 298,
+        "p99": 718,
+        "max": 898,
+        "mean": 340.2901098901099,
+        "stdev": 129.99222043919858
+      },
+      "feed": {
+        "n": 455,
+        "min": 193,
+        "p50": 321,
+        "p99": 1517,
+        "max": 53866,
+        "mean": 581.4,
+        "stdev": 2729.2977501970668
+      },
+      "output": {
+        "n": 455,
+        "min": 116,
+        "p50": 203,
+        "p99": 633,
+        "max": 695,
+        "mean": 234,
+        "stdev": 90.88038267989388
+      }
+    },
+    "tick_lost_records": 0,
+    "tx_dropped_flag_count": 0,
+    "dac_states": [
+      [
+        326050385,
+        0,
+        0
+      ]
+    ],
+    "sample_stat": {
+      "skipped_idle_gap": 251,
+      "skipped_decimated": 7496,
+      "decimated_now": 0,
+      "decimated_seconds": 16,
+      "records": 170,
+      "seconds": 169,
+      "ticks": 169050,
+      "handled": 168785,
+      "coalesced": 265,
+      "dropped": 0,
+      "coalesced_total_since_boot": 760,
+      "dropped_total_since_boot": 0,
+      "tick_cost_max_us": 3292,
+      "tick_cost_max_per_second_us": {
+        "n": 170,
+        "min": 67,
+        "p50": 88,
+        "p99": 1167,
+        "max": 3292,
+        "mean": 199.43529411764706,
+        "stdev": 377.21485364861866
+      },
+      "tick_cost_last_us": {
+        "n": 170,
+        "min": 29,
+        "p50": 46,
+        "p99": 526,
+        "max": 815,
+        "mean": 74.83529411764705,
+        "stdev": 109.9695516210602
+      },
+      "budget_us": 400,
+      "seconds_over_budget": 17
+    }
+  },
+  "capture": {
+    "tick_period_us": {
+      "n": 180006,
+      "min": 775.0,
+      "p50": 1000.0,
+      "p99": 1017.0,
+      "max": 1225.0,
+      "mean": 1000.0003722098153,
+      "stdev": 7.473284223448303,
+      "nominal": 1000.0,
+      "missed": 0,
+      "doubled": 0
+    },
+    "marker_pulses_us": {
+      "n": 166888,
+      "min": 19.0,
+      "p50": 45.0,
+      "p99": 484.0,
+      "max": 1445.0,
+      "mean": 63.02846819423805,
+      "stdev": 80.26768190423006
+    },
+    "marker_rising_edges": 166889,
+    "tick_level_us": {
+      "n": 135300,
+      "min": 40.0,
+      "p50": 47.0,
+      "p99": 571.0,
+      "max": 1445.0,
+      "mean": 69.37008869179601,
+      "stdev": 87.93469800200957
+    },
+    "tick_level_back_to_back": 66,
+    "tick_level_open_at_end": true
+  },
+  "host": {
+    "steps_ok": 32,
+    "steps": 35,
+    "summary": {
+      "steps_ok": 32,
+      "steps": 35,
+      "lines_tx": 590,
+      "lines_rx": 1232,
+      "naks": [],
+      "round_trip_us_ping": {
+        "n": 512,
+        "min": 1744.698,
+        "p50": 3121.957,
+        "p99": 5235.653,
+        "max": 49149.788,
+        "mean": 3391.3097109375
+      },
+      "round_trip_us_commands": {
+        "n": 78,
+        "min": 2247.756,
+        "p50": 4534.794,
+        "p99": 34361.924,
+        "max": 59454.246,
+        "mean": 6389.033987179487
+      },
+      "move_ack_to_target_us": {
+        "n": 20,
+        "min": 431932.879,
+        "p50": 434769.463,
+        "p99": 437561.154,
+        "max": 472400.876,
+        "mean": 436299.5729
+      },
+      "host_loss_fault_delay_ms": 124.729609,
+      "trial": {
+        "cfg": {
+          "wdt_ms": "100",
+          "deadband_deg": "0.5",
+          "stream_hz": "10",
+          "pre_ms": "500",
+          "post_ms": "500"
+        },
+        "stimulus": "hand",
+        "release_angle": -0.816,
+        "park": 0.0,
+        "pull": null,
+        "trial": null,
+        "window_samples": 500,
+        "window_pre": 500,
+        "window_lost": 0,
+        "window_chunks": 16,
+        "fetch_ms": 125.031715,
+        "angle_at_pre": null,
+        "stream_lines_2s": 100
+      }
+    }
+  },
+  "align": {
+    "pairs": 57,
+    "drift_ppm": 12.879402139454044,
+    "residual_us": {
+      "n": 57,
+      "min": -780.5777578353882,
+      "p50": -75.06382465362549,
+      "p99": 1491.5777740478516,
+      "max": 1940.8079719543457,
+      "mean": 3.513536955180921e-07,
+      "stdev": 518.5908757540423
+    },
+    "note": "residual spread = host-to-board arrival jitter; the mean is absorbed by the offset"
+  }
+}

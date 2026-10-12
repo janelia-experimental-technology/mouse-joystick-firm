@@ -1,0 +1,192 @@
+{
+  "name": "la3",
+  "decoded_at": "2026-10-09T09:20:14-04:00",
+  "profile": {
+    "name": "mouse-joystick-pcb-v1.0-digital50-pycontrol",
+    "path": "fixtures/mouse-joystick-pcb-v1.0/profile.toml"
+  },
+  "capture": {
+    "path": "evidence/which/captures/la3.sr",
+    "version": "2",
+    "sigrok_version": "0.6.0",
+    "samplerate_hz": 1000000,
+    "unitsize": 4,
+    "channels": [
+      "CH0",
+      "CH1",
+      "CH2",
+      "CH3"
+    ],
+    "sample_count": 3001496,
+    "duration_s": 3.001496,
+    "chunks": 3
+  },
+  "evidence_dir": "evidence/which",
+  "roles_present": {
+    "marker0": "CH0",
+    "marker1": "CH1",
+    "trace": "CH1",
+    "link_tx": "CH2",
+    "link_rx": "CH3",
+    "beacon_clock": "CH0",
+    "beacon_data": "CH1"
+  },
+  "roles_missing": {
+    "enc_a": "CH28",
+    "enc_b": "CH29",
+    "limit": "CH15",
+    "hv_en": "CH24",
+    "tmc_sck": "CH8",
+    "tmc_cs": "CH9",
+    "tmc_copi": "CH10",
+    "tmc_cipo": "CH11",
+    "tmc_drv_en": "CH14",
+    "bus_sw_en": "CH27"
+  },
+  "outputs": {
+    "trace_bytes": "evidence/which/trace/la3.qs.bin",
+    "markers": "evidence/which/markers/la3.jsonl"
+  },
+  "warnings": [],
+  "link": {
+    "streams": {
+      "link_rx": {
+        "channel": "CH3",
+        "bytes": 0,
+        "frame_errors": 0,
+        "parity_errors": 0,
+        "lines": 0,
+        "unterminated": 0,
+        "lines_with_errors": 0
+      },
+      "link_tx": {
+        "channel": "CH2",
+        "bytes": 0,
+        "frame_errors": 0,
+        "parity_errors": 0,
+        "lines": 0,
+        "unterminated": 0,
+        "lines_with_errors": 0
+      }
+    },
+    "lines": 0,
+    "commands": {},
+    "replies": {},
+    "events": {},
+    "malformed": 0,
+    "naks": [],
+    "faults": [],
+    "trials": [],
+    "last_event": null,
+    "heartbeat": {
+      "verb": "ping",
+      "count": 0
+    }
+  },
+  "trace": {
+    "channel": "CH1",
+    "baud": 115200,
+    "format": "8N1",
+    "bytes": 0,
+    "frame_errors": 0,
+    "parity_errors": 0,
+    "lines": 0,
+    "unterminated": 0,
+    "lines_with_errors": 0,
+    "decoder": "qspy",
+    "qspy": null
+  },
+  "markers": {
+    "marker0": {
+      "channel": "CH0",
+      "signal": "FW_TRIG0",
+      "rising": 0,
+      "falling": 0,
+      "edges_listed": true,
+      "pulses": 0
+    },
+    "marker1": {
+      "channel": "CH1",
+      "signal": "FW_TRIG1",
+      "rising": 0,
+      "falling": 0,
+      "edges_listed": false,
+      "note": "shares its channel with a UART role; edges are serial bits"
+    }
+  },
+  "beacon": {
+    "serial": null,
+    "reason": "no frame start: no interval with data high while clock is low. Check the profile's beacon channels, the cable and buffer power, the capture timing, and whether firmware emitted a beacon."
+  },
+  "health": {
+    "board": "la3",
+    "window": null,
+    "t_wall": "2026-10-09T09:20:15-04:00",
+    "window_start_wall": null,
+    "duration_s": 3.001496,
+    "gap_before_s": null,
+    "gap_kind": "sampling",
+    "status": "dead",
+    "reasons": [
+      "no link lines and no trace bytes: board off, cable, or wrong channels"
+    ],
+    "link": {
+      "present": true,
+      "lines": 0,
+      "lines_per_s": null,
+      "active_span_s": null,
+      "heartbeat_hz": null,
+      "heartbeat_ok": null,
+      "naks": 0,
+      "faults": 0,
+      "trials": 0,
+      "outcomes": {},
+      "events": {},
+      "errors": 0,
+      "longest_silence_s": null
+    },
+    "trace": {
+      "present": true,
+      "alive": false,
+      "bytes": 0,
+      "frame_errors": 0,
+      "records": 0,
+      "records_per_s": null,
+      "longest_gap_s": null
+    },
+    "markers": {
+      "marker0": {
+        "pulses": 0,
+        "rising": 0
+      },
+      "marker1": {
+        "pulses": 0,
+        "rising": 0
+      }
+    },
+    "pulses": {},
+    "coverage": {},
+    "last_event": null,
+    "capture": "evidence/which/captures/la3.sr",
+    "warnings": [],
+    "totals": {
+      "windows": 1,
+      "captured_s": 3.001,
+      "gap_s": 0.0,
+      "armed_idle_s": 0.0,
+      "lines": 0,
+      "faults": 0,
+      "naks": 0,
+      "trials": 0,
+      "frame_errors": 0,
+      "outcomes": {},
+      "statuses": {
+        "dead": 1
+      },
+      "trace_records": 0,
+      "unseen_lines_min": 0,
+      "unseen_lines_max": 0,
+      "reboots": 0
+    }
+  }
+}

@@ -29,6 +29,18 @@ This firmware was developed inside the Orb Weaver ecosystem
 (https://codeberg.org/orb-weaver), which supplies the instrument tooling and
 the planning documents above. The firmware itself depends on none of it.
 
+## Evidence
+
+`evidence/` is a curated copy of the v1.0 verification runs from
+`qp-arduino-example/evidence/`, where the bench sessions were driven and
+where the raw material still lives in full. The copy keeps every text file
+and the logic-analyzer captures up to 1 MB plus the four first-board captures
+the bring-up log cites by name; each directory's `OMITTED.sha256` lists the
+raw `.sr` and `.vcd` files left behind with their sizes and hashes (about
+835 MB). The earlier QP pilot and board 4 (pcb v0.3) runs of 2026-09-30 to
+2026-10-02 are not copied; the QP example's README cites them where they
+live.
+
 ## Observability Development
 
 The [observability plan](docs/observability-plan.md) tracks `OBS-FW`: define

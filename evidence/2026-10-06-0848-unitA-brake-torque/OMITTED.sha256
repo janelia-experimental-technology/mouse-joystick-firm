@@ -1,0 +1,9 @@
+# Raw captures not copied into this repository (sha256, bytes, path).
+# The files are in the qp-arduino-example repository under evidence/2026-10-06-0848-unitA-brake-torque/ (see docs/development.md) and available on request.
+a6cc4af25b6d92a33c0c7a0e12d8cda2215f3e6e2a842e76201cfdbcb43731d5          385  captures/p0_reboot.vcd
+1a2129863fedc3573a9520756afb1188c200415cea8675fa0c4613cceb85294f        29977  captures/p1_bringup.vcd
+979ac6d54f64f5aebbd33fa826a4160d0ac21563bf1dc1148732035f152cb6e3        33039  captures/p2_brake.vcd
+0f0c755d2f259e1fbb97fdbf87b2faa7eaa3c96cc7c9d66d5eb11537f981e61c      1330214  captures/p3_torque.sr
+42a186aa8e5d0a9fad4cf86715f0219a95c56c1a2389bd7f12307539b2b92cec      3594074  captures/p3_torque.vcd
+20985c20940f4b1ffd063bc43402d2a7de34247fe712af82a8445f6796173e8a      2305549  captures/p4_live.sr
+6bf969f8bee0b9440af81bfe8c719e13d2e78b26ca4d675bb648ce47fada3829     12312209  captures/p4_live.vcd

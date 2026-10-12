@@ -1,0 +1,11 @@
+firmware: ec3b36d (ec3b36d)
+qp-arduino: v6.9.9-20-g678a73c (678a73c) [consumed as the GitHub tag v7.3.4]
+qp-arduino-example: f6018cd
+board: E4654C159F171E34 (board 4, RIGHT joystick, pcb v0.3)
+port: /dev/serial/by-id/usb-Orb_Weaver_mouse-joystick-pcb_E4654C159F171E34-if00
+purpose: regression of the 2026-10-04 v1.0-preparation refactor and the 2026-10-02 QP fixes on known-good v0.3 hardware, driven non-interactively (no meter, no hand pull, no pyboard)
+firmware on the board before the session: ef976c5 mouse_joystick_qp_rev1_usb, hv=0, boot=por
+LA5032: lsusb 77a1:01a2 Bus 001 Device 016; sigrok sees 34 channels
+started: 2026-10-05T11:42:21-04:00
+ended: 2026-10-05T12:24:39-04:00
+end state: mouse_joystick_qp_rev1_usb at ec3b36d, IDLE, hv=0, boot=reboot; 36 V supply still on

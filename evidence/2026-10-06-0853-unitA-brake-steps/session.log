@@ -1,0 +1,9 @@
+##### unit A brake steps session start 2026-10-06T08:53:44-04:00
+##### unit A at /dev/serial/by-id/usb-Orb_Weaver_mouse-joystick-pcb_E4654C159F274534-if00 2026-10-06T08:53:44-04:00
+##### capture p0_reboot running for 8000 ms at 10m on CH0,CH1,CH24,CH27,CH30,CH31 2026-10-06T08:53:46-04:00
+##### waiting for capture p0_reboot 2026-10-06T08:53:50-04:00
+##### capture p0_reboot complete: 320438 bytes 2026-10-06T08:53:54-04:00
+##### capture p1_steps running for 70000 ms at 1m on CH0,CH1,CH20,CH21,CH22,CH23,CH24,CH27 2026-10-06T08:53:57-04:00
+##### waiting for capture p1_steps 2026-10-06T08:54:38-04:00
+##### capture p1_steps complete: 280655 bytes 2026-10-06T08:55:06-04:00
+##### session done; rail off by x. 2026-10-06T08:55:07-04:00

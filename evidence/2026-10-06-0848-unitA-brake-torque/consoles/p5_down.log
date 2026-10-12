@@ -1,0 +1,15 @@
+ WARN the lock file is up-to-date but uses an older format (v6), run `pixi lock` to upgrade to v7 for improved reproducibility
+  rail: 3.301 V (up), bus closed
+  I2C: 0x48 ACK, 0x49 ACK
+  brake DAC: configured
+    code 0 (0x0) -> DAC 0.0000 V -> 0.000 mA commanded, 0.000 N.cm nominal
+    BRAKE_ISENSE 0.0113 V (14.2 counts) = 0.55 mA   ~BRAKE_FAULT high (not limiting)
+  torque ADC: configured
+    20446.0 codes = 1.59734 V at AMP_VOUT, 0.79867 V at the BNC, -0.0006 N.cm (tared)
+    TQ_CAL_EN low
+
+ WARN the lock file is up-to-date but uses an older format (v6), run `pixi lock` to upgrade to v7 for improved reproducibility
+Powered down: brake at code 0, bus open, HV_EN low.
++36V_SW takes about 700 ms to bleed down. The DAC and the ADC
+lost their supplies; 'b' configures both again.
+

@@ -1,0 +1,1 @@
+Park-error measurement on v1.0 unit A: mouse_joystick_check with park=0 (leave RELEASED with stop instead of a move; status right after and 300 ms later) and park=1 (the usual move), status also read at RELEASED; firmware mouse_joystick_qp_rev2 (quad-lane stage 2 default, TMC51X0 4.2.0, 23b7bb0-dirty)

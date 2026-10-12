@@ -1,0 +1,4 @@
+ WARN the lock file is up-to-date but uses an older format (v6), run `pixi lock` to upgrade to v7 for improved reproducibility
+serial E4654C159F171E34 ok, hw rev1 ok, caps motion+home+instr+hv+watch+fetch+stream+cfg+angout ok
+boot=reboot;crumb=0  (forced reboot (Q_onError))
+check-id: ok -> /home/peter/Repositories/orb-weaver/qp-arduino-example/evidence/2026-10-05-1142-board4-regression/steps/check-id.json

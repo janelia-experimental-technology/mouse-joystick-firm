@@ -1,0 +1,32 @@
+pyControl v2.1.1 at /home/peter/Repositories/github/pycontrol-code; hardware definition mouse_joystick_bringup.py; task mouse_joystick_check
+
+Micropython version: 1.261
+Framework version: 2.1.1
+pyboard unique id b'M\x00B\x00\x0bQ323459', MicroPython 1.261, framework True 2.1.1
+
+Transfering device driver files ['MCP.py', 'mouse_joystick_protocol.py', 'uart_handler.py', 'mouse_joystick.py', 'poke.py'] to pyboard...
+
+Insufficient space on pyboard filesystem to transfer file.
+Traceback (most recent call last):
+  File "/home/peter/Repositories/orb-weaver/mouse-joystick-firm/tools/pycontrol_run.py", line 126, in <module>
+    main()
+    ~~~~^^
+  File "/home/peter/Repositories/orb-weaver/mouse-joystick-firm/tools/pycontrol_run.py", line 75, in main
+    board.load_hardware_definition(str(hwd_path))
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "/home/peter/Repositories/github/pycontrol-code/source/communication/pycboard.py", line 320, in load_hardware_definition
+    self.transfer_device_files(hwd_path)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "/home/peter/Repositories/github/pycontrol-code/source/communication/pycboard.py", line 349, in transfer_device_files
+    self.transfer_folder(
+    ~~~~~~~~~~~~~~~~~~~~^
+        user_folder("devices"), files=files_to_transfer, remove_files=False, show_progress=True
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/home/peter/Repositories/github/pycontrol-code/source/communication/pycboard.py", line 277, in transfer_folder
+    self.transfer_file(file_path, target_path)
+    ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/peter/Repositories/github/pycontrol-code/source/communication/pycboard.py", line 245, in transfer_file
+    raise PyboardError
+source.communication.pyboard.PyboardError

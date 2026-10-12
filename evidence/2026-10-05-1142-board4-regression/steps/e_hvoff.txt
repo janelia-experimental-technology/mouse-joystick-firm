@@ -1,0 +1,3 @@
+ WARN the lock file is up-to-date but uses an older format (v6), run `pixi lock` to upgrade to v7 for improved reproducibility
+hv off: ack;1; ack;2;state=HOMED;angle=-1.716;xactual=-1.624;torque=;brake=;homed=1;limit=0;faults=0;hv=0;t=862484871
+>>> METER on the angle BNC with the rail off: reading in volts (expected 0)?  hv-off: ok -> /home/peter/Repositories/orb-weaver/qp-arduino-example/evidence/2026-10-05-1142-board4-regression/steps/e_hvoff.json

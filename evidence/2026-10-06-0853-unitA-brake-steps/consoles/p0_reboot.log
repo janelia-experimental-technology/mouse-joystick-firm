@@ -1,0 +1,8 @@
+Traceback (most recent call last):
+  File "/home/peter/Repositories/orb-weaver/mouse-joystick-firm/tools/board_console.py", line 29, in <module>
+    data = ser.read(4096)
+  File "/home/peter/Repositories/orb-weaver/mouse-joystick-firm/.pixi/envs/default/lib/python3.14/site-packages/serial/serialposix.py", line 595, in read
+    raise SerialException(
+        'device reports readiness to read but returned no data '
+        '(device disconnected or multiple access on port?)')
+serial.serialutil.SerialException: device reports readiness to read but returned no data (device disconnected or multiple access on port?)

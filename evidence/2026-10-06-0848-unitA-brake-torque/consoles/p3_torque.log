@@ -1,0 +1,37 @@
+ WARN the lock file is up-to-date but uses an older format (v6), run `pixi lock` to upgrade to v7 for improved reproducibility
+  20447.0 codes = 1.59742 V at AMP_VOUT, 0.79871 V at the BNC, -0.2549 N.cm (nominal zero)
+ WARN the lock file is up-to-date but uses an older format (v6), run `pixi lock` to upgrade to v7 for improved reproducibility
+  1000 conversions at 1 kHz:
+    n 1000  mean 20448.0 codes = 1.59750 V at AMP_VOUT, 0.79875 V at the BNC, -0.2546 N.cm (nominal zero)
+    sd 1.22 codes = 95.2 uV rms = 0.351 mN.cm rms   min 20444  max 20452  span 8 codes
+
+ WARN the lock file is up-to-date but uses an older format (v6), run `pixi lock` to upgrade to v7 for improved reproducibility
+  DEVICE_ID    0x00: 0x0010
+  RST_PWRCTL   0x04: 0x0000
+  SDI_CTL      0x08: 0x0000
+  SDO_CTL      0x0C: 0x0000
+  DATAOUT_CTL  0x10: 0x0000
+  RANGE_SEL    0x14: 0x000B
+  ALARM        0x20: 0x0041
+  ALARM_H_TH   0x24: 0xFFFF
+  ALARM_L_TH   0x28: 0x0000
+
+ WARN the lock file is up-to-date but uses an older format (v6), run `pixi lock` to upgrade to v7 for improved reproducibility
+Shunt calibration: 500 samples with TQ_CAL_EN low, 500 high, 500 low.
+Design step: R2003 75k across one 350 ohm arm = 1.164 mV/V = 0.744 V at AMP_VOUT = 9522 codes. The 2026-10-04 review expects the switch NOT to turn on.
+  TQ_CAL_EN low: 
+    n 500  mean 20447.7 codes = 1.59748 V at AMP_VOUT, 0.79874 V at the BNC, -0.2547 N.cm (nominal zero)
+    sd 1.42 codes = 111.1 uV rms = 0.409 mN.cm rms   min 20443  max 20451  span 8 codes
+  TQ_CAL_EN high:
+    n 500  mean 20447.8 codes = 1.59749 V at AMP_VOUT, 0.79874 V at the BNC, -0.2547 N.cm (nominal zero)
+    sd 1.43 codes = 111.6 uV rms = 0.411 mN.cm rms   min 20443  max 20452  span 9 codes
+  TQ_CAL_EN low again:
+    n 500  mean 20447.8 codes = 1.59749 V at AMP_VOUT, 0.79874 V at the BNC, -0.2547 N.cm (nominal zero)
+    sd 1.22 codes = 95.2 uV rms = 0.351 mN.cm rms   min 20444  max 20452  span 8 codes
+  step 0.0 codes = 0.00 mV = 0.0 % of the design step
+
+ WARN the lock file is up-to-date but uses an older format (v6), run `pixi lock` to upgrade to v7 for improved reproducibility
+  tared at code 20448 = 1.59750 V (nominal zero 21333, -885 codes = -69.14 mV off; the sensor's zero balance is +/-1 % R.O. = +/-9.6 mV here)
+
+ WARN the lock file is up-to-date but uses an older format (v6), run `pixi lock` to upgrade to v7 for improved reproducibility
+  20448.0 codes = 1.59750 V at AMP_VOUT, 0.79875 V at the BNC, 0.0000 N.cm (tared)

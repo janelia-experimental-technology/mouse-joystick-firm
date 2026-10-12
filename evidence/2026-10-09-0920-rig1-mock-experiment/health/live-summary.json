@@ -1,0 +1,128 @@
+{
+  "started": "2026-10-09T09:20:37-04:00",
+  "finished": "2026-10-09T09:26:01-04:00",
+  "windows": 19,
+  "window_s": 15.0,
+  "trigger": "marker0",
+  "pre_trigger_pct": 20,
+  "overlap": true,
+  "interrupted": true,
+  "evidence_dir": "evidence/2026-10-09-rig1",
+  "boards": {
+    "joy1": {
+      "analyzer": {
+        "driver": "kingst-la2016",
+        "conn": "1.18",
+        "topology": "1-5.1",
+        "driver_spec": "kingst-la2016:conn=1.18",
+        "selected_by": "--analyzer topology"
+      },
+      "profile": "mouse-joystick-pcb-v1.0-digital50-pycontrol",
+      "totals": {
+        "windows": 2,
+        "captured_s": 14.836,
+        "gap_s": 0.002,
+        "armed_idle_s": 125.014,
+        "lines": 537,
+        "faults": 0,
+        "naks": 0,
+        "trials": 2,
+        "frame_errors": 0,
+        "outcomes": {
+          "NOMOVE": 2
+        },
+        "statuses": {
+          "idle": 1,
+          "ok": 1
+        },
+        "trace_records": 899,
+        "unseen_lines_min": 0,
+        "unseen_lines_max": 0,
+        "reboots": 0
+      },
+      "last_event": {
+        "event": "TARGET",
+        "t": 12.895191,
+        "kv": {
+          "angle": "-0.091"
+        },
+        "window": "joy1-0002"
+      },
+      "health_file": "evidence/2026-10-09-rig1/health/joy1.jsonl"
+    },
+    "joy4": {
+      "analyzer": {
+        "driver": "kingst-la2016",
+        "conn": "1.20",
+        "topology": "1-5.4",
+        "driver_spec": "kingst-la2016:conn=1.20",
+        "selected_by": "--analyzer topology"
+      },
+      "profile": "mouse-joystick-pcb-v1.0-digital50-pycontrol",
+      "totals": {
+        "windows": 3,
+        "captured_s": 14.582,
+        "gap_s": 0.003,
+        "armed_idle_s": 252.434,
+        "lines": 533,
+        "faults": 0,
+        "naks": 0,
+        "trials": 2,
+        "frame_errors": 0,
+        "outcomes": {
+          "NOMOVE": 2
+        },
+        "statuses": {
+          "idle": 2,
+          "ok": 1
+        },
+        "trace_records": 894,
+        "unseen_lines_min": 0,
+        "unseen_lines_max": 0,
+        "reboots": 0
+      },
+      "last_event": {
+        "event": "TARGET",
+        "t": 12.549045,
+        "kv": {
+          "angle": "-0.091"
+        },
+        "window": "joy4-0002"
+      },
+      "health_file": "evidence/2026-10-09-rig1/health/joy4.jsonl"
+    },
+    "cameras": {
+      "analyzer": {
+        "driver": "kingst-la2016",
+        "conn": "1.19",
+        "topology": "1-5.3",
+        "driver_spec": "kingst-la2016:conn=1.19",
+        "selected_by": "--analyzer topology"
+      },
+      "profile": "camera-gpio-interface-pcb-v1.0-digital50",
+      "totals": {
+        "windows": 19,
+        "captured_s": 285.014,
+        "gap_s": 15.883,
+        "armed_idle_s": 0.0,
+        "lines": 0,
+        "faults": 0,
+        "naks": 0,
+        "trials": 0,
+        "frame_errors": 0,
+        "outcomes": {},
+        "statuses": {
+          "silent": 16,
+          "ok": 2,
+          "degraded": 1
+        },
+        "trace_records": 0,
+        "unseen_lines_min": 0,
+        "unseen_lines_max": 0,
+        "reboots": 0
+      },
+      "last_event": null,
+      "health_file": "evidence/2026-10-09-rig1/health/cameras.jsonl"
+    }
+  }
+}

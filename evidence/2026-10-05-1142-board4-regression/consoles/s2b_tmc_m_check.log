@@ -1,0 +1,152 @@
+
+mouse-joystick-pcb stage 2, idle and powered down.
+36 V must be connected to J1901. Send 's' to begin.
+
+commands
+  ?  this menu
+  s  run the full stage 2 sequence (raises HV_EN)
+  r  read and print the register set
+  i  read IOIN once
+  v  rail state now
+  d  36 V switch diagnostics (raises HV_DIAG_EN briefly)
+  p  profile a power-up attempt, 1 ms resolution
+  c  staircase soft-start: burst-charge +36V_SW, then hold
+  b  close the GPIO bus and start SPI0 (rail must be up)
+  m  measure 36 V input current, self-zeroed and averaged
+  l  LATCH probe: does this revision still need the
+     firmware workaround? (costs one thermal trip if it does)
+  h  raise HV_EN and HOLD it (for supply-ramp bench tests)
+  w  software soft-start: retry HV_EN, 10 attempts
+  x  power down: open the bus, drop HV_EN
+  I  beacon the board serial on the InstrumentPort
+     triggers (no 36 V, no bus)
+  B  reboot into BOOTSEL
+  R  reboot
+
+There is no command to enable the driver. Stage 2 cannot put
+current through the motor.
+
+
+##### send 's' at +4.0 s
+
+================================================================
+ mouse-joystick-pcb  stage 2: TMC5130A communication
+================================================================
+ Raises HV_EN. The driver output stage stays disabled.
+
+[1] before: rail must be off
+    +3.3V_SW: 0.0210 V (13 counts, 0.0105 V divided) -- off
+    [ ok ] switched domain dead, as it must be before HV_EN
+
+[2] raising HV_EN
+    method: firmware staircase (R1903 straps LATCH high)
+    [ ok ] +3.3V_SW came up in 132 ms, peak 3.2927 V
+    +3.3V_SW: 3.2927 V (2043 counts, 1.6464 V divided) -- live
+
+[3] 36 V switch diagnostics
+    HV_SNS: 0.0113 V across R1907 249R (14 counts) -- at the offset floor, no measurable load
+      Quiet state with HV_EN low reads 18-22 counts and one
+      count is 2.6 mA, so idle draw is unresolvable. All
+      this says is 'far below the 1.15 A limit'.
+    ~{HV_FAULT}: high, no latched fault
+
+[4] closing the GPIO isolation bus switch
+    Only now, with the driver's VCC_IO rail established. Before
+    this point every MCU pin on the switched side was isolated.
+    [ ok ] bus closed, ~{TMC_DRV_EN} still high
+
+[5] TMC5130A registers, driver disabled throughout
+    IOIN      (0x04) = 0x1100001C  status=0x39
+      sent 1: 04 00 00 00 00
+      got  1: 00 00 00 00 00
+      sent 2: 04 00 00 00 00
+      got  2: 39 11 00 00 1C
+    VERSION = 0x11  [ ok ] TMC5130A
+    DRV_ENN = 1  [ ok ] driver disabled, and GP3 reaches the chip
+    SD_MODE = 0  [ ok ] motion-controller mode, tied to GND
+    inputs: REFL_STEP=0 REFR_DIR=0 ENCA=1 ENCB=1 ENCN=0 SWCOMP=0
+      With nothing plugged into the motor, encoder or limit
+      switch connectors these should all read 0, held there by
+      That list is v0.2's and does not hold on v0.3, where
+      REFL_STEP = 1 is CORRECT with the switch unplugged and
+      the check below is simply wrong: U1301's IN pin has no
+      external pull -- it reaches only J1301 pad 2 -- so the
+      MAX6816 supplies its own pull-up, drives OUT high, and
+      nothing can override a driven output. There is no
+      LIMIT_SW pull-down anywhere on v0.3.
+    [ ok ] IOIN board-invariant fields correct:
+      VERSION, DRV_ENN, SD_MODE and REFR_DIR
+    GSTAT     (0x01) = 0x00000001  status=0x39
+      sent 1: 01 00 00 00 00
+      got  1: 39 11 00 00 1C
+      sent 2: 01 00 00 00 00
+      got  2: 39 00 00 00 01
+      reset=1 drv_err=0 uv_cp=0
+      reset=1 is expected on the first read after a power-up,
+      and reading GSTAT is what clears it.
+    GCONF     (0x00) = 0x00000000  status=0x38
+      sent 1: 00 00 00 00 00
+      got  1: 38 00 00 00 00
+      sent 2: 00 00 00 00 00
+      got  2: 38 00 00 00 00
+    CHOPCONF  (0x6C) = 0x00000000  status=0x38
+      sent 1: 6C 00 00 00 00
+      got  1: 38 00 00 00 00
+      sent 2: 6C 00 00 00 00
+      got  2: 38 00 00 00 00
+      vsense = 0
+      This board fits 0.15 ohm shunts. vsense resets to 0, and
+      0 with 0.15 ohm is roughly 1.8x the motor's rated current.
+      Stage 3 must set it to 1 and read it back BEFORE it lowers
+      ~{TMC_DRV_EN}. Stage 2 only reports it.
+    DRV_STATUS (0x6F) = 0x80000000  status=0x38
+      sent 1: 6F 00 00 00 00
+      got  1: 38 00 00 00 00
+      sent 2: 6F 00 00 00 00
+      got  2: 38 80 00 00 00
+    XACTUAL   (0x21) = 0x00000000  status=0x38
+      sent 1: 21 00 00 00 00
+      got  1: 38 80 00 00 00
+      sent 2: 21 00 00 00 00
+      got  2: 38 00 00 00 00
+    X_ENC     (0x39) = 0x00000000  status=0x38
+      sent 1: 39 00 00 00 00
+      got  1: 38 00 00 00 00
+      sent 2: 39 00 00 00 00
+      got  2: 38 00 00 00 00
+      Position comes from here and XACTUAL, never from a GPIO.
+      The encoder does not reach the MCU on any revision.
+
+    register checks: 5, 0 failed
+
+----------------------------------------------------------------
+ The rail is still up and the bus is still closed, so 'r' and
+ 'i' work now. Send 'x' to power down when you are done.
+----------------------------------------------------------------
+
+
+##### send 'x' at +8.4 s
+Powered down: bus open, HV_EN low, HV_DIAG_EN low.
+
+##### send 'v' at +10.5 s
+    +3.3V_SW: 0.0193 V (12 counts, 0.0097 V divided) -- off
+
+##### send 'v' at +11.6 s
+    +3.3V_SW: 0.0193 V (12 counts, 0.0097 V divided) -- off
+
+##### send 'm' at +12.7 s
+Measuring 36 V input current: 2048 samples at each point.
+  Zero is taken with HV_EN low, moments before raising it,
+  so it cancels ADC offset and leakage rather than assuming
+  a floor. HV_DIAG_EN is high for both reads.
+
+  zero (HV_EN low):  11.77 counts
+  live (HV_EN high): 16.76 counts
+  delta:             4.98 counts
+  36 V input current: 12.9 mA   (KSNS 800 A/A, R1907 249R, 2.6 mA per count)
+  rail: live
+  Rail left live -- send 'b' to close the bus, 'x' to stop.
+
+
+##### send 'x' at +16.1 s
+Powered down: bus open, HV_EN low, HV_DIAG_EN low.

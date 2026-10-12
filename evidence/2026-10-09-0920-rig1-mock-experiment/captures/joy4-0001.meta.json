@@ -1,0 +1,90 @@
+{
+  "name": "joy4-0001",
+  "capture_file": "joy4-0001.sr",
+  "path": "evidence/2026-10-09-rig1/captures/joy4-0001.sr",
+  "meta_file": "joy4-0001.meta.json",
+  "ok": false,
+  "error": "no trigger on CH0=r within 125 s",
+  "no_trigger": true,
+  "started_at": "2026-10-09T09:20:37-04:00",
+  "finished_at": "2026-10-09T09:22:42-04:00",
+  "wall_s": 125.019,
+  "trigger": "CH0=r",
+  "pre_trigger_pct": 20,
+  "profile": {
+    "name": "mouse-joystick-pcb-v1.0-digital50-pycontrol",
+    "path": "fixtures/mouse-joystick-pcb-v1.0/profile.toml",
+    "source": "instrument-control fixtures/mouse-joystick-pcb-v1.0/profile.toml (original, 2026-10-07)"
+  },
+  "board": {
+    "repository": "mouse-joystick-pcb",
+    "revision": "v1.0",
+    "port": "digital-50",
+    "port_map": "docs/interface-map.md#instrument_port_digital_50_dut_ffc_boundary_vertical",
+    "known_serials": [
+      "E4654C159F274534",
+      "E4654C159F404534"
+    ]
+  },
+  "firmware": {
+    "repository": "mouse-joystick-firm",
+    "build": "examples/PyControlLinkQp",
+    "environment": "mouse_joystick_qp_rev2",
+    "revision": "51322e7",
+    "trace_records": "examples/PyControlLinkQp/LinkAo.hpp (LinkRecords), Bsp.cpp (BspRecords)",
+    "link_codec": "pycontrol/devices/mouse_joystick_protocol.py",
+    "link_spec": "mouse-joystick-pcb/docs/uart-protocol.md (Protocol v1 Proposal, proto=2)"
+  },
+  "adapter": {
+    "mapping": "straight",
+    "revision": "v2.0"
+  },
+  "analyzer": {
+    "driver": "kingst-la2016",
+    "conn": "1.20",
+    "topology": "1-5.4",
+    "driver_spec": "kingst-la2016:conn=1.20",
+    "selected_by": "--analyzer topology"
+  },
+  "roles": {
+    "marker0": "CH0",
+    "marker1": "CH1",
+    "trace": "CH1",
+    "link_tx": "CH2",
+    "link_rx": "CH3",
+    "beacon_clock": "CH0",
+    "beacon_data": "CH1"
+  },
+  "channels": [
+    "CH0",
+    "CH1",
+    "CH2",
+    "CH3"
+  ],
+  "samplerate_hz": 2000000,
+  "seconds": 15.0,
+  "samples_requested": 30000000,
+  "samples_captured": null,
+  "duration_s": null,
+  "channels_captured": [],
+  "command": [
+    "/gnu/store/npcjawnwlwalb3c5z9p78chdkk996lsy-profile/bin/sigrok-cli",
+    "-d",
+    "kingst-la2016:conn=1.20",
+    "-C",
+    "CH0,CH1,CH2,CH3",
+    "-c",
+    "samplerate=2000000:captureratio=20",
+    "--samples",
+    "30000000",
+    "-o",
+    "evidence/2026-10-09-rig1/captures/joy4-0001.sr",
+    "-O",
+    "srzip",
+    "-t",
+    "CH0=r"
+  ],
+  "returncode": -9,
+  "stderr": "",
+  "warnings": []
+}

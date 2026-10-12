@@ -1,0 +1,24 @@
+id: E4654C159F274534 rev2 80fdf3b-dirty caps motion+home+instr+hv+watch+fetch+stream+cfg+angout+brake+torque
+status: state=IDLE;angle=0.0;xactual=0.0;torque=0.0;brake=0.0;homed=0;limit=0;faults=0;hv=0;t=7531988
+hv on: ack in 180.8 ms
+status after hv on: state=IDLE;angle=0.0;xactual=0.0;torque=-0.302;brake=0.0;homed=0;limit=0;faults=0;hv=1;t=8034430
+tq get: {'torque': '-0.302', 'raw': '-0.302', 'cal': '0'}
+tq get after zero: {'torque': '0.0', 'raw': '-0.301', 'cal': '0'}
+tq get with cal on: {'torque': '0.0', 'raw': '-0.301', 'cal': '1'}
+ev;HOMED;9082941;angle=0.0
+brake 1.000: ack 19.4 ms, RELEASED 0.0 ms after the ack: ev;RELEASED;9157946;angle=0.0;torque=0.053;brake=1.0
+  status: state=RELEASED;angle=0.267;xactual=0.0;torque=0.052;brake=1.0;homed=1;limit=0;faults=0;hv=1;t=9266583
+  status: state=RELEASED;angle=0.267;xactual=0.0;torque=0.023;brake=1.0;homed=1;limit=0;faults=0;hv=1;t=9387242
+  status: state=RELEASED;angle=0.267;xactual=0.0;torque=0.01;brake=1.0;homed=1;limit=0;faults=0;hv=1;t=9506590
+  after stop: state=ARMED;angle=0.176;xactual=0.176;torque=0.076;brake=0.0;homed=1;limit=0;faults=0;hv=1;t=9569009
+brake 3.400: ack 22.1 ms, RELEASED 20.2 ms after the ack: ev;RELEASED;9904947;angle=0.176;torque=0.012;brake=3.4
+  status: state=RELEASED;angle=0.267;xactual=0.176;torque=-0.025;brake=3.4;homed=1;limit=0;faults=0;hv=1;t=10030855
+  status: state=RELEASED;angle=0.267;xactual=0.176;torque=-0.025;brake=3.4;homed=1;limit=0;faults=0;hv=1;t=10150721
+  status: state=RELEASED;angle=0.267;xactual=0.176;torque=-0.024;brake=3.4;homed=1;limit=0;faults=0;hv=1;t=10271271
+  after stop: state=ARMED;angle=0.176;xactual=0.176;torque=0.001;brake=0.0;homed=1;limit=0;faults=0;hv=1;t=10332478
+watch outcome: ev;NOMOVE;13679763;angle=0.267;torque=-0.025 touch: []
+ev;TRIAL;14679763;outcome=NOMOVE;t_rel=10661947;t_touch=;t_move=;t_out=13679763;a0=0.176;a_peak=0.091;a_end=0.091;tq_peak=-0.058;tq_out=-0.025;dur_thr=0
+fetch: n=4;k0=0;t0=13178947;dt_us=1000;pre=500;lost=0
+cap lines: ['cap;0;0.267;-0.026', 'cap;1;0.267;-0.025', 'cap;2;0.267;-0.026', 'cap;3;0.267;-0.025', 'cap;end']
+final status: state=HOMED;angle=-0.183;xactual=-0.183;torque=0.0;brake=0.0;homed=1;limit=0;faults=0;hv=0;t=15470001
+-> /home/peter/Repositories/orb-weaver/qp-arduino-example/evidence/2026-10-06-0942-unitA-qp-brake-torque/pilot/brake_torque.json

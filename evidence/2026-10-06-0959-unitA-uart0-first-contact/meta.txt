@@ -1,0 +1,1 @@
+firmware: 9b6d2ef mouse_joystick_qp_rev2 (UART0); pyboard PYBV11 MicroPython 1.26.1 serial 397734803233; board E4654C159F274534

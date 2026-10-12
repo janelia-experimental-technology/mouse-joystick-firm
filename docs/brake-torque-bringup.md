@@ -66,7 +66,7 @@ Lines: a letter, an optional number, Enter (`c 32768`, `T 2000`).
 | `M` | micro-benchmark: µs per ADS8689 sample, per `BRAKE_ISENSE` read, per fault-pin read, per brake DAC write (what the protocol build pays per tick) |
 
 The host harness is `tools/board_console.py`; the two bench scripts that ran
-the first unit are `qp-arduino-example/evidence/bench-scripts/unitA_brake_torque.sh`
+the first unit are `evidence/bench-scripts/unitA_brake_torque.sh`
 and `unitA_brake_steps.sh`.
 
 ## Measured On The First Unit, 2026-10-06 (unit A, `E4654C159F274534`)

@@ -1,0 +1,27 @@
+ WARN the lock file is up-to-date but uses an older format (v6), run `pixi lock` to upgrade to v7 for improved reproducibility
+Live loop: 10 s at 1 kHz, each tick one ADS8689 conversion and one
+BRAKE_ISENSE read. FW_TRIG0 high while a tick works.
+  10000 ticks in 9999 ms = 1000.1 Hz achieved; worst iteration 295 us; 0 ticks overran
+  torque:
+    n 10000  mean 20446.8 codes = 1.59740 V at AMP_VOUT, 0.79870 V at the BNC, -0.0004 N.cm (tared)
+    sd 1.36 codes = 106.2 uV rms = 0.391 mN.cm rms   min 20441  max 20452  span 11 codes
+  brake ISENSE mean 0.55 mA (code 0 commanded 0.00 mA), sd 1.46 counts
+
+ WARN the lock file is up-to-date but uses an older format (v6), run `pixi lock` to upgrade to v7 for improved reproducibility
+Brake-to-torque coupling: 500 torque samples at each brake level,
+joystick untouched. A mean that moves with the brake current is
+electrical pickup (shared return, supply sag) or the brake
+preloading the sensor through the coupling; sd is the noise.
+  brake code 0 = 0.55 mA measured:
+    n 500  mean 20446.4 codes = 1.59738 V at AMP_VOUT, 0.79869 V at the BNC, -0.0005 N.cm (tared)
+    sd 1.40 codes = 109.3 uV rms = 0.403 mN.cm rms   min 20442  max 20451  span 9 codes
+  brake code 32768 = 24.38 mA measured:
+    n 500  mean 20447.7 codes = 1.59748 V at AMP_VOUT, 0.79874 V at the BNC, -0.0001 N.cm (tared)
+    sd 1.22 codes = 95.1 uV rms = 0.350 mN.cm rms   min 20445  max 20451  span 6 codes
+  brake code 65535 = 48.80 mA measured:
+    n 500  mean 20446.6 codes = 1.59739 V at AMP_VOUT, 0.79870 V at the BNC, -0.0004 N.cm (tared)
+    sd 1.36 codes = 106.0 uV rms = 0.391 mN.cm rms   min 20443  max 20451  span 8 codes
+  brake code 0 = 0.55 mA measured:
+    n 500  mean 20446.4 codes = 1.59737 V at AMP_VOUT, 0.79869 V at the BNC, -0.0005 N.cm (tared)
+    sd 1.30 codes = 101.7 uV rms = 0.374 mN.cm rms   min 20443  max 20451  span 8 codes
+

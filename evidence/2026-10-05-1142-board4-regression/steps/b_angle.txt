@@ -1,0 +1,28 @@
+ WARN the lock file is up-to-date but uses an older format (v6), run `pixi lock` to upgrade to v7 for improved reproducibility
+ok   limits: ack;1;travel_lo=-10.125;travel_hi=0.0;v_max=36.0;a_max=180.0;i_max=0.421
+ok   targets from limits: travel [-10.12, 0.00]; angscale -10.12 0.00; angles -7.59, -5.06, -2.53
+ok   angle output present: yes
+ok   status before hv on: ack;8;state=IDLE;angle=0.0;xactual=0.0;torque=;brake=;homed=0;limit=0;faults=0;hv=0;t=6717470
+ok   hv on: ack;9
+>>> METER on the angle BNC, unhomed, hv on, angout off (DAC parked at code 0): reading in volts (expected 0.0000 V)?  FAIL meter unhomed, hv on, angout off (DAC parked at code 0):  V, expected 0.0000
+ok   home: ack;31
+ok   HOMED: ev;HOMED;8352133;angle=0.0
+ok   angscale -10.12 0.00: ack;53
+ok   angout on: ack;54
+>>> METER on the angle BNC, homed at the parked end (travel_hi), angout on: reading in volts (expected 3.3000 V)?  FAIL meter homed at the parked end (travel_hi), angout on:  V, expected 3.3000
+ok   arm: ack;61
+ok   moveto -7.59 (25 % of travel): ack;63
+ok   TARGET at -7.59: ev;TARGET;9031092;angle=-7.474
+>>> METER on the angle BNC, at -7.59 deg (25 % of travel): reading in volts (expected 0.9009 V)?  FAIL meter at -7.59 deg (25 % of travel):  V, expected 0.9009
+ok   moveto -5.06 (50 % of travel): ack;81
+ok   TARGET at -5.06: ev;TARGET;9496132;angle=-5.674
+>>> METER on the angle BNC, at -5.06 deg (50 % of travel): reading in volts (expected 1.4787 V)?  FAIL meter at -5.06 deg (50 % of travel):  V, expected 1.4787
+ok   moveto -2.53 (75 % of travel): ack;94
+ok   TARGET at -2.53: ev;TARGET;9960156;angle=-3.066
+>>> METER on the angle BNC, at -2.53 deg (75 % of travel): reading in volts (expected 2.3159 V)?  FAIL meter at -2.53 deg (75 % of travel):  V, expected 2.3159
+ok   moveto 0.00 (park): ack;108
+ok   TARGET at park: ev;TARGET;10428132;angle=-0.541
+ok   angout off: ack;115
+>>> METER on the angle BNC, angout off (parked): reading in volts (expected 0.0000 V)?  FAIL meter angout off (parked):  V, expected 0.0000
+ok   disarm: ack;122
+angle-check: FAILED -> /home/peter/Repositories/orb-weaver/qp-arduino-example/evidence/2026-10-05-1142-board4-regression/steps/b_angle.json

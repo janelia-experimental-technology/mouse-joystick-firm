@@ -1,0 +1,48 @@
+ WARN the lock file is up-to-date but uses an older format (v6), run `pixi lock` to upgrade to v7 for improved reproducibility
+ok   READY: not seen (board was up before the port opened); ID answered instead
+ok   id: ack;1;hw=rev2;serial=E4654C159F274534;fw=a8cabbe-dirty;proto=2;axes=1;caps=motion+home+instr+hv+watch+fetch+stream+cfg+angout;rxbuf=200;boot=reboot;crumb=0
+ok   status: ack;2;state=IDLE;angle=-0.183;xactual=-0.183;torque=;brake=;homed=0;limit=0;faults=0;hv=0;t=512379301
+ok   limits: ack;3;travel_lo=-10.125;travel_hi=0.0;v_max=36.0;a_max=180.0;i_max=0.421
+ok   targets from limits: moves between -9.12 and -1.00, release from 0.00 (travel_hi), park 0.00
+ok   hv on: ack;9
+ok   home: ack;14
+ok   HOMED: ev;HOMED;513630640;angle=0.0
+ok   arm: ack;36
+ok   moveto 0: ack;38 then ev;TARGET;514138633;angle=-9.274
+ok   moveto 299: ack;3931 then ev;TARGET;646888643;angle=-1.8
+ok   moves completed: 300 of 300
+ok   disarm (trial block skipped): ack;3944
+ok   id (end): ack;3945;hw=rev2;serial=E4654C159F274534;fw=a8cabbe-dirty;proto=2;axes=1;caps=motion+home+instr+hv+watch+fetch+stream+cfg+angout;rxbuf=200;boot=reboot;crumb=0
+{
+  "steps_ok": 14,
+  "steps": 14,
+  "lines_tx": 3945,
+  "lines_rx": 4246,
+  "naks": [],
+  "round_trip_us_ping": {
+    "n": 3337,
+    "min": 2181.23,
+    "p50": 3121.905,
+    "p99": 5299.702,
+    "max": 176976.02,
+    "mean": 3321.477060233743
+  },
+  "round_trip_us_commands": {
+    "n": 608,
+    "min": 3782.476,
+    "p50": 4899.764,
+    "p99": 6629.357,
+    "max": 176747.112,
+    "mean": 5374.615898026316
+  },
+  "move_ack_to_target_us": {
+    "n": 300,
+    "min": 429415.639,
+    "p50": 433686.625,
+    "p99": 445119.315,
+    "max": 473722.862,
+    "mean": 433925.4178266667
+  },
+  "host_loss_fault_delay_ms": null,
+  "trial": null
+}

@@ -1,0 +1,30 @@
+{
+ "step": "hv-off",
+ "port": "/dev/serial/by-id/usb-Orb_Weaver_mouse-joystick-pcb_E4654C159F274534-if00",
+ "started_unix": 1791230723.8822305,
+ "hv_off": "ack;1",
+ "status": "ack;2;state=HOMED;angle=-1.8;xactual=-1.8;torque=;brake=;homed=1;limit=0;faults=0;hv=0;t=840567308",
+ "meter_v_rail_off": "",
+ "log": [
+  {
+   "t_ns": 21009384435662,
+   "dir": "tx",
+   "text": "hv;1;off"
+  },
+  {
+   "t_ns": 21009391152085,
+   "dir": "rx",
+   "text": "ack;1"
+  },
+  {
+   "t_ns": 21009891439146,
+   "dir": "tx",
+   "text": "status;2"
+  },
+  {
+   "t_ns": 21009895716393,
+   "dir": "rx",
+   "text": "ack;2;state=HOMED;angle=-1.8;xactual=-1.8;torque=;brake=;homed=1;limit=0;faults=0;hv=0;t=840567308"
+  }
+ ]
+}

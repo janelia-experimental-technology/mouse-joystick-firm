@@ -1,0 +1,247 @@
+
+##### send 'g' at +1.8 s
+Encoder check: -1280 usteps out (away from the switch, at the positive end), then back.
+  Run this from mid-travel, or straight after 'h'. It jogs
+    toward the FAR hard stop first, so from rest against
+    that stop it fails on the mechanism, not the encoder.
+  Expecting 100.0 quadrature counts each way at 1000 CPR
+
+  outbound:
+    outcome: target reached
+    from:    3327 usteps (23.393 deg, 0.0650 rev)
+    to:      2047 usteps (14.393 deg, 0.0400 rev)
+    commanded -1280 usteps, encoder measured -1191 usteps
+    follow ratio: 0.9305
+    elapsed: 455 ms
+  return:
+    outcome: target reached
+    from:    2047 usteps (14.393 deg, 0.0400 rev)
+    to:      3327 usteps (23.393 deg, 0.0650 rev)
+    commanded 1280 usteps, encoder measured 1139 usteps
+    follow ratio: 0.8898
+    elapsed: 455 ms
+
+  encoder residual after the round trip: -52 usteps (-4.1 counts)
+    A few counts is quantisation plus gear backlash. Tens of
+    counts is real lost motion, and the places to look are
+    the encoder hub and the gear mesh.
+
+  [ ok ] the encoder tracks the ramp to within 7.0%, which
+    confirms 1000 CPR against 51200 usteps/rev. A ratio near 2 or
+    0.5 would mean the fitted encoder is not the CPR this
+    firmware was told about.
+
+
+##### send 'h' at +9.8 s
+Homing toward the POSITIVE end, switch active high. Approach 0.200 rev/s, then creep off at 0.010 rev/s...
+  approach:
+    outcome: STOPPED BY THE SWITCH
+    from:    3327 usteps (23.393 deg, 0.0650 rev)
+    to:      3717 usteps (26.135 deg, 0.0726 rev)
+    commanded 390 usteps, encoder measured 422 usteps
+    follow ratio: 1.0821
+    elapsed: 179 ms
+  stage 1 XLATCH, closing edge: 3717 usteps (26.135 deg, 0.0726 rev)
+  stage 1 settled:              3717 usteps (26.135 deg, 0.0726 rev)
+    overshoot past the closing latch: 0 usteps
+      A hard stop latches and stops at the same position,
+      so zero here is correct. It does NOT include the
+      debounce delay, which elapses before the driver sees
+      anything -- that is what stage 2 is for.
+  stage 2 XLATCH, release edge: 3326 usteps (23.386 deg, 0.0650 rev)
+    creep travelled -512 usteps at 0.010 rev/s
+    closing to release: 391 usteps (2.749 deg)
+      That is the approach's debounce overshoot plus the
+      switch's own throw. It grows with approach velocity,
+      which is why the release edge is the datum and the
+      closing edge is not.
+  backed off to -1401 usteps; switch released
+  [ ok ] homed. Position 0 is the RELEASE edge, taken at
+  the creep velocity, and the encoder was zeroed there too.
+  total: 1741 ms
+
+
+##### send 'H' at +15.8 s
+Homing repeatability, 5 runs. Each run re-homes from the previous back-off.
+One throwaway home runs first and is NOT counted: the first
+home of a series starts from wherever the last command left
+the mechanism, so including it measures approach history
+rather than repeatability. Measured 2026-09-02: with the
+first run counted, one series read 5 counts and another 2,
+while the settled runs within each agreed to about 1.
+Every run re-zeroes at its own switch point, so the
+run-to-run scatter shows up as spread in the encoder reading
+at the moment of the latch.
+
+  throwaway home done; starting the counted series.
+
+run 1:
+  release ENC_LATCH 115 usteps, closing-to-release 640 usteps, 2518 ms
+run 2:
+  release ENC_LATCH 102 usteps, closing-to-release 639 usteps, 2242 ms
+run 3:
+  release ENC_LATCH 0 usteps, closing-to-release 625 usteps, 2227 ms
+run 4:
+  release ENC_LATCH 12 usteps, closing-to-release 628 usteps, 2227 ms
+run 5:
+  release ENC_LATCH 12 usteps, closing-to-release 629 usteps, 2226 ms
+
+succeeded: 5 of 5
+spread: 115 usteps (0.809 deg, 9.0 encoder counts)
+  Record this in ../mouse-joystick-pcb/docs/bringup-log.md
+  under Homing, WITH the homing velocity: the MAX6816's
+  debounce delay scales the offset with speed, so a
+  repeatability figure without a velocity means nothing.
+
+
+##### send 'k' at +41.9 s
+Jogging -1280 usteps (-9.00 deg)...
+    outcome: target reached
+    from:    -1291 usteps (-9.077 deg, -0.0252 rev)
+    to:      -2571 usteps (-18.077 deg, -0.0502 rev)
+    commanded -1280 usteps, encoder measured -1293 usteps
+    follow ratio: 1.0102
+    elapsed: 455 ms
+
+
+##### send 'k' at +44.4 s
+Jogging -1280 usteps (-9.00 deg)...
+    outcome: target reached
+    from:    -2571 usteps (-18.077 deg, -0.0502 rev)
+    to:      -3851 usteps (-27.077 deg, -0.0752 rev)
+    commanded -1280 usteps, encoder measured -1267 usteps
+    follow ratio: 0.9898
+    elapsed: 455 ms
+
+
+##### send 'j' at +46.9 s
+Jogging 1280 usteps (9.00 deg)...
+    outcome: target reached
+    from:    -3851 usteps (-27.077 deg, -0.0752 rev)
+    to:      -2571 usteps (-18.077 deg, -0.0502 rev)
+    commanded 1280 usteps, encoder measured 1190 usteps
+    follow ratio: 0.9297
+    elapsed: 456 ms
+
+
+##### send 'k' at +49.4 s
+Jogging -1280 usteps (-9.00 deg)...
+    outcome: target reached
+    from:    -2571 usteps (-18.077 deg, -0.0502 rev)
+    to:      -3851 usteps (-27.077 deg, -0.0752 rev)
+    commanded -1280 usteps, encoder measured -1203 usteps
+    follow ratio: 0.9398
+    elapsed: 455 ms
+
+
+##### send 'j' at +51.9 s
+Jogging 1280 usteps (9.00 deg)...
+    outcome: target reached
+    from:    -3851 usteps (-27.077 deg, -0.0752 rev)
+    to:      -2571 usteps (-18.077 deg, -0.0502 rev)
+    commanded 1280 usteps, encoder measured 1203 usteps
+    follow ratio: 0.9398
+    elapsed: 455 ms
+
+
+##### send 'k' at +54.4 s
+Jogging -1280 usteps (-9.00 deg)...
+    outcome: target reached
+    from:    -2571 usteps (-18.077 deg, -0.0502 rev)
+    to:      -3851 usteps (-27.077 deg, -0.0752 rev)
+    commanded -1280 usteps, encoder measured -1203 usteps
+    follow ratio: 0.9398
+    elapsed: 455 ms
+
+
+##### send 'g' at +56.9 s
+Encoder check: -1280 usteps out (away from the switch, at the positive end), then back.
+  Run this from mid-travel, or straight after 'h'. It jogs
+    toward the FAR hard stop first, so from rest against
+    that stop it fails on the mechanism, not the encoder.
+  Expecting 100.0 quadrature counts each way at 1000 CPR
+
+  outbound:
+    outcome: target reached
+    from:    -3851 usteps (-27.077 deg, -0.0752 rev)
+    to:      -5131 usteps (-36.077 deg, -0.1002 rev)
+    commanded -1280 usteps, encoder measured -1267 usteps
+    follow ratio: 0.9898
+    elapsed: 455 ms
+  return:
+    outcome: target reached
+    from:    -5131 usteps (-36.077 deg, -0.1002 rev)
+    to:      -3851 usteps (-27.077 deg, -0.0752 rev)
+    commanded 1280 usteps, encoder measured 1190 usteps
+    follow ratio: 0.9297
+    elapsed: 455 ms
+
+  encoder residual after the round trip: -77 usteps (-6.0 counts)
+    A few counts is quantisation plus gear backlash. Tens of
+    counts is real lost motion, and the places to look are
+    the encoder hub and the gear mesh.
+
+  [ ok ] the encoder tracks the ramp to within 1.0%, which
+    confirms 1000 CPR against 51200 usteps/rev. A ratio near 2 or
+    0.5 would mean the fitted encoder is not the CPR this
+    firmware was told about.
+
+
+##### send 'h' at +61.9 s
+Homing toward the POSITIVE end, switch active high. Approach 0.200 rev/s, then creep off at 0.010 rev/s...
+  approach:
+    outcome: STOPPED BY THE SWITCH
+    from:    -3851 usteps (-27.077 deg, -0.0752 rev)
+    to:      672 usteps (4.725 deg, 0.0131 rev)
+    commanded 4523 usteps, encoder measured 4467 usteps
+    follow ratio: 0.9876
+    elapsed: 644 ms
+  stage 1 XLATCH, closing edge: 672 usteps (4.725 deg, 0.0131 rev)
+  stage 1 settled:              672 usteps (4.725 deg, 0.0131 rev)
+    overshoot past the closing latch: 0 usteps
+      A hard stop latches and stops at the same position,
+      so zero here is correct. It does NOT include the
+      debounce delay, which elapses before the driver sees
+      anything -- that is what stage 2 is for.
+  stage 2 XLATCH, release edge: 28 usteps (0.197 deg, 0.0005 rev)
+    creep travelled -768 usteps at 0.010 rev/s
+    closing to release: 644 usteps (4.528 deg)
+      That is the approach's debounce overshoot plus the
+      switch's own throw. It grows with approach velocity,
+      which is why the release edge is the datum and the
+      closing edge is not.
+  backed off to -1404 usteps; switch released
+  [ ok ] homed. Position 0 is the RELEASE edge, taken at
+  the creep velocity, and the encoder was zeroed there too.
+  total: 2759 ms
+
+
+##### send 'L' at +69.0 s
+Live angle output at 1000 Hz. Any key stops it.
+  mapping: 0 to 90.0 deg of excursion -> 0.025 to 1.650 V at the BNC
+  one encoder count = 0.0900 deg = 1.63 mV at the BNC
+  With the driver DISABLED ('E') the motor freewheels and
+  the joystick can be moved by hand -- the encoder still
+  counts, because it is read by the TMC5130A and does not
+  depend on the output stage.
+
+
+##### send '\\n' at +78.0 s
+Stopped.
+  updates:        9011
+  elapsed:        9010.2 ms
+  ACHIEVED rate:  1000.1 Hz
+  worst loop:     350 us of the 1000 us budget
+  code range:     7190 to 7190  (0.1810 to 0.1810 V at the BNC)
+
+
+##### send 'p' at +80.0 s
+    XACTUAL: -1404 usteps (-9.872 deg, -0.0274 rev)
+    X_ENC:   -1229 usteps (-8.641 deg, -0.0240 rev)
+    VACTUAL: 0 usteps/t
+    switch:  status_stop_l=0 latch_l=0  vzero=1 position_reached=1
+    DRV_STATUS 0x81020038  stst=1 cs_actual=2 sg_result=56 ot=0 otpw=0
+    ola=0 olb=0   (open load; only meaningful during slow motion)
+
+##### send 'x' at +82.0 s
+Powered down: driver disabled, bus open, HV_EN low.

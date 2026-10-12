@@ -1,0 +1,89 @@
+
+##### send 't' at +1.8 s
+  26718.0 codes = 2.08734 V at AMP_VOUT, 1.04367 V at the BNC, 1.5495 N.cm (nominal zero)
+
+##### send 'T 1000' at +3.8 s
+  1000 conversions at 1 kHz:
+    n 1000  mean 26718.6 codes = 2.08739 V at AMP_VOUT, 1.04369 V at the BNC, 1.5497 N.cm (nominal zero)
+    sd 1.31 codes = 102.6 uV rms = 0.378 mN.cm rms   min 26714  max 26722  span 8 codes
+
+
+##### send 'd' at +7.8 s
+  DEVICE_ID    0x00: 0x0010
+  RST_PWRCTL   0x04: 0x0000
+  SDI_CTL      0x08: 0x0000
+  SDO_CTL      0x0C: 0x0000
+  DATAOUT_CTL  0x10: 0x0000
+  RANGE_SEL    0x14: 0x000B
+  ALARM        0x20: 0x0041
+  ALARM_H_TH   0x24: 0xFFFF
+  ALARM_L_TH   0x28: 0x0000
+
+
+##### send 'k' at +9.8 s
+Shunt calibration: 500 samples with TQ_CAL_EN low, 500 high, 500 low.
+Design step: R2003 75k across one 350 ohm arm = 1.164 mV/V = 0.744 V at AMP_VOUT = 9522 codes. The 2026-10-04 review expects the switch NOT to turn on.
+  TQ_CAL_EN low: 
+    n 500  mean 26720.3 codes = 2.08752 V at AMP_VOUT, 1.04376 V at the BNC, 1.5502 N.cm (nominal zero)
+    sd 1.32 codes = 102.9 uV rms = 0.379 mN.cm rms   min 26717  max 26724  span 7 codes
+  TQ_CAL_EN high:
+    n 500  mean 26720.3 codes = 2.08752 V at AMP_VOUT, 1.04376 V at the BNC, 1.5502 N.cm (nominal zero)
+    sd 1.28 codes = 99.6 uV rms = 0.367 mN.cm rms   min 26717  max 26725  span 8 codes
+  TQ_CAL_EN low again:
+    n 500  mean 26720.4 codes = 2.08753 V at AMP_VOUT, 1.04377 V at the BNC, 1.5502 N.cm (nominal zero)
+    sd 1.18 codes = 92.4 uV rms = 0.340 mN.cm rms   min 26717  max 26724  span 7 codes
+  step -0.1 codes = -0.01 mV = -0.0 % of the design step
+
+
+##### send 'z' at +14.8 s
+  tared at code 26721 = 2.08758 V (nominal zero 21333, 5388 codes = 420.94 mV off; the sensor's zero balance is +/-1 % R.O. = +/-9.6 mV here)
+
+
+##### send 't' at +17.8 s
+  26722.0 codes = 2.08766 V at AMP_VOUT, 1.04383 V at the BNC, 0.0003 N.cm (tared)
+
+##### send 'L 10' at +19.8 s
+Live loop: 10 s at 1 kHz, each tick one ADS8689 conversion and one
+BRAKE_ISENSE read. FW_TRIG0 high while a tick works.
+  10000 ticks in 9999 ms = 1000.1 Hz achieved; worst iteration 137 us; 0 ticks overran
+  torque:
+    n 10000  mean 26723.8 codes = 2.08780 V at AMP_VOUT, 1.04390 V at the BNC, 0.0008 N.cm (tared)
+    sd 1.46 codes = 114.2 uV rms = 0.421 mN.cm rms   min 26719  max 26729  span 10 codes
+  brake ISENSE mean 0.70 mA (code 0 commanded 0.00 mA), sd 1.25 counts
+
+
+##### send 'X' at +33.9 s
+Brake-to-torque coupling: 500 torque samples at each brake level,
+joystick untouched. A mean that moves with the brake current is
+electrical pickup (shared return, supply sag) or the brake
+preloading the sensor through the coupling; sd is the noise.
+  brake code 0 = 0.70 mA measured:
+    n 500  mean 26725.9 codes = 2.08796 V at AMP_VOUT, 1.04398 V at the BNC, 0.0014 N.cm (tared)
+    sd 1.26 codes = 98.7 uV rms = 0.363 mN.cm rms   min 26723  max 26730  span 7 codes
+  brake code 32768 = 24.62 mA measured:
+    n 500  mean 26713.9 codes = 2.08702 V at AMP_VOUT, 1.04351 V at the BNC, -0.0021 N.cm (tared)
+    sd 1.32 codes = 103.4 uV rms = 0.381 mN.cm rms   min 26710  max 26718  span 8 codes
+  brake code 65535 = 49.11 mA measured:
+    n 500  mean 26703.9 codes = 2.08624 V at AMP_VOUT, 1.04312 V at the BNC, -0.0049 N.cm (tared)
+    sd 1.35 codes = 105.3 uV rms = 0.388 mN.cm rms   min 26700  max 26708  span 8 codes
+  brake code 0 = 0.70 mA measured:
+    n 500  mean 26724.6 codes = 2.08786 V at AMP_VOUT, 1.04393 V at the BNC, 0.0010 N.cm (tared)
+    sd 1.12 codes = 87.3 uV rms = 0.321 mN.cm rms   min 26721  max 26728  span 7 codes
+
+
+##### send 'i' at +41.9 s
+  rail: 3.314 V (up), bus closed
+  I2C: 0x48 ACK, 0x49 ACK
+  brake DAC: configured
+    code 0 (0x0) -> DAC 0.0000 V -> 0.000 mA commanded, 0.000 N.cm nominal
+    BRAKE_ISENSE 0.0145 V (18.3 counts) = 0.70 mA   ~BRAKE_FAULT high (not limiting)
+  torque ADC: configured
+    26725.0 codes = 2.08789 V at AMP_VOUT, 1.04395 V at the BNC, 0.0012 N.cm (tared)
+    TQ_CAL_EN low
+
+
+##### send 'x' at +44.9 s
+Powered down: brake at code 0, bus open, HV_EN low.
++36V_SW takes about 700 ms to bleed down. The DAC and the ADC
+lost their supplies; 'b' configures both again.
+

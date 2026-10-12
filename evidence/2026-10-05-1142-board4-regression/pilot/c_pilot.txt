@@ -1,0 +1,92 @@
+ WARN the lock file is up-to-date but uses an older format (v6), run `pixi lock` to upgrade to v7 for improved reproducibility
+ok   READY: not seen (board was up before the port opened); ID answered instead
+ok   id: ack;1;hw=rev1;serial=E4654C159F171E34;fw=ec3b36d;proto=2;axes=1;caps=motion+home+instr+hv+watch+fetch+stream+cfg+angout;rxbuf=200;boot=reboot;crumb=0
+ok   status: ack;2;state=HOMED;angle=-0.541;xactual=-0.541;torque=;brake=;homed=1;limit=0;faults=0;hv=1;t=305382088
+ok   limits: ack;3;travel_lo=-10.125;travel_hi=0.0;v_max=36.0;a_max=180.0;i_max=0.421
+ok   targets from limits: moves between -9.12 and -1.00, release from 0.00 (travel_hi), park 0.00
+ok   hv on: ack;9
+ok   home: ack;10
+ok   HOMED: ev;HOMED;306427132;angle=0.0
+ok   arm: ack;31
+ok   moveto 0: ack;33 then ev;TARGET;306932132;angle=-9.183
+ok   moveto 19: ack;281 then ev;TARGET;315346130;angle=-1.716
+ok   moves completed: 20 of 20
+ok   cfg get: ack;294;wdt_ms=100;deadband_deg=0.5;stream_hz=10;pre_ms=500;post_ms=500
+ok   moveto travel_hi (0.00) before the release: ack;295
+ok   brake 0: ack;300
+ok   RELEASED: ev;RELEASED;315521086;angle=-0.816;torque=;brake=
+ok   status in RELEASED: ack;301;state=RELEASED;angle=-0.9;xactual=0.0;torque=;brake=;homed=1;limit=0;faults=0;hv=1;t=315526300
+ok   watch: ack;320
+
+>>> PULL THE JOYSTICK toward +angle, past 5 degrees from where it rests, and hold it (you have 6 s; PUSH is the other direction) <<<
+
+FAIL hand pull -> PULL (PUSH = pull_sign is -1 for this joystick): no outcome within 6 s
+FAIL TRIAL one second after the outcome: no TRIAL
+ok   moveto 0.00 (park; leaves RELEASED with the resync): ack;502
+ok   TARGET at park: ev;TARGET;323670133;angle=-0.183
+ok   status after the resync (angle against xactual): ack;507;state=ARMED;angle=-0.183;xactual=0.0;torque=;brake=;homed=1;limit=0;faults=0;hv=1;t=323673830
+FAIL fetch window: 500 samples in 16 chunks (125 ms), pre=500, lost=0, expected 1001, angle at k=pre None
+ok   stream on 50: ack;527
+ok   stream off: ack;578
+ok   stream delivered about 100 lines in 2 s: 100 ev;S lines
+ok   disarm: ack;581
+ok   status after disarm: ack;582;state=HOMED;angle=-0.183;xactual=0.0;torque=;brake=;homed=1;limit=0;faults=0;hv=1;t=325915845
+ok   arm (for host loss): ack;583
+ok   host-loss FAULT: ev;FAULT;326045888;code=0;detail=host_timeout after 124.7 ms of silence
+ok   status while FAULTED: ack;585;state=FAULTED;angle=-0.183;xactual=-0.183;torque=;brake=;homed=1;limit=0;faults=1;hv=0;t=326052045
+ok   clrfault: ack;588
+ok   status after clrfault: ack;589;state=IDLE;angle=-0.183;xactual=-0.183;torque=;brake=;homed=0;limit=0;faults=0;hv=0;t=326158527
+ok   id (end): ack;590;hw=rev1;serial=E4654C159F171E34;fw=ec3b36d;proto=2;axes=1;caps=motion+home+instr+hv+watch+fetch+stream+cfg+angout;rxbuf=200;boot=reboot;crumb=0
+{
+  "steps_ok": 32,
+  "steps": 35,
+  "lines_tx": 590,
+  "lines_rx": 1232,
+  "naks": [],
+  "round_trip_us_ping": {
+    "n": 512,
+    "min": 1744.698,
+    "p50": 3121.957,
+    "p99": 5235.653,
+    "max": 49149.788,
+    "mean": 3391.3097109375
+  },
+  "round_trip_us_commands": {
+    "n": 78,
+    "min": 2247.756,
+    "p50": 4534.794,
+    "p99": 34361.924,
+    "max": 59454.246,
+    "mean": 6389.033987179487
+  },
+  "move_ack_to_target_us": {
+    "n": 20,
+    "min": 431932.879,
+    "p50": 434769.463,
+    "p99": 437561.154,
+    "max": 472400.876,
+    "mean": 436299.5729
+  },
+  "host_loss_fault_delay_ms": 124.729609,
+  "trial": {
+    "cfg": {
+      "wdt_ms": "100",
+      "deadband_deg": "0.5",
+      "stream_hz": "10",
+      "pre_ms": "500",
+      "post_ms": "500"
+    },
+    "stimulus": "hand",
+    "release_angle": -0.816,
+    "park": 0.0,
+    "pull": null,
+    "trial": null,
+    "window_samples": 500,
+    "window_pre": 500,
+    "window_lost": 0,
+    "window_chunks": 16,
+    "fetch_ms": 125.031715,
+    "angle_at_pre": null,
+    "stream_lines_2s": 100
+  }
+}

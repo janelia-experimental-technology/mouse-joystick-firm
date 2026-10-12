@@ -1,0 +1,341 @@
+{
+  "qspy": "/home/peter/Repositories/orb-weaver/qp-arduino-example/evidence/2026-10-05-1142-board4-regression/v1/qp/qspy/c_pilot-offline-decode.txt",
+  "board": {
+    "counts": {
+      "USER+013": 1,
+      "USER+008": 7,
+      "USER+011": 7,
+      "USER+010": 7,
+      "TRACE_STAT": 173,
+      "SAMPLE_STAT": 173,
+      "LINK_STAT": 173,
+      "LINK_RX": 592,
+      "LINK_TX": 734,
+      "LINK_WORK": 592,
+      "ENABLE_SETTLE": 4,
+      "OP_START": 23,
+      "OP_DONE": 23,
+      "LINK_STATE": 50,
+      "BOOT_INFO": 17,
+      "DAC_STATE": 1
+    },
+    "turnaround_us": {
+      "ping": {
+        "n": 514,
+        "min": 461,
+        "p50": 777,
+        "p99": 1329,
+        "max": 1748,
+        "mean": 833.4241245136187,
+        "stdev": 174.32146129885933
+      },
+      "status": {
+        "n": 26,
+        "min": 900,
+        "p50": 1468,
+        "p99": 1572,
+        "max": 1572,
+        "mean": 1399.5384615384614,
+        "stdev": 169.86289284850858
+      },
+      "moveto": {
+        "n": 22,
+        "min": 2037,
+        "p50": 2208,
+        "p99": 53463,
+        "max": 53463,
+        "mean": 4586.590909090909,
+        "stdev": 10666.963070660104
+      },
+      "other": {
+        "n": 30,
+        "min": 640,
+        "p50": 2168,
+        "p99": 31213,
+        "max": 31213,
+        "mean": 5104.4,
+        "stdev": 8123.3539444410935
+      }
+    },
+    "port_write_cost_us": {
+      "n": 734,
+      "min": 5,
+      "p50": 49,
+      "p99": 295,
+      "max": 597,
+      "mean": 63.228882833787466,
+      "stdev": 51.276638556897616
+    },
+    "rx_without_reply_in_trace": 0,
+    "op_duration_us": {
+      "home": {
+        "n": 1,
+        "min": 785090,
+        "p50": 785090,
+        "p99": 785090,
+        "max": 785090,
+        "mean": 785090,
+        "stdev": 0.0
+      },
+      "move": {
+        "n": 22,
+        "min": 82780,
+        "p50": 435213,
+        "p99": 472617,
+        "max": 472617,
+        "mean": 408010.54545454547,
+        "stdev": 92000.457565427
+      }
+    },
+    "states": [
+      "ARMED",
+      "ACTIVE",
+      "ARMED",
+      "ACTIVE",
+      "ARMED",
+      "ACTIVE",
+      "ARMED",
+      "ACTIVE",
+      "ARMED",
+      "ACTIVE",
+      "ARMED",
+      "ACTIVE",
+      "ARMED",
+      "ACTIVE",
+      "ARMED",
+      "ACTIVE",
+      "ARMED",
+      "ACTIVE",
+      "ARMED",
+      "ACTIVE",
+      "ARMED",
+      "ACTIVE",
+      "ARMED",
+      "ACTIVE",
+      "ARMED",
+      "ACTIVE",
+      "ARMED",
+      "ACTIVE",
+      "ARMED",
+      "ACTIVE",
+      "ARMED",
+      "ACTIVE",
+      "ARMED",
+      "ACTIVE",
+      "ARMED",
+      "ACTIVE",
+      "ARMED",
+      "ACTIVE",
+      "ARMED",
+      "ACTIVE",
+      "ARMED",
+      "ACTIVE",
+      "ARMED",
+      "RELEASED",
+      "ACTIVE",
+      "ARMED",
+      "HOMED",
+      "ARMED",
+      "FAULTED",
+      "IDLE"
+    ],
+    "trace_stat": {
+      "count": 173,
+      "high_water_max": 1207,
+      "high_water_p50": 110,
+      "buffer_full_total": 0
+    },
+    "link_stat_last": {
+      "lines_rx": 716,
+      "dropped_pool": 0,
+      "dropped_queue": 0,
+      "replies_dropped": 0,
+      "overlong": 0,
+      "queue_min_free": 11,
+      "pool_min_free": 3
+    },
+    "link_stat_min_free": {
+      "queue": 11,
+      "pool": 3
+    },
+    "work_us": {
+      "advance": {
+        "n": 592,
+        "min": 35,
+        "p50": 244,
+        "p99": 792,
+        "max": 969,
+        "mean": 301.83614864864865,
+        "stdev": 163.65487285593247
+      },
+      "feed": {
+        "n": 592,
+        "min": 274,
+        "p50": 450,
+        "p99": 2279,
+        "max": 52388,
+        "mean": 829.3513513513514,
+        "stdev": 2965.950100988253
+      },
+      "output": {
+        "n": 592,
+        "min": 103,
+        "p50": 178,
+        "p99": 674,
+        "max": 946,
+        "mean": 219.95101351351352,
+        "stdev": 104.0948565222038
+      }
+    },
+    "tick_lost_records": 0,
+    "tx_dropped_flag_count": 0,
+    "dac_states": [
+      [
+        321442259,
+        0,
+        0
+      ]
+    ],
+    "sample_stat": {
+      "skipped_idle_gap": 258,
+      "skipped_decimated": 10045,
+      "decimated_now": 0,
+      "decimated_seconds": 21,
+      "records": 173,
+      "seconds": 172,
+      "ticks": 172000,
+      "handled": 171458,
+      "coalesced": 542,
+      "dropped": 0,
+      "coalesced_total_since_boot": 958,
+      "dropped_total_since_boot": 0,
+      "tick_cost_max_us": 3673,
+      "tick_cost_max_per_second_us": {
+        "n": 173,
+        "min": 43,
+        "p50": 52,
+        "p99": 1419,
+        "max": 3673,
+        "mean": 204.4971098265896,
+        "stdev": 444.4602054955016
+      },
+      "tick_cost_last_us": {
+        "n": 173,
+        "min": 10,
+        "p50": 15,
+        "p99": 595,
+        "max": 754,
+        "mean": 49.45086705202312,
+        "stdev": 115.82548244510483
+      },
+      "budget_us": 400,
+      "seconds_over_budget": 21
+    }
+  },
+  "capture": {
+    "tick_period_us": {
+      "n": 180019,
+      "min": 713.0,
+      "p50": 1000.0,
+      "p99": 1008.0,
+      "max": 1270.0,
+      "mean": 999.9963281653603,
+      "stdev": 5.311991907736669,
+      "nominal": 1000.0,
+      "missed": 0,
+      "doubled": 0
+    },
+    "marker_pulses_us": {
+      "n": 165306,
+      "min": 7.0,
+      "p50": 13.0,
+      "p99": 450.0,
+      "max": 1749.0,
+      "mean": 32.44173230251776,
+      "stdev": 83.25885207690654
+    },
+    "marker_rising_edges": 165306,
+    "tick_level_us": {
+      "n": 14816,
+      "min": 40.0,
+      "p50": 117.0,
+      "p99": 850.0,
+      "max": 1749.0,
+      "mean": 227.81169006479482,
+      "stdev": 188.0382613472934
+    },
+    "tick_level_back_to_back": 66,
+    "tick_level_open_at_end": false
+  },
+  "host": {
+    "steps_ok": 32,
+    "steps": 35,
+    "summary": {
+      "steps_ok": 32,
+      "steps": 35,
+      "lines_tx": 592,
+      "lines_rx": 1234,
+      "naks": [],
+      "round_trip_us_ping": {
+        "n": 514,
+        "min": 2245.434,
+        "p50": 3371.312,
+        "p99": 6041.856,
+        "max": 30894.028,
+        "mean": 3572.591227626459
+      },
+      "round_trip_us_commands": {
+        "n": 78,
+        "min": 3011.424,
+        "p50": 5230.092,
+        "p99": 34567.646,
+        "max": 58120.066,
+        "mean": 7106.072051282052
+      },
+      "move_ack_to_target_us": {
+        "n": 20,
+        "min": 429536.881,
+        "p50": 435076.392,
+        "p99": 439040.816,
+        "max": 471727.661,
+        "mean": 436172.013
+      },
+      "host_loss_fault_delay_ms": 105.687559,
+      "trial": {
+        "cfg": {
+          "wdt_ms": "100",
+          "deadband_deg": "0.5",
+          "stream_hz": "10",
+          "pre_ms": "500",
+          "post_ms": "500"
+        },
+        "stimulus": "hand",
+        "release_angle": -0.816,
+        "park": 0.0,
+        "pull": null,
+        "trial": null,
+        "window_samples": 500,
+        "window_pre": 500,
+        "window_lost": 0,
+        "window_chunks": 16,
+        "fetch_ms": 153.038809,
+        "angle_at_pre": null,
+        "stream_lines_2s": 100
+      }
+    }
+  },
+  "align": {
+    "pairs": 78,
+    "drift_ppm": 11.724479494601425,
+    "residual_us": {
+      "n": 78,
+      "min": -666.9626274108887,
+      "p50": -100.09962463378906,
+      "p99": 1465.4002075195312,
+      "max": 1501.7743225097656,
+      "mean": 2.4453187600160254e-07,
+      "stdev": 484.0040716530757
+    },
+    "note": "residual spread = host-to-board arrival jitter; the mean is absorbed by the offset"
+  }
+}

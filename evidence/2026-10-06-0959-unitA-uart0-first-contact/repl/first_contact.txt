@@ -1,0 +1,21 @@
+--- sent: from machine import UART
+from machine import UART
+>>> 
+--- sent: import time
+import time
+>>> 
+--- sent: u4 = UART(4, 115200, timeout=20); u4.write(b'id;1\n'); time.slee
+u4 = UART(4, 115200, timeout=20); u4.write(b'id;1\n'); time.sleep_ms(150); print('port1/UART4:', u4.read())
+5
+port1/UART4: None
+>>> 
+--- sent: u3 = UART(3, 115200, timeout=20); u3.write(b'id;2\n'); time.slee
+u3 = UART(3, 115200, timeout=20); u3.write(b'id;2\n'); time.sleep_ms(150); print('port4/USART3:', u3.read())
+5
+port4/USART3: b'ack;2;hw=rev2;serial=E4654C159F274534;fw=9b6d2ef;proto=2;axes=1;c'
+>>> 
+--- sent: u1 = UART(1, 115200, timeout=20); u1.write(b'id;3\n'); time.slee
+u1 = UART(1, 115200, timeout=20); u1.write(b'id;3\n'); time.sleep_ms(150); print('port3/USART1:', u1.read())
+5
+port3/USART1: None
+>>> 

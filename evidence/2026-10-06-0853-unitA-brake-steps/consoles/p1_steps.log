@@ -1,0 +1,152 @@
+    BRAKE_ISENSE 0.0113 V (14.3 counts) = 0.55 mA   ~BRAKE_FAULT high (not limiting)
+Step 0 -> code -> 0, BRAKE_ISENSE every 200 us for 25 ms each way.
+FW_TRIG1 is high from the rising code write to the falling one.
+    code 65535 (0xFFFF) -> DAC 2.5000 V -> 48.780 mA commanded, 3.484 N.cm nominal
+  rise: from 0.55 mA to 48.80 mA
+    t10 4000 us
+    t50 5600 us
+    t90 8600 us
+    peak 62.05 mA at 14400 us (127.2 % of full scale; the ceiling is 56.4 mA)
+    ~BRAKE_FAULT low in 0 of 125 samples
+    mA at 1 ms steps: 0.7 0.5 0.5 0.5 8.2 20.3 29.1 36.0 41.7 46.5 50.6 53.9 56.9 59.5 61.3 59.0 52.4 49.7 49.0 48.8 48.8 48.9 48.8 48.9 48.8
+  fall: from 48.80 mA to 0.55 mA
+    t10 400 us
+    t50 1200 us
+    t90 3000 us
+    peak 48.76 mA at 0 us (100.0 % of full scale; the ceiling is 56.4 mA)
+    ~BRAKE_FAULT low in 0 of 125 samples
+    mA at 1 ms steps: 48.8 26.3 10.7 5.2 3.1 2.3 1.8 1.4 1.3 1.1 1.0 1.1 1.0 0.9 0.9 0.8 0.8 0.7 0.7 0.7 0.7 0.7 0.6 0.7 0.6
+  The command filter alone is ~2 ms to 90 %; the coil's L/R
+  against the sink's headroom adds the rest. The brake's
+  mechanical response is 6 ms (datasheet).
+
+Step 0 -> code -> 0, BRAKE_ISENSE every 200 us for 25 ms each way.
+FW_TRIG1 is high from the rising code write to the falling one.
+    code 58981 (0xE665) -> DAC 2.2499 V -> 43.901 mA commanded, 3.136 N.cm nominal
+  rise: from 0.55 mA to 43.88 mA
+    t10 1400 us
+    t50 2800 us
+    t90 5200 us
+    peak 55.17 mA at 9000 us (113.1 % of full scale; the ceiling is 56.4 mA)
+    ~BRAKE_FAULT low in 0 of 125 samples
+    mA at 1 ms steps: 0.5 1.3 14.1 24.3 32.2 38.6 43.9 48.4 52.0 55.2 50.1 45.9 44.5 44.0 44.0 43.9 43.9 43.8 43.9 44.0 44.0 44.0 43.9 43.9 43.8
+  fall: from 43.88 mA to 0.55 mA
+    t10 400 us
+    t50 1200 us
+    t90 3200 us
+    peak 43.92 mA at 0 us (90.0 % of full scale; the ceiling is 56.4 mA)
+    ~BRAKE_FAULT low in 0 of 125 samples
+    mA at 1 ms steps: 43.9 24.0 10.0 4.9 3.0 2.3 1.7 1.4 1.3 1.1 1.1 1.0 0.9 0.8 0.8 0.8 0.8 0.7 0.7 0.7 0.6 0.7 0.6 0.6 0.7
+  The command filter alone is ~2 ms to 90 %; the coil's L/R
+  against the sink's headroom adds the rest. The brake's
+  mechanical response is 6 ms (datasheet).
+
+Step 0 -> code -> 0, BRAKE_ISENSE every 200 us for 25 ms each way.
+FW_TRIG1 is high from the rising code write to the falling one.
+    code 49151 (0xBFFF) -> DAC 1.8750 V -> 36.585 mA commanded, 2.613 N.cm nominal
+  rise: from 0.55 mA to 36.57 mA
+    t10 1600 us
+    t50 2800 us
+    t90 4400 us
+    peak 42.12 mA at 6000 us (86.3 % of full scale; the ceiling is 56.4 mA)
+    ~BRAKE_FAULT low in 0 of 125 samples
+    mA at 1 ms steps: 0.5 0.8 10.9 22.2 30.6 37.2 42.1 39.7 37.7 37.0 36.7 36.7 36.6 36.6 36.6 36.6 36.6 36.6 36.6 36.6 36.6 36.6 36.6 36.6 36.7
+  fall: from 36.57 mA to 0.55 mA
+    t10 400 us
+    t50 1200 us
+    t90 3400 us
+    peak 36.61 mA at 0 us (75.1 % of full scale; the ceiling is 56.4 mA)
+    ~BRAKE_FAULT low in 0 of 125 samples
+    mA at 1 ms steps: 36.6 20.7 9.0 4.6 2.9 2.1 1.7 1.4 1.3 1.2 1.1 0.9 0.9 0.9 0.9 0.8 0.8 0.7 0.7 0.6 0.7 0.7 0.7 0.7 0.5
+  The command filter alone is ~2 ms to 90 %; the coil's L/R
+  against the sink's headroom adds the rest. The brake's
+  mechanical response is 6 ms (datasheet).
+
+Step 0 -> code -> 0, BRAKE_ISENSE every 200 us for 25 ms each way.
+FW_TRIG1 is high from the rising code write to the falling one.
+    code 39321 (0x9999) -> DAC 1.5000 V -> 29.268 mA commanded, 2.091 N.cm nominal
+  rise: from 0.59 mA to 29.30 mA
+    t10 1800 us
+    t50 2800 us
+    t90 4200 us
+    peak 29.66 mA at 6200 us (60.8 % of full scale; the ceiling is 56.4 mA)
+    ~BRAKE_FAULT low in 0 of 125 samples
+    mA at 1 ms steps: 0.6 0.6 6.1 18.4 26.4 29.0 29.5 29.5 29.5 29.4 29.4 29.4 29.3 29.4 29.4 29.3 29.3 29.3 29.3 29.3 29.3 29.3 29.3 29.3 29.3
+  fall: from 29.30 mA to 0.59 mA
+    t10 400 us
+    t50 1200 us
+    t90 3600 us
+    peak 29.23 mA at 0 us (59.9 % of full scale; the ceiling is 56.4 mA)
+    ~BRAKE_FAULT low in 0 of 125 samples
+    mA at 1 ms steps: 29.2 17.4 8.0 4.3 2.7 2.1 1.6 1.5 1.3 1.2 1.0 0.9 0.9 0.9 0.8 0.9 0.8 0.7 0.9 0.7 0.7 0.7 0.7 0.7 0.6
+  The command filter alone is ~2 ms to 90 %; the coil's L/R
+  against the sink's headroom adds the rest. The brake's
+  mechanical response is 6 ms (datasheet).
+
+Step 0 -> code -> 0, BRAKE_ISENSE every 200 us for 25 ms each way.
+FW_TRIG1 is high from the rising code write to the falling one.
+    code 32768 (0x8000) -> DAC 1.2500 V -> 24.390 mA commanded, 1.742 N.cm nominal
+  rise: from 0.55 mA to 24.38 mA
+    t10 2000 us
+    t50 3000 us
+    t90 4600 us
+    peak 24.58 mA at 7000 us (50.4 % of full scale; the ceiling is 56.4 mA)
+    ~BRAKE_FAULT low in 0 of 125 samples
+    mA at 1 ms steps: 0.5 0.5 3.1 12.9 20.2 23.5 24.3 24.6 24.5 24.5 24.5 24.5 24.4 24.4 24.4 24.5 24.4 24.5 24.4 24.4 24.5 24.5 24.3 24.4 24.4
+  fall: from 24.38 mA to 0.55 mA
+    t10 600 us
+    t50 1400 us
+    t90 3800 us
+    peak 24.30 mA at 0 us (49.8 % of full scale; the ceiling is 56.4 mA)
+    ~BRAKE_FAULT low in 0 of 125 samples
+    mA at 1 ms steps: 24.3 14.9 7.3 4.0 2.7 2.0 1.6 1.4 1.3 1.1 1.0 1.0 0.9 0.8 0.8 0.7 0.7 0.8 0.7 0.7 0.7 0.6 0.5 0.7 0.6
+  The command filter alone is ~2 ms to 90 %; the coil's L/R
+  against the sink's headroom adds the rest. The brake's
+  mechanical response is 6 ms (datasheet).
+
+Step 0 -> code -> 0, BRAKE_ISENSE every 200 us for 25 ms each way.
+FW_TRIG1 is high from the rising code write to the falling one.
+    code 65535 (0xFFFF) -> DAC 2.5000 V -> 48.780 mA commanded, 3.484 N.cm nominal
+  rise: from 0.55 mA to 48.80 mA
+    t10 1400 us
+    t50 3000 us
+    t90 6000 us
+    peak 61.50 mA at 11800 us (126.1 % of full scale; the ceiling is 56.4 mA)
+    ~BRAKE_FAULT low in 0 of 125 samples
+    mA at 1 ms steps: 0.5 2.0 16.1 26.1 33.6 39.8 44.7 48.9 52.6 55.6 58.3 60.1 60.7 53.8 50.2 49.1 48.8 48.9 48.8 48.8 48.7 48.8 48.8 48.8 48.8
+  fall: from 48.80 mA to 0.55 mA
+    t10 400 us
+    t50 1200 us
+    t90 3000 us
+    peak 48.68 mA at 0 us (99.8 % of full scale; the ceiling is 56.4 mA)
+    ~BRAKE_FAULT low in 0 of 125 samples
+    mA at 1 ms steps: 48.7 26.4 10.7 5.1 3.1 2.3 1.8 1.6 1.3 1.2 1.0 0.9 1.0 0.8 0.8 0.8 0.7 0.8 0.7 0.7 0.7 0.7 0.6 0.7 0.6
+  The command filter alone is ~2 ms to 90 %; the coil's L/R
+  against the sink's headroom adds the rest. The brake's
+  mechanical response is 6 ms (datasheet).
+
+  DEVICE_ID    0x00: 0x0010
+  RST_PWRCTL   0x04: 0x0000
+  SDI_CTL      0x08: 0x0000
+  SDO_CTL      0x0C: 0x0000
+  DATAOUT_CTL  0x10: 0x0000
+  RANGE_SEL    0x14: 0x000B
+  ALARM        0x20: 0x0041
+  ALARM_H_TH   0x24: 0xFFFF
+  ALARM_L_TH   0x28: 0x0000
+
+  DEVICE_ID    0x00: 0x0010
+  RST_PWRCTL   0x04: 0x0000
+  SDI_CTL      0x08: 0x0000
+  SDO_CTL      0x0C: 0x0000
+  DATAOUT_CTL  0x10: 0x0000
+  RANGE_SEL    0x14: 0x000B
+  ALARM        0x20: 0x0000
+  ALARM_H_TH   0x24: 0xFFFF
+  ALARM_L_TH   0x28: 0x0000
+
+  20445.0 codes = 1.59727 V at AMP_VOUT, 0.79863 V at the BNC, -0.2555 N.cm (nominal zero)
+Powered down: brake at code 0, bus open, HV_EN low.
++36V_SW takes about 700 ms to bleed down. The DAC and the ADC
+lost their supplies; 'b' configures both again.
+

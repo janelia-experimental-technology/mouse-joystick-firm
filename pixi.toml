@@ -169,7 +169,7 @@ cmd = "python tools/pycontrol_run.py --port {{ port }} --hwd {{ hwd }} --task {{
 [feature.pycontrol.tasks.identify-analyzers]
 description = "Map each LA5032 to the board it probes, by identity beacon. No 36 V needed."
 cmd = """python ../instrument-control/tools/identify_boards.py
-  --board-glob '/dev/serial/by-id/usb-Orb_Weaver_mouse-joystick-pcb_*-if00'"""
+  --board-glob '/dev/serial/by-id/usb-*_mouse-joystick-pcb_*-if00'"""
 
 [environments]
 # `default` stays implicit: the firmware toolchain, unchanged.

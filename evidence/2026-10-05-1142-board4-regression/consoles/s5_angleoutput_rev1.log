@@ -1,0 +1,80 @@
+
+================================================
+ mouse-joystick-pcb  stage 5: analog angle output
+================================================
+ Requires 36 V and a v0.3 or later board.
+ The motor is not touched. Send 'b' to begin.
+
+commands
+  ?  this menu
+  b  rail up, bus closed, DAC configured
+  z  output zero scale (code 0)
+  m  output midscale
+  f  output full scale (code 0xFFFF)
+  v  set an output voltage, digits then Enter (mV)
+  c  set a raw code, digits then Enter
+  s  the three-point fit: 0, midscale, full scale, with a
+     pause at each for a meter reading
+  t  step 0 -> full scale, for the filter group delay
+  q  what the driver knows: gain, full scale, LSB
+  d  DEVID and STATUS -- I2C builds only, see below
+  r  soft reset the DAC (blocks data writes until 'b')
+  x  power down: bus open, HV_EN low
+  B  reboot into BOOTSEL      R  reboot
+
+Every value printed is COMMANDED, never measured. This
+board cannot read its own analog output, and over SPI it
+cannot read the DAC's registers either. Use a DMM.
+
+
+##### send 'b' at +5.0 s
+[1] rail
+    [ ok ] +3.3V_SW up in 132 ms
+[2] bus switch
+    [ ok ] closed. GP10/GP11/GP13 now reach the DAC.
+[3] SPI1
+    [ ok ] SCK GP10, TX GP11, SYNC GP13
+[4] DAC configuration
+    [ ok ] GAIN 0x101, full scale 2.5000 V at the DAC, 3.3000 V at the BNC
+    [note] NOT VERIFIED, and cannot be: this transport
+      is SPI and the DAC80501 has no SDO pin. The only
+      check on GAIN is measuring the output against the
+      expected full scale above. Strapping SPI2C for I2C
+      would make this a real read -- see the pcb plan.
+
+
+##### send 'q' at +8.3 s
+  configured:   yes
+  GAIN written: 0x101
+  REF-DIV 1, BUFF-GAIN 1
+  DAC full scale: 2.500000 V
+  BNC full scale: 3.300000 V
+  one LSB:        38.15 uV at the DAC, 50.35 uV at the BNC
+  last code:      0
+
+
+##### send 'm' at +10.4 s
+    code 32768 (0x8000)  -> DAC 1.250000 V  -> BNC 1.650000 V expected
+
+##### send 'f' at +12.5 s
+    code 65535 (0xFFFF)  -> DAC 2.499962 V  -> BNC 3.299950 V expected
+
+##### send 't' at +14.6 s
+Step 0 -> full scale on FW_TRIG1's rising edge, then back
+after 100 ms. Scope the BNC against InstrumentPort TRIG1
+(J1501 pin 28) and read the delay to 50% of the step.
+Expect about 266 us of group delay from the 2-pole 987 Hz
+Sallen-Key, and roughly 2 ms to settle to one OneBox LSB.
+That delay is the FILTER, not firmware latency.
+  stepped.
+
+
+##### send 'z' at +16.8 s
+    code 0 (0x0)  -> DAC 0.000000 V  -> BNC 0.000000 V expected
+
+##### send 'x' at +18.9 s
+Powered down: DAC at zero scale, bus open, HV_EN low.
++36V_SW takes about 700 ms to bleed down.
+The DAC lost VDD, so its GAIN is back to a 5.0 V full
+scale. Data writes are blocked again until 'b'.
+

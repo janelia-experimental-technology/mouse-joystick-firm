@@ -1,0 +1,52 @@
+
+##### send 'b' at +4.0 s
+[1] rail
+    [ ok ] +3.3V_SW up in 3 ms
+[2] bus switch
+    [ ok ] closed. GP16/GP17 now reach both DACs.
+[3] I2C
+    [ ok ] SCL GP17, SDA GP16, address 0x48
+[4] DAC configuration
+    [ ok ] GAIN 0x101, full scale 2.5000 V at the DAC, 1.6500 V at the BNC
+    [ ok ] GAIN read back and matched
+
+
+##### send 'd' at +7.2 s
+  DEVID 0x115
+  plausible: yes
+  resets to: zero scale
+  REF-ALARM: clear
+
+
+##### send 'q' at +9.3 s
+  configured:   yes
+  GAIN written: 0x101
+  REF-DIV 1, BUFF-GAIN 1
+  DAC full scale: 2.500000 V
+  BNC full scale: 1.650000 V
+  one LSB:        38.15 uV at the DAC, 25.18 uV at the BNC
+  last code:      0
+
+
+##### send 'm' at +11.4 s
+    code 32768 (0x8000)  -> DAC 1.250000 V  -> BNC 0.825000 V expected
+
+##### send 'f' at +13.5 s
+    code 65535 (0xFFFF)  -> DAC 2.499962 V  -> BNC 1.649975 V expected
+
+##### send 'z' at +15.6 s
+    code 0 (0x0)  -> DAC 0.000000 V  -> BNC 0.000000 V expected
+
+##### send 'd' at +17.7 s
+  DEVID 0x115
+  plausible: yes
+  resets to: zero scale
+  REF-ALARM: clear
+
+
+##### send 'x' at +19.8 s
+Powered down: DAC at zero scale, bus open, HV_EN low.
++36V_SW takes about 700 ms to bleed down.
+The DAC lost VDD, so its GAIN is back to a 5.0 V full
+scale. Data writes are blocked again until 'b'.
+

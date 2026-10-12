@@ -1,0 +1,40 @@
+/home/peter/Repositories/github/pycontrol-code/source/communication/pycboard.py:379: SyntaxWarning: invalid escape sequence '\s'
+  pattern = "[\n\r]class\s*(?P<dcname>\w+)\s*"
+pyControl v2.1.1 at /home/peter/Repositories/github/pycontrol-code; hardware definition mouse_joystick_bringup.py; task mouse_joystick_check
+
+Micropython version: 1.261
+Framework version: 2.1.1
+pyboard unique id b'M\x00B\x00\x0bQ323459', MicroPython 1.261, framework True 2.1.1
+Traceback (most recent call last):
+  File "/home/peter/Repositories/orb-weaver/mouse-joystick-firm/tools/pycontrol_run.py", line 126, in <module>
+    main()
+    ~~~~^^
+  File "/home/peter/Repositories/orb-weaver/mouse-joystick-firm/tools/pycontrol_run.py", line 75, in main
+    board.load_hardware_definition(str(hwd_path))
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "/home/peter/Repositories/github/pycontrol-code/source/communication/pycboard.py", line 320, in load_hardware_definition
+    self.transfer_device_files(hwd_path)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "/home/peter/Repositories/github/pycontrol-code/source/communication/pycboard.py", line 338, in transfer_device_files
+    used_device_files = self._get_used_device_files(ref_file_path)
+  File "/home/peter/Repositories/github/pycontrol-code/source/communication/pycboard.py", line 367, in _get_used_device_files
+    device_files += self._get_used_device_files(os.path.join(user_folder("devices"), device_file))
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/peter/Repositories/github/pycontrol-code/source/communication/pycboard.py", line 367, in _get_used_device_files
+    device_files += self._get_used_device_files(os.path.join(user_folder("devices"), device_file))
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/peter/Repositories/github/pycontrol-code/source/communication/pycboard.py", line 367, in _get_used_device_files
+    device_files += self._get_used_device_files(os.path.join(user_folder("devices"), device_file))
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  [Previous line repeated 989 more times]
+  File "/home/peter/Repositories/github/pycontrol-code/source/gui/settings.py", line 48, in user_folder
+    return get_setting("folders", folder_name)
+  File "/home/peter/Repositories/github/pycontrol-code/source/gui/settings.py", line 38, in get_setting
+    custom_settings = json.loads(f.read())
+  File "/home/peter/Repositories/orb-weaver/mouse-joystick-firm/.pixi/envs/pycontrol/lib/python3.13/json/__init__.py", line 352, in loads
+    return _default_decoder.decode(s)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^
+  File "/home/peter/Repositories/orb-weaver/mouse-joystick-firm/.pixi/envs/pycontrol/lib/python3.13/json/decoder.py", line 345, in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+RecursionError: maximum recursion depth exceeded

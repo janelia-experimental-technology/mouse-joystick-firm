@@ -1,0 +1,3 @@
+firmware: 80fdf3b-dirty (80fdf3b) + busy-wait ADS8689 transport
+build: mouse_joystick_qp_rev2_usb, examples/PyControlLinkQp
+board: E4654C159F274534 (v1.0 unit A)

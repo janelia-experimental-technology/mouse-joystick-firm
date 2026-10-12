@@ -1,0 +1,8 @@
+Reward path check on Rig 1: the solenoid cable moved to Breakout 1.2 port 5 (POW_A) by Peter at ~08:55 on 2026-10-07; the rig's trial task (joystick-rig feat/mouse-joystick, lean copies as in the 0840 dry run) on unit A E4654C159F274534, right joystick, n_trials=2, watch_timeout_ms=25000, iti_ms=2000, home_each_trial=0; Peter pulls the joystick by hand during each watch so the board reports PULL and the task opens the solenoid for reward_duration=50 ms. Firmware mouse_joystick_qp_rev2 (bd9bcbb-dirty, the settle; committed as 51322e7).
+08:53:22 start
+08:54:25 end
+08:55:14 start pull1_60s (one trial, 60 s watch)
+08:56:40 end pull1_60s
+08:58:36 flashed pull_sign -1 for unit A
+08:58:55 start pull1_60s_signed (one trial, 60 s watch, pull_sign -1)
+08:59:12 end pull1_60s_signed

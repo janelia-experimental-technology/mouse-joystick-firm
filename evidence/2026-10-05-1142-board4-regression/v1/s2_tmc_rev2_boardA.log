@@ -1,0 +1,382 @@
+
+mouse-joystick-pcb stage 2, idle and powered down.
+36 V must be connected to J501. Send 's' to begin.
+
+commands
+  ?  this menu
+  s  run the full stage 2 sequence (raises HV_EN)
+  r  read and print the register set
+  i  read IOIN once
+  v  rail state now
+  d  36 V switch diagnostics (raises HV_DIAG_EN briefly)
+  p  profile a power-up attempt, 1 ms resolution
+  c  staircase soft-start: burst-charge +36V_SW, then hold
+  b  close the GPIO bus and start SPI0 (rail must be up)
+  m  measure 36 V input current, self-zeroed and averaged
+  l  LATCH probe: does this revision still need the
+     firmware workaround? (costs one thermal trip if it does)
+  h  raise HV_EN and HOLD it (for supply-ramp bench tests)
+  w  software soft-start: retry HV_EN, 10 attempts
+  x  power down: open the bus, drop HV_EN
+  I  beacon the board serial on the InstrumentPort
+     triggers (no 36 V, no bus)
+  B  reboot into BOOTSEL
+  R  reboot
+
+There is no command to enable the driver. Stage 2 cannot put
+current through the motor.
+
+
+##### send 'v' at +5.0 s
+    +3.3V_SW: 0.0161 V (10 counts, 0.0081 V divided) -- off
+
+##### send 'd' at +6.1 s
+    HV_SNS: 0.0089 V across R509 249R (11 counts) -- at the offset floor, no measurable load
+      Quiet state with HV_EN low reads 18-22 counts and one
+      count is 2.6 mA, so idle draw is unresolvable. All
+      this says is 'far below the 1.15 A limit'.
+    ~{HV_FAULT}: high, no latched fault
+
+##### send 's' at +0.5 s
+
+================================================================
+ mouse-joystick-pcb  stage 2: TMC5130A communication
+================================================================
+ Raises HV_EN. The driver output stage stays disabled.
+
+[1] before: rail must be off
+    +3.3V_SW: 0.0210 V (13 counts, 0.0105 V divided) -- off
+    [ ok ] switched domain dead, as it must be before HV_EN
+
+[2] raising HV_EN
+    [FAIL] the 36 V switch latched a fault during power-up.
+      LATCH is tied high on this board, so faults latch off
+      rather than auto-retrying. HV_EN has been dropped, which
+      is what clears it. I_CL is about 1.2 A (R508 40k).
+
+##### send 'i' at +4.7 s
+Bus is open. Run 's' first.
+
+##### send 'd' at +6.8 s
+    HV_SNS: 0.0073 V across R509 249R (9 counts) -- at the offset floor, no measurable load
+      Quiet state with HV_EN low reads 18-22 counts and one
+      count is 2.6 mA, so idle draw is unresolvable. All
+      this says is 'far below the 1.15 A limit'.
+    ~{HV_FAULT}: high, no latched fault
+
+##### send 'x' at +8.9 s
+Powered down: bus open, HV_EN low, HV_DIAG_EN low.
+
+##### send '\n' at +11.0 s
+
+##### send 'm' at +15.0 s
+Measuring 36 V input current: 2048 samples at each point.
+  Zero is taken with HV_EN low, moments before raising it,
+  so it cancels ADC offset and leakage rather than assuming
+  a floor. HV_DIAG_EN is high for both reads.
+
+  zero (HV_EN low):  9.44 counts
+  live (HV_EN high): 29.24 counts
+  delta:             19.80 counts
+  36 V input current: 51.3 mA   (KSNS 800 A/A, R509 249R, 2.6 mA per count)
+  rail: live
+  Rail left live -- send 'b' to close the bus, 'x' to stop.
+
+
+##### send 'x' at +18.2 s
+Powered down: bus open, HV_EN low, HV_DIAG_EN low.
+
+##### send '\n' at +20.3 s
+
+##### send 'l' at +24.4 s
+LATCH probe: a plain single-shot HV_EN assertion.
+  On pcb v1.0 LATCH is GP24 through R503. The probe drives it
+  HIGH first to reproduce the strapped behaviour of v0.1-v0.3
+  (expect FAIL: latch-off trips while charging 208 uF), then
+  'p'/powerUp() holds it LOW for the ramp, which should PASS
+  and report the direct method, for the first time on any
+  board. Record both outcomes in the PCB bring-up log.
+
+  rail came up:  yes
+  rail held:     no
+  held for:      13 ms of 250 ms
+  rail peak:     3.293 V
+  ~{HV_FAULT}:   LOW, FAULT LATCHED
+  started cold:  yes, +36V_SW bulk bled down in 0 ms
+
+  [FAIL] this board still needs the workaround, as
+  expected on pcb v0.1-v0.3. powerUp() uses the staircase
+  automatically -- nothing to do.
+
+
+##### send 'x' at +29.9 s
+Powered down: bus open, HV_EN low, HV_DIAG_EN low.
+
+##### send '\n' at +32.0 s
+
+##### send 'p' at +36.0 s
+Profiling a power-up attempt. HV_DIAG_EN is held high for the
+duration so HV_SNS is meaningful, and lowered again at the end.
+Ends powered down, which clears any latched fault.
+
+  t_ms  rail_cnt  +3.3V_SW      sns_cnt   HV_SNS
+  0	11	  0.018 V	11	  0.009 V
+  1	10	  0.016 V	2049	  1.651 V
+  2	141	  0.227 V	2051	  1.653 V
+  3	1998	  3.220 V	2050	  1.652 V
+  4	2042	  3.291 V	2052	  1.654 V
+  5	2043	  3.293 V	2052	  1.654 V
+  6	2042	  3.291 V	2053	  1.654 V
+  7	2042	  3.291 V	2052	  1.654 V
+  8	2042	  3.291 V	2052	  1.654 V
+  9	2042	  3.291 V	2052	  1.654 V
+  10	2043	  3.293 V	2053	  1.654 V
+  11	2041	  3.290 V	2052	  1.654 V
+  12	2005	  3.232 V	2052	  1.654 V
+  13	1892	  3.049 V	2052	  1.654 V
+  14	1812	  2.920 V	2053	  1.654 V
+  15	1696	  2.733 V	2052	  1.654 V
+  16	1670	  2.692 V	2052	  1.654 V
+  17	1614	  2.601 V	2052	  1.654 V
+  18	1521	  2.451 V	2053	  1.654 V
+  19	1408	  2.269 V	2053	  1.654 V
+  20	1317	  2.123 V	2052	  1.654 V
+  21	1244	  2.005 V	2052	  1.654 V
+  22	1179	  1.900 V	2052	  1.654 V
+  23	1117	  1.800 V	2052	  1.654 V
+  24	1065	  1.716 V	2051	  1.653 V
+  25	1017	  1.639 V	2052	  1.654 V
+  26	976	  1.573 V	2052	  1.654 V
+  27	938	  1.512 V	2052	  1.654 V
+  28	904	  1.457 V	2052	  1.654 V
+  29	872	  1.405 V	2052	  1.654 V
+  30	843	  1.359 V	2051	  1.653 V
+  31	811	  1.307 V	2051	  1.653 V
+  32	765	  1.233 V	2053	  1.654 V
+  33	727	  1.172 V	2051	  1.653 V
+  34	692	  1.115 V	2051	  1.653 V
+  35	659	  1.062 V	2052	  1.654 V
+  36	632	  1.019 V	2051	  1.653 V
+  37	607	  0.978 V	2052	  1.654 V
+  38	585	  0.943 V	2052	  1.654 V
+  39	565	  0.911 V	2053	  1.654 V
+  40	550	  0.886 V	2053	  1.654 V
+  41	534	  0.861 V	2052	  1.654 V
+  42	521	  0.840 V	2052	  1.654 V
+  43	511	  0.824 V	2052	  1.654 V
+  44	505	  0.814 V	2052	  1.654 V
+  45	492	  0.793 V	2052	  1.654 V
+  46	482	  0.777 V	2052	  1.654 V
+  47	472	  0.761 V	2052	  1.654 V
+  48	461	  0.743 V	2052	  1.654 V
+  49	451	  0.727 V	2053	  1.654 V
+  50	443	  0.714 V	2052	  1.654 V
+  51	433	  0.698 V	2052	  1.654 V
+  52	424	  0.683 V	2052	  1.654 V
+  53	415	  0.669 V	2052	  1.654 V
+  54	409	  0.659 V	2050	  1.652 V
+  55	399	  0.643 V	2052	  1.654 V
+  56	390	  0.629 V	2052	  1.654 V
+  57	382	  0.616 V	2052	  1.654 V
+  58	374	  0.603 V	2052	  1.654 V
+  59	367	  0.592 V	2052	  1.654 V
+  60	360	  0.580 V	2052	  1.654 V
+  61	352	  0.567 V	2050	  1.652 V
+  62	346	  0.558 V	2052	  1.654 V
+  63	339	  0.546 V	2050	  1.652 V
+  64	332	  0.535 V	2051	  1.653 V
+  65	325	  0.524 V	2051	  1.653 V
+  66	319	  0.514 V	2052	  1.654 V
+  67	313	  0.504 V	2052	  1.654 V
+  68	306	  0.493 V	2053	  1.654 V
+  69	300	  0.484 V	2052	  1.654 V
+  70	294	  0.474 V	2053	  1.654 V
+  71	289	  0.466 V	2052	  1.654 V
+  72	283	  0.456 V	2051	  1.653 V
+  73	278	  0.448 V	2052	  1.654 V
+  74	273	  0.440 V	2052	  1.654 V
+  75	267	  0.430 V	2053	  1.654 V
+  76	262	  0.422 V	2052	  1.654 V
+  77	257	  0.414 V	2052	  1.654 V
+  78	254	  0.409 V	2051	  1.653 V
+  79	249	  0.401 V	2051	  1.653 V
+  80	244	  0.393 V	2052	  1.654 V
+  82	240	  0.387 V	2052	  1.654 V
+  83	236	  0.380 V	2052	  1.654 V
+  84	232	  0.374 V	2051	  1.653 V
+  85	227	  0.366 V	2052	  1.654 V
+  86	222	  0.358 V	2053	  1.654 V
+  87	219	  0.353 V	2052	  1.654 V
+  88	215	  0.347 V	2052	  1.654 V
+  89	210	  0.338 V	2052	  1.654 V
+  90	206	  0.332 V	2052	  1.654 V
+  91	203	  0.327 V	2052	  1.654 V
+  92	200	  0.322 V	2052	  1.654 V
+  93	196	  0.316 V	2052	  1.654 V
+  94	192	  0.309 V	2051	  1.653 V
+  95	188	  0.303 V	2052	  1.654 V
+  96	185	  0.298 V	2052	  1.654 V
+  97	182	  0.293 V	2052	  1.654 V
+  98	179	  0.288 V	2051	  1.653 V
+  99	176	  0.284 V	2051	  1.653 V
+  100	172	  0.277 V	2052	  1.654 V
+  101	169	  0.272 V	2052	  1.654 V
+  102	165	  0.266 V	2053	  1.654 V
+  103	163	  0.263 V	2052	  1.654 V
+  104	161	  0.259 V	2052	  1.654 V
+  105	157	  0.253 V	2053	  1.654 V
+  106	155	  0.250 V	2050	  1.652 V
+  107	152	  0.245 V	2052	  1.654 V
+  108	148	  0.239 V	2052	  1.654 V
+  109	146	  0.235 V	2052	  1.654 V
+  110	144	  0.232 V	2052	  1.654 V
+  111	141	  0.227 V	2052	  1.654 V
+  112	138	  0.222 V	2052	  1.654 V
+  113	136	  0.219 V	2052	  1.654 V
+  114	133	  0.214 V	2052	  1.654 V
+  115	131	  0.211 V	2052	  1.654 V
+  116	129	  0.208 V	2052	  1.654 V
+  117	126	  0.203 V	2053	  1.654 V
+  118	124	  0.200 V	2052	  1.654 V
+  119	122	  0.197 V	2052	  1.654 V
+  120	120	  0.193 V	2053	  1.654 V
+  121	117	  0.189 V	2053	  1.654 V
+  122	115	  0.185 V	2052	  1.654 V
+  123	114	  0.184 V	2052	  1.654 V
+  124	112	  0.181 V	2052	  1.654 V
+  125	109	  0.176 V	2051	  1.653 V
+  126	108	  0.174 V	2051	  1.653 V
+  127	106	  0.171 V	2052	  1.654 V
+  128	105	  0.169 V	2052	  1.654 V
+  129	104	  0.168 V	2052	  1.654 V
+  130	100	  0.161 V	2052	  1.654 V
+  131	99	  0.160 V	2052	  1.654 V
+  132	98	  0.158 V	2051	  1.653 V
+  133	96	  0.155 V	2053	  1.654 V
+  134	94	  0.152 V	2051	  1.653 V
+  135	93	  0.150 V	2052	  1.654 V
+  136	91	  0.147 V	2052	  1.654 V
+  137	90	  0.145 V	2052	  1.654 V
+  138	89	  0.143 V	2051	  1.653 V
+  139	88	  0.142 V	2051	  1.653 V
+  140	85	  0.137 V	2051	  1.653 V
+  141	83	  0.134 V	2052	  1.654 V
+  142	82	  0.132 V	2052	  1.654 V
+  143	81	  0.131 V	2053	  1.654 V
+  144	80	  0.129 V	2053	  1.654 V
+  145	78	  0.126 V	2052	  1.654 V
+  146	77	  0.124 V	2052	  1.654 V
+  147	76	  0.122 V	2052	  1.654 V
+  148	75	  0.121 V	2052	  1.654 V
+  149	73	  0.118 V	2051	  1.653 V
+  150	73	  0.118 V	2052	  1.654 V
+  151	71	  0.114 V	2052	  1.654 V
+  152	70	  0.113 V	2052	  1.654 V
+  153	69	  0.111 V	2052	  1.654 V
+  154	69	  0.111 V	2051	  1.653 V
+  155	67	  0.108 V	2052	  1.654 V
+  156	65	  0.105 V	2051	  1.653 V
+  157	65	  0.105 V	2052	  1.654 V
+  158	64	  0.103 V	2052	  1.654 V
+  159	63	  0.102 V	2051	  1.653 V
+  160	62	  0.100 V	2052	  1.654 V
+  161	61	  0.098 V	2053	  1.654 V
+  162	60	  0.097 V	2052	  1.654 V
+  163	59	  0.095 V	2051	  1.653 V
+  164	58	  0.093 V	2052	  1.654 V
+  165	58	  0.093 V	2052	  1.654 V
+  166	57	  0.092 V	2052	  1.654 V
+  167	56	  0.090 V	2051	  1.653 V
+  168	55	  0.089 V	2052	  1.654 V
+  169	53	  0.085 V	2052	  1.654 V
+  170	53	  0.085 V	2051	  1.653 V
+  171	52	  0.084 V	2052	  1.654 V
+  173	52	  0.084 V	2052	  1.654 V
+  174	51	  0.082 V	2051	  1.653 V
+  175	50	  0.081 V	2052	  1.654 V
+  176	49	  0.079 V	2051	  1.653 V
+  177	49	  0.079 V	2052	  1.654 V
+  178	49	  0.079 V	2051	  1.653 V
+  179	48	  0.077 V	2052	  1.654 V
+  180	48	  0.077 V	2052	  1.654 V
+  181	45	  0.073 V	2052	  1.654 V
+  182	46	  0.074 V	2052	  1.654 V
+  183	45	  0.073 V	2053	  1.654 V
+  184	45	  0.073 V	2052	  1.654 V
+  185	44	  0.071 V	2052	  1.654 V
+  186	44	  0.071 V	2052	  1.654 V
+  187	43	  0.069 V	2052	  1.654 V
+  188	42	  0.068 V	2051	  1.653 V
+  189	41	  0.066 V	2052	  1.654 V
+  190	42	  0.068 V	2052	  1.654 V
+  191	41	  0.066 V	2052	  1.654 V
+  192	41	  0.066 V	2051	  1.653 V
+  193	40	  0.064 V	2053	  1.654 V
+  194	39	  0.063 V	2052	  1.654 V
+  195	40	  0.064 V	2053	  1.654 V
+  196	37	  0.060 V	2052	  1.654 V
+  197	37	  0.060 V	2052	  1.654 V
+  198	37	  0.060 V	2052	  1.654 V
+  199	37	  0.060 V	2051	  1.653 V
+  200	37	  0.060 V	2052	  1.654 V
+  201	36	  0.058 V	2052	  1.654 V
+  202	35	  0.056 V	2052	  1.654 V
+  203	35	  0.056 V	2052	  1.654 V
+  204	35	  0.056 V	2052	  1.654 V
+  205	35	  0.056 V	2052	  1.654 V
+  206	34	  0.055 V	2052	  1.654 V
+  207	34	  0.055 V	2052	  1.654 V
+  208	33	  0.053 V	2052	  1.654 V
+  209	33	  0.053 V	2052	  1.654 V
+  210	33	  0.053 V	2052	  1.654 V
+  211	32	  0.052 V	2052	  1.654 V
+  212	32	  0.052 V	2052	  1.654 V
+  213	31	  0.050 V	2052	  1.654 V
+  214	32	  0.052 V	2052	  1.654 V
+  215	31	  0.050 V	2052	  1.654 V
+  216	30	  0.048 V	2052	  1.654 V
+  217	31	  0.050 V	2051	  1.653 V
+  218	29	  0.047 V	2051	  1.653 V
+  219	30	  0.048 V	2052	  1.654 V
+  220	29	  0.047 V	2052	  1.654 V
+  221	30	  0.048 V	2052	  1.654 V
+  222	29	  0.047 V	2052	  1.654 V
+  223	28	  0.045 V	2051	  1.653 V
+  224	29	  0.047 V	2052	  1.654 V
+  225	28	  0.045 V	2052	  1.654 V
+  226	28	  0.045 V	2053	  1.654 V
+  227	28	  0.045 V	2052	  1.654 V
+  228	27	  0.044 V	2051	  1.653 V
+  229	27	  0.044 V	2052	  1.654 V
+  230	27	  0.044 V	2051	  1.653 V
+  231	27	  0.044 V	2052	  1.654 V
+  232	27	  0.044 V	2051	  1.653 V
+  233	26	  0.042 V	2050	  1.652 V
+  234	26	  0.042 V	2053	  1.654 V
+  235	25	  0.040 V	2052	  1.654 V
+  236	25	  0.040 V	2051	  1.653 V
+  237	25	  0.040 V	2052	  1.654 V
+  238	25	  0.040 V	2052	  1.654 V
+  239	25	  0.040 V	2052	  1.654 V
+  240	24	  0.039 V	2051	  1.653 V
+  241	25	  0.040 V	2052	  1.654 V
+  242	24	  0.039 V	2052	  1.654 V
+  243	24	  0.039 V	2052	  1.654 V
+  244	24	  0.039 V	2052	  1.654 V
+  245	25	  0.040 V	2051	  1.653 V
+  246	23	  0.037 V	2051	  1.653 V
+  247	24	  0.039 V	2052	  1.654 V
+  248	24	  0.039 V	2051	  1.653 V
+  249	24	  0.039 V	2051	  1.653 V
+  250	24	  0.039 V	2051	  1.653 V
+  251	22	  0.035 V	2052	  1.654 V
+
+  samples: 250
+  peak +3.3V_SW: 3.293 V
+  peak HV_SNS:   1.654 V
+  HV_SNS in the 1.3-1.6 V band is the switch's ISNSFLT fault
+  current into R509 249R, not a load-current reading.
+  Powered down.
+
+##### send 'x' at +40.6 s
+Powered down: bus open, HV_EN low, HV_DIAG_EN low.

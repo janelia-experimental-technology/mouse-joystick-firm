@@ -1,0 +1,81 @@
+
+##### send 'b' at +1.8 s
+[1] rail and bus
+    [ ok ] +3.3V_SW up in 4 ms, peak 3.304 V, method: direct HV_EN
+    [ ok ] +36V_SW bulk charged at 33 ms (HV_SNS below the fault level); latch-off armed
+    [ ok ] bus closed, ~{TMC_DRV_EN} still high
+
+[2] TMC51X0 over SPI0, driver disabled
+    IOIN.VERSION = 0x11  [ ok ] TMC5130A
+    [ ok ] motion-controller mode
+    GSTAT: reset=0 drv_err=0 uv_cp=0
+      reset=1 is expected on the first read after a rail
+      power-up. uv_cp=0 means the charge pump is happy,
+      which needs VS genuinely up.
+    [ ok ] converter, driver, controller, encoder configured
+      clock 16 MHz external (X1201), 256 usteps/fullstep,
+      SpreadCycle, StealthChop off, CoolStep off
+      ENC_CONST = +12.8 usteps per quadrature count, decimal mode.
+      X_ENC now reads in microsteps, comparable to XACTUAL.
+      Its scale reset to ZERO, so this write is what makes
+      the encoder count at all.
+[4] angle-output DAC
+    transport: I2C at 0x48
+    Pull-ups must be BOARD-level, not per instance -- two
+    DACs each carrying them would halve the resistance.
+    [ ok ] GAIN 0x101, 1.6500 V full scale at the BNC
+      Output is at zero scale, which measures 4.5 mV on
+      this board -- a clamp, not an offset. Park it with
+      'A' before looking for motor coupling.
+
+
+##### send 'c' at +5.8 s
+[3] current: CHOPCONF.vsense, set and read back
+    CHOPCONF = 0x10030153
+    vsense read back = 1  [ ok ]
+    TOFF nonzero = yes
+    IRUN  = 8  -> 0.211 A RMS per coil
+    IHOLD = 2  -> 0.070 A RMS per coil
+      IHOLD_IRUN is write-only on the TMC5130A, so those two
+      are what firmware wrote, not what was read back.
+      CHOPCONF is the readable half of the decision, and
+      vsense is the bit that carries the 1.8x error.
+    motor WO-208-13-01D, 0.6 A rated. Ceiling IRUN 17 = 0.421 A RMS
+      That ceiling reads the vendor's 0.6 A as a sine peak,
+      the conservative of the two possible readings. Measure
+      coil current and case temperature before raising it.
+    [ ok ] safe to enable the output stage
+
+
+##### send 'e' at +7.8 s
+Driver ENABLED, IRUN 8 = 0.211 A RMS.
+
+##### send 'p' at +11.8 s
+    XACTUAL: 0 usteps (0.000 deg, 0.0000 rev)
+    X_ENC:   38 usteps (0.267 deg, 0.0007 rev)
+    VACTUAL: 0 usteps/t
+    switch:  status_stop_l=0 latch_l=0  vzero=1 position_reached=1
+    DRV_STATUS 0xA0020033  stst=1 cs_actual=2 sg_result=51 ot=0 otpw=0
+    ola=1 olb=0   (open load; only meaningful during slow motion)
+
+##### send 'W' at +13.8 s
+Sweeping toward the positive end in 128 ustep steps to find the switch...
+  resting REFL_STEP: 0
+  travel used:       3583 usteps (25.19 deg)
+  engaged at:        3583 usteps (25.193 deg, 0.0700 rev)
+  released again:    yes
+  released at:       3327 usteps (23.393 deg, 0.0650 rev)
+  switch throw:      256 usteps between engage and release
+  [ ok ] triggered level = 1 (active high)
+    -> SW_MODE.pol_stop = 0, non-inverted
+    The path from J1301 through U1301 to TMC REFL works, so
+    this board is not the one with an open debouncer output.
+
+
+##### send 'p' at +25.9 s
+    XACTUAL: 3327 usteps (23.393 deg, 0.0650 rev)
+    X_ENC:   3392 usteps (23.850 deg, 0.0662 rev)
+    VACTUAL: 0 usteps/t
+    switch:  status_stop_l=0 latch_l=0  vzero=1 position_reached=1
+    DRV_STATUS 0x81020037  stst=1 cs_actual=2 sg_result=55 ot=0 otpw=0
+    ola=0 olb=0   (open load; only meaningful during slow motion)

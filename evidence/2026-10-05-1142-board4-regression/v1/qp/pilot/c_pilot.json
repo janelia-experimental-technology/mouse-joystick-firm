@@ -1,0 +1,9539 @@
+{
+ "meta": {
+  "port": "/dev/serial/by-id/usb-Orb_Weaver_mouse-joystick-pcb_E4654C159F274534-if00",
+  "heartbeat_ms": 40.0,
+  "cycles": 20,
+  "started_unix": 1791230181.8333187,
+  "clock": "time.monotonic_ns",
+  "port_error": null,
+  "travel": [
+   -10.125,
+   0.0,
+   0.0
+  ]
+ },
+ "steps": [
+  {
+   "step": "READY",
+   "ok": true,
+   "detail": "not seen (board was up before the port opened); ID answered instead"
+  },
+  {
+   "step": "id",
+   "ok": true,
+   "detail": "ack;1;hw=rev2;serial=E4654C159F274534;fw=a8cabbe-dirty;proto=2;axes=1;caps=motion+home+instr+hv+watch+fetch+stream+cfg+angout;rxbuf=200;boot=reboot;crumb=0"
+  },
+  {
+   "step": "status",
+   "ok": true,
+   "detail": "ack;2;state=HOMED;angle=-0.541;xactual=-0.541;torque=;brake=;homed=1;limit=0;faults=0;hv=1;t=300719207"
+  },
+  {
+   "step": "limits",
+   "ok": true,
+   "detail": "ack;3;travel_lo=-10.125;travel_hi=0.0;v_max=36.0;a_max=180.0;i_max=0.421"
+  },
+  {
+   "step": "targets from limits",
+   "ok": true,
+   "detail": "moves between -9.12 and -1.00, release from 0.00 (travel_hi), park 0.00"
+  },
+  {
+   "step": "hv on",
+   "ok": true,
+   "detail": "ack;9"
+  },
+  {
+   "step": "home",
+   "ok": true,
+   "detail": "ack;10"
+  },
+  {
+   "step": "HOMED",
+   "ok": true,
+   "detail": "ev;HOMED;301772841;angle=0.0"
+  },
+  {
+   "step": "arm",
+   "ok": true,
+   "detail": "ack;32"
+  },
+  {
+   "step": "moveto 0",
+   "ok": true,
+   "detail": "ack;33 then ev;TARGET;302277643;angle=-9.183"
+  },
+  {
+   "step": "moveto 19",
+   "ok": true,
+   "detail": "ack;282 then ev;TARGET;310726716;angle=-1.716"
+  },
+  {
+   "step": "moves completed",
+   "ok": true,
+   "detail": "20 of 20"
+  },
+  {
+   "step": "cfg get",
+   "ok": true,
+   "detail": "ack;295;wdt_ms=100;deadband_deg=0.5;stream_hz=10;pre_ms=500;post_ms=500"
+  },
+  {
+   "step": "moveto travel_hi (0.00) before the release",
+   "ok": true,
+   "detail": "ack;296"
+  },
+  {
+   "step": "brake 0",
+   "ok": true,
+   "detail": "ack;301"
+  },
+  {
+   "step": "RELEASED",
+   "ok": true,
+   "detail": "ev;RELEASED;310902468;angle=-0.816;torque=;brake="
+  },
+  {
+   "step": "status in RELEASED",
+   "ok": true,
+   "detail": "ack;302;state=RELEASED;angle=-0.9;xactual=0.0;torque=;brake=;homed=1;limit=0;faults=0;hv=1;t=310908892"
+  },
+  {
+   "step": "watch",
+   "ok": true,
+   "detail": "ack;321"
+  },
+  {
+   "step": "hand pull -> PULL (PUSH = pull_sign is -1 for this joystick)",
+   "ok": false,
+   "detail": "no outcome within 6 s"
+  },
+  {
+   "step": "TRIAL one second after the outcome",
+   "ok": false,
+   "detail": "no TRIAL"
+  },
+  {
+   "step": "moveto 0.00 (park; leaves RELEASED with the resync)",
+   "ok": true,
+   "detail": "ack;503"
+  },
+  {
+   "step": "TARGET at park",
+   "ok": true,
+   "detail": "ev;TARGET;319056638;angle=-0.183"
+  },
+  {
+   "step": "status after the resync (angle against xactual)",
+   "ok": true,
+   "detail": "ack;507;state=ARMED;angle=-0.183;xactual=0.0;torque=;brake=;homed=1;limit=0;faults=0;hv=1;t=319059427"
+  },
+  {
+   "step": "fetch window",
+   "ok": false,
+   "detail": "500 samples in 16 chunks (153 ms), pre=500, lost=0, expected 1001, angle at k=pre None"
+  },
+  {
+   "step": "stream on 50",
+   "ok": true,
+   "detail": "ack;528"
+  },
+  {
+   "step": "stream off",
+   "ok": true,
+   "detail": "ack;579"
+  },
+  {
+   "step": "stream delivered about 100 lines in 2 s",
+   "ok": true,
+   "detail": "100 ev;S lines"
+  },
+  {
+   "step": "disarm",
+   "ok": true,
+   "detail": "ack;582"
+  },
+  {
+   "step": "status after disarm",
+   "ok": true,
+   "detail": "ack;584;state=HOMED;angle=-0.183;xactual=0.0;torque=;brake=;homed=1;limit=0;faults=0;hv=1;t=321333579"
+  },
+  {
+   "step": "arm (for host loss)",
+   "ok": true,
+   "detail": "ack;585"
+  },
+  {
+   "step": "host-loss FAULT",
+   "ok": true,
+   "detail": "ev;FAULT;321438531;code=0;detail=host_timeout after 105.7 ms of silence"
+  },
+  {
+   "step": "status while FAULTED",
+   "ok": true,
+   "detail": "ack;586;state=FAULTED;angle=-0.183;xactual=-0.183;torque=;brake=;homed=1;limit=0;faults=1;hv=0;t=321444667"
+  },
+  {
+   "step": "clrfault",
+   "ok": true,
+   "detail": "ack;590"
+  },
+  {
+   "step": "status after clrfault",
+   "ok": true,
+   "detail": "ack;591;state=IDLE;angle=-0.183;xactual=-0.183;torque=;brake=;homed=0;limit=0;faults=0;hv=0;t=321552192"
+  },
+  {
+   "step": "id (end)",
+   "ok": true,
+   "detail": "ack;592;hw=rev2;serial=E4654C159F274534;fw=a8cabbe-dirty;proto=2;axes=1;caps=motion+home+instr+hv+watch+fetch+stream+cfg+angout;rxbuf=200;boot=reboot;crumb=0"
+  }
+ ],
+ "moves": [
+  {
+   "seq": 33,
+   "target": "ev;TARGET;302277643;angle=-9.183",
+   "ack": "ack;33",
+   "ack_t_ns": 20471132152718,
+   "target_t_ns": 20471603880379,
+   "send_t_ns": 20471126489605
+  },
+  {
+   "seq": 47,
+   "target": "ev;TARGET;302723644;angle=-1.716",
+   "ack": "ack;47",
+   "ack_t_ns": 20471613909961,
+   "target_t_ns": 20472049908835,
+   "send_t_ns": 20471608897264
+  },
+  {
+   "seq": 60,
+   "target": "ev;TARGET;303166641;angle=-9.091",
+   "ack": "ack;60",
+   "ack_t_ns": 20472059744421,
+   "target_t_ns": 20472492845911,
+   "send_t_ns": 20472054579898
+  },
+  {
+   "seq": 73,
+   "target": "ev;TARGET;303605636;angle=-1.716",
+   "ack": "ack;73",
+   "ack_t_ns": 20472502252778,
+   "target_t_ns": 20472931789659,
+   "send_t_ns": 20472497498025
+  },
+  {
+   "seq": 86,
+   "target": "ev;TARGET;304050634;angle=-9.091",
+   "ack": "ack;86",
+   "ack_t_ns": 20472941828146,
+   "target_t_ns": 20473376904538,
+   "send_t_ns": 20472936737913
+  },
+  {
+   "seq": 99,
+   "target": "ev;TARGET;304498636;angle=-1.716",
+   "ack": "ack;99",
+   "ack_t_ns": 20473386801053,
+   "target_t_ns": 20473824872920,
+   "send_t_ns": 20473381881202
+  },
+  {
+   "seq": 112,
+   "target": "ev;TARGET;304944630;angle=-9.091",
+   "ack": "ack;112",
+   "ack_t_ns": 20473835132543,
+   "target_t_ns": 20474270783413,
+   "send_t_ns": 20473830203642
+  },
+  {
+   "seq": 125,
+   "target": "ev;TARGET;305392632;angle=-1.716",
+   "ack": "ack;125",
+   "ack_t_ns": 20474279716591,
+   "target_t_ns": 20474718757407,
+   "send_t_ns": 20474274947409
+  },
+  {
+   "seq": 138,
+   "target": "ev;TARGET;305834642;angle=-9.091",
+   "ack": "ack;138",
+   "ack_t_ns": 20474729831665,
+   "target_t_ns": 20475160921451,
+   "send_t_ns": 20474723815092
+  },
+  {
+   "seq": 151,
+   "target": "ev;TARGET;306277633;angle=-1.716",
+   "ack": "ack;151",
+   "ack_t_ns": 20475172042499,
+   "target_t_ns": 20475603834820,
+   "send_t_ns": 20475165958159
+  },
+  {
+   "seq": 164,
+   "target": "ev;TARGET;306718640;angle=-9.091",
+   "ack": "ack;164",
+   "ack_t_ns": 20475615125521,
+   "target_t_ns": 20476044883321,
+   "send_t_ns": 20475609164585
+  },
+  {
+   "seq": 177,
+   "target": "ev;TARGET;307160654;angle=-1.716",
+   "ack": "ack;177",
+   "ack_t_ns": 20476054947513,
+   "target_t_ns": 20476486840768,
+   "send_t_ns": 20476049698926
+  },
+  {
+   "seq": 190,
+   "target": "ev;TARGET;307606636;angle=-9.091",
+   "ack": "ack;190",
+   "ack_t_ns": 20476496816049,
+   "target_t_ns": 20476932878700,
+   "send_t_ns": 20476491344123
+  },
+  {
+   "seq": 203,
+   "target": "ev;TARGET;308053628;angle=-1.716",
+   "ack": "ack;203",
+   "ack_t_ns": 20476943057919,
+   "target_t_ns": 20477379782698,
+   "send_t_ns": 20476937919809
+  },
+  {
+   "seq": 216,
+   "target": "ev;TARGET;308496644;angle=-9.091",
+   "ack": "ack;216",
+   "ack_t_ns": 20477391377237,
+   "target_t_ns": 20477822880183,
+   "send_t_ns": 20477384730257
+  },
+  {
+   "seq": 229,
+   "target": "ev;TARGET;308944633;angle=-1.716",
+   "ack": "ack;229",
+   "ack_t_ns": 20477832683727,
+   "target_t_ns": 20478270895811,
+   "send_t_ns": 20477827034634
+  },
+  {
+   "seq": 243,
+   "target": "ev;TARGET;309390638;angle=-9.091",
+   "ack": "ack;243",
+   "ack_t_ns": 20478281816639,
+   "target_t_ns": 20478716855738,
+   "send_t_ns": 20478275657340
+  },
+  {
+   "seq": 256,
+   "target": "ev;TARGET;309835635;angle=-1.716",
+   "ack": "ack;256",
+   "ack_t_ns": 20478727504937,
+   "target_t_ns": 20479162509197,
+   "send_t_ns": 20478722777253
+  },
+  {
+   "seq": 269,
+   "target": "ev;TARGET;310279628;angle=-9.091",
+   "ack": "ack;269",
+   "ack_t_ns": 20479173915059,
+   "target_t_ns": 20479606548608,
+   "send_t_ns": 20479168467670
+  },
+  {
+   "seq": 282,
+   "target": "ev;TARGET;310726716;angle=-1.716",
+   "ack": "ack;282",
+   "ack_t_ns": 20479617702051,
+   "target_t_ns": 20480053224930,
+   "send_t_ns": 20479612199380
+  }
+ ],
+ "summary": {
+  "steps_ok": 32,
+  "steps": 35,
+  "lines_tx": 592,
+  "lines_rx": 1234,
+  "naks": [],
+  "round_trip_us_ping": {
+   "n": 514,
+   "min": 2245.434,
+   "p50": 3371.312,
+   "p99": 6041.856,
+   "max": 30894.028,
+   "mean": 3572.591227626459
+  },
+  "round_trip_us_commands": {
+   "n": 78,
+   "min": 3011.424,
+   "p50": 5230.092,
+   "p99": 34567.646,
+   "max": 58120.066,
+   "mean": 7106.072051282052
+  },
+  "move_ack_to_target_us": {
+   "n": 20,
+   "min": 429536.881,
+   "p50": 435076.392,
+   "p99": 439040.816,
+   "max": 471727.661,
+   "mean": 436172.013
+  },
+  "host_loss_fault_delay_ms": 105.687559,
+  "trial": {
+   "cfg": {
+    "wdt_ms": "100",
+    "deadband_deg": "0.5",
+    "stream_hz": "10",
+    "pre_ms": "500",
+    "post_ms": "500"
+   },
+   "stimulus": "hand",
+   "release_angle": -0.816,
+   "park": 0.0,
+   "pull": null,
+   "trial": null,
+   "window_samples": 500,
+   "window_pre": 500,
+   "window_lost": 0,
+   "window_chunks": 16,
+   "fetch_ms": 153.038809,
+   "angle_at_pre": null,
+   "stream_lines_2s": 100
+  }
+ },
+ "log": [
+  {
+   "t_ns": 20470037155214,
+   "dir": "tx",
+   "text": "id;1"
+  },
+  {
+   "t_ns": 20470042216396,
+   "dir": "rx",
+   "text": "ack;1;hw=rev2;serial=E4654C159F274534;fw=a8cabbe-dirty;proto=2;axes=1;caps=motion+home+instr+hv+watch+fetch+stream+cfg+angout;rxbuf=200;boot=reboot;crumb=0"
+  },
+  {
+   "t_ns": 20470042416457,
+   "dir": "tx",
+   "text": "status;2"
+  },
+  {
+   "t_ns": 20470046741292,
+   "dir": "rx",
+   "text": "ack;2;state=HOMED;angle=-0.541;xactual=-0.541;torque=;brake=;homed=1;limit=0;faults=0;hv=1;t=300719207"
+  },
+  {
+   "t_ns": 20470046904652,
+   "dir": "tx",
+   "text": "limits;3"
+  },
+  {
+   "t_ns": 20470051863406,
+   "dir": "rx",
+   "text": "ack;3;travel_lo=-10.125;travel_hi=0.0;v_max=36.0;a_max=180.0;i_max=0.421"
+  },
+  {
+   "t_ns": 20470088273261,
+   "dir": "tx",
+   "text": "ping;4"
+  },
+  {
+   "t_ns": 20470090923801,
+   "dir": "rx",
+   "text": "ack;4"
+  },
+  {
+   "t_ns": 20470128619690,
+   "dir": "tx",
+   "text": "ping;5"
+  },
+  {
+   "t_ns": 20470131769382,
+   "dir": "rx",
+   "text": "ack;5"
+  },
+  {
+   "t_ns": 20470168875420,
+   "dir": "tx",
+   "text": "ping;6"
+  },
+  {
+   "t_ns": 20470171936962,
+   "dir": "rx",
+   "text": "ack;6"
+  },
+  {
+   "t_ns": 20470209198119,
+   "dir": "tx",
+   "text": "ping;7"
+  },
+  {
+   "t_ns": 20470212227088,
+   "dir": "rx",
+   "text": "ack;7"
+  },
+  {
+   "t_ns": 20470249476976,
+   "dir": "tx",
+   "text": "ping;8"
+  },
+  {
+   "t_ns": 20470251851830,
+   "dir": "rx",
+   "text": "ack;8"
+  },
+  {
+   "t_ns": 20470252274616,
+   "dir": "tx",
+   "text": "hv;9;on"
+  },
+  {
+   "t_ns": 20470286842262,
+   "dir": "rx",
+   "text": "ack;9"
+  },
+  {
+   "t_ns": 20470287002088,
+   "dir": "tx",
+   "text": "home;10"
+  },
+  {
+   "t_ns": 20470289815185,
+   "dir": "tx",
+   "text": "ping;11"
+  },
+  {
+   "t_ns": 20470315800310,
+   "dir": "rx",
+   "text": "ack;10"
+  },
+  {
+   "t_ns": 20470318066032,
+   "dir": "rx",
+   "text": "ack;11"
+  },
+  {
+   "t_ns": 20470330147773,
+   "dir": "tx",
+   "text": "ping;12"
+  },
+  {
+   "t_ns": 20470333066028,
+   "dir": "rx",
+   "text": "ack;12"
+  },
+  {
+   "t_ns": 20470370494551,
+   "dir": "tx",
+   "text": "ping;13"
+  },
+  {
+   "t_ns": 20470373309212,
+   "dir": "rx",
+   "text": "ack;13"
+  },
+  {
+   "t_ns": 20470410826112,
+   "dir": "tx",
+   "text": "ping;14"
+  },
+  {
+   "t_ns": 20470413854410,
+   "dir": "rx",
+   "text": "ack;14"
+  },
+  {
+   "t_ns": 20470451163920,
+   "dir": "tx",
+   "text": "ping;15"
+  },
+  {
+   "t_ns": 20470454155003,
+   "dir": "rx",
+   "text": "ack;15"
+  },
+  {
+   "t_ns": 20470491500314,
+   "dir": "tx",
+   "text": "ping;16"
+  },
+  {
+   "t_ns": 20470494828987,
+   "dir": "rx",
+   "text": "ack;16"
+  },
+  {
+   "t_ns": 20470531826740,
+   "dir": "tx",
+   "text": "ping;17"
+  },
+  {
+   "t_ns": 20470535156194,
+   "dir": "rx",
+   "text": "ack;17"
+  },
+  {
+   "t_ns": 20470572167666,
+   "dir": "tx",
+   "text": "ping;18"
+  },
+  {
+   "t_ns": 20470575071211,
+   "dir": "rx",
+   "text": "ack;18"
+  },
+  {
+   "t_ns": 20470612491412,
+   "dir": "tx",
+   "text": "ping;19"
+  },
+  {
+   "t_ns": 20470615146414,
+   "dir": "rx",
+   "text": "ack;19"
+  },
+  {
+   "t_ns": 20470652830706,
+   "dir": "tx",
+   "text": "ping;20"
+  },
+  {
+   "t_ns": 20470655864344,
+   "dir": "rx",
+   "text": "ack;20"
+  },
+  {
+   "t_ns": 20470693167704,
+   "dir": "tx",
+   "text": "ping;21"
+  },
+  {
+   "t_ns": 20470696151753,
+   "dir": "rx",
+   "text": "ack;21"
+  },
+  {
+   "t_ns": 20470733525414,
+   "dir": "tx",
+   "text": "ping;22"
+  },
+  {
+   "t_ns": 20470735860471,
+   "dir": "rx",
+   "text": "ack;22"
+  },
+  {
+   "t_ns": 20470773860536,
+   "dir": "tx",
+   "text": "ping;23"
+  },
+  {
+   "t_ns": 20470776818330,
+   "dir": "rx",
+   "text": "ack;23"
+  },
+  {
+   "t_ns": 20470814196393,
+   "dir": "tx",
+   "text": "ping;24"
+  },
+  {
+   "t_ns": 20470817066596,
+   "dir": "rx",
+   "text": "ack;24"
+  },
+  {
+   "t_ns": 20470854544763,
+   "dir": "tx",
+   "text": "ping;25"
+  },
+  {
+   "t_ns": 20470856860730,
+   "dir": "rx",
+   "text": "ack;25"
+  },
+  {
+   "t_ns": 20470894877870,
+   "dir": "tx",
+   "text": "ping;26"
+  },
+  {
+   "t_ns": 20470898610066,
+   "dir": "rx",
+   "text": "ack;26"
+  },
+  {
+   "t_ns": 20470935209820,
+   "dir": "tx",
+   "text": "ping;27"
+  },
+  {
+   "t_ns": 20470938692477,
+   "dir": "rx",
+   "text": "ack;27"
+  },
+  {
+   "t_ns": 20470975541926,
+   "dir": "tx",
+   "text": "ping;28"
+  },
+  {
+   "t_ns": 20470978669161,
+   "dir": "rx",
+   "text": "ack;28"
+  },
+  {
+   "t_ns": 20471015872704,
+   "dir": "tx",
+   "text": "ping;29"
+  },
+  {
+   "t_ns": 20471019004255,
+   "dir": "rx",
+   "text": "ack;29"
+  },
+  {
+   "t_ns": 20471056230301,
+   "dir": "tx",
+   "text": "ping;30"
+  },
+  {
+   "t_ns": 20471059116545,
+   "dir": "rx",
+   "text": "ack;30"
+  },
+  {
+   "t_ns": 20471096564433,
+   "dir": "tx",
+   "text": "ping;31"
+  },
+  {
+   "t_ns": 20471100746436,
+   "dir": "rx",
+   "text": "ev;HOMED;301772841;angle=0.0"
+  },
+  {
+   "t_ns": 20471100746436,
+   "dir": "rx",
+   "text": "ack;31"
+  },
+  {
+   "t_ns": 20471100925217,
+   "dir": "tx",
+   "text": "arm;32"
+  },
+  {
+   "t_ns": 20471126341483,
+   "dir": "rx",
+   "text": "ack;32"
+  },
+  {
+   "t_ns": 20471126513645,
+   "dir": "tx",
+   "text": "moveto;33;-9.12"
+  },
+  {
+   "t_ns": 20471132152718,
+   "dir": "rx",
+   "text": "ack;33"
+  },
+  {
+   "t_ns": 20471136822362,
+   "dir": "tx",
+   "text": "ping;34"
+  },
+  {
+   "t_ns": 20471140211887,
+   "dir": "rx",
+   "text": "ack;34"
+  },
+  {
+   "t_ns": 20471177159134,
+   "dir": "tx",
+   "text": "ping;35"
+  },
+  {
+   "t_ns": 20471180556765,
+   "dir": "rx",
+   "text": "ack;35"
+  },
+  {
+   "t_ns": 20471217483097,
+   "dir": "tx",
+   "text": "ping;36"
+  },
+  {
+   "t_ns": 20471220543326,
+   "dir": "rx",
+   "text": "ack;36"
+  },
+  {
+   "t_ns": 20471257815106,
+   "dir": "tx",
+   "text": "ping;37"
+  },
+  {
+   "t_ns": 20471260709174,
+   "dir": "rx",
+   "text": "ack;37"
+  },
+  {
+   "t_ns": 20471298135484,
+   "dir": "tx",
+   "text": "ping;38"
+  },
+  {
+   "t_ns": 20471301351861,
+   "dir": "rx",
+   "text": "ack;38"
+  },
+  {
+   "t_ns": 20471338469114,
+   "dir": "tx",
+   "text": "ping;39"
+  },
+  {
+   "t_ns": 20471341084463,
+   "dir": "rx",
+   "text": "ack;39"
+  },
+  {
+   "t_ns": 20471378801690,
+   "dir": "tx",
+   "text": "ping;40"
+  },
+  {
+   "t_ns": 20471382032855,
+   "dir": "rx",
+   "text": "ack;40"
+  },
+  {
+   "t_ns": 20471419144899,
+   "dir": "tx",
+   "text": "ping;41"
+  },
+  {
+   "t_ns": 20471422015279,
+   "dir": "rx",
+   "text": "ack;41"
+  },
+  {
+   "t_ns": 20471459477791,
+   "dir": "tx",
+   "text": "ping;42"
+  },
+  {
+   "t_ns": 20471462229794,
+   "dir": "rx",
+   "text": "ack;42"
+  },
+  {
+   "t_ns": 20471499799427,
+   "dir": "tx",
+   "text": "ping;43"
+  },
+  {
+   "t_ns": 20471503210458,
+   "dir": "rx",
+   "text": "ack;43"
+  },
+  {
+   "t_ns": 20471540061486,
+   "dir": "tx",
+   "text": "ping;44"
+  },
+  {
+   "t_ns": 20471543987284,
+   "dir": "rx",
+   "text": "ack;44"
+  },
+  {
+   "t_ns": 20471580369214,
+   "dir": "tx",
+   "text": "ping;45"
+  },
+  {
+   "t_ns": 20471583516179,
+   "dir": "rx",
+   "text": "ack;45"
+  },
+  {
+   "t_ns": 20471603880379,
+   "dir": "rx",
+   "text": "ev;TARGET;302277643;angle=-9.183"
+  },
+  {
+   "t_ns": 20471604030471,
+   "dir": "tx",
+   "text": "status;46"
+  },
+  {
+   "t_ns": 20471608828734,
+   "dir": "rx",
+   "text": "ack;46;state=ARMED;angle=-9.183;xactual=-9.12;torque=;brake=;homed=1;limit=0;faults=0;hv=1;t=302280494"
+  },
+  {
+   "t_ns": 20471608916783,
+   "dir": "tx",
+   "text": "moveto;47;-1.00"
+  },
+  {
+   "t_ns": 20471613909961,
+   "dir": "rx",
+   "text": "ack;47"
+  },
+  {
+   "t_ns": 20471620595107,
+   "dir": "tx",
+   "text": "ping;48"
+  },
+  {
+   "t_ns": 20471624455485,
+   "dir": "rx",
+   "text": "ack;48"
+  },
+  {
+   "t_ns": 20471660890407,
+   "dir": "tx",
+   "text": "ping;49"
+  },
+  {
+   "t_ns": 20471664687990,
+   "dir": "rx",
+   "text": "ack;49"
+  },
+  {
+   "t_ns": 20471701178605,
+   "dir": "tx",
+   "text": "ping;50"
+  },
+  {
+   "t_ns": 20471703835471,
+   "dir": "rx",
+   "text": "ack;50"
+  },
+  {
+   "t_ns": 20471741357903,
+   "dir": "tx",
+   "text": "ping;51"
+  },
+  {
+   "t_ns": 20471744101087,
+   "dir": "rx",
+   "text": "ack;51"
+  },
+  {
+   "t_ns": 20471781655946,
+   "dir": "tx",
+   "text": "ping;52"
+  },
+  {
+   "t_ns": 20471784958674,
+   "dir": "rx",
+   "text": "ack;52"
+  },
+  {
+   "t_ns": 20471821956654,
+   "dir": "tx",
+   "text": "ping;53"
+  },
+  {
+   "t_ns": 20471824757812,
+   "dir": "rx",
+   "text": "ack;53"
+  },
+  {
+   "t_ns": 20471862246525,
+   "dir": "tx",
+   "text": "ping;54"
+  },
+  {
+   "t_ns": 20471864961327,
+   "dir": "rx",
+   "text": "ack;54"
+  },
+  {
+   "t_ns": 20471902539155,
+   "dir": "tx",
+   "text": "ping;55"
+  },
+  {
+   "t_ns": 20471905434931,
+   "dir": "rx",
+   "text": "ack;55"
+  },
+  {
+   "t_ns": 20471942783257,
+   "dir": "tx",
+   "text": "ping;56"
+  },
+  {
+   "t_ns": 20471945558361,
+   "dir": "rx",
+   "text": "ack;56"
+  },
+  {
+   "t_ns": 20471983074681,
+   "dir": "tx",
+   "text": "ping;57"
+  },
+  {
+   "t_ns": 20471986167092,
+   "dir": "rx",
+   "text": "ack;57"
+  },
+  {
+   "t_ns": 20472023369334,
+   "dir": "tx",
+   "text": "ping;58"
+  },
+  {
+   "t_ns": 20472026034173,
+   "dir": "rx",
+   "text": "ack;58"
+  },
+  {
+   "t_ns": 20472049908835,
+   "dir": "rx",
+   "text": "ev;TARGET;302723644;angle=-1.716"
+  },
+  {
+   "t_ns": 20472050003989,
+   "dir": "tx",
+   "text": "status;59"
+  },
+  {
+   "t_ns": 20472054512349,
+   "dir": "rx",
+   "text": "ack;59;state=ARMED;angle=-1.716;xactual=-0.998;torque=;brake=;homed=1;limit=0;faults=0;hv=1;t=302726433"
+  },
+  {
+   "t_ns": 20472054599237,
+   "dir": "tx",
+   "text": "moveto;60;-9.12"
+  },
+  {
+   "t_ns": 20472059744421,
+   "dir": "rx",
+   "text": "ack;60"
+  },
+  {
+   "t_ns": 20472063665560,
+   "dir": "tx",
+   "text": "ping;61"
+  },
+  {
+   "t_ns": 20472066610947,
+   "dir": "rx",
+   "text": "ack;61"
+  },
+  {
+   "t_ns": 20472103955511,
+   "dir": "tx",
+   "text": "ping;62"
+  },
+  {
+   "t_ns": 20472107387682,
+   "dir": "rx",
+   "text": "ack;62"
+  },
+  {
+   "t_ns": 20472144208377,
+   "dir": "tx",
+   "text": "ping;63"
+  },
+  {
+   "t_ns": 20472147869912,
+   "dir": "rx",
+   "text": "ack;63"
+  },
+  {
+   "t_ns": 20472184499273,
+   "dir": "tx",
+   "text": "ping;64"
+  },
+  {
+   "t_ns": 20472187274719,
+   "dir": "rx",
+   "text": "ack;64"
+  },
+  {
+   "t_ns": 20472224793845,
+   "dir": "tx",
+   "text": "ping;65"
+  },
+  {
+   "t_ns": 20472227517491,
+   "dir": "rx",
+   "text": "ack;65"
+  },
+  {
+   "t_ns": 20472265085260,
+   "dir": "tx",
+   "text": "ping;66"
+  },
+  {
+   "t_ns": 20472268586330,
+   "dir": "rx",
+   "text": "ack;66"
+  },
+  {
+   "t_ns": 20472305375685,
+   "dir": "tx",
+   "text": "ping;67"
+  },
+  {
+   "t_ns": 20472308217280,
+   "dir": "rx",
+   "text": "ack;67"
+  },
+  {
+   "t_ns": 20472345686225,
+   "dir": "tx",
+   "text": "ping;68"
+  },
+  {
+   "t_ns": 20472348194512,
+   "dir": "rx",
+   "text": "ack;68"
+  },
+  {
+   "t_ns": 20472386044662,
+   "dir": "tx",
+   "text": "ping;69"
+  },
+  {
+   "t_ns": 20472389233313,
+   "dir": "rx",
+   "text": "ack;69"
+  },
+  {
+   "t_ns": 20472426343839,
+   "dir": "tx",
+   "text": "ping;70"
+  },
+  {
+   "t_ns": 20472428845559,
+   "dir": "rx",
+   "text": "ack;70"
+  },
+  {
+   "t_ns": 20472466641035,
+   "dir": "tx",
+   "text": "ping;71"
+  },
+  {
+   "t_ns": 20472469163481,
+   "dir": "rx",
+   "text": "ack;71"
+  },
+  {
+   "t_ns": 20472492845911,
+   "dir": "rx",
+   "text": "ev;TARGET;303166641;angle=-9.091"
+  },
+  {
+   "t_ns": 20472492938450,
+   "dir": "tx",
+   "text": "status;72"
+  },
+  {
+   "t_ns": 20472497424644,
+   "dir": "rx",
+   "text": "ack;72;state=ARMED;angle=-9.091;xactual=-9.12;torque=;brake=;homed=1;limit=0;faults=0;hv=1;t=303169375"
+  },
+  {
+   "t_ns": 20472497516233,
+   "dir": "tx",
+   "text": "moveto;73;-1.00"
+  },
+  {
+   "t_ns": 20472502252778,
+   "dir": "rx",
+   "text": "ack;73"
+  },
+  {
+   "t_ns": 20472506938935,
+   "dir": "tx",
+   "text": "ping;74"
+  },
+  {
+   "t_ns": 20472509812695,
+   "dir": "rx",
+   "text": "ack;74"
+  },
+  {
+   "t_ns": 20472547197204,
+   "dir": "tx",
+   "text": "ping;75"
+  },
+  {
+   "t_ns": 20472550621775,
+   "dir": "rx",
+   "text": "ack;75"
+  },
+  {
+   "t_ns": 20472587523795,
+   "dir": "tx",
+   "text": "ping;76"
+  },
+  {
+   "t_ns": 20472590735736,
+   "dir": "rx",
+   "text": "ack;76"
+  },
+  {
+   "t_ns": 20472627839286,
+   "dir": "tx",
+   "text": "ping;77"
+  },
+  {
+   "t_ns": 20472630699299,
+   "dir": "rx",
+   "text": "ack;77"
+  },
+  {
+   "t_ns": 20472668151607,
+   "dir": "tx",
+   "text": "ping;78"
+  },
+  {
+   "t_ns": 20472670634091,
+   "dir": "rx",
+   "text": "ack;78"
+  },
+  {
+   "t_ns": 20472708429504,
+   "dir": "tx",
+   "text": "ping;79"
+  },
+  {
+   "t_ns": 20472711498868,
+   "dir": "rx",
+   "text": "ack;79"
+  },
+  {
+   "t_ns": 20472748665671,
+   "dir": "tx",
+   "text": "ping;80"
+  },
+  {
+   "t_ns": 20472751496676,
+   "dir": "rx",
+   "text": "ack;80"
+  },
+  {
+   "t_ns": 20472788881816,
+   "dir": "tx",
+   "text": "ping;81"
+  },
+  {
+   "t_ns": 20472791536367,
+   "dir": "rx",
+   "text": "ack;81"
+  },
+  {
+   "t_ns": 20472829064688,
+   "dir": "tx",
+   "text": "ping;82"
+  },
+  {
+   "t_ns": 20472832255047,
+   "dir": "rx",
+   "text": "ack;82"
+  },
+  {
+   "t_ns": 20472869298722,
+   "dir": "tx",
+   "text": "ping;83"
+  },
+  {
+   "t_ns": 20472872186529,
+   "dir": "rx",
+   "text": "ack;83"
+  },
+  {
+   "t_ns": 20472909550943,
+   "dir": "tx",
+   "text": "ping;84"
+  },
+  {
+   "t_ns": 20472912582953,
+   "dir": "rx",
+   "text": "ack;84"
+  },
+  {
+   "t_ns": 20472931789659,
+   "dir": "rx",
+   "text": "ev;TARGET;303605636;angle=-1.716"
+  },
+  {
+   "t_ns": 20472931888789,
+   "dir": "tx",
+   "text": "status;85"
+  },
+  {
+   "t_ns": 20472936661842,
+   "dir": "rx",
+   "text": "ack;85;state=ARMED;angle=-1.716;xactual=-0.998;torque=;brake=;homed=1;limit=0;faults=0;hv=1;t=303608357"
+  },
+  {
+   "t_ns": 20472936757103,
+   "dir": "tx",
+   "text": "moveto;86;-9.12"
+  },
+  {
+   "t_ns": 20472941828146,
+   "dir": "rx",
+   "text": "ack;86"
+  },
+  {
+   "t_ns": 20472949747516,
+   "dir": "tx",
+   "text": "ping;87"
+  },
+  {
+   "t_ns": 20472952957004,
+   "dir": "rx",
+   "text": "ack;87"
+  },
+  {
+   "t_ns": 20472989970795,
+   "dir": "tx",
+   "text": "ping;88"
+  },
+  {
+   "t_ns": 20472993352675,
+   "dir": "rx",
+   "text": "ack;88"
+  },
+  {
+   "t_ns": 20473030262299,
+   "dir": "tx",
+   "text": "ping;89"
+  },
+  {
+   "t_ns": 20473032843936,
+   "dir": "rx",
+   "text": "ack;89"
+  },
+  {
+   "t_ns": 20473070534687,
+   "dir": "tx",
+   "text": "ping;90"
+  },
+  {
+   "t_ns": 20473073229625,
+   "dir": "rx",
+   "text": "ack;90"
+  },
+  {
+   "t_ns": 20473110767852,
+   "dir": "tx",
+   "text": "ping;91"
+  },
+  {
+   "t_ns": 20473114074599,
+   "dir": "rx",
+   "text": "ack;91"
+  },
+  {
+   "t_ns": 20473151140377,
+   "dir": "tx",
+   "text": "ping;92"
+  },
+  {
+   "t_ns": 20473154428204,
+   "dir": "rx",
+   "text": "ack;92"
+  },
+  {
+   "t_ns": 20473191475551,
+   "dir": "tx",
+   "text": "ping;93"
+  },
+  {
+   "t_ns": 20473194624104,
+   "dir": "rx",
+   "text": "ack;93"
+  },
+  {
+   "t_ns": 20473231812884,
+   "dir": "tx",
+   "text": "ping;94"
+  },
+  {
+   "t_ns": 20473234679610,
+   "dir": "rx",
+   "text": "ack;94"
+  },
+  {
+   "t_ns": 20473272136897,
+   "dir": "tx",
+   "text": "ping;95"
+  },
+  {
+   "t_ns": 20473275407240,
+   "dir": "rx",
+   "text": "ack;95"
+  },
+  {
+   "t_ns": 20473312463236,
+   "dir": "tx",
+   "text": "ping;96"
+  },
+  {
+   "t_ns": 20473315285591,
+   "dir": "rx",
+   "text": "ack;96"
+  },
+  {
+   "t_ns": 20473352804817,
+   "dir": "tx",
+   "text": "ping;97"
+  },
+  {
+   "t_ns": 20473356528715,
+   "dir": "rx",
+   "text": "ack;97"
+  },
+  {
+   "t_ns": 20473376904538,
+   "dir": "rx",
+   "text": "ev;TARGET;304050634;angle=-9.091"
+  },
+  {
+   "t_ns": 20473377008217,
+   "dir": "tx",
+   "text": "status;98"
+  },
+  {
+   "t_ns": 20473381799823,
+   "dir": "rx",
+   "text": "ack;98;state=ARMED;angle=-9.091;xactual=-9.12;torque=;brake=;homed=1;limit=0;faults=0;hv=1;t=304053412"
+  },
+  {
+   "t_ns": 20473381903014,
+   "dir": "tx",
+   "text": "moveto;99;-1.00"
+  },
+  {
+   "t_ns": 20473386801053,
+   "dir": "rx",
+   "text": "ack;99"
+  },
+  {
+   "t_ns": 20473393140256,
+   "dir": "tx",
+   "text": "ping;100"
+  },
+  {
+   "t_ns": 20473395979194,
+   "dir": "rx",
+   "text": "ack;100"
+  },
+  {
+   "t_ns": 20473433475489,
+   "dir": "tx",
+   "text": "ping;101"
+  },
+  {
+   "t_ns": 20473437026263,
+   "dir": "rx",
+   "text": "ack;101"
+  },
+  {
+   "t_ns": 20473473808499,
+   "dir": "tx",
+   "text": "ping;102"
+  },
+  {
+   "t_ns": 20473477719524,
+   "dir": "rx",
+   "text": "ack;102"
+  },
+  {
+   "t_ns": 20473514141017,
+   "dir": "tx",
+   "text": "ping;103"
+  },
+  {
+   "t_ns": 20473517597711,
+   "dir": "rx",
+   "text": "ack;103"
+  },
+  {
+   "t_ns": 20473554481814,
+   "dir": "tx",
+   "text": "ping;104"
+  },
+  {
+   "t_ns": 20473557764320,
+   "dir": "rx",
+   "text": "ack;104"
+  },
+  {
+   "t_ns": 20473594815670,
+   "dir": "tx",
+   "text": "ping;105"
+  },
+  {
+   "t_ns": 20473597740999,
+   "dir": "rx",
+   "text": "ack;105"
+  },
+  {
+   "t_ns": 20473635165611,
+   "dir": "tx",
+   "text": "ping;106"
+  },
+  {
+   "t_ns": 20473638050039,
+   "dir": "rx",
+   "text": "ack;106"
+  },
+  {
+   "t_ns": 20473675506504,
+   "dir": "tx",
+   "text": "ping;107"
+  },
+  {
+   "t_ns": 20473677884867,
+   "dir": "rx",
+   "text": "ack;107"
+  },
+  {
+   "t_ns": 20473715834106,
+   "dir": "tx",
+   "text": "ping;108"
+  },
+  {
+   "t_ns": 20473718830547,
+   "dir": "rx",
+   "text": "ack;108"
+  },
+  {
+   "t_ns": 20473756132466,
+   "dir": "tx",
+   "text": "ping;109"
+  },
+  {
+   "t_ns": 20473759166370,
+   "dir": "rx",
+   "text": "ack;109"
+  },
+  {
+   "t_ns": 20473796482040,
+   "dir": "tx",
+   "text": "ping;110"
+  },
+  {
+   "t_ns": 20473798942279,
+   "dir": "rx",
+   "text": "ack;110"
+  },
+  {
+   "t_ns": 20473824872920,
+   "dir": "rx",
+   "text": "ev;TARGET;304498636;angle=-1.716"
+  },
+  {
+   "t_ns": 20473824972133,
+   "dir": "tx",
+   "text": "status;111"
+  },
+  {
+   "t_ns": 20473830119587,
+   "dir": "rx",
+   "text": "ack;111;state=ARMED;angle=-1.716;xactual=-0.998;torque=;brake=;homed=1;limit=0;faults=0;hv=1;t=304501397"
+  },
+  {
+   "t_ns": 20473830225938,
+   "dir": "tx",
+   "text": "moveto;112;-9.12"
+  },
+  {
+   "t_ns": 20473835132543,
+   "dir": "rx",
+   "text": "ack;112"
+  },
+  {
+   "t_ns": 20473836819486,
+   "dir": "tx",
+   "text": "ping;113"
+  },
+  {
+   "t_ns": 20473840367093,
+   "dir": "rx",
+   "text": "ack;113"
+  },
+  {
+   "t_ns": 20473877151351,
+   "dir": "tx",
+   "text": "ping;114"
+  },
+  {
+   "t_ns": 20473880802962,
+   "dir": "rx",
+   "text": "ack;114"
+  },
+  {
+   "t_ns": 20473917478497,
+   "dir": "tx",
+   "text": "ping;115"
+  },
+  {
+   "t_ns": 20473921264889,
+   "dir": "rx",
+   "text": "ack;115"
+  },
+  {
+   "t_ns": 20473957810829,
+   "dir": "tx",
+   "text": "ping;116"
+  },
+  {
+   "t_ns": 20473961928160,
+   "dir": "rx",
+   "text": "ack;116"
+  },
+  {
+   "t_ns": 20473998146552,
+   "dir": "tx",
+   "text": "ping;117"
+  },
+  {
+   "t_ns": 20474001600060,
+   "dir": "rx",
+   "text": "ack;117"
+  },
+  {
+   "t_ns": 20474038469309,
+   "dir": "tx",
+   "text": "ping;118"
+  },
+  {
+   "t_ns": 20474041600414,
+   "dir": "rx",
+   "text": "ack;118"
+  },
+  {
+   "t_ns": 20474078748311,
+   "dir": "tx",
+   "text": "ping;119"
+  },
+  {
+   "t_ns": 20474081525621,
+   "dir": "rx",
+   "text": "ack;119"
+  },
+  {
+   "t_ns": 20474118963935,
+   "dir": "tx",
+   "text": "ping;120"
+  },
+  {
+   "t_ns": 20474121903931,
+   "dir": "rx",
+   "text": "ack;120"
+  },
+  {
+   "t_ns": 20474159242816,
+   "dir": "tx",
+   "text": "ping;121"
+  },
+  {
+   "t_ns": 20474161775557,
+   "dir": "rx",
+   "text": "ack;121"
+  },
+  {
+   "t_ns": 20474199579170,
+   "dir": "tx",
+   "text": "ping;122"
+  },
+  {
+   "t_ns": 20474202326872,
+   "dir": "rx",
+   "text": "ack;122"
+  },
+  {
+   "t_ns": 20474239893762,
+   "dir": "tx",
+   "text": "ping;123"
+  },
+  {
+   "t_ns": 20474242875548,
+   "dir": "rx",
+   "text": "ack;123"
+  },
+  {
+   "t_ns": 20474270783413,
+   "dir": "rx",
+   "text": "ev;TARGET;304944630;angle=-9.091"
+  },
+  {
+   "t_ns": 20474270885383,
+   "dir": "tx",
+   "text": "status;124"
+  },
+  {
+   "t_ns": 20474274857160,
+   "dir": "rx",
+   "text": "ack;124;state=ARMED;angle=-9.091;xactual=-9.12;torque=;brake=;homed=1;limit=0;faults=0;hv=1;t=304947810"
+  },
+  {
+   "t_ns": 20474274968164,
+   "dir": "tx",
+   "text": "moveto;125;-1.00"
+  },
+  {
+   "t_ns": 20474279716591,
+   "dir": "rx",
+   "text": "ack;125"
+  },
+  {
+   "t_ns": 20474280212432,
+   "dir": "tx",
+   "text": "ping;126"
+  },
+  {
+   "t_ns": 20474282943097,
+   "dir": "rx",
+   "text": "ack;126"
+  },
+  {
+   "t_ns": 20474320484064,
+   "dir": "tx",
+   "text": "ping;127"
+  },
+  {
+   "t_ns": 20474323153616,
+   "dir": "rx",
+   "text": "ack;127"
+  },
+  {
+   "t_ns": 20474360815714,
+   "dir": "tx",
+   "text": "ping;128"
+  },
+  {
+   "t_ns": 20474363849714,
+   "dir": "rx",
+   "text": "ack;128"
+  },
+  {
+   "t_ns": 20474401154919,
+   "dir": "tx",
+   "text": "ping;129"
+  },
+  {
+   "t_ns": 20474404174360,
+   "dir": "rx",
+   "text": "ack;129"
+  },
+  {
+   "t_ns": 20474441504911,
+   "dir": "tx",
+   "text": "ping;130"
+  },
+  {
+   "t_ns": 20474444947052,
+   "dir": "rx",
+   "text": "ack;130"
+  },
+  {
+   "t_ns": 20474481837842,
+   "dir": "tx",
+   "text": "ping;131"
+  },
+  {
+   "t_ns": 20474485054568,
+   "dir": "rx",
+   "text": "ack;131"
+  },
+  {
+   "t_ns": 20474522177530,
+   "dir": "tx",
+   "text": "ping;132"
+  },
+  {
+   "t_ns": 20474525548842,
+   "dir": "rx",
+   "text": "ack;132"
+  },
+  {
+   "t_ns": 20474562506973,
+   "dir": "tx",
+   "text": "ping;133"
+  },
+  {
+   "t_ns": 20474565627498,
+   "dir": "rx",
+   "text": "ack;133"
+  },
+  {
+   "t_ns": 20474602837752,
+   "dir": "tx",
+   "text": "ping;134"
+  },
+  {
+   "t_ns": 20474606077122,
+   "dir": "rx",
+   "text": "ack;134"
+  },
+  {
+   "t_ns": 20474643172364,
+   "dir": "tx",
+   "text": "ping;135"
+  },
+  {
+   "t_ns": 20474645685772,
+   "dir": "rx",
+   "text": "ack;135"
+  },
+  {
+   "t_ns": 20474683501582,
+   "dir": "tx",
+   "text": "ping;136"
+  },
+  {
+   "t_ns": 20474686132376,
+   "dir": "rx",
+   "text": "ack;136"
+  },
+  {
+   "t_ns": 20474718757407,
+   "dir": "rx",
+   "text": "ev;TARGET;305392632;angle=-1.716"
+  },
+  {
+   "t_ns": 20474718870643,
+   "dir": "tx",
+   "text": "status;137"
+  },
+  {
+   "t_ns": 20474723734388,
+   "dir": "rx",
+   "text": "ack;137;state=ARMED;angle=-1.716;xactual=-0.998;torque=;brake=;homed=1;limit=0;faults=0;hv=1;t=305395857"
+  },
+  {
+   "t_ns": 20474723838949,
+   "dir": "tx",
+   "text": "moveto;138;-9.12"
+  },
+  {
+   "t_ns": 20474723976590,
+   "dir": "tx",
+   "text": "ping;139"
+  },
+  {
+   "t_ns": 20474729831665,
+   "dir": "rx",
+   "text": "ack;138"
+  },
+  {
+   "t_ns": 20474729831665,
+   "dir": "rx",
+   "text": "ack;139"
+  },
+  {
+   "t_ns": 20474764544808,
+   "dir": "tx",
+   "text": "ping;140"
+  },
+  {
+   "t_ns": 20474767607566,
+   "dir": "rx",
+   "text": "ack;140"
+  },
+  {
+   "t_ns": 20474804885773,
+   "dir": "tx",
+   "text": "ping;141"
+  },
+  {
+   "t_ns": 20474807620035,
+   "dir": "rx",
+   "text": "ack;141"
+  },
+  {
+   "t_ns": 20474845218241,
+   "dir": "tx",
+   "text": "ping;142"
+  },
+  {
+   "t_ns": 20474847898357,
+   "dir": "rx",
+   "text": "ack;142"
+  },
+  {
+   "t_ns": 20474885552503,
+   "dir": "tx",
+   "text": "ping;143"
+  },
+  {
+   "t_ns": 20474888372247,
+   "dir": "rx",
+   "text": "ack;143"
+  },
+  {
+   "t_ns": 20474925880672,
+   "dir": "tx",
+   "text": "ping;144"
+  },
+  {
+   "t_ns": 20474929720766,
+   "dir": "rx",
+   "text": "ack;144"
+  },
+  {
+   "t_ns": 20474966202686,
+   "dir": "tx",
+   "text": "ping;145"
+  },
+  {
+   "t_ns": 20474969178054,
+   "dir": "rx",
+   "text": "ack;145"
+  },
+  {
+   "t_ns": 20475006537568,
+   "dir": "tx",
+   "text": "ping;146"
+  },
+  {
+   "t_ns": 20475008990223,
+   "dir": "rx",
+   "text": "ack;146"
+  },
+  {
+   "t_ns": 20475046870610,
+   "dir": "tx",
+   "text": "ping;147"
+  },
+  {
+   "t_ns": 20475050469162,
+   "dir": "rx",
+   "text": "ack;147"
+  },
+  {
+   "t_ns": 20475087214950,
+   "dir": "tx",
+   "text": "ping;148"
+  },
+  {
+   "t_ns": 20475090785983,
+   "dir": "rx",
+   "text": "ack;148"
+  },
+  {
+   "t_ns": 20475127550057,
+   "dir": "tx",
+   "text": "ping;149"
+  },
+  {
+   "t_ns": 20475130842616,
+   "dir": "rx",
+   "text": "ack;149"
+  },
+  {
+   "t_ns": 20475160921451,
+   "dir": "rx",
+   "text": "ev;TARGET;305834642;angle=-9.091"
+  },
+  {
+   "t_ns": 20475161019902,
+   "dir": "tx",
+   "text": "status;150"
+  },
+  {
+   "t_ns": 20475165863299,
+   "dir": "rx",
+   "text": "ack;150;state=ARMED;angle=-9.091;xactual=-9.12;torque=;brake=;homed=1;limit=0;faults=0;hv=1;t=305837436"
+  },
+  {
+   "t_ns": 20475165979629,
+   "dir": "tx",
+   "text": "moveto;151;-1.00"
+  },
+  {
+   "t_ns": 20475167879339,
+   "dir": "tx",
+   "text": "ping;152"
+  },
+  {
+   "t_ns": 20475172042499,
+   "dir": "rx",
+   "text": "ack;151"
+  },
+  {
+   "t_ns": 20475174579310,
+   "dir": "rx",
+   "text": "ack;152"
+  },
+  {
+   "t_ns": 20475208228946,
+   "dir": "tx",
+   "text": "ping;153"
+  },
+  {
+   "t_ns": 20475211583580,
+   "dir": "rx",
+   "text": "ack;153"
+  },
+  {
+   "t_ns": 20475248571752,
+   "dir": "tx",
+   "text": "ping;154"
+  },
+  {
+   "t_ns": 20475251467341,
+   "dir": "rx",
+   "text": "ack;154"
+  },
+  {
+   "t_ns": 20475288905751,
+   "dir": "tx",
+   "text": "ping;155"
+  },
+  {
+   "t_ns": 20475292368939,
+   "dir": "rx",
+   "text": "ack;155"
+  },
+  {
+   "t_ns": 20475329247112,
+   "dir": "tx",
+   "text": "ping;156"
+  },
+  {
+   "t_ns": 20475332933102,
+   "dir": "rx",
+   "text": "ack;156"
+  },
+  {
+   "t_ns": 20475369595517,
+   "dir": "tx",
+   "text": "ping;157"
+  },
+  {
+   "t_ns": 20475373090712,
+   "dir": "rx",
+   "text": "ack;157"
+  },
+  {
+   "t_ns": 20475409922519,
+   "dir": "tx",
+   "text": "ping;158"
+  },
+  {
+   "t_ns": 20475413679456,
+   "dir": "rx",
+   "text": "ack;158"
+  },
+  {
+   "t_ns": 20475450269989,
+   "dir": "tx",
+   "text": "ping;159"
+  },
+  {
+   "t_ns": 20475453235936,
+   "dir": "rx",
+   "text": "ack;159"
+  },
+  {
+   "t_ns": 20475490608753,
+   "dir": "tx",
+   "text": "ping;160"
+  },
+  {
+   "t_ns": 20475493321952,
+   "dir": "rx",
+   "text": "ack;160"
+  },
+  {
+   "t_ns": 20475530948420,
+   "dir": "tx",
+   "text": "ping;161"
+  },
+  {
+   "t_ns": 20475534263609,
+   "dir": "rx",
+   "text": "ack;161"
+  },
+  {
+   "t_ns": 20475571273541,
+   "dir": "tx",
+   "text": "ping;162"
+  },
+  {
+   "t_ns": 20475574176345,
+   "dir": "rx",
+   "text": "ack;162"
+  },
+  {
+   "t_ns": 20475603834820,
+   "dir": "rx",
+   "text": "ev;TARGET;306277633;angle=-1.716"
+  },
+  {
+   "t_ns": 20475603936570,
+   "dir": "tx",
+   "text": "status;163"
+  },
+  {
+   "t_ns": 20475609083738,
+   "dir": "rx",
+   "text": "ack;163;state=ARMED;angle=-1.716;xactual=-0.998;torque=;brake=;homed=1;limit=0;faults=0;hv=1;t=306280927"
+  },
+  {
+   "t_ns": 20475609186760,
+   "dir": "tx",
+   "text": "moveto;164;-9.12"
+  },
+  {
+   "t_ns": 20475611609312,
+   "dir": "tx",
+   "text": "ping;165"
+  },
+  {
+   "t_ns": 20475615125521,
+   "dir": "rx",
+   "text": "ack;164"
+  },
+  {
+   "t_ns": 20475617651168,
+   "dir": "rx",
+   "text": "ack;165"
+  },
+  {
+   "t_ns": 20475651926218,
+   "dir": "tx",
+   "text": "ping;166"
+  },
+  {
+   "t_ns": 20475654681279,
+   "dir": "rx",
+   "text": "ack;166"
+  },
+  {
+   "t_ns": 20475692261311,
+   "dir": "tx",
+   "text": "ping;167"
+  },
+  {
+   "t_ns": 20475695548653,
+   "dir": "rx",
+   "text": "ack;167"
+  },
+  {
+   "t_ns": 20475732601419,
+   "dir": "tx",
+   "text": "ping;168"
+  },
+  {
+   "t_ns": 20475735885901,
+   "dir": "rx",
+   "text": "ack;168"
+  },
+  {
+   "t_ns": 20475772935936,
+   "dir": "tx",
+   "text": "ping;169"
+  },
+  {
+   "t_ns": 20475775836425,
+   "dir": "rx",
+   "text": "ack;169"
+  },
+  {
+   "t_ns": 20475813275322,
+   "dir": "tx",
+   "text": "ping;170"
+  },
+  {
+   "t_ns": 20475816443717,
+   "dir": "rx",
+   "text": "ack;170"
+  },
+  {
+   "t_ns": 20475853628176,
+   "dir": "tx",
+   "text": "ping;171"
+  },
+  {
+   "t_ns": 20475856532604,
+   "dir": "rx",
+   "text": "ack;171"
+  },
+  {
+   "t_ns": 20475893953965,
+   "dir": "tx",
+   "text": "ping;172"
+  },
+  {
+   "t_ns": 20475897470238,
+   "dir": "rx",
+   "text": "ack;172"
+  },
+  {
+   "t_ns": 20475934277439,
+   "dir": "tx",
+   "text": "ping;173"
+  },
+  {
+   "t_ns": 20475937317003,
+   "dir": "rx",
+   "text": "ack;173"
+  },
+  {
+   "t_ns": 20475974611659,
+   "dir": "tx",
+   "text": "ping;174"
+  },
+  {
+   "t_ns": 20475977331607,
+   "dir": "rx",
+   "text": "ack;174"
+  },
+  {
+   "t_ns": 20476014945238,
+   "dir": "tx",
+   "text": "ping;175"
+  },
+  {
+   "t_ns": 20476018436848,
+   "dir": "rx",
+   "text": "ack;175"
+  },
+  {
+   "t_ns": 20476044883321,
+   "dir": "rx",
+   "text": "ev;TARGET;306718640;angle=-9.091"
+  },
+  {
+   "t_ns": 20476044984761,
+   "dir": "tx",
+   "text": "status;176"
+  },
+  {
+   "t_ns": 20476049618931,
+   "dir": "rx",
+   "text": "ack;176;state=ARMED;angle=-9.091;xactual=-9.12;torque=;brake=;homed=1;limit=0;faults=0;hv=1;t=306721347"
+  },
+  {
+   "t_ns": 20476049719257,
+   "dir": "tx",
+   "text": "moveto;177;-1.00"
+  },
+  {
+   "t_ns": 20476054947513,
+   "dir": "rx",
+   "text": "ack;177"
+  },
+  {
+   "t_ns": 20476055271340,
+   "dir": "tx",
+   "text": "ping;178"
+  },
+  {
+   "t_ns": 20476058639421,
+   "dir": "rx",
+   "text": "ack;178"
+  },
+  {
+   "t_ns": 20476095549261,
+   "dir": "tx",
+   "text": "ping;179"
+  },
+  {
+   "t_ns": 20476098686873,
+   "dir": "rx",
+   "text": "ack;179"
+  },
+  {
+   "t_ns": 20476135884603,
+   "dir": "tx",
+   "text": "ping;180"
+  },
+  {
+   "t_ns": 20476138982868,
+   "dir": "rx",
+   "text": "ack;180"
+  },
+  {
+   "t_ns": 20476176232059,
+   "dir": "tx",
+   "text": "ping;181"
+  },
+  {
+   "t_ns": 20476179055730,
+   "dir": "rx",
+   "text": "ack;181"
+  },
+  {
+   "t_ns": 20476216575370,
+   "dir": "tx",
+   "text": "ping;182"
+  },
+  {
+   "t_ns": 20476219551199,
+   "dir": "rx",
+   "text": "ack;182"
+  },
+  {
+   "t_ns": 20476256901469,
+   "dir": "tx",
+   "text": "ping;183"
+  },
+  {
+   "t_ns": 20476259506777,
+   "dir": "rx",
+   "text": "ack;183"
+  },
+  {
+   "t_ns": 20476297234756,
+   "dir": "tx",
+   "text": "ping;184"
+  },
+  {
+   "t_ns": 20476300329190,
+   "dir": "rx",
+   "text": "ack;184"
+  },
+  {
+   "t_ns": 20476337568416,
+   "dir": "tx",
+   "text": "ping;185"
+  },
+  {
+   "t_ns": 20476340513553,
+   "dir": "rx",
+   "text": "ack;185"
+  },
+  {
+   "t_ns": 20476377893981,
+   "dir": "tx",
+   "text": "ping;186"
+  },
+  {
+   "t_ns": 20476381342485,
+   "dir": "rx",
+   "text": "ack;186"
+  },
+  {
+   "t_ns": 20476418123019,
+   "dir": "tx",
+   "text": "ping;187"
+  },
+  {
+   "t_ns": 20476421136437,
+   "dir": "rx",
+   "text": "ack;187"
+  },
+  {
+   "t_ns": 20476458468505,
+   "dir": "tx",
+   "text": "ping;188"
+  },
+  {
+   "t_ns": 20476460897506,
+   "dir": "rx",
+   "text": "ack;188"
+  },
+  {
+   "t_ns": 20476486840768,
+   "dir": "rx",
+   "text": "ev;TARGET;307160654;angle=-1.716"
+  },
+  {
+   "t_ns": 20476486945984,
+   "dir": "tx",
+   "text": "status;189"
+  },
+  {
+   "t_ns": 20476491262482,
+   "dir": "rx",
+   "text": "ack;189;state=ARMED;angle=-1.716;xactual=-0.998;torque=;brake=;homed=1;limit=0;faults=0;hv=1;t=307163409"
+  },
+  {
+   "t_ns": 20476491366959,
+   "dir": "tx",
+   "text": "moveto;190;-9.12"
+  },
+  {
+   "t_ns": 20476496816049,
+   "dir": "rx",
+   "text": "ack;190"
+  },
+  {
+   "t_ns": 20476498805744,
+   "dir": "tx",
+   "text": "ping;191"
+  },
+  {
+   "t_ns": 20476501790916,
+   "dir": "rx",
+   "text": "ack;191"
+  },
+  {
+   "t_ns": 20476539133968,
+   "dir": "tx",
+   "text": "ping;192"
+  },
+  {
+   "t_ns": 20476542099130,
+   "dir": "rx",
+   "text": "ack;192"
+  },
+  {
+   "t_ns": 20476579463098,
+   "dir": "tx",
+   "text": "ping;193"
+  },
+  {
+   "t_ns": 20476581908521,
+   "dir": "rx",
+   "text": "ack;193"
+  },
+  {
+   "t_ns": 20476619798041,
+   "dir": "tx",
+   "text": "ping;194"
+  },
+  {
+   "t_ns": 20476622753091,
+   "dir": "rx",
+   "text": "ack;194"
+  },
+  {
+   "t_ns": 20476660127374,
+   "dir": "tx",
+   "text": "ping;195"
+  },
+  {
+   "t_ns": 20476663325860,
+   "dir": "rx",
+   "text": "ack;195"
+  },
+  {
+   "t_ns": 20476700452703,
+   "dir": "tx",
+   "text": "ping;196"
+  },
+  {
+   "t_ns": 20476703642371,
+   "dir": "rx",
+   "text": "ack;196"
+  },
+  {
+   "t_ns": 20476740794710,
+   "dir": "tx",
+   "text": "ping;197"
+  },
+  {
+   "t_ns": 20476743585318,
+   "dir": "rx",
+   "text": "ack;197"
+  },
+  {
+   "t_ns": 20476781131554,
+   "dir": "tx",
+   "text": "ping;198"
+  },
+  {
+   "t_ns": 20476783813385,
+   "dir": "rx",
+   "text": "ack;198"
+  },
+  {
+   "t_ns": 20476821461787,
+   "dir": "tx",
+   "text": "ping;199"
+  },
+  {
+   "t_ns": 20476824750386,
+   "dir": "rx",
+   "text": "ack;199"
+  },
+  {
+   "t_ns": 20476861798326,
+   "dir": "tx",
+   "text": "ping;200"
+  },
+  {
+   "t_ns": 20476864977153,
+   "dir": "rx",
+   "text": "ack;200"
+  },
+  {
+   "t_ns": 20476902133406,
+   "dir": "tx",
+   "text": "ping;201"
+  },
+  {
+   "t_ns": 20476905280625,
+   "dir": "rx",
+   "text": "ack;201"
+  },
+  {
+   "t_ns": 20476932878700,
+   "dir": "rx",
+   "text": "ev;TARGET;307606636;angle=-9.091"
+  },
+  {
+   "t_ns": 20476932994879,
+   "dir": "tx",
+   "text": "status;202"
+  },
+  {
+   "t_ns": 20476937838472,
+   "dir": "rx",
+   "text": "ack;202;state=ARMED;angle=-9.091;xactual=-9.12;torque=;brake=;homed=1;limit=0;faults=0;hv=1;t=307609909"
+  },
+  {
+   "t_ns": 20476937941726,
+   "dir": "tx",
+   "text": "moveto;203;-1.00"
+  },
+  {
+   "t_ns": 20476942473626,
+   "dir": "tx",
+   "text": "ping;204"
+  },
+  {
+   "t_ns": 20476943057919,
+   "dir": "rx",
+   "text": "ack;203"
+  },
+  {
+   "t_ns": 20476946102621,
+   "dir": "rx",
+   "text": "ack;204"
+  },
+  {
+   "t_ns": 20476982804098,
+   "dir": "tx",
+   "text": "ping;205"
+  },
+  {
+   "t_ns": 20476985877278,
+   "dir": "rx",
+   "text": "ack;205"
+  },
+  {
+   "t_ns": 20477023125293,
+   "dir": "tx",
+   "text": "ping;206"
+  },
+  {
+   "t_ns": 20477026097587,
+   "dir": "rx",
+   "text": "ack;206"
+  },
+  {
+   "t_ns": 20477063460203,
+   "dir": "tx",
+   "text": "ping;207"
+  },
+  {
+   "t_ns": 20477066356474,
+   "dir": "rx",
+   "text": "ack;207"
+  },
+  {
+   "t_ns": 20477103798282,
+   "dir": "tx",
+   "text": "ping;208"
+  },
+  {
+   "t_ns": 20477107083272,
+   "dir": "rx",
+   "text": "ack;208"
+  },
+  {
+   "t_ns": 20477144133948,
+   "dir": "tx",
+   "text": "ping;209"
+  },
+  {
+   "t_ns": 20477146949221,
+   "dir": "rx",
+   "text": "ack;209"
+  },
+  {
+   "t_ns": 20477184474156,
+   "dir": "tx",
+   "text": "ping;210"
+  },
+  {
+   "t_ns": 20477187644704,
+   "dir": "rx",
+   "text": "ack;210"
+  },
+  {
+   "t_ns": 20477224809282,
+   "dir": "tx",
+   "text": "ping;211"
+  },
+  {
+   "t_ns": 20477227543879,
+   "dir": "rx",
+   "text": "ack;211"
+  },
+  {
+   "t_ns": 20477265143603,
+   "dir": "tx",
+   "text": "ping;212"
+  },
+  {
+   "t_ns": 20477268152951,
+   "dir": "rx",
+   "text": "ack;212"
+  },
+  {
+   "t_ns": 20477305493787,
+   "dir": "tx",
+   "text": "ping;213"
+  },
+  {
+   "t_ns": 20477308250306,
+   "dir": "rx",
+   "text": "ack;213"
+  },
+  {
+   "t_ns": 20477345832169,
+   "dir": "tx",
+   "text": "ping;214"
+  },
+  {
+   "t_ns": 20477348954453,
+   "dir": "rx",
+   "text": "ack;214"
+  },
+  {
+   "t_ns": 20477379782698,
+   "dir": "rx",
+   "text": "ev;TARGET;308053628;angle=-1.716"
+  },
+  {
+   "t_ns": 20477379876052,
+   "dir": "tx",
+   "text": "status;215"
+  },
+  {
+   "t_ns": 20477384658694,
+   "dir": "rx",
+   "text": "ack;215;state=ARMED;angle=-1.716;xactual=-0.998;torque=;brake=;homed=1;limit=0;faults=0;hv=1;t=308056433"
+  },
+  {
+   "t_ns": 20477384753564,
+   "dir": "tx",
+   "text": "moveto;216;-9.12"
+  },
+  {
+   "t_ns": 20477386116077,
+   "dir": "tx",
+   "text": "ping;217"
+  },
+  {
+   "t_ns": 20477391377237,
+   "dir": "rx",
+   "text": "ack;216"
+  },
+  {
+   "t_ns": 20477391377237,
+   "dir": "rx",
+   "text": "ack;217"
+  },
+  {
+   "t_ns": 20477426438781,
+   "dir": "tx",
+   "text": "ping;218"
+  },
+  {
+   "t_ns": 20477429573349,
+   "dir": "rx",
+   "text": "ack;218"
+  },
+  {
+   "t_ns": 20477466776039,
+   "dir": "tx",
+   "text": "ping;219"
+  },
+  {
+   "t_ns": 20477469710961,
+   "dir": "rx",
+   "text": "ack;219"
+  },
+  {
+   "t_ns": 20477507100599,
+   "dir": "tx",
+   "text": "ping;220"
+  },
+  {
+   "t_ns": 20477510293134,
+   "dir": "rx",
+   "text": "ack;220"
+  },
+  {
+   "t_ns": 20477547394877,
+   "dir": "tx",
+   "text": "ping;221"
+  },
+  {
+   "t_ns": 20477550149984,
+   "dir": "rx",
+   "text": "ack;221"
+  },
+  {
+   "t_ns": 20477587725957,
+   "dir": "tx",
+   "text": "ping;222"
+  },
+  {
+   "t_ns": 20477590823331,
+   "dir": "rx",
+   "text": "ack;222"
+  },
+  {
+   "t_ns": 20477628093367,
+   "dir": "tx",
+   "text": "ping;223"
+  },
+  {
+   "t_ns": 20477631309226,
+   "dir": "rx",
+   "text": "ack;223"
+  },
+  {
+   "t_ns": 20477668353059,
+   "dir": "tx",
+   "text": "ping;224"
+  },
+  {
+   "t_ns": 20477670809241,
+   "dir": "rx",
+   "text": "ack;224"
+  },
+  {
+   "t_ns": 20477708674221,
+   "dir": "tx",
+   "text": "ping;225"
+  },
+  {
+   "t_ns": 20477711671689,
+   "dir": "rx",
+   "text": "ack;225"
+  },
+  {
+   "t_ns": 20477749013809,
+   "dir": "tx",
+   "text": "ping;226"
+  },
+  {
+   "t_ns": 20477751807427,
+   "dir": "rx",
+   "text": "ack;226"
+  },
+  {
+   "t_ns": 20477789337806,
+   "dir": "tx",
+   "text": "ping;227"
+  },
+  {
+   "t_ns": 20477792525497,
+   "dir": "rx",
+   "text": "ack;227"
+  },
+  {
+   "t_ns": 20477822880183,
+   "dir": "rx",
+   "text": "ev;TARGET;308496644;angle=-9.091"
+  },
+  {
+   "t_ns": 20477822981401,
+   "dir": "tx",
+   "text": "status;228"
+  },
+  {
+   "t_ns": 20477826960136,
+   "dir": "rx",
+   "text": "ack;228;state=ARMED;angle=-9.091;xactual=-9.12;torque=;brake=;homed=1;limit=0;faults=0;hv=1;t=308499450"
+  },
+  {
+   "t_ns": 20477827056891,
+   "dir": "tx",
+   "text": "moveto;229;-1.00"
+  },
+  {
+   "t_ns": 20477829673796,
+   "dir": "tx",
+   "text": "ping;230"
+  },
+  {
+   "t_ns": 20477832683727,
+   "dir": "rx",
+   "text": "ack;229"
+  },
+  {
+   "t_ns": 20477834729348,
+   "dir": "rx",
+   "text": "ack;230"
+  },
+  {
+   "t_ns": 20477870013971,
+   "dir": "tx",
+   "text": "ping;231"
+  },
+  {
+   "t_ns": 20477872862137,
+   "dir": "rx",
+   "text": "ack;231"
+  },
+  {
+   "t_ns": 20477910353499,
+   "dir": "tx",
+   "text": "ping;232"
+  },
+  {
+   "t_ns": 20477913097239,
+   "dir": "rx",
+   "text": "ack;232"
+  },
+  {
+   "t_ns": 20477950686952,
+   "dir": "tx",
+   "text": "ping;233"
+  },
+  {
+   "t_ns": 20477953893872,
+   "dir": "rx",
+   "text": "ack;233"
+  },
+  {
+   "t_ns": 20477991017855,
+   "dir": "tx",
+   "text": "ping;234"
+  },
+  {
+   "t_ns": 20477993856630,
+   "dir": "rx",
+   "text": "ack;234"
+  },
+  {
+   "t_ns": 20478031347514,
+   "dir": "tx",
+   "text": "ping;235"
+  },
+  {
+   "t_ns": 20478033893457,
+   "dir": "rx",
+   "text": "ack;235"
+  },
+  {
+   "t_ns": 20478071686567,
+   "dir": "tx",
+   "text": "ping;236"
+  },
+  {
+   "t_ns": 20478074691722,
+   "dir": "rx",
+   "text": "ack;236"
+  },
+  {
+   "t_ns": 20478112036841,
+   "dir": "tx",
+   "text": "ping;237"
+  },
+  {
+   "t_ns": 20478115340943,
+   "dir": "rx",
+   "text": "ack;237"
+  },
+  {
+   "t_ns": 20478152319256,
+   "dir": "tx",
+   "text": "ping;238"
+  },
+  {
+   "t_ns": 20478155192564,
+   "dir": "rx",
+   "text": "ack;238"
+  },
+  {
+   "t_ns": 20478192660181,
+   "dir": "tx",
+   "text": "ping;239"
+  },
+  {
+   "t_ns": 20478195651785,
+   "dir": "rx",
+   "text": "ack;239"
+  },
+  {
+   "t_ns": 20478232984517,
+   "dir": "tx",
+   "text": "ping;240"
+  },
+  {
+   "t_ns": 20478235620646,
+   "dir": "rx",
+   "text": "ack;240"
+  },
+  {
+   "t_ns": 20478270895811,
+   "dir": "rx",
+   "text": "ev;TARGET;308944633;angle=-1.716"
+  },
+  {
+   "t_ns": 20478270999106,
+   "dir": "tx",
+   "text": "status;241"
+  },
+  {
+   "t_ns": 20478273315234,
+   "dir": "tx",
+   "text": "ping;242"
+  },
+  {
+   "t_ns": 20478275562527,
+   "dir": "rx",
+   "text": "ack;241;state=ARMED;angle=-1.716;xactual=-0.998;torque=;brake=;homed=1;limit=0;faults=0;hv=1;t=308947411"
+  },
+  {
+   "t_ns": 20478275679598,
+   "dir": "tx",
+   "text": "moveto;243;-9.12"
+  },
+  {
+   "t_ns": 20478278064698,
+   "dir": "rx",
+   "text": "ack;242"
+  },
+  {
+   "t_ns": 20478281816639,
+   "dir": "rx",
+   "text": "ack;243"
+  },
+  {
+   "t_ns": 20478313647749,
+   "dir": "tx",
+   "text": "ping;244"
+  },
+  {
+   "t_ns": 20478316956383,
+   "dir": "rx",
+   "text": "ack;244"
+  },
+  {
+   "t_ns": 20478353980682,
+   "dir": "tx",
+   "text": "ping;245"
+  },
+  {
+   "t_ns": 20478357111027,
+   "dir": "rx",
+   "text": "ack;245"
+  },
+  {
+   "t_ns": 20478394317279,
+   "dir": "tx",
+   "text": "ping;246"
+  },
+  {
+   "t_ns": 20478396990677,
+   "dir": "rx",
+   "text": "ack;246"
+  },
+  {
+   "t_ns": 20478434639986,
+   "dir": "tx",
+   "text": "ping;247"
+  },
+  {
+   "t_ns": 20478437710431,
+   "dir": "rx",
+   "text": "ack;247"
+  },
+  {
+   "t_ns": 20478474971736,
+   "dir": "tx",
+   "text": "ping;248"
+  },
+  {
+   "t_ns": 20478477733758,
+   "dir": "rx",
+   "text": "ack;248"
+  },
+  {
+   "t_ns": 20478515306254,
+   "dir": "tx",
+   "text": "ping;249"
+  },
+  {
+   "t_ns": 20478518560559,
+   "dir": "rx",
+   "text": "ack;249"
+  },
+  {
+   "t_ns": 20478555646372,
+   "dir": "tx",
+   "text": "ping;250"
+  },
+  {
+   "t_ns": 20478558597025,
+   "dir": "rx",
+   "text": "ack;250"
+  },
+  {
+   "t_ns": 20478595893444,
+   "dir": "tx",
+   "text": "ping;251"
+  },
+  {
+   "t_ns": 20478599141045,
+   "dir": "rx",
+   "text": "ack;251"
+  },
+  {
+   "t_ns": 20478636156211,
+   "dir": "tx",
+   "text": "ping;252"
+  },
+  {
+   "t_ns": 20478639137156,
+   "dir": "rx",
+   "text": "ack;252"
+  },
+  {
+   "t_ns": 20478676408689,
+   "dir": "tx",
+   "text": "ping;253"
+  },
+  {
+   "t_ns": 20478679780924,
+   "dir": "rx",
+   "text": "ack;253"
+  },
+  {
+   "t_ns": 20478716855738,
+   "dir": "rx",
+   "text": "ev;TARGET;309390638;angle=-9.091"
+  },
+  {
+   "t_ns": 20478716666236,
+   "dir": "tx",
+   "text": "ping;254"
+  },
+  {
+   "t_ns": 20478717006111,
+   "dir": "tx",
+   "text": "status;255"
+  },
+  {
+   "t_ns": 20478722668428,
+   "dir": "rx",
+   "text": "ack;254"
+  },
+  {
+   "t_ns": 20478722668428,
+   "dir": "rx",
+   "text": "ack;255;state=ARMED;angle=-9.091;xactual=-9.12;torque=;brake=;homed=1;limit=0;faults=0;hv=1;t=309395125"
+  },
+  {
+   "t_ns": 20478722798740,
+   "dir": "tx",
+   "text": "moveto;256;-1.00"
+  },
+  {
+   "t_ns": 20478727504937,
+   "dir": "rx",
+   "text": "ack;256"
+  },
+  {
+   "t_ns": 20478757091226,
+   "dir": "tx",
+   "text": "ping;257"
+  },
+  {
+   "t_ns": 20478760749559,
+   "dir": "rx",
+   "text": "ack;257"
+  },
+  {
+   "t_ns": 20478797433290,
+   "dir": "tx",
+   "text": "ping;258"
+  },
+  {
+   "t_ns": 20478799912320,
+   "dir": "rx",
+   "text": "ack;258"
+  },
+  {
+   "t_ns": 20478837768546,
+   "dir": "tx",
+   "text": "ping;259"
+  },
+  {
+   "t_ns": 20478840728895,
+   "dir": "rx",
+   "text": "ack;259"
+  },
+  {
+   "t_ns": 20478878038105,
+   "dir": "tx",
+   "text": "ping;260"
+  },
+  {
+   "t_ns": 20478881227805,
+   "dir": "rx",
+   "text": "ack;260"
+  },
+  {
+   "t_ns": 20478918372595,
+   "dir": "tx",
+   "text": "ping;261"
+  },
+  {
+   "t_ns": 20478921652058,
+   "dir": "rx",
+   "text": "ack;261"
+  },
+  {
+   "t_ns": 20478958717202,
+   "dir": "tx",
+   "text": "ping;262"
+  },
+  {
+   "t_ns": 20478961774365,
+   "dir": "rx",
+   "text": "ack;262"
+  },
+  {
+   "t_ns": 20478999123628,
+   "dir": "tx",
+   "text": "ping;263"
+  },
+  {
+   "t_ns": 20479002089652,
+   "dir": "rx",
+   "text": "ack;263"
+  },
+  {
+   "t_ns": 20479039465598,
+   "dir": "tx",
+   "text": "ping;264"
+  },
+  {
+   "t_ns": 20479042866478,
+   "dir": "rx",
+   "text": "ack;264"
+  },
+  {
+   "t_ns": 20479079802849,
+   "dir": "tx",
+   "text": "ping;265"
+  },
+  {
+   "t_ns": 20479082948889,
+   "dir": "rx",
+   "text": "ack;265"
+  },
+  {
+   "t_ns": 20479120145230,
+   "dir": "tx",
+   "text": "ping;266"
+  },
+  {
+   "t_ns": 20479123451956,
+   "dir": "rx",
+   "text": "ack;266"
+  },
+  {
+   "t_ns": 20479160477317,
+   "dir": "tx",
+   "text": "ping;267"
+  },
+  {
+   "t_ns": 20479162509197,
+   "dir": "rx",
+   "text": "ev;TARGET;309835635;angle=-1.716"
+  },
+  {
+   "t_ns": 20479162611224,
+   "dir": "tx",
+   "text": "status;268"
+  },
+  {
+   "t_ns": 20479164925365,
+   "dir": "rx",
+   "text": "ack;267"
+  },
+  {
+   "t_ns": 20479168387489,
+   "dir": "rx",
+   "text": "ack;268;state=ARMED;angle=-1.716;xactual=-0.998;torque=;brake=;homed=1;limit=0;faults=0;hv=1;t=309841033"
+  },
+  {
+   "t_ns": 20479168490553,
+   "dir": "tx",
+   "text": "moveto;269;-9.12"
+  },
+  {
+   "t_ns": 20479173915059,
+   "dir": "rx",
+   "text": "ack;269"
+  },
+  {
+   "t_ns": 20479200730302,
+   "dir": "tx",
+   "text": "ping;270"
+  },
+  {
+   "t_ns": 20479204208725,
+   "dir": "rx",
+   "text": "ack;270"
+  },
+  {
+   "t_ns": 20479241109998,
+   "dir": "tx",
+   "text": "ping;271"
+  },
+  {
+   "t_ns": 20479244377564,
+   "dir": "rx",
+   "text": "ack;271"
+  },
+  {
+   "t_ns": 20479281462689,
+   "dir": "tx",
+   "text": "ping;272"
+  },
+  {
+   "t_ns": 20479284635674,
+   "dir": "rx",
+   "text": "ack;272"
+  },
+  {
+   "t_ns": 20479321794590,
+   "dir": "tx",
+   "text": "ping;273"
+  },
+  {
+   "t_ns": 20479324593472,
+   "dir": "rx",
+   "text": "ack;273"
+  },
+  {
+   "t_ns": 20479362140544,
+   "dir": "tx",
+   "text": "ping;274"
+  },
+  {
+   "t_ns": 20479365201282,
+   "dir": "rx",
+   "text": "ack;274"
+  },
+  {
+   "t_ns": 20479402478776,
+   "dir": "tx",
+   "text": "ping;275"
+  },
+  {
+   "t_ns": 20479405152907,
+   "dir": "rx",
+   "text": "ack;275"
+  },
+  {
+   "t_ns": 20479442812790,
+   "dir": "tx",
+   "text": "ping;276"
+  },
+  {
+   "t_ns": 20479445809788,
+   "dir": "rx",
+   "text": "ack;276"
+  },
+  {
+   "t_ns": 20479483153224,
+   "dir": "tx",
+   "text": "ping;277"
+  },
+  {
+   "t_ns": 20479485960458,
+   "dir": "rx",
+   "text": "ack;277"
+  },
+  {
+   "t_ns": 20479523494588,
+   "dir": "tx",
+   "text": "ping;278"
+  },
+  {
+   "t_ns": 20479526765672,
+   "dir": "rx",
+   "text": "ack;278"
+  },
+  {
+   "t_ns": 20479563824130,
+   "dir": "tx",
+   "text": "ping;279"
+  },
+  {
+   "t_ns": 20479567352127,
+   "dir": "rx",
+   "text": "ack;279"
+  },
+  {
+   "t_ns": 20479604166418,
+   "dir": "tx",
+   "text": "ping;280"
+  },
+  {
+   "t_ns": 20479606548608,
+   "dir": "rx",
+   "text": "ev;TARGET;310279628;angle=-9.091"
+  },
+  {
+   "t_ns": 20479606649392,
+   "dir": "tx",
+   "text": "status;281"
+  },
+  {
+   "t_ns": 20479608999838,
+   "dir": "rx",
+   "text": "ack;280"
+  },
+  {
+   "t_ns": 20479612119176,
+   "dir": "rx",
+   "text": "ack;281;state=ARMED;angle=-9.091;xactual=-9.12;torque=;brake=;homed=1;limit=0;faults=0;hv=1;t=310285035"
+  },
+  {
+   "t_ns": 20479612220858,
+   "dir": "tx",
+   "text": "moveto;282;-1.00"
+  },
+  {
+   "t_ns": 20479617702051,
+   "dir": "rx",
+   "text": "ack;282"
+  },
+  {
+   "t_ns": 20479644500143,
+   "dir": "tx",
+   "text": "ping;283"
+  },
+  {
+   "t_ns": 20479647950365,
+   "dir": "rx",
+   "text": "ack;283"
+  },
+  {
+   "t_ns": 20479684842588,
+   "dir": "tx",
+   "text": "ping;284"
+  },
+  {
+   "t_ns": 20479687651815,
+   "dir": "rx",
+   "text": "ack;284"
+  },
+  {
+   "t_ns": 20479725172972,
+   "dir": "tx",
+   "text": "ping;285"
+  },
+  {
+   "t_ns": 20479727939707,
+   "dir": "rx",
+   "text": "ack;285"
+  },
+  {
+   "t_ns": 20479765513617,
+   "dir": "tx",
+   "text": "ping;286"
+  },
+  {
+   "t_ns": 20479768168472,
+   "dir": "rx",
+   "text": "ack;286"
+  },
+  {
+   "t_ns": 20479805849663,
+   "dir": "tx",
+   "text": "ping;287"
+  },
+  {
+   "t_ns": 20479808992824,
+   "dir": "rx",
+   "text": "ack;287"
+  },
+  {
+   "t_ns": 20479846134179,
+   "dir": "tx",
+   "text": "ping;288"
+  },
+  {
+   "t_ns": 20479848636569,
+   "dir": "rx",
+   "text": "ack;288"
+  },
+  {
+   "t_ns": 20479886466829,
+   "dir": "tx",
+   "text": "ping;289"
+  },
+  {
+   "t_ns": 20479889303602,
+   "dir": "rx",
+   "text": "ack;289"
+  },
+  {
+   "t_ns": 20479926718082,
+   "dir": "tx",
+   "text": "ping;290"
+  },
+  {
+   "t_ns": 20479929921388,
+   "dir": "rx",
+   "text": "ack;290"
+  },
+  {
+   "t_ns": 20479967125870,
+   "dir": "tx",
+   "text": "ping;291"
+  },
+  {
+   "t_ns": 20479970093711,
+   "dir": "rx",
+   "text": "ack;291"
+  },
+  {
+   "t_ns": 20480007469918,
+   "dir": "tx",
+   "text": "ping;292"
+  },
+  {
+   "t_ns": 20480009955643,
+   "dir": "rx",
+   "text": "ack;292"
+  },
+  {
+   "t_ns": 20480047797639,
+   "dir": "tx",
+   "text": "ping;293"
+  },
+  {
+   "t_ns": 20480050841443,
+   "dir": "rx",
+   "text": "ack;293"
+  },
+  {
+   "t_ns": 20480053224930,
+   "dir": "rx",
+   "text": "ev;TARGET;310726716;angle=-1.716"
+  },
+  {
+   "t_ns": 20480053384602,
+   "dir": "tx",
+   "text": "status;294"
+  },
+  {
+   "t_ns": 20480057864166,
+   "dir": "rx",
+   "text": "ack;294;state=ARMED;angle=-1.716;xactual=-0.998;torque=;brake=;homed=1;limit=0;faults=0;hv=1;t=310729921"
+  },
+  {
+   "t_ns": 20480058042414,
+   "dir": "tx",
+   "text": "cfg;295;get"
+  },
+  {
+   "t_ns": 20480062952589,
+   "dir": "rx",
+   "text": "ack;295;wdt_ms=100;deadband_deg=0.5;stream_hz=10;pre_ms=500;post_ms=500"
+  },
+  {
+   "t_ns": 20480063133524,
+   "dir": "tx",
+   "text": "moveto;296;0.00"
+  },
+  {
+   "t_ns": 20480068507818,
+   "dir": "rx",
+   "text": "ack;296"
+  },
+  {
+   "t_ns": 20480088130970,
+   "dir": "tx",
+   "text": "ping;297"
+  },
+  {
+   "t_ns": 20480091865574,
+   "dir": "rx",
+   "text": "ack;297"
+  },
+  {
+   "t_ns": 20480128377198,
+   "dir": "tx",
+   "text": "ping;298"
+  },
+  {
+   "t_ns": 20480131702182,
+   "dir": "rx",
+   "text": "ack;298"
+  },
+  {
+   "t_ns": 20480168709070,
+   "dir": "tx",
+   "text": "ping;299"
+  },
+  {
+   "t_ns": 20480171719276,
+   "dir": "rx",
+   "text": "ack;299"
+  },
+  {
+   "t_ns": 20480209043983,
+   "dir": "tx",
+   "text": "ping;300"
+  },
+  {
+   "t_ns": 20480212335161,
+   "dir": "rx",
+   "text": "ack;300"
+  },
+  {
+   "t_ns": 20480225937156,
+   "dir": "rx",
+   "text": "ev;TARGET;310899633;angle=-0.816"
+  },
+  {
+   "t_ns": 20480226086798,
+   "dir": "tx",
+   "text": "brake;301;0"
+  },
+  {
+   "t_ns": 20480231777444,
+   "dir": "rx",
+   "text": "ack;301"
+  },
+  {
+   "t_ns": 20480231777444,
+   "dir": "rx",
+   "text": "ev;RELEASED;310902468;angle=-0.816;torque=;brake="
+  },
+  {
+   "t_ns": 20480231976917,
+   "dir": "tx",
+   "text": "status;302"
+  },
+  {
+   "t_ns": 20480236692043,
+   "dir": "rx",
+   "text": "ack;302;state=RELEASED;angle=-0.9;xactual=0.0;torque=;brake=;homed=1;limit=0;faults=0;hv=1;t=310908892"
+  },
+  {
+   "t_ns": 20480249374509,
+   "dir": "tx",
+   "text": "ping;303"
+  },
+  {
+   "t_ns": 20480252960498,
+   "dir": "rx",
+   "text": "ack;303"
+  },
+  {
+   "t_ns": 20480289709644,
+   "dir": "tx",
+   "text": "ping;304"
+  },
+  {
+   "t_ns": 20480292788193,
+   "dir": "rx",
+   "text": "ack;304"
+  },
+  {
+   "t_ns": 20480329957791,
+   "dir": "tx",
+   "text": "ping;305"
+  },
+  {
+   "t_ns": 20480333388794,
+   "dir": "rx",
+   "text": "ack;305"
+  },
+  {
+   "t_ns": 20480370283883,
+   "dir": "tx",
+   "text": "ping;306"
+  },
+  {
+   "t_ns": 20480372938420,
+   "dir": "rx",
+   "text": "ack;306"
+  },
+  {
+   "t_ns": 20480410619238,
+   "dir": "tx",
+   "text": "ping;307"
+  },
+  {
+   "t_ns": 20480413621241,
+   "dir": "rx",
+   "text": "ack;307"
+  },
+  {
+   "t_ns": 20480450963333,
+   "dir": "tx",
+   "text": "ping;308"
+  },
+  {
+   "t_ns": 20480454633532,
+   "dir": "rx",
+   "text": "ack;308"
+  },
+  {
+   "t_ns": 20480491220833,
+   "dir": "tx",
+   "text": "ping;309"
+  },
+  {
+   "t_ns": 20480494780211,
+   "dir": "rx",
+   "text": "ack;309"
+  },
+  {
+   "t_ns": 20480531417992,
+   "dir": "tx",
+   "text": "ping;310"
+  },
+  {
+   "t_ns": 20480534133643,
+   "dir": "rx",
+   "text": "ack;310"
+  },
+  {
+   "t_ns": 20480571746256,
+   "dir": "tx",
+   "text": "ping;311"
+  },
+  {
+   "t_ns": 20480575019773,
+   "dir": "rx",
+   "text": "ack;311"
+  },
+  {
+   "t_ns": 20480612141131,
+   "dir": "tx",
+   "text": "ping;312"
+  },
+  {
+   "t_ns": 20480615583194,
+   "dir": "rx",
+   "text": "ack;312"
+  },
+  {
+   "t_ns": 20480652388787,
+   "dir": "tx",
+   "text": "ping;313"
+  },
+  {
+   "t_ns": 20480655711625,
+   "dir": "rx",
+   "text": "ack;313"
+  },
+  {
+   "t_ns": 20480692637878,
+   "dir": "tx",
+   "text": "ping;314"
+  },
+  {
+   "t_ns": 20480695932698,
+   "dir": "rx",
+   "text": "ack;314"
+  },
+  {
+   "t_ns": 20480732883715,
+   "dir": "tx",
+   "text": "ping;315"
+  },
+  {
+   "t_ns": 20480735694085,
+   "dir": "rx",
+   "text": "ack;315"
+  },
+  {
+   "t_ns": 20480773216334,
+   "dir": "tx",
+   "text": "ping;316"
+  },
+  {
+   "t_ns": 20480776576453,
+   "dir": "rx",
+   "text": "ack;316"
+  },
+  {
+   "t_ns": 20480813474968,
+   "dir": "tx",
+   "text": "ping;317"
+  },
+  {
+   "t_ns": 20480816776706,
+   "dir": "rx",
+   "text": "ack;317"
+  },
+  {
+   "t_ns": 20480853801674,
+   "dir": "tx",
+   "text": "ping;318"
+  },
+  {
+   "t_ns": 20480857153535,
+   "dir": "rx",
+   "text": "ack;318"
+  },
+  {
+   "t_ns": 20480894139772,
+   "dir": "tx",
+   "text": "ping;319"
+  },
+  {
+   "t_ns": 20480897833771,
+   "dir": "rx",
+   "text": "ack;319"
+  },
+  {
+   "t_ns": 20480934392075,
+   "dir": "tx",
+   "text": "ping;320"
+  },
+  {
+   "t_ns": 20480937026511,
+   "dir": "tx",
+   "text": "watch;321;pull=5;push=5;timeout=6000;hold=100"
+  },
+  {
+   "t_ns": 20480939263420,
+   "dir": "rx",
+   "text": "ack;320"
+  },
+  {
+   "t_ns": 20480944127265,
+   "dir": "rx",
+   "text": "ack;321"
+  },
+  {
+   "t_ns": 20480974754312,
+   "dir": "tx",
+   "text": "ping;322"
+  },
+  {
+   "t_ns": 20480978329489,
+   "dir": "rx",
+   "text": "ack;322"
+  },
+  {
+   "t_ns": 20481015116306,
+   "dir": "tx",
+   "text": "ping;323"
+  },
+  {
+   "t_ns": 20481019241194,
+   "dir": "rx",
+   "text": "ack;323"
+  },
+  {
+   "t_ns": 20481055447049,
+   "dir": "tx",
+   "text": "ping;324"
+  },
+  {
+   "t_ns": 20481058972214,
+   "dir": "rx",
+   "text": "ack;324"
+  },
+  {
+   "t_ns": 20481095744353,
+   "dir": "tx",
+   "text": "ping;325"
+  },
+  {
+   "t_ns": 20481099058635,
+   "dir": "rx",
+   "text": "ack;325"
+  },
+  {
+   "t_ns": 20481136038845,
+   "dir": "tx",
+   "text": "ping;326"
+  },
+  {
+   "t_ns": 20481140283187,
+   "dir": "rx",
+   "text": "ack;326"
+  },
+  {
+   "t_ns": 20481176285984,
+   "dir": "tx",
+   "text": "ping;327"
+  },
+  {
+   "t_ns": 20481181092471,
+   "dir": "rx",
+   "text": "ack;327"
+  },
+  {
+   "t_ns": 20481216545815,
+   "dir": "tx",
+   "text": "ping;328"
+  },
+  {
+   "t_ns": 20481220515305,
+   "dir": "rx",
+   "text": "ack;328"
+  },
+  {
+   "t_ns": 20481256883299,
+   "dir": "tx",
+   "text": "ping;329"
+  },
+  {
+   "t_ns": 20481261518996,
+   "dir": "rx",
+   "text": "ack;329"
+  },
+  {
+   "t_ns": 20481297162232,
+   "dir": "tx",
+   "text": "ping;330"
+  },
+  {
+   "t_ns": 20481302372233,
+   "dir": "rx",
+   "text": "ack;330"
+  },
+  {
+   "t_ns": 20481337414070,
+   "dir": "tx",
+   "text": "ping;331"
+  },
+  {
+   "t_ns": 20481341524181,
+   "dir": "rx",
+   "text": "ack;331"
+  },
+  {
+   "t_ns": 20481377744403,
+   "dir": "tx",
+   "text": "ping;332"
+  },
+  {
+   "t_ns": 20481381309575,
+   "dir": "rx",
+   "text": "ack;332"
+  },
+  {
+   "t_ns": 20481418142316,
+   "dir": "tx",
+   "text": "ping;333"
+  },
+  {
+   "t_ns": 20481422214240,
+   "dir": "rx",
+   "text": "ack;333"
+  },
+  {
+   "t_ns": 20481458478439,
+   "dir": "tx",
+   "text": "ping;334"
+  },
+  {
+   "t_ns": 20481461981135,
+   "dir": "rx",
+   "text": "ack;334"
+  },
+  {
+   "t_ns": 20481498814379,
+   "dir": "tx",
+   "text": "ping;335"
+  },
+  {
+   "t_ns": 20481502227029,
+   "dir": "rx",
+   "text": "ack;335"
+  },
+  {
+   "t_ns": 20481539061310,
+   "dir": "tx",
+   "text": "ping;336"
+  },
+  {
+   "t_ns": 20481543120846,
+   "dir": "rx",
+   "text": "ack;336"
+  },
+  {
+   "t_ns": 20481579390497,
+   "dir": "tx",
+   "text": "ping;337"
+  },
+  {
+   "t_ns": 20481582818356,
+   "dir": "rx",
+   "text": "ack;337"
+  },
+  {
+   "t_ns": 20481619721742,
+   "dir": "tx",
+   "text": "ping;338"
+  },
+  {
+   "t_ns": 20481623708410,
+   "dir": "rx",
+   "text": "ack;338"
+  },
+  {
+   "t_ns": 20481660051436,
+   "dir": "tx",
+   "text": "ping;339"
+  },
+  {
+   "t_ns": 20481664541003,
+   "dir": "rx",
+   "text": "ack;339"
+  },
+  {
+   "t_ns": 20481700386225,
+   "dir": "tx",
+   "text": "ping;340"
+  },
+  {
+   "t_ns": 20481704185627,
+   "dir": "rx",
+   "text": "ack;340"
+  },
+  {
+   "t_ns": 20481740637356,
+   "dir": "tx",
+   "text": "ping;341"
+  },
+  {
+   "t_ns": 20481744799286,
+   "dir": "rx",
+   "text": "ack;341"
+  },
+  {
+   "t_ns": 20481780884102,
+   "dir": "tx",
+   "text": "ping;342"
+  },
+  {
+   "t_ns": 20481784538762,
+   "dir": "rx",
+   "text": "ack;342"
+  },
+  {
+   "t_ns": 20481821222868,
+   "dir": "tx",
+   "text": "ping;343"
+  },
+  {
+   "t_ns": 20481825441545,
+   "dir": "rx",
+   "text": "ack;343"
+  },
+  {
+   "t_ns": 20481862685953,
+   "dir": "tx",
+   "text": "ping;344"
+  },
+  {
+   "t_ns": 20481866359778,
+   "dir": "rx",
+   "text": "ack;344"
+  },
+  {
+   "t_ns": 20481903024208,
+   "dir": "tx",
+   "text": "ping;345"
+  },
+  {
+   "t_ns": 20481906894856,
+   "dir": "rx",
+   "text": "ack;345"
+  },
+  {
+   "t_ns": 20481943363457,
+   "dir": "tx",
+   "text": "ping;346"
+  },
+  {
+   "t_ns": 20481947181563,
+   "dir": "rx",
+   "text": "ack;346"
+  },
+  {
+   "t_ns": 20481983697337,
+   "dir": "tx",
+   "text": "ping;347"
+  },
+  {
+   "t_ns": 20481986927965,
+   "dir": "rx",
+   "text": "ack;347"
+  },
+  {
+   "t_ns": 20482024043810,
+   "dir": "tx",
+   "text": "ping;348"
+  },
+  {
+   "t_ns": 20482028213245,
+   "dir": "rx",
+   "text": "ack;348"
+  },
+  {
+   "t_ns": 20482064336286,
+   "dir": "tx",
+   "text": "ping;349"
+  },
+  {
+   "t_ns": 20482069099324,
+   "dir": "rx",
+   "text": "ack;349"
+  },
+  {
+   "t_ns": 20482104692905,
+   "dir": "tx",
+   "text": "ping;350"
+  },
+  {
+   "t_ns": 20482108588574,
+   "dir": "rx",
+   "text": "ack;350"
+  },
+  {
+   "t_ns": 20482145022443,
+   "dir": "tx",
+   "text": "ping;351"
+  },
+  {
+   "t_ns": 20482149494891,
+   "dir": "rx",
+   "text": "ack;351"
+  },
+  {
+   "t_ns": 20482185359353,
+   "dir": "tx",
+   "text": "ping;352"
+  },
+  {
+   "t_ns": 20482190180319,
+   "dir": "rx",
+   "text": "ack;352"
+  },
+  {
+   "t_ns": 20482225606737,
+   "dir": "tx",
+   "text": "ping;353"
+  },
+  {
+   "t_ns": 20482229402808,
+   "dir": "rx",
+   "text": "ack;353"
+  },
+  {
+   "t_ns": 20482265903014,
+   "dir": "tx",
+   "text": "ping;354"
+  },
+  {
+   "t_ns": 20482270232589,
+   "dir": "rx",
+   "text": "ack;354"
+  },
+  {
+   "t_ns": 20482306238874,
+   "dir": "tx",
+   "text": "ping;355"
+  },
+  {
+   "t_ns": 20482309934920,
+   "dir": "rx",
+   "text": "ack;355"
+  },
+  {
+   "t_ns": 20482346567732,
+   "dir": "tx",
+   "text": "ping;356"
+  },
+  {
+   "t_ns": 20482350284291,
+   "dir": "rx",
+   "text": "ack;356"
+  },
+  {
+   "t_ns": 20482386818766,
+   "dir": "tx",
+   "text": "ping;357"
+  },
+  {
+   "t_ns": 20482390140952,
+   "dir": "rx",
+   "text": "ack;357"
+  },
+  {
+   "t_ns": 20482427146520,
+   "dir": "tx",
+   "text": "ping;358"
+  },
+  {
+   "t_ns": 20482431023635,
+   "dir": "rx",
+   "text": "ack;358"
+  },
+  {
+   "t_ns": 20482467483595,
+   "dir": "tx",
+   "text": "ping;359"
+  },
+  {
+   "t_ns": 20482470836667,
+   "dir": "rx",
+   "text": "ack;359"
+  },
+  {
+   "t_ns": 20482507806761,
+   "dir": "tx",
+   "text": "ping;360"
+  },
+  {
+   "t_ns": 20482512105548,
+   "dir": "rx",
+   "text": "ack;360"
+  },
+  {
+   "t_ns": 20482548113934,
+   "dir": "tx",
+   "text": "ping;361"
+  },
+  {
+   "t_ns": 20482552135599,
+   "dir": "rx",
+   "text": "ack;361"
+  },
+  {
+   "t_ns": 20482588360083,
+   "dir": "tx",
+   "text": "ping;362"
+  },
+  {
+   "t_ns": 20482592180043,
+   "dir": "rx",
+   "text": "ack;362"
+  },
+  {
+   "t_ns": 20482628568964,
+   "dir": "tx",
+   "text": "ping;363"
+  },
+  {
+   "t_ns": 20482632589440,
+   "dir": "rx",
+   "text": "ack;363"
+  },
+  {
+   "t_ns": 20482668916824,
+   "dir": "tx",
+   "text": "ping;364"
+  },
+  {
+   "t_ns": 20482673381313,
+   "dir": "rx",
+   "text": "ack;364"
+  },
+  {
+   "t_ns": 20482709257223,
+   "dir": "tx",
+   "text": "ping;365"
+  },
+  {
+   "t_ns": 20482713174658,
+   "dir": "rx",
+   "text": "ack;365"
+  },
+  {
+   "t_ns": 20482749508154,
+   "dir": "tx",
+   "text": "ping;366"
+  },
+  {
+   "t_ns": 20482753440133,
+   "dir": "rx",
+   "text": "ack;366"
+  },
+  {
+   "t_ns": 20482789843280,
+   "dir": "tx",
+   "text": "ping;367"
+  },
+  {
+   "t_ns": 20482792980870,
+   "dir": "rx",
+   "text": "ack;367"
+  },
+  {
+   "t_ns": 20482830182263,
+   "dir": "tx",
+   "text": "ping;368"
+  },
+  {
+   "t_ns": 20482833877657,
+   "dir": "rx",
+   "text": "ack;368"
+  },
+  {
+   "t_ns": 20482870522527,
+   "dir": "tx",
+   "text": "ping;369"
+  },
+  {
+   "t_ns": 20482874142977,
+   "dir": "rx",
+   "text": "ack;369"
+  },
+  {
+   "t_ns": 20482910848028,
+   "dir": "tx",
+   "text": "ping;370"
+  },
+  {
+   "t_ns": 20482914101198,
+   "dir": "rx",
+   "text": "ack;370"
+  },
+  {
+   "t_ns": 20482951095472,
+   "dir": "tx",
+   "text": "ping;371"
+  },
+  {
+   "t_ns": 20482955715280,
+   "dir": "rx",
+   "text": "ack;371"
+  },
+  {
+   "t_ns": 20482991427210,
+   "dir": "tx",
+   "text": "ping;372"
+  },
+  {
+   "t_ns": 20482995102647,
+   "dir": "rx",
+   "text": "ack;372"
+  },
+  {
+   "t_ns": 20483031765870,
+   "dir": "tx",
+   "text": "ping;373"
+  },
+  {
+   "t_ns": 20483035007115,
+   "dir": "rx",
+   "text": "ack;373"
+  },
+  {
+   "t_ns": 20483072147305,
+   "dir": "tx",
+   "text": "ping;374"
+  },
+  {
+   "t_ns": 20483076428346,
+   "dir": "rx",
+   "text": "ack;374"
+  },
+  {
+   "t_ns": 20483112489952,
+   "dir": "tx",
+   "text": "ping;375"
+  },
+  {
+   "t_ns": 20483116237848,
+   "dir": "rx",
+   "text": "ack;375"
+  },
+  {
+   "t_ns": 20483152829492,
+   "dir": "tx",
+   "text": "ping;376"
+  },
+  {
+   "t_ns": 20483156331670,
+   "dir": "rx",
+   "text": "ack;376"
+  },
+  {
+   "t_ns": 20483193180588,
+   "dir": "tx",
+   "text": "ping;377"
+  },
+  {
+   "t_ns": 20483197308915,
+   "dir": "rx",
+   "text": "ack;377"
+  },
+  {
+   "t_ns": 20483233484664,
+   "dir": "tx",
+   "text": "ping;378"
+  },
+  {
+   "t_ns": 20483237224781,
+   "dir": "rx",
+   "text": "ack;378"
+  },
+  {
+   "t_ns": 20483273824011,
+   "dir": "tx",
+   "text": "ping;379"
+  },
+  {
+   "t_ns": 20483278108743,
+   "dir": "rx",
+   "text": "ack;379"
+  },
+  {
+   "t_ns": 20483314170333,
+   "dir": "tx",
+   "text": "ping;380"
+  },
+  {
+   "t_ns": 20483318314427,
+   "dir": "rx",
+   "text": "ack;380"
+  },
+  {
+   "t_ns": 20483354504764,
+   "dir": "tx",
+   "text": "ping;381"
+  },
+  {
+   "t_ns": 20483357905515,
+   "dir": "rx",
+   "text": "ack;381"
+  },
+  {
+   "t_ns": 20483394843214,
+   "dir": "tx",
+   "text": "ping;382"
+  },
+  {
+   "t_ns": 20483398373224,
+   "dir": "rx",
+   "text": "ack;382"
+  },
+  {
+   "t_ns": 20483435167510,
+   "dir": "tx",
+   "text": "ping;383"
+  },
+  {
+   "t_ns": 20483439495982,
+   "dir": "rx",
+   "text": "ack;383"
+  },
+  {
+   "t_ns": 20483475516271,
+   "dir": "tx",
+   "text": "ping;384"
+  },
+  {
+   "t_ns": 20483479095183,
+   "dir": "rx",
+   "text": "ack;384"
+  },
+  {
+   "t_ns": 20483515849620,
+   "dir": "tx",
+   "text": "ping;385"
+  },
+  {
+   "t_ns": 20483520206402,
+   "dir": "rx",
+   "text": "ack;385"
+  },
+  {
+   "t_ns": 20483556195075,
+   "dir": "tx",
+   "text": "ping;386"
+  },
+  {
+   "t_ns": 20483560285938,
+   "dir": "rx",
+   "text": "ack;386"
+  },
+  {
+   "t_ns": 20483596542647,
+   "dir": "tx",
+   "text": "ping;387"
+  },
+  {
+   "t_ns": 20483600410846,
+   "dir": "rx",
+   "text": "ack;387"
+  },
+  {
+   "t_ns": 20483636880796,
+   "dir": "tx",
+   "text": "ping;388"
+  },
+  {
+   "t_ns": 20483641134891,
+   "dir": "rx",
+   "text": "ack;388"
+  },
+  {
+   "t_ns": 20483677216712,
+   "dir": "tx",
+   "text": "ping;389"
+  },
+  {
+   "t_ns": 20483681231899,
+   "dir": "rx",
+   "text": "ack;389"
+  },
+  {
+   "t_ns": 20483717551058,
+   "dir": "tx",
+   "text": "ping;390"
+  },
+  {
+   "t_ns": 20483721174395,
+   "dir": "rx",
+   "text": "ack;390"
+  },
+  {
+   "t_ns": 20483757892584,
+   "dir": "tx",
+   "text": "ping;391"
+  },
+  {
+   "t_ns": 20483762399685,
+   "dir": "rx",
+   "text": "ack;391"
+  },
+  {
+   "t_ns": 20483798229333,
+   "dir": "tx",
+   "text": "ping;392"
+  },
+  {
+   "t_ns": 20483801943318,
+   "dir": "rx",
+   "text": "ack;392"
+  },
+  {
+   "t_ns": 20483838552796,
+   "dir": "tx",
+   "text": "ping;393"
+  },
+  {
+   "t_ns": 20483842401455,
+   "dir": "rx",
+   "text": "ack;393"
+  },
+  {
+   "t_ns": 20483878898741,
+   "dir": "tx",
+   "text": "ping;394"
+  },
+  {
+   "t_ns": 20483883796830,
+   "dir": "rx",
+   "text": "ack;394"
+  },
+  {
+   "t_ns": 20483919223137,
+   "dir": "tx",
+   "text": "ping;395"
+  },
+  {
+   "t_ns": 20483923004918,
+   "dir": "rx",
+   "text": "ack;395"
+  },
+  {
+   "t_ns": 20483959569138,
+   "dir": "tx",
+   "text": "ping;396"
+  },
+  {
+   "t_ns": 20483963137084,
+   "dir": "rx",
+   "text": "ack;396"
+  },
+  {
+   "t_ns": 20483999898003,
+   "dir": "tx",
+   "text": "ping;397"
+  },
+  {
+   "t_ns": 20484004259352,
+   "dir": "rx",
+   "text": "ack;397"
+  },
+  {
+   "t_ns": 20484040232760,
+   "dir": "tx",
+   "text": "ping;398"
+  },
+  {
+   "t_ns": 20484045158991,
+   "dir": "rx",
+   "text": "ack;398"
+  },
+  {
+   "t_ns": 20484080481656,
+   "dir": "tx",
+   "text": "ping;399"
+  },
+  {
+   "t_ns": 20484084638931,
+   "dir": "rx",
+   "text": "ack;399"
+  },
+  {
+   "t_ns": 20484120714087,
+   "dir": "tx",
+   "text": "ping;400"
+  },
+  {
+   "t_ns": 20484124400142,
+   "dir": "rx",
+   "text": "ack;400"
+  },
+  {
+   "t_ns": 20484160953524,
+   "dir": "tx",
+   "text": "ping;401"
+  },
+  {
+   "t_ns": 20484165029469,
+   "dir": "rx",
+   "text": "ack;401"
+  },
+  {
+   "t_ns": 20484201213830,
+   "dir": "tx",
+   "text": "ping;402"
+  },
+  {
+   "t_ns": 20484205187819,
+   "dir": "rx",
+   "text": "ack;402"
+  },
+  {
+   "t_ns": 20484241546018,
+   "dir": "tx",
+   "text": "ping;403"
+  },
+  {
+   "t_ns": 20484245346431,
+   "dir": "rx",
+   "text": "ack;403"
+  },
+  {
+   "t_ns": 20484281868134,
+   "dir": "tx",
+   "text": "ping;404"
+  },
+  {
+   "t_ns": 20484286088071,
+   "dir": "rx",
+   "text": "ack;404"
+  },
+  {
+   "t_ns": 20484322204105,
+   "dir": "tx",
+   "text": "ping;405"
+  },
+  {
+   "t_ns": 20484326149540,
+   "dir": "rx",
+   "text": "ack;405"
+  },
+  {
+   "t_ns": 20484362545977,
+   "dir": "tx",
+   "text": "ping;406"
+  },
+  {
+   "t_ns": 20484366372614,
+   "dir": "rx",
+   "text": "ack;406"
+  },
+  {
+   "t_ns": 20484402878902,
+   "dir": "tx",
+   "text": "ping;407"
+  },
+  {
+   "t_ns": 20484407152084,
+   "dir": "rx",
+   "text": "ack;407"
+  },
+  {
+   "t_ns": 20484443206794,
+   "dir": "tx",
+   "text": "ping;408"
+  },
+  {
+   "t_ns": 20484447681928,
+   "dir": "rx",
+   "text": "ack;408"
+  },
+  {
+   "t_ns": 20484483555320,
+   "dir": "tx",
+   "text": "ping;409"
+  },
+  {
+   "t_ns": 20484487044242,
+   "dir": "rx",
+   "text": "ack;409"
+  },
+  {
+   "t_ns": 20484523882262,
+   "dir": "tx",
+   "text": "ping;410"
+  },
+  {
+   "t_ns": 20484528184809,
+   "dir": "rx",
+   "text": "ack;410"
+  },
+  {
+   "t_ns": 20484564218850,
+   "dir": "tx",
+   "text": "ping;411"
+  },
+  {
+   "t_ns": 20484568521205,
+   "dir": "rx",
+   "text": "ack;411"
+  },
+  {
+   "t_ns": 20484604472423,
+   "dir": "tx",
+   "text": "ping;412"
+  },
+  {
+   "t_ns": 20484608192229,
+   "dir": "rx",
+   "text": "ack;412"
+  },
+  {
+   "t_ns": 20484644805631,
+   "dir": "tx",
+   "text": "ping;413"
+  },
+  {
+   "t_ns": 20484648697034,
+   "dir": "rx",
+   "text": "ack;413"
+  },
+  {
+   "t_ns": 20484685145868,
+   "dir": "tx",
+   "text": "ping;414"
+  },
+  {
+   "t_ns": 20484689102858,
+   "dir": "rx",
+   "text": "ack;414"
+  },
+  {
+   "t_ns": 20484725490350,
+   "dir": "tx",
+   "text": "ping;415"
+  },
+  {
+   "t_ns": 20484729327466,
+   "dir": "rx",
+   "text": "ack;415"
+  },
+  {
+   "t_ns": 20484765822547,
+   "dir": "tx",
+   "text": "ping;416"
+  },
+  {
+   "t_ns": 20484769559083,
+   "dir": "rx",
+   "text": "ack;416"
+  },
+  {
+   "t_ns": 20484806158645,
+   "dir": "tx",
+   "text": "ping;417"
+  },
+  {
+   "t_ns": 20484810256038,
+   "dir": "rx",
+   "text": "ack;417"
+  },
+  {
+   "t_ns": 20484846481864,
+   "dir": "tx",
+   "text": "ping;418"
+  },
+  {
+   "t_ns": 20484849963286,
+   "dir": "rx",
+   "text": "ack;418"
+  },
+  {
+   "t_ns": 20484886824995,
+   "dir": "tx",
+   "text": "ping;419"
+  },
+  {
+   "t_ns": 20484890558187,
+   "dir": "rx",
+   "text": "ack;419"
+  },
+  {
+   "t_ns": 20484927162575,
+   "dir": "tx",
+   "text": "ping;420"
+  },
+  {
+   "t_ns": 20484930991977,
+   "dir": "rx",
+   "text": "ack;420"
+  },
+  {
+   "t_ns": 20484967499552,
+   "dir": "tx",
+   "text": "ping;421"
+  },
+  {
+   "t_ns": 20484971153491,
+   "dir": "rx",
+   "text": "ack;421"
+  },
+  {
+   "t_ns": 20485007838305,
+   "dir": "tx",
+   "text": "ping;422"
+  },
+  {
+   "t_ns": 20485011558666,
+   "dir": "rx",
+   "text": "ack;422"
+  },
+  {
+   "t_ns": 20485048183906,
+   "dir": "tx",
+   "text": "ping;423"
+  },
+  {
+   "t_ns": 20485052303125,
+   "dir": "rx",
+   "text": "ack;423"
+  },
+  {
+   "t_ns": 20485088520679,
+   "dir": "tx",
+   "text": "ping;424"
+  },
+  {
+   "t_ns": 20485092239990,
+   "dir": "rx",
+   "text": "ack;424"
+  },
+  {
+   "t_ns": 20485128800263,
+   "dir": "tx",
+   "text": "ping;425"
+  },
+  {
+   "t_ns": 20485133405766,
+   "dir": "rx",
+   "text": "ack;425"
+  },
+  {
+   "t_ns": 20485169148221,
+   "dir": "tx",
+   "text": "ping;426"
+  },
+  {
+   "t_ns": 20485173189735,
+   "dir": "rx",
+   "text": "ack;426"
+  },
+  {
+   "t_ns": 20485209484165,
+   "dir": "tx",
+   "text": "ping;427"
+  },
+  {
+   "t_ns": 20485213385014,
+   "dir": "rx",
+   "text": "ack;427"
+  },
+  {
+   "t_ns": 20485249816858,
+   "dir": "tx",
+   "text": "ping;428"
+  },
+  {
+   "t_ns": 20485253301476,
+   "dir": "rx",
+   "text": "ack;428"
+  },
+  {
+   "t_ns": 20485290148573,
+   "dir": "tx",
+   "text": "ping;429"
+  },
+  {
+   "t_ns": 20485293895734,
+   "dir": "rx",
+   "text": "ack;429"
+  },
+  {
+   "t_ns": 20485330487606,
+   "dir": "tx",
+   "text": "ping;430"
+  },
+  {
+   "t_ns": 20485334198932,
+   "dir": "rx",
+   "text": "ack;430"
+  },
+  {
+   "t_ns": 20485370821284,
+   "dir": "tx",
+   "text": "ping;431"
+  },
+  {
+   "t_ns": 20485374379637,
+   "dir": "rx",
+   "text": "ack;431"
+  },
+  {
+   "t_ns": 20485411148735,
+   "dir": "tx",
+   "text": "ping;432"
+  },
+  {
+   "t_ns": 20485415290588,
+   "dir": "rx",
+   "text": "ack;432"
+  },
+  {
+   "t_ns": 20485451470258,
+   "dir": "tx",
+   "text": "ping;433"
+  },
+  {
+   "t_ns": 20485454952640,
+   "dir": "rx",
+   "text": "ack;433"
+  },
+  {
+   "t_ns": 20485491809376,
+   "dir": "tx",
+   "text": "ping;434"
+  },
+  {
+   "t_ns": 20485495046823,
+   "dir": "rx",
+   "text": "ack;434"
+  },
+  {
+   "t_ns": 20485532131782,
+   "dir": "tx",
+   "text": "ping;435"
+  },
+  {
+   "t_ns": 20485536675239,
+   "dir": "rx",
+   "text": "ack;435"
+  },
+  {
+   "t_ns": 20485572432225,
+   "dir": "tx",
+   "text": "ping;436"
+  },
+  {
+   "t_ns": 20485576341894,
+   "dir": "rx",
+   "text": "ack;436"
+  },
+  {
+   "t_ns": 20485612776127,
+   "dir": "tx",
+   "text": "ping;437"
+  },
+  {
+   "t_ns": 20485616302345,
+   "dir": "rx",
+   "text": "ack;437"
+  },
+  {
+   "t_ns": 20485653156078,
+   "dir": "tx",
+   "text": "ping;438"
+  },
+  {
+   "t_ns": 20485657772133,
+   "dir": "rx",
+   "text": "ack;438"
+  },
+  {
+   "t_ns": 20485693483868,
+   "dir": "tx",
+   "text": "ping;439"
+  },
+  {
+   "t_ns": 20485697261181,
+   "dir": "rx",
+   "text": "ack;439"
+  },
+  {
+   "t_ns": 20485733808335,
+   "dir": "tx",
+   "text": "ping;440"
+  },
+  {
+   "t_ns": 20485737336368,
+   "dir": "rx",
+   "text": "ack;440"
+  },
+  {
+   "t_ns": 20485774103943,
+   "dir": "tx",
+   "text": "ping;441"
+  },
+  {
+   "t_ns": 20485778255393,
+   "dir": "rx",
+   "text": "ack;441"
+  },
+  {
+   "t_ns": 20485814441024,
+   "dir": "tx",
+   "text": "ping;442"
+  },
+  {
+   "t_ns": 20485818115211,
+   "dir": "rx",
+   "text": "ack;442"
+  },
+  {
+   "t_ns": 20485854775130,
+   "dir": "tx",
+   "text": "ping;443"
+  },
+  {
+   "t_ns": 20485859068453,
+   "dir": "rx",
+   "text": "ack;443"
+  },
+  {
+   "t_ns": 20485895157737,
+   "dir": "tx",
+   "text": "ping;444"
+  },
+  {
+   "t_ns": 20485898825707,
+   "dir": "rx",
+   "text": "ack;444"
+  },
+  {
+   "t_ns": 20485935477147,
+   "dir": "tx",
+   "text": "ping;445"
+  },
+  {
+   "t_ns": 20485939189014,
+   "dir": "rx",
+   "text": "ack;445"
+  },
+  {
+   "t_ns": 20485975837675,
+   "dir": "tx",
+   "text": "ping;446"
+  },
+  {
+   "t_ns": 20485979876235,
+   "dir": "rx",
+   "text": "ack;446"
+  },
+  {
+   "t_ns": 20486016202629,
+   "dir": "tx",
+   "text": "ping;447"
+  },
+  {
+   "t_ns": 20486019800812,
+   "dir": "rx",
+   "text": "ack;447"
+  },
+  {
+   "t_ns": 20486056455428,
+   "dir": "tx",
+   "text": "ping;448"
+  },
+  {
+   "t_ns": 20486060627670,
+   "dir": "rx",
+   "text": "ack;448"
+  },
+  {
+   "t_ns": 20486096709036,
+   "dir": "tx",
+   "text": "ping;449"
+  },
+  {
+   "t_ns": 20486100191762,
+   "dir": "rx",
+   "text": "ack;449"
+  },
+  {
+   "t_ns": 20486137043242,
+   "dir": "tx",
+   "text": "ping;450"
+  },
+  {
+   "t_ns": 20486141133685,
+   "dir": "rx",
+   "text": "ack;450"
+  },
+  {
+   "t_ns": 20486177310414,
+   "dir": "tx",
+   "text": "ping;451"
+  },
+  {
+   "t_ns": 20486181596430,
+   "dir": "rx",
+   "text": "ack;451"
+  },
+  {
+   "t_ns": 20486217605070,
+   "dir": "tx",
+   "text": "ping;452"
+  },
+  {
+   "t_ns": 20486221395653,
+   "dir": "rx",
+   "text": "ack;452"
+  },
+  {
+   "t_ns": 20486257946678,
+   "dir": "tx",
+   "text": "ping;453"
+  },
+  {
+   "t_ns": 20486261535515,
+   "dir": "rx",
+   "text": "ack;453"
+  },
+  {
+   "t_ns": 20486298279888,
+   "dir": "tx",
+   "text": "ping;454"
+  },
+  {
+   "t_ns": 20486302357419,
+   "dir": "rx",
+   "text": "ack;454"
+  },
+  {
+   "t_ns": 20486338616380,
+   "dir": "tx",
+   "text": "ping;455"
+  },
+  {
+   "t_ns": 20486341896432,
+   "dir": "rx",
+   "text": "ack;455"
+  },
+  {
+   "t_ns": 20486378946893,
+   "dir": "tx",
+   "text": "ping;456"
+  },
+  {
+   "t_ns": 20486382817027,
+   "dir": "rx",
+   "text": "ack;456"
+  },
+  {
+   "t_ns": 20486419287926,
+   "dir": "tx",
+   "text": "ping;457"
+  },
+  {
+   "t_ns": 20486422957143,
+   "dir": "rx",
+   "text": "ack;457"
+  },
+  {
+   "t_ns": 20486459640993,
+   "dir": "tx",
+   "text": "ping;458"
+  },
+  {
+   "t_ns": 20486462779805,
+   "dir": "rx",
+   "text": "ack;458"
+  },
+  {
+   "t_ns": 20486499976253,
+   "dir": "tx",
+   "text": "ping;459"
+  },
+  {
+   "t_ns": 20486504515443,
+   "dir": "rx",
+   "text": "ack;459"
+  },
+  {
+   "t_ns": 20486540230406,
+   "dir": "tx",
+   "text": "ping;460"
+  },
+  {
+   "t_ns": 20486543863244,
+   "dir": "rx",
+   "text": "ack;460"
+  },
+  {
+   "t_ns": 20486580559177,
+   "dir": "tx",
+   "text": "ping;461"
+  },
+  {
+   "t_ns": 20486583831325,
+   "dir": "rx",
+   "text": "ack;461"
+  },
+  {
+   "t_ns": 20486620899817,
+   "dir": "tx",
+   "text": "ping;462"
+  },
+  {
+   "t_ns": 20486624135049,
+   "dir": "rx",
+   "text": "ack;462"
+  },
+  {
+   "t_ns": 20486661237435,
+   "dir": "tx",
+   "text": "ping;463"
+  },
+  {
+   "t_ns": 20486665471657,
+   "dir": "rx",
+   "text": "ack;463"
+  },
+  {
+   "t_ns": 20486701576099,
+   "dir": "tx",
+   "text": "ping;464"
+  },
+  {
+   "t_ns": 20486705163971,
+   "dir": "rx",
+   "text": "ack;464"
+  },
+  {
+   "t_ns": 20486741900017,
+   "dir": "tx",
+   "text": "ping;465"
+  },
+  {
+   "t_ns": 20486745982900,
+   "dir": "rx",
+   "text": "ack;465"
+  },
+  {
+   "t_ns": 20486782242571,
+   "dir": "tx",
+   "text": "ping;466"
+  },
+  {
+   "t_ns": 20486785804015,
+   "dir": "rx",
+   "text": "ack;466"
+  },
+  {
+   "t_ns": 20486822581197,
+   "dir": "tx",
+   "text": "ping;467"
+  },
+  {
+   "t_ns": 20486826266614,
+   "dir": "rx",
+   "text": "ack;467"
+  },
+  {
+   "t_ns": 20486862914038,
+   "dir": "tx",
+   "text": "ping;468"
+  },
+  {
+   "t_ns": 20486867184187,
+   "dir": "rx",
+   "text": "ack;468"
+  },
+  {
+   "t_ns": 20486903256718,
+   "dir": "tx",
+   "text": "ping;469"
+  },
+  {
+   "t_ns": 20486906913640,
+   "dir": "rx",
+   "text": "ack;469"
+  },
+  {
+   "t_ns": 20486943577362,
+   "dir": "tx",
+   "text": "ping;470"
+  },
+  {
+   "t_ns": 20486947491285,
+   "dir": "rx",
+   "text": "ack;470"
+  },
+  {
+   "t_ns": 20486983906489,
+   "dir": "tx",
+   "text": "ping;471"
+  },
+  {
+   "t_ns": 20486987685544,
+   "dir": "rx",
+   "text": "ack;471"
+  },
+  {
+   "t_ns": 20487024253264,
+   "dir": "tx",
+   "text": "ping;472"
+  },
+  {
+   "t_ns": 20487028246690,
+   "dir": "rx",
+   "text": "ack;472"
+  },
+  {
+   "t_ns": 20487064590603,
+   "dir": "tx",
+   "text": "ping;473"
+  },
+  {
+   "t_ns": 20487068637597,
+   "dir": "rx",
+   "text": "ack;473"
+  },
+  {
+   "t_ns": 20487104926037,
+   "dir": "tx",
+   "text": "ping;474"
+  },
+  {
+   "t_ns": 20487108024329,
+   "dir": "rx",
+   "text": "ack;474"
+  },
+  {
+   "t_ns": 20487145196955,
+   "dir": "tx",
+   "text": "ping;475"
+  },
+  {
+   "t_ns": 20487149691034,
+   "dir": "rx",
+   "text": "ack;475"
+  },
+  {
+   "t_ns": 20487185443699,
+   "dir": "tx",
+   "text": "ping;476"
+  },
+  {
+   "t_ns": 20487189243250,
+   "dir": "rx",
+   "text": "ack;476"
+  },
+  {
+   "t_ns": 20487225764898,
+   "dir": "tx",
+   "text": "ping;477"
+  },
+  {
+   "t_ns": 20487229331265,
+   "dir": "rx",
+   "text": "ack;477"
+  },
+  {
+   "t_ns": 20487266167053,
+   "dir": "tx",
+   "text": "ping;478"
+  },
+  {
+   "t_ns": 20487270814469,
+   "dir": "rx",
+   "text": "ack;478"
+  },
+  {
+   "t_ns": 20487306517307,
+   "dir": "tx",
+   "text": "ping;479"
+  },
+  {
+   "t_ns": 20487310252660,
+   "dir": "rx",
+   "text": "ack;479"
+  },
+  {
+   "t_ns": 20487346837654,
+   "dir": "tx",
+   "text": "ping;480"
+  },
+  {
+   "t_ns": 20487350589330,
+   "dir": "rx",
+   "text": "ack;480"
+  },
+  {
+   "t_ns": 20487387172362,
+   "dir": "tx",
+   "text": "ping;481"
+  },
+  {
+   "t_ns": 20487391529225,
+   "dir": "rx",
+   "text": "ack;481"
+  },
+  {
+   "t_ns": 20487427509533,
+   "dir": "tx",
+   "text": "ping;482"
+  },
+  {
+   "t_ns": 20487431163570,
+   "dir": "rx",
+   "text": "ack;482"
+  },
+  {
+   "t_ns": 20487467839095,
+   "dir": "tx",
+   "text": "ping;483"
+  },
+  {
+   "t_ns": 20487471408104,
+   "dir": "rx",
+   "text": "ack;483"
+  },
+  {
+   "t_ns": 20487508123999,
+   "dir": "tx",
+   "text": "ping;484"
+  },
+  {
+   "t_ns": 20487512185787,
+   "dir": "rx",
+   "text": "ack;484"
+  },
+  {
+   "t_ns": 20487548325738,
+   "dir": "tx",
+   "text": "ping;485"
+  },
+  {
+   "t_ns": 20487551780309,
+   "dir": "rx",
+   "text": "ack;485"
+  },
+  {
+   "t_ns": 20487588671317,
+   "dir": "tx",
+   "text": "ping;486"
+  },
+  {
+   "t_ns": 20487592671754,
+   "dir": "rx",
+   "text": "ack;486"
+  },
+  {
+   "t_ns": 20487629006867,
+   "dir": "tx",
+   "text": "ping;487"
+  },
+  {
+   "t_ns": 20487633365952,
+   "dir": "rx",
+   "text": "ack;487"
+  },
+  {
+   "t_ns": 20487669254999,
+   "dir": "tx",
+   "text": "ping;488"
+  },
+  {
+   "t_ns": 20487673113627,
+   "dir": "rx",
+   "text": "ack;488"
+  },
+  {
+   "t_ns": 20487709588706,
+   "dir": "tx",
+   "text": "ping;489"
+  },
+  {
+   "t_ns": 20487713576553,
+   "dir": "rx",
+   "text": "ack;489"
+  },
+  {
+   "t_ns": 20487749913718,
+   "dir": "tx",
+   "text": "ping;490"
+  },
+  {
+   "t_ns": 20487754471489,
+   "dir": "rx",
+   "text": "ack;490"
+  },
+  {
+   "t_ns": 20487790265037,
+   "dir": "tx",
+   "text": "ping;491"
+  },
+  {
+   "t_ns": 20487794206362,
+   "dir": "rx",
+   "text": "ack;491"
+  },
+  {
+   "t_ns": 20487830607924,
+   "dir": "tx",
+   "text": "ping;492"
+  },
+  {
+   "t_ns": 20487834171592,
+   "dir": "rx",
+   "text": "ack;492"
+  },
+  {
+   "t_ns": 20487870935991,
+   "dir": "tx",
+   "text": "ping;493"
+  },
+  {
+   "t_ns": 20487874450870,
+   "dir": "rx",
+   "text": "ack;493"
+  },
+  {
+   "t_ns": 20487911325375,
+   "dir": "tx",
+   "text": "ping;494"
+  },
+  {
+   "t_ns": 20487915308365,
+   "dir": "rx",
+   "text": "ack;494"
+  },
+  {
+   "t_ns": 20487951649993,
+   "dir": "tx",
+   "text": "ping;495"
+  },
+  {
+   "t_ns": 20487954879637,
+   "dir": "rx",
+   "text": "ack;495"
+  },
+  {
+   "t_ns": 20487991978884,
+   "dir": "tx",
+   "text": "ping;496"
+  },
+  {
+   "t_ns": 20487996044883,
+   "dir": "rx",
+   "text": "ack;496"
+  },
+  {
+   "t_ns": 20488032318982,
+   "dir": "tx",
+   "text": "ping;497"
+  },
+  {
+   "t_ns": 20488036715980,
+   "dir": "rx",
+   "text": "ack;497"
+  },
+  {
+   "t_ns": 20488072664050,
+   "dir": "tx",
+   "text": "ping;498"
+  },
+  {
+   "t_ns": 20488076069135,
+   "dir": "rx",
+   "text": "ack;498"
+  },
+  {
+   "t_ns": 20488112987732,
+   "dir": "tx",
+   "text": "ping;499"
+  },
+  {
+   "t_ns": 20488117694834,
+   "dir": "rx",
+   "text": "ack;499"
+  },
+  {
+   "t_ns": 20488153260375,
+   "dir": "tx",
+   "text": "ping;500"
+  },
+  {
+   "t_ns": 20488157164970,
+   "dir": "rx",
+   "text": "ack;500"
+  },
+  {
+   "t_ns": 20488193579665,
+   "dir": "tx",
+   "text": "ping;501"
+  },
+  {
+   "t_ns": 20488197686091,
+   "dir": "rx",
+   "text": "ack;501"
+  },
+  {
+   "t_ns": 20488233913575,
+   "dir": "tx",
+   "text": "ping;502"
+  },
+  {
+   "t_ns": 20488237557707,
+   "dir": "rx",
+   "text": "ack;502"
+  },
+  {
+   "t_ns": 20488244648837,
+   "dir": "tx",
+   "text": "moveto;503;0.00"
+  },
+  {
+   "t_ns": 20488274242238,
+   "dir": "tx",
+   "text": "ping;504"
+  },
+  {
+   "t_ns": 20488302768903,
+   "dir": "rx",
+   "text": "ev;TRIAL;318921372;outcome=NONE;t_rel=310902468;t_touch=;t_move=311615468;t_out=;a0=-0.816;a_peak=-0.9;a_end=-0.9;tq_peak=;tq_out=;dur_thr=0"
+  },
+  {
+   "t_ns": 20488302768903,
+   "dir": "rx",
+   "text": "ack;503"
+  },
+  {
+   "t_ns": 20488305136266,
+   "dir": "rx",
+   "text": "ack;504"
+  },
+  {
+   "t_ns": 20488314492922,
+   "dir": "tx",
+   "text": "ping;505"
+  },
+  {
+   "t_ns": 20488318128857,
+   "dir": "rx",
+   "text": "ack;505"
+  },
+  {
+   "t_ns": 20488354834307,
+   "dir": "tx",
+   "text": "ping;506"
+  },
+  {
+   "t_ns": 20488358503987,
+   "dir": "rx",
+   "text": "ack;506"
+  },
+  {
+   "t_ns": 20488382911572,
+   "dir": "rx",
+   "text": "ev;TARGET;319056638;angle=-0.183"
+  },
+  {
+   "t_ns": 20488383058856,
+   "dir": "tx",
+   "text": "status;507"
+  },
+  {
+   "t_ns": 20488387515085,
+   "dir": "rx",
+   "text": "ack;507;state=ARMED;angle=-0.183;xactual=0.0;torque=;brake=;homed=1;limit=0;faults=0;hv=1;t=319059427"
+  },
+  {
+   "t_ns": 20488387668228,
+   "dir": "tx",
+   "text": "fetch;508;0;32"
+  },
+  {
+   "t_ns": 20488393600616,
+   "dir": "rx",
+   "text": "ack;508;n=32;k0=0;t0=318421468;dt_us=1000;pre=500;lost=0"
+  },
+  {
+   "t_ns": 20488393600616,
+   "dir": "rx",
+   "text": "cap;0;-1.716;"
+  },
+  {
+   "t_ns": 20488393600616,
+   "dir": "rx",
+   "text": "cap;1;-1.716;"
+  },
+  {
+   "t_ns": 20488393600616,
+   "dir": "rx",
+   "text": "cap;2;-1.716;"
+  },
+  {
+   "t_ns": 20488393600616,
+   "dir": "rx",
+   "text": "cap;3;-1.716;"
+  },
+  {
+   "t_ns": 20488393600616,
+   "dir": "rx",
+   "text": "cap;4;-1.716;"
+  },
+  {
+   "t_ns": 20488393674208,
+   "dir": "rx",
+   "text": "cap;5;-1.716;"
+  },
+  {
+   "t_ns": 20488393674208,
+   "dir": "rx",
+   "text": "cap;6;-1.716;"
+  },
+  {
+   "t_ns": 20488393674208,
+   "dir": "rx",
+   "text": "cap;7;-1.716;"
+  },
+  {
+   "t_ns": 20488393674208,
+   "dir": "rx",
+   "text": "cap;8;-1.716;"
+  },
+  {
+   "t_ns": 20488393674208,
+   "dir": "rx",
+   "text": "cap;9;-1.716;"
+  },
+  {
+   "t_ns": 20488393674208,
+   "dir": "rx",
+   "text": "cap;10;-1.716;"
+  },
+  {
+   "t_ns": 20488393674208,
+   "dir": "rx",
+   "text": "cap;11;-1.716;"
+  },
+  {
+   "t_ns": 20488393674208,
+   "dir": "rx",
+   "text": "cap;12;-1.716;"
+  },
+  {
+   "t_ns": 20488394850324,
+   "dir": "rx",
+   "text": "cap;13;-1.716;"
+  },
+  {
+   "t_ns": 20488394931320,
+   "dir": "rx",
+   "text": "cap;14;-1.716;"
+  },
+  {
+   "t_ns": 20488394931320,
+   "dir": "rx",
+   "text": "cap;15;-1.716;"
+  },
+  {
+   "t_ns": 20488394931320,
+   "dir": "rx",
+   "text": "cap;16;-1.716;"
+  },
+  {
+   "t_ns": 20488394931320,
+   "dir": "rx",
+   "text": "cap;17;-1.716;"
+  },
+  {
+   "t_ns": 20488394931320,
+   "dir": "rx",
+   "text": "cap;18;-1.716;"
+  },
+  {
+   "t_ns": 20488394931320,
+   "dir": "rx",
+   "text": "cap;19;-1.716;"
+  },
+  {
+   "t_ns": 20488394931320,
+   "dir": "rx",
+   "text": "cap;20;-1.716;"
+  },
+  {
+   "t_ns": 20488394931320,
+   "dir": "rx",
+   "text": "cap;21;-1.716;"
+  },
+  {
+   "t_ns": 20488395072121,
+   "dir": "tx",
+   "text": "ping;509"
+  },
+  {
+   "t_ns": 20488395784636,
+   "dir": "rx",
+   "text": "cap;22;-1.716;"
+  },
+  {
+   "t_ns": 20488395784636,
+   "dir": "rx",
+   "text": "cap;23;-1.716;"
+  },
+  {
+   "t_ns": 20488395784636,
+   "dir": "rx",
+   "text": "cap;24;-1.716;"
+  },
+  {
+   "t_ns": 20488395784636,
+   "dir": "rx",
+   "text": "cap;25;-1.716;"
+  },
+  {
+   "t_ns": 20488395784636,
+   "dir": "rx",
+   "text": "cap;26;-1.716;"
+  },
+  {
+   "t_ns": 20488395784636,
+   "dir": "rx",
+   "text": "cap;27;-1.716;"
+  },
+  {
+   "t_ns": 20488395784636,
+   "dir": "rx",
+   "text": "cap;28;-1.716;"
+  },
+  {
+   "t_ns": 20488395784636,
+   "dir": "rx",
+   "text": "cap;29;-1.716;"
+  },
+  {
+   "t_ns": 20488395784636,
+   "dir": "rx",
+   "text": "cap;30;-1.716;"
+  },
+  {
+   "t_ns": 20488395784636,
+   "dir": "rx",
+   "text": "cap;31;-1.716;"
+  },
+  {
+   "t_ns": 20488395784636,
+   "dir": "rx",
+   "text": "cap;end"
+  },
+  {
+   "t_ns": 20488395995302,
+   "dir": "tx",
+   "text": "fetch;510;32;32"
+  },
+  {
+   "t_ns": 20488398800379,
+   "dir": "rx",
+   "text": "ack;509"
+  },
+  {
+   "t_ns": 20488403377159,
+   "dir": "rx",
+   "text": "ack;510;n=32;k0=32;t0=318453468;dt_us=1000;pre=500;lost=0"
+  },
+  {
+   "t_ns": 20488403377159,
+   "dir": "rx",
+   "text": "cap;32;-1.716;"
+  },
+  {
+   "t_ns": 20488403377159,
+   "dir": "rx",
+   "text": "cap;33;-1.716;"
+  },
+  {
+   "t_ns": 20488403377159,
+   "dir": "rx",
+   "text": "cap;34;-1.716;"
+  },
+  {
+   "t_ns": 20488403377159,
+   "dir": "rx",
+   "text": "cap;35;-1.716;"
+  },
+  {
+   "t_ns": 20488403941735,
+   "dir": "rx",
+   "text": "cap;36;-1.716;"
+  },
+  {
+   "t_ns": 20488403941735,
+   "dir": "rx",
+   "text": "cap;37;-1.716;"
+  },
+  {
+   "t_ns": 20488403941735,
+   "dir": "rx",
+   "text": "cap;38;-1.716;"
+  },
+  {
+   "t_ns": 20488403941735,
+   "dir": "rx",
+   "text": "cap;39;-1.716;"
+  },
+  {
+   "t_ns": 20488403941735,
+   "dir": "rx",
+   "text": "cap;40;-1.716;"
+  },
+  {
+   "t_ns": 20488403941735,
+   "dir": "rx",
+   "text": "cap;41;-1.716;"
+  },
+  {
+   "t_ns": 20488403941735,
+   "dir": "rx",
+   "text": "cap;42;-1.716;"
+  },
+  {
+   "t_ns": 20488403941735,
+   "dir": "rx",
+   "text": "cap;43;-1.716;"
+  },
+  {
+   "t_ns": 20488403941735,
+   "dir": "rx",
+   "text": "cap;44;-1.716;"
+  },
+  {
+   "t_ns": 20488405205873,
+   "dir": "rx",
+   "text": "cap;45;-1.716;"
+  },
+  {
+   "t_ns": 20488405205873,
+   "dir": "rx",
+   "text": "cap;46;-1.716;"
+  },
+  {
+   "t_ns": 20488405205873,
+   "dir": "rx",
+   "text": "cap;47;-1.716;"
+  },
+  {
+   "t_ns": 20488405205873,
+   "dir": "rx",
+   "text": "cap;48;-1.716;"
+  },
+  {
+   "t_ns": 20488405205873,
+   "dir": "rx",
+   "text": "cap;49;-1.716;"
+  },
+  {
+   "t_ns": 20488405205873,
+   "dir": "rx",
+   "text": "cap;50;-1.716;"
+  },
+  {
+   "t_ns": 20488405205873,
+   "dir": "rx",
+   "text": "cap;51;-1.716;"
+  },
+  {
+   "t_ns": 20488405205873,
+   "dir": "rx",
+   "text": "cap;52;-1.716;"
+  },
+  {
+   "t_ns": 20488405968513,
+   "dir": "rx",
+   "text": "cap;53;-1.716;"
+  },
+  {
+   "t_ns": 20488405968513,
+   "dir": "rx",
+   "text": "cap;54;-1.716;"
+  },
+  {
+   "t_ns": 20488405968513,
+   "dir": "rx",
+   "text": "cap;55;-1.716;"
+  },
+  {
+   "t_ns": 20488405968513,
+   "dir": "rx",
+   "text": "cap;56;-1.716;"
+  },
+  {
+   "t_ns": 20488405968513,
+   "dir": "rx",
+   "text": "cap;57;-1.716;"
+  },
+  {
+   "t_ns": 20488405968513,
+   "dir": "rx",
+   "text": "cap;58;-1.716;"
+  },
+  {
+   "t_ns": 20488405968513,
+   "dir": "rx",
+   "text": "cap;59;-1.716;"
+  },
+  {
+   "t_ns": 20488405968513,
+   "dir": "rx",
+   "text": "cap;60;-1.716;"
+  },
+  {
+   "t_ns": 20488405968513,
+   "dir": "rx",
+   "text": "cap;61;-1.716;"
+  },
+  {
+   "t_ns": 20488406260056,
+   "dir": "rx",
+   "text": "cap;62;-1.716;"
+  },
+  {
+   "t_ns": 20488406260056,
+   "dir": "rx",
+   "text": "cap;63;-1.716;"
+  },
+  {
+   "t_ns": 20488406260056,
+   "dir": "rx",
+   "text": "cap;end"
+  },
+  {
+   "t_ns": 20488406406736,
+   "dir": "tx",
+   "text": "fetch;511;64;32"
+  },
+  {
+   "t_ns": 20488412227152,
+   "dir": "rx",
+   "text": "ack;511;n=32;k0=64;t0=318485468;dt_us=1000;pre=500;lost=0"
+  },
+  {
+   "t_ns": 20488412227152,
+   "dir": "rx",
+   "text": "cap;64;-1.716;"
+  },
+  {
+   "t_ns": 20488412227152,
+   "dir": "rx",
+   "text": "cap;65;-1.716;"
+  },
+  {
+   "t_ns": 20488412227152,
+   "dir": "rx",
+   "text": "cap;66;-1.716;"
+  },
+  {
+   "t_ns": 20488412227152,
+   "dir": "rx",
+   "text": "cap;67;-1.716;"
+  },
+  {
+   "t_ns": 20488412791653,
+   "dir": "rx",
+   "text": "cap;68;-1.716;"
+  },
+  {
+   "t_ns": 20488412791653,
+   "dir": "rx",
+   "text": "cap;69;-1.716;"
+  },
+  {
+   "t_ns": 20488412791653,
+   "dir": "rx",
+   "text": "cap;70;-1.716;"
+  },
+  {
+   "t_ns": 20488412791653,
+   "dir": "rx",
+   "text": "cap;71;-1.716;"
+  },
+  {
+   "t_ns": 20488412791653,
+   "dir": "rx",
+   "text": "cap;72;-1.716;"
+  },
+  {
+   "t_ns": 20488412791653,
+   "dir": "rx",
+   "text": "cap;73;-1.716;"
+  },
+  {
+   "t_ns": 20488412791653,
+   "dir": "rx",
+   "text": "cap;74;-1.716;"
+  },
+  {
+   "t_ns": 20488412791653,
+   "dir": "rx",
+   "text": "cap;75;-1.716;"
+  },
+  {
+   "t_ns": 20488412791653,
+   "dir": "rx",
+   "text": "cap;76;-1.716;"
+  },
+  {
+   "t_ns": 20488413095409,
+   "dir": "rx",
+   "text": "cap;77;-1.716;"
+  },
+  {
+   "t_ns": 20488413095409,
+   "dir": "rx",
+   "text": "cap;78;-1.716;"
+  },
+  {
+   "t_ns": 20488413095409,
+   "dir": "rx",
+   "text": "cap;79;-1.716;"
+  },
+  {
+   "t_ns": 20488413095409,
+   "dir": "rx",
+   "text": "cap;80;-1.716;"
+  },
+  {
+   "t_ns": 20488413095409,
+   "dir": "rx",
+   "text": "cap;81;-1.716;"
+  },
+  {
+   "t_ns": 20488413095409,
+   "dir": "rx",
+   "text": "cap;82;-1.716;"
+  },
+  {
+   "t_ns": 20488413095409,
+   "dir": "rx",
+   "text": "cap;83;-1.716;"
+  },
+  {
+   "t_ns": 20488413095409,
+   "dir": "rx",
+   "text": "cap;84;-1.716;"
+  },
+  {
+   "t_ns": 20488414214515,
+   "dir": "rx",
+   "text": "cap;85;-1.716;"
+  },
+  {
+   "t_ns": 20488414214515,
+   "dir": "rx",
+   "text": "cap;86;-1.716;"
+  },
+  {
+   "t_ns": 20488414214515,
+   "dir": "rx",
+   "text": "cap;87;-1.716;"
+  },
+  {
+   "t_ns": 20488414214515,
+   "dir": "rx",
+   "text": "cap;88;-1.716;"
+  },
+  {
+   "t_ns": 20488414214515,
+   "dir": "rx",
+   "text": "cap;89;-1.716;"
+  },
+  {
+   "t_ns": 20488414214515,
+   "dir": "rx",
+   "text": "cap;90;-1.716;"
+  },
+  {
+   "t_ns": 20488414214515,
+   "dir": "rx",
+   "text": "cap;91;-1.716;"
+  },
+  {
+   "t_ns": 20488414214515,
+   "dir": "rx",
+   "text": "cap;92;-1.716;"
+  },
+  {
+   "t_ns": 20488414214515,
+   "dir": "rx",
+   "text": "cap;93;-1.716;"
+  },
+  {
+   "t_ns": 20488414910317,
+   "dir": "rx",
+   "text": "cap;94;-1.716;"
+  },
+  {
+   "t_ns": 20488414910317,
+   "dir": "rx",
+   "text": "cap;95;-1.716;"
+  },
+  {
+   "t_ns": 20488414910317,
+   "dir": "rx",
+   "text": "cap;end"
+  },
+  {
+   "t_ns": 20488415102598,
+   "dir": "tx",
+   "text": "fetch;512;96;32"
+  },
+  {
+   "t_ns": 20488421039759,
+   "dir": "rx",
+   "text": "ack;512;n=32;k0=96;t0=318517468;dt_us=1000;pre=500;lost=0"
+  },
+  {
+   "t_ns": 20488421039759,
+   "dir": "rx",
+   "text": "cap;96;-1.716;"
+  },
+  {
+   "t_ns": 20488421039759,
+   "dir": "rx",
+   "text": "cap;97;-1.716;"
+  },
+  {
+   "t_ns": 20488421039759,
+   "dir": "rx",
+   "text": "cap;98;-1.716;"
+  },
+  {
+   "t_ns": 20488421039759,
+   "dir": "rx",
+   "text": "cap;99;-1.716;"
+  },
+  {
+   "t_ns": 20488421039759,
+   "dir": "rx",
+   "text": "cap;100;-1.716;"
+  },
+  {
+   "t_ns": 20488421039759,
+   "dir": "rx",
+   "text": "cap;101;-1.716;"
+  },
+  {
+   "t_ns": 20488422010090,
+   "dir": "rx",
+   "text": "cap;102;-1.716;"
+  },
+  {
+   "t_ns": 20488422010090,
+   "dir": "rx",
+   "text": "cap;103;-1.716;"
+  },
+  {
+   "t_ns": 20488422010090,
+   "dir": "rx",
+   "text": "cap;104;-1.716;"
+  },
+  {
+   "t_ns": 20488422010090,
+   "dir": "rx",
+   "text": "cap;105;-1.716;"
+  },
+  {
+   "t_ns": 20488422010090,
+   "dir": "rx",
+   "text": "cap;106;-1.716;"
+  },
+  {
+   "t_ns": 20488422010090,
+   "dir": "rx",
+   "text": "cap;107;-1.716;"
+  },
+  {
+   "t_ns": 20488422010090,
+   "dir": "rx",
+   "text": "cap;108;-1.716;"
+  },
+  {
+   "t_ns": 20488422010090,
+   "dir": "rx",
+   "text": "cap;109;-1.716;"
+  },
+  {
+   "t_ns": 20488423348983,
+   "dir": "rx",
+   "text": "cap;110;-1.716;"
+  },
+  {
+   "t_ns": 20488423348983,
+   "dir": "rx",
+   "text": "cap;111;-1.716;"
+  },
+  {
+   "t_ns": 20488423348983,
+   "dir": "rx",
+   "text": "cap;112;-1.716;"
+  },
+  {
+   "t_ns": 20488423348983,
+   "dir": "rx",
+   "text": "cap;113;-1.716;"
+  },
+  {
+   "t_ns": 20488423348983,
+   "dir": "rx",
+   "text": "cap;114;-1.716;"
+  },
+  {
+   "t_ns": 20488423348983,
+   "dir": "rx",
+   "text": "cap;115;-1.716;"
+  },
+  {
+   "t_ns": 20488423348983,
+   "dir": "rx",
+   "text": "cap;116;-1.716;"
+  },
+  {
+   "t_ns": 20488423348983,
+   "dir": "rx",
+   "text": "cap;117;-1.716;"
+  },
+  {
+   "t_ns": 20488425350352,
+   "dir": "rx",
+   "text": "cap;118;-1.716;"
+  },
+  {
+   "t_ns": 20488425350352,
+   "dir": "rx",
+   "text": "cap;119;-1.716;"
+  },
+  {
+   "t_ns": 20488425350352,
+   "dir": "rx",
+   "text": "cap;120;-1.716;"
+  },
+  {
+   "t_ns": 20488425350352,
+   "dir": "rx",
+   "text": "cap;121;-1.716;"
+  },
+  {
+   "t_ns": 20488425350352,
+   "dir": "rx",
+   "text": "cap;122;-1.716;"
+  },
+  {
+   "t_ns": 20488425350352,
+   "dir": "rx",
+   "text": "cap;123;-1.716;"
+  },
+  {
+   "t_ns": 20488425350352,
+   "dir": "rx",
+   "text": "cap;124;-1.716;"
+  },
+  {
+   "t_ns": 20488425350352,
+   "dir": "rx",
+   "text": "cap;125;-1.716;"
+  },
+  {
+   "t_ns": 20488425350352,
+   "dir": "rx",
+   "text": "cap;126;-1.716;"
+  },
+  {
+   "t_ns": 20488425350352,
+   "dir": "rx",
+   "text": "cap;127;-1.716;"
+  },
+  {
+   "t_ns": 20488425350352,
+   "dir": "rx",
+   "text": "cap;end"
+  },
+  {
+   "t_ns": 20488425572799,
+   "dir": "tx",
+   "text": "fetch;513;128;32"
+  },
+  {
+   "t_ns": 20488431317750,
+   "dir": "rx",
+   "text": "ack;513;n=32;k0=128;t0=318549468;dt_us=1000;pre=500;lost=0"
+  },
+  {
+   "t_ns": 20488431317750,
+   "dir": "rx",
+   "text": "cap;128;-1.716;"
+  },
+  {
+   "t_ns": 20488431317750,
+   "dir": "rx",
+   "text": "cap;129;-1.716;"
+  },
+  {
+   "t_ns": 20488431317750,
+   "dir": "rx",
+   "text": "cap;130;-1.716;"
+  },
+  {
+   "t_ns": 20488431317750,
+   "dir": "rx",
+   "text": "cap;131;-1.716;"
+  },
+  {
+   "t_ns": 20488431685954,
+   "dir": "rx",
+   "text": "cap;132;-1.716;"
+  },
+  {
+   "t_ns": 20488431685954,
+   "dir": "rx",
+   "text": "cap;133;-1.716;"
+  },
+  {
+   "t_ns": 20488431685954,
+   "dir": "rx",
+   "text": "cap;134;-1.716;"
+  },
+  {
+   "t_ns": 20488431685954,
+   "dir": "rx",
+   "text": "cap;135;-1.716;"
+  },
+  {
+   "t_ns": 20488431685954,
+   "dir": "rx",
+   "text": "cap;136;-1.716;"
+  },
+  {
+   "t_ns": 20488431685954,
+   "dir": "rx",
+   "text": "cap;137;-1.716;"
+  },
+  {
+   "t_ns": 20488431685954,
+   "dir": "rx",
+   "text": "cap;138;-1.716;"
+  },
+  {
+   "t_ns": 20488431685954,
+   "dir": "rx",
+   "text": "cap;139;-1.716;"
+  },
+  {
+   "t_ns": 20488432148385,
+   "dir": "rx",
+   "text": "cap;140;-1.716;"
+  },
+  {
+   "t_ns": 20488432148385,
+   "dir": "rx",
+   "text": "cap;141;-1.716;"
+  },
+  {
+   "t_ns": 20488432148385,
+   "dir": "rx",
+   "text": "cap;142;-1.716;"
+  },
+  {
+   "t_ns": 20488432148385,
+   "dir": "rx",
+   "text": "cap;143;-1.716;"
+  },
+  {
+   "t_ns": 20488432148385,
+   "dir": "rx",
+   "text": "cap;144;-1.716;"
+  },
+  {
+   "t_ns": 20488432148385,
+   "dir": "rx",
+   "text": "cap;145;-1.716;"
+  },
+  {
+   "t_ns": 20488432148385,
+   "dir": "rx",
+   "text": "cap;146;-1.716;"
+  },
+  {
+   "t_ns": 20488432148385,
+   "dir": "rx",
+   "text": "cap;147;-1.716;"
+  },
+  {
+   "t_ns": 20488432998710,
+   "dir": "rx",
+   "text": "cap;148;-1.716;"
+  },
+  {
+   "t_ns": 20488432998710,
+   "dir": "rx",
+   "text": "cap;149;-1.716;"
+  },
+  {
+   "t_ns": 20488432998710,
+   "dir": "rx",
+   "text": "cap;150;-1.716;"
+  },
+  {
+   "t_ns": 20488432998710,
+   "dir": "rx",
+   "text": "cap;151;-1.716;"
+  },
+  {
+   "t_ns": 20488432998710,
+   "dir": "rx",
+   "text": "cap;152;-1.716;"
+  },
+  {
+   "t_ns": 20488432998710,
+   "dir": "rx",
+   "text": "cap;153;-1.716;"
+  },
+  {
+   "t_ns": 20488432998710,
+   "dir": "rx",
+   "text": "cap;154;-1.716;"
+  },
+  {
+   "t_ns": 20488432998710,
+   "dir": "rx",
+   "text": "cap;155;-1.716;"
+  },
+  {
+   "t_ns": 20488433780854,
+   "dir": "rx",
+   "text": "cap;156;-1.716;"
+  },
+  {
+   "t_ns": 20488433780854,
+   "dir": "rx",
+   "text": "cap;157;-1.716;"
+  },
+  {
+   "t_ns": 20488433780854,
+   "dir": "rx",
+   "text": "cap;158;-1.716;"
+  },
+  {
+   "t_ns": 20488433780854,
+   "dir": "rx",
+   "text": "cap;159;-1.716;"
+  },
+  {
+   "t_ns": 20488433780854,
+   "dir": "rx",
+   "text": "cap;end"
+  },
+  {
+   "t_ns": 20488433979970,
+   "dir": "tx",
+   "text": "fetch;514;160;32"
+  },
+  {
+   "t_ns": 20488435396885,
+   "dir": "tx",
+   "text": "ping;515"
+  },
+  {
+   "t_ns": 20488439857115,
+   "dir": "rx",
+   "text": "ack;514;n=32;k0=160;t0=318581468;dt_us=1000;pre=500;lost=0"
+  },
+  {
+   "t_ns": 20488439857115,
+   "dir": "rx",
+   "text": "cap;160;-1.716;"
+  },
+  {
+   "t_ns": 20488439857115,
+   "dir": "rx",
+   "text": "cap;161;-1.716;"
+  },
+  {
+   "t_ns": 20488439857115,
+   "dir": "rx",
+   "text": "cap;162;-1.716;"
+  },
+  {
+   "t_ns": 20488439857115,
+   "dir": "rx",
+   "text": "cap;163;-1.716;"
+  },
+  {
+   "t_ns": 20488441861812,
+   "dir": "rx",
+   "text": "cap;164;-1.716;"
+  },
+  {
+   "t_ns": 20488441861812,
+   "dir": "rx",
+   "text": "cap;165;-1.716;"
+  },
+  {
+   "t_ns": 20488441861812,
+   "dir": "rx",
+   "text": "cap;166;-1.716;"
+  },
+  {
+   "t_ns": 20488441861812,
+   "dir": "rx",
+   "text": "cap;167;-1.716;"
+  },
+  {
+   "t_ns": 20488441861812,
+   "dir": "rx",
+   "text": "cap;168;-1.716;"
+  },
+  {
+   "t_ns": 20488441861812,
+   "dir": "rx",
+   "text": "cap;169;-1.716;"
+  },
+  {
+   "t_ns": 20488441861812,
+   "dir": "rx",
+   "text": "cap;170;-1.716;"
+  },
+  {
+   "t_ns": 20488441861812,
+   "dir": "rx",
+   "text": "cap;171;-1.716;"
+  },
+  {
+   "t_ns": 20488442421507,
+   "dir": "rx",
+   "text": "cap;172;-1.716;"
+  },
+  {
+   "t_ns": 20488442421507,
+   "dir": "rx",
+   "text": "cap;173;-1.716;"
+  },
+  {
+   "t_ns": 20488442421507,
+   "dir": "rx",
+   "text": "cap;174;-1.716;"
+  },
+  {
+   "t_ns": 20488442421507,
+   "dir": "rx",
+   "text": "cap;175;-1.716;"
+  },
+  {
+   "t_ns": 20488442421507,
+   "dir": "rx",
+   "text": "cap;176;-1.716;"
+  },
+  {
+   "t_ns": 20488442421507,
+   "dir": "rx",
+   "text": "cap;177;-1.716;"
+  },
+  {
+   "t_ns": 20488442421507,
+   "dir": "rx",
+   "text": "cap;178;-1.716;"
+  },
+  {
+   "t_ns": 20488442421507,
+   "dir": "rx",
+   "text": "cap;179;-1.716;"
+  },
+  {
+   "t_ns": 20488443168034,
+   "dir": "rx",
+   "text": "cap;180;-1.716;"
+  },
+  {
+   "t_ns": 20488443168034,
+   "dir": "rx",
+   "text": "cap;181;-1.716;"
+  },
+  {
+   "t_ns": 20488443168034,
+   "dir": "rx",
+   "text": "cap;182;-1.716;"
+  },
+  {
+   "t_ns": 20488443168034,
+   "dir": "rx",
+   "text": "cap;183;-1.716;"
+  },
+  {
+   "t_ns": 20488443168034,
+   "dir": "rx",
+   "text": "cap;184;-1.716;"
+  },
+  {
+   "t_ns": 20488443168034,
+   "dir": "rx",
+   "text": "cap;185;-1.716;"
+  },
+  {
+   "t_ns": 20488443168034,
+   "dir": "rx",
+   "text": "cap;186;-1.716;"
+  },
+  {
+   "t_ns": 20488443168034,
+   "dir": "rx",
+   "text": "cap;187;-1.716;"
+  },
+  {
+   "t_ns": 20488444131221,
+   "dir": "rx",
+   "text": "cap;188;-1.716;"
+  },
+  {
+   "t_ns": 20488444131221,
+   "dir": "rx",
+   "text": "cap;189;-1.716;"
+  },
+  {
+   "t_ns": 20488444131221,
+   "dir": "rx",
+   "text": "cap;190;-1.716;"
+  },
+  {
+   "t_ns": 20488444131221,
+   "dir": "rx",
+   "text": "cap;191;-1.716;"
+  },
+  {
+   "t_ns": 20488444131221,
+   "dir": "rx",
+   "text": "cap;end"
+  },
+  {
+   "t_ns": 20488444131221,
+   "dir": "rx",
+   "text": "ack;515"
+  },
+  {
+   "t_ns": 20488444315347,
+   "dir": "tx",
+   "text": "fetch;516;192;32"
+  },
+  {
+   "t_ns": 20488449878824,
+   "dir": "rx",
+   "text": "ack;516;n=32;k0=192;t0=318613468;dt_us=1000;pre=500;lost=0"
+  },
+  {
+   "t_ns": 20488449878824,
+   "dir": "rx",
+   "text": "cap;192;-1.716;"
+  },
+  {
+   "t_ns": 20488449878824,
+   "dir": "rx",
+   "text": "cap;193;-1.716;"
+  },
+  {
+   "t_ns": 20488449878824,
+   "dir": "rx",
+   "text": "cap;194;-1.716;"
+  },
+  {
+   "t_ns": 20488449878824,
+   "dir": "rx",
+   "text": "cap;195;-1.716;"
+  },
+  {
+   "t_ns": 20488451200022,
+   "dir": "rx",
+   "text": "cap;196;-1.716;"
+  },
+  {
+   "t_ns": 20488451200022,
+   "dir": "rx",
+   "text": "cap;197;-1.716;"
+  },
+  {
+   "t_ns": 20488451200022,
+   "dir": "rx",
+   "text": "cap;198;-1.716;"
+  },
+  {
+   "t_ns": 20488451200022,
+   "dir": "rx",
+   "text": "cap;199;-1.716;"
+  },
+  {
+   "t_ns": 20488451200022,
+   "dir": "rx",
+   "text": "cap;200;-1.716;"
+  },
+  {
+   "t_ns": 20488451200022,
+   "dir": "rx",
+   "text": "cap;201;-1.716;"
+  },
+  {
+   "t_ns": 20488451200022,
+   "dir": "rx",
+   "text": "cap;202;-1.716;"
+  },
+  {
+   "t_ns": 20488451200022,
+   "dir": "rx",
+   "text": "cap;203;-1.716;"
+  },
+  {
+   "t_ns": 20488451437216,
+   "dir": "rx",
+   "text": "cap;204;-1.716;"
+  },
+  {
+   "t_ns": 20488451437216,
+   "dir": "rx",
+   "text": "cap;205;-1.716;"
+  },
+  {
+   "t_ns": 20488451437216,
+   "dir": "rx",
+   "text": "cap;206;-1.716;"
+  },
+  {
+   "t_ns": 20488451437216,
+   "dir": "rx",
+   "text": "cap;207;-1.716;"
+  },
+  {
+   "t_ns": 20488451437216,
+   "dir": "rx",
+   "text": "cap;208;-1.716;"
+  },
+  {
+   "t_ns": 20488451437216,
+   "dir": "rx",
+   "text": "cap;209;-1.716;"
+  },
+  {
+   "t_ns": 20488451437216,
+   "dir": "rx",
+   "text": "cap;210;-1.716;"
+  },
+  {
+   "t_ns": 20488451437216,
+   "dir": "rx",
+   "text": "cap;211;-1.716;"
+  },
+  {
+   "t_ns": 20488451694062,
+   "dir": "rx",
+   "text": "cap;212;-1.716;"
+  },
+  {
+   "t_ns": 20488451694062,
+   "dir": "rx",
+   "text": "cap;213;-1.716;"
+  },
+  {
+   "t_ns": 20488451694062,
+   "dir": "rx",
+   "text": "cap;214;-1.716;"
+  },
+  {
+   "t_ns": 20488451694062,
+   "dir": "rx",
+   "text": "cap;215;-1.716;"
+  },
+  {
+   "t_ns": 20488451694062,
+   "dir": "rx",
+   "text": "cap;216;-1.716;"
+  },
+  {
+   "t_ns": 20488451694062,
+   "dir": "rx",
+   "text": "cap;217;-1.716;"
+  },
+  {
+   "t_ns": 20488451694062,
+   "dir": "rx",
+   "text": "cap;218;-1.716;"
+  },
+  {
+   "t_ns": 20488451694062,
+   "dir": "rx",
+   "text": "cap;219;-1.716;"
+  },
+  {
+   "t_ns": 20488453908376,
+   "dir": "rx",
+   "text": "cap;220;-1.716;"
+  },
+  {
+   "t_ns": 20488453908376,
+   "dir": "rx",
+   "text": "cap;221;-1.716;"
+  },
+  {
+   "t_ns": 20488453908376,
+   "dir": "rx",
+   "text": "cap;222;-1.716;"
+  },
+  {
+   "t_ns": 20488453908376,
+   "dir": "rx",
+   "text": "cap;223;-1.716;"
+  },
+  {
+   "t_ns": 20488453908376,
+   "dir": "rx",
+   "text": "cap;end"
+  },
+  {
+   "t_ns": 20488454118675,
+   "dir": "tx",
+   "text": "fetch;517;224;32"
+  },
+  {
+   "t_ns": 20488459981686,
+   "dir": "rx",
+   "text": "ack;517;n=32;k0=224;t0=318645468;dt_us=1000;pre=500;lost=0"
+  },
+  {
+   "t_ns": 20488459981686,
+   "dir": "rx",
+   "text": "cap;224;-1.716;"
+  },
+  {
+   "t_ns": 20488459981686,
+   "dir": "rx",
+   "text": "cap;225;-1.716;"
+  },
+  {
+   "t_ns": 20488459981686,
+   "dir": "rx",
+   "text": "cap;226;-1.716;"
+  },
+  {
+   "t_ns": 20488459981686,
+   "dir": "rx",
+   "text": "cap;227;-1.716;"
+  },
+  {
+   "t_ns": 20488460073195,
+   "dir": "rx",
+   "text": "cap;228;-1.716;"
+  },
+  {
+   "t_ns": 20488460073195,
+   "dir": "rx",
+   "text": "cap;229;-1.716;"
+  },
+  {
+   "t_ns": 20488460073195,
+   "dir": "rx",
+   "text": "cap;230;-1.716;"
+  },
+  {
+   "t_ns": 20488460073195,
+   "dir": "rx",
+   "text": "cap;231;-1.716;"
+  },
+  {
+   "t_ns": 20488460073195,
+   "dir": "rx",
+   "text": "cap;232;-1.716;"
+  },
+  {
+   "t_ns": 20488460073195,
+   "dir": "rx",
+   "text": "cap;233;-1.716;"
+  },
+  {
+   "t_ns": 20488460073195,
+   "dir": "rx",
+   "text": "cap;234;-1.716;"
+  },
+  {
+   "t_ns": 20488460073195,
+   "dir": "rx",
+   "text": "cap;235;-1.716;"
+  },
+  {
+   "t_ns": 20488460931281,
+   "dir": "rx",
+   "text": "cap;236;-1.716;"
+  },
+  {
+   "t_ns": 20488460931281,
+   "dir": "rx",
+   "text": "cap;237;-1.716;"
+  },
+  {
+   "t_ns": 20488460931281,
+   "dir": "rx",
+   "text": "cap;238;-1.716;"
+  },
+  {
+   "t_ns": 20488460931281,
+   "dir": "rx",
+   "text": "cap;239;-1.716;"
+  },
+  {
+   "t_ns": 20488460931281,
+   "dir": "rx",
+   "text": "cap;240;-1.716;"
+  },
+  {
+   "t_ns": 20488460931281,
+   "dir": "rx",
+   "text": "cap;241;-1.716;"
+  },
+  {
+   "t_ns": 20488460931281,
+   "dir": "rx",
+   "text": "cap;242;-1.716;"
+  },
+  {
+   "t_ns": 20488460931281,
+   "dir": "rx",
+   "text": "cap;243;-1.716;"
+  },
+  {
+   "t_ns": 20488461139907,
+   "dir": "rx",
+   "text": "cap;244;-1.716;"
+  },
+  {
+   "t_ns": 20488461139907,
+   "dir": "rx",
+   "text": "cap;245;-1.716;"
+  },
+  {
+   "t_ns": 20488461139907,
+   "dir": "rx",
+   "text": "cap;246;-1.716;"
+  },
+  {
+   "t_ns": 20488461139907,
+   "dir": "rx",
+   "text": "cap;247;-1.716;"
+  },
+  {
+   "t_ns": 20488461139907,
+   "dir": "rx",
+   "text": "cap;248;-1.716;"
+  },
+  {
+   "t_ns": 20488461139907,
+   "dir": "rx",
+   "text": "cap;249;-1.716;"
+  },
+  {
+   "t_ns": 20488461139907,
+   "dir": "rx",
+   "text": "cap;250;-1.716;"
+  },
+  {
+   "t_ns": 20488461139907,
+   "dir": "rx",
+   "text": "cap;251;-1.716;"
+  },
+  {
+   "t_ns": 20488462277617,
+   "dir": "rx",
+   "text": "cap;252;-1.716;"
+  },
+  {
+   "t_ns": 20488462277617,
+   "dir": "rx",
+   "text": "cap;253;-1.716;"
+  },
+  {
+   "t_ns": 20488462277617,
+   "dir": "rx",
+   "text": "cap;254;-1.716;"
+  },
+  {
+   "t_ns": 20488462277617,
+   "dir": "rx",
+   "text": "cap;255;-1.716;"
+  },
+  {
+   "t_ns": 20488462277617,
+   "dir": "rx",
+   "text": "cap;end"
+  },
+  {
+   "t_ns": 20488462482308,
+   "dir": "tx",
+   "text": "fetch;518;256;32"
+  },
+  {
+   "t_ns": 20488468079054,
+   "dir": "rx",
+   "text": "ack;518;n=32;k0=256;t0=318677468;dt_us=1000;pre=500;lost=0"
+  },
+  {
+   "t_ns": 20488468079054,
+   "dir": "rx",
+   "text": "cap;256;-1.716;"
+  },
+  {
+   "t_ns": 20488468079054,
+   "dir": "rx",
+   "text": "cap;257;-1.716;"
+  },
+  {
+   "t_ns": 20488468079054,
+   "dir": "rx",
+   "text": "cap;258;-1.716;"
+  },
+  {
+   "t_ns": 20488468079054,
+   "dir": "rx",
+   "text": "cap;259;-1.716;"
+  },
+  {
+   "t_ns": 20488468264993,
+   "dir": "rx",
+   "text": "cap;260;-1.716;"
+  },
+  {
+   "t_ns": 20488468264993,
+   "dir": "rx",
+   "text": "cap;261;-1.716;"
+  },
+  {
+   "t_ns": 20488468264993,
+   "dir": "rx",
+   "text": "cap;262;-1.716;"
+  },
+  {
+   "t_ns": 20488468264993,
+   "dir": "rx",
+   "text": "cap;263;-1.716;"
+  },
+  {
+   "t_ns": 20488468264993,
+   "dir": "rx",
+   "text": "cap;264;-1.716;"
+  },
+  {
+   "t_ns": 20488468264993,
+   "dir": "rx",
+   "text": "cap;265;-1.716;"
+  },
+  {
+   "t_ns": 20488468264993,
+   "dir": "rx",
+   "text": "cap;266;-1.716;"
+  },
+  {
+   "t_ns": 20488468264993,
+   "dir": "rx",
+   "text": "cap;267;-1.716;"
+  },
+  {
+   "t_ns": 20488468747004,
+   "dir": "rx",
+   "text": "cap;268;-1.716;"
+  },
+  {
+   "t_ns": 20488468747004,
+   "dir": "rx",
+   "text": "cap;269;-1.716;"
+  },
+  {
+   "t_ns": 20488468747004,
+   "dir": "rx",
+   "text": "cap;270;-1.716;"
+  },
+  {
+   "t_ns": 20488468747004,
+   "dir": "rx",
+   "text": "cap;271;-1.716;"
+  },
+  {
+   "t_ns": 20488468747004,
+   "dir": "rx",
+   "text": "cap;272;-1.716;"
+  },
+  {
+   "t_ns": 20488468747004,
+   "dir": "rx",
+   "text": "cap;273;-1.716;"
+  },
+  {
+   "t_ns": 20488468747004,
+   "dir": "rx",
+   "text": "cap;274;-1.716;"
+  },
+  {
+   "t_ns": 20488468747004,
+   "dir": "rx",
+   "text": "cap;275;-1.716;"
+  },
+  {
+   "t_ns": 20488470214172,
+   "dir": "rx",
+   "text": "cap;276;-1.716;"
+  },
+  {
+   "t_ns": 20488470214172,
+   "dir": "rx",
+   "text": "cap;277;-1.716;"
+  },
+  {
+   "t_ns": 20488470214172,
+   "dir": "rx",
+   "text": "cap;278;-1.716;"
+  },
+  {
+   "t_ns": 20488470214172,
+   "dir": "rx",
+   "text": "cap;279;-1.716;"
+  },
+  {
+   "t_ns": 20488470214172,
+   "dir": "rx",
+   "text": "cap;280;-1.716;"
+  },
+  {
+   "t_ns": 20488470214172,
+   "dir": "rx",
+   "text": "cap;281;-1.716;"
+  },
+  {
+   "t_ns": 20488470214172,
+   "dir": "rx",
+   "text": "cap;282;-1.716;"
+  },
+  {
+   "t_ns": 20488470214172,
+   "dir": "rx",
+   "text": "cap;283;-1.716;"
+  },
+  {
+   "t_ns": 20488472128214,
+   "dir": "rx",
+   "text": "cap;284;-1.716;"
+  },
+  {
+   "t_ns": 20488472128214,
+   "dir": "rx",
+   "text": "cap;285;-1.716;"
+  },
+  {
+   "t_ns": 20488472128214,
+   "dir": "rx",
+   "text": "cap;286;-1.716;"
+  },
+  {
+   "t_ns": 20488472128214,
+   "dir": "rx",
+   "text": "cap;287;-1.716;"
+  },
+  {
+   "t_ns": 20488472128214,
+   "dir": "rx",
+   "text": "cap;end"
+  },
+  {
+   "t_ns": 20488472314749,
+   "dir": "tx",
+   "text": "fetch;519;288;32"
+  },
+  {
+   "t_ns": 20488475734104,
+   "dir": "tx",
+   "text": "ping;520"
+  },
+  {
+   "t_ns": 20488478671480,
+   "dir": "rx",
+   "text": "ack;519;n=32;k0=288;t0=318709468;dt_us=1000;pre=500;lost=0"
+  },
+  {
+   "t_ns": 20488478671480,
+   "dir": "rx",
+   "text": "cap;288;-1.716;"
+  },
+  {
+   "t_ns": 20488478671480,
+   "dir": "rx",
+   "text": "cap;289;-1.716;"
+  },
+  {
+   "t_ns": 20488478671480,
+   "dir": "rx",
+   "text": "cap;290;-1.716;"
+  },
+  {
+   "t_ns": 20488478671480,
+   "dir": "rx",
+   "text": "cap;291;-1.716;"
+  },
+  {
+   "t_ns": 20488480537818,
+   "dir": "rx",
+   "text": "cap;292;-1.716;"
+  },
+  {
+   "t_ns": 20488480537818,
+   "dir": "rx",
+   "text": "cap;293;-1.716;"
+  },
+  {
+   "t_ns": 20488480537818,
+   "dir": "rx",
+   "text": "cap;294;-1.716;"
+  },
+  {
+   "t_ns": 20488480537818,
+   "dir": "rx",
+   "text": "cap;295;-1.716;"
+  },
+  {
+   "t_ns": 20488480537818,
+   "dir": "rx",
+   "text": "cap;296;-1.716;"
+  },
+  {
+   "t_ns": 20488480537818,
+   "dir": "rx",
+   "text": "cap;297;-1.716;"
+  },
+  {
+   "t_ns": 20488480537818,
+   "dir": "rx",
+   "text": "cap;298;-1.716;"
+  },
+  {
+   "t_ns": 20488480537818,
+   "dir": "rx",
+   "text": "cap;299;-1.716;"
+  },
+  {
+   "t_ns": 20488481564006,
+   "dir": "rx",
+   "text": "cap;300;-1.716;"
+  },
+  {
+   "t_ns": 20488481564006,
+   "dir": "rx",
+   "text": "cap;301;-1.716;"
+  },
+  {
+   "t_ns": 20488481564006,
+   "dir": "rx",
+   "text": "cap;302;-1.716;"
+  },
+  {
+   "t_ns": 20488481564006,
+   "dir": "rx",
+   "text": "cap;303;-1.716;"
+  },
+  {
+   "t_ns": 20488481564006,
+   "dir": "rx",
+   "text": "cap;304;-1.716;"
+  },
+  {
+   "t_ns": 20488481564006,
+   "dir": "rx",
+   "text": "cap;305;-1.716;"
+  },
+  {
+   "t_ns": 20488481564006,
+   "dir": "rx",
+   "text": "cap;306;-1.716;"
+  },
+  {
+   "t_ns": 20488481564006,
+   "dir": "rx",
+   "text": "cap;307;-1.716;"
+  },
+  {
+   "t_ns": 20488482356315,
+   "dir": "rx",
+   "text": "cap;308;-1.716;"
+  },
+  {
+   "t_ns": 20488482356315,
+   "dir": "rx",
+   "text": "cap;309;-1.716;"
+  },
+  {
+   "t_ns": 20488482356315,
+   "dir": "rx",
+   "text": "cap;310;-1.716;"
+  },
+  {
+   "t_ns": 20488482356315,
+   "dir": "rx",
+   "text": "cap;311;-1.716;"
+  },
+  {
+   "t_ns": 20488482356315,
+   "dir": "rx",
+   "text": "cap;312;-1.716;"
+  },
+  {
+   "t_ns": 20488482356315,
+   "dir": "rx",
+   "text": "cap;313;-1.716;"
+  },
+  {
+   "t_ns": 20488482356315,
+   "dir": "rx",
+   "text": "cap;314;-1.716;"
+  },
+  {
+   "t_ns": 20488482356315,
+   "dir": "rx",
+   "text": "cap;315;-1.716;"
+  },
+  {
+   "t_ns": 20488483355477,
+   "dir": "rx",
+   "text": "cap;316;-1.716;"
+  },
+  {
+   "t_ns": 20488483355477,
+   "dir": "rx",
+   "text": "cap;317;-1.716;"
+  },
+  {
+   "t_ns": 20488483355477,
+   "dir": "rx",
+   "text": "cap;318;-1.716;"
+  },
+  {
+   "t_ns": 20488483355477,
+   "dir": "rx",
+   "text": "cap;319;-1.716;"
+  },
+  {
+   "t_ns": 20488483355477,
+   "dir": "rx",
+   "text": "cap;end"
+  },
+  {
+   "t_ns": 20488483355477,
+   "dir": "rx",
+   "text": "ack;520"
+  },
+  {
+   "t_ns": 20488483570174,
+   "dir": "tx",
+   "text": "fetch;521;320;32"
+  },
+  {
+   "t_ns": 20488488850749,
+   "dir": "rx",
+   "text": "ack;521;n=32;k0=320;t0=318741468;dt_us=1000;pre=500;lost=0"
+  },
+  {
+   "t_ns": 20488488850749,
+   "dir": "rx",
+   "text": "cap;320;-1.716;"
+  },
+  {
+   "t_ns": 20488488850749,
+   "dir": "rx",
+   "text": "cap;321;-1.716;"
+  },
+  {
+   "t_ns": 20488488850749,
+   "dir": "rx",
+   "text": "cap;322;-1.716;"
+  },
+  {
+   "t_ns": 20488488850749,
+   "dir": "rx",
+   "text": "cap;323;-1.716;"
+  },
+  {
+   "t_ns": 20488490214970,
+   "dir": "rx",
+   "text": "cap;324;-1.716;"
+  },
+  {
+   "t_ns": 20488490214970,
+   "dir": "rx",
+   "text": "cap;325;-1.716;"
+  },
+  {
+   "t_ns": 20488490214970,
+   "dir": "rx",
+   "text": "cap;326;-1.716;"
+  },
+  {
+   "t_ns": 20488490214970,
+   "dir": "rx",
+   "text": "cap;327;-1.716;"
+  },
+  {
+   "t_ns": 20488490214970,
+   "dir": "rx",
+   "text": "cap;328;-1.716;"
+  },
+  {
+   "t_ns": 20488490214970,
+   "dir": "rx",
+   "text": "cap;329;-1.716;"
+  },
+  {
+   "t_ns": 20488490214970,
+   "dir": "rx",
+   "text": "cap;330;-1.716;"
+  },
+  {
+   "t_ns": 20488490214970,
+   "dir": "rx",
+   "text": "cap;331;-1.716;"
+  },
+  {
+   "t_ns": 20488490556949,
+   "dir": "rx",
+   "text": "cap;332;-1.716;"
+  },
+  {
+   "t_ns": 20488490556949,
+   "dir": "rx",
+   "text": "cap;333;-1.716;"
+  },
+  {
+   "t_ns": 20488490556949,
+   "dir": "rx",
+   "text": "cap;334;-1.716;"
+  },
+  {
+   "t_ns": 20488490556949,
+   "dir": "rx",
+   "text": "cap;335;-1.716;"
+  },
+  {
+   "t_ns": 20488490556949,
+   "dir": "rx",
+   "text": "cap;336;-1.716;"
+  },
+  {
+   "t_ns": 20488490556949,
+   "dir": "rx",
+   "text": "cap;337;-1.716;"
+  },
+  {
+   "t_ns": 20488490556949,
+   "dir": "rx",
+   "text": "cap;338;-1.716;"
+  },
+  {
+   "t_ns": 20488490556949,
+   "dir": "rx",
+   "text": "cap;339;-1.716;"
+  },
+  {
+   "t_ns": 20488491857207,
+   "dir": "rx",
+   "text": "cap;340;-1.716;"
+  },
+  {
+   "t_ns": 20488491857207,
+   "dir": "rx",
+   "text": "cap;341;-1.716;"
+  },
+  {
+   "t_ns": 20488491857207,
+   "dir": "rx",
+   "text": "cap;342;-1.716;"
+  },
+  {
+   "t_ns": 20488491857207,
+   "dir": "rx",
+   "text": "cap;343;-1.716;"
+  },
+  {
+   "t_ns": 20488491857207,
+   "dir": "rx",
+   "text": "cap;344;-1.716;"
+  },
+  {
+   "t_ns": 20488491857207,
+   "dir": "rx",
+   "text": "cap;345;-1.716;"
+  },
+  {
+   "t_ns": 20488491857207,
+   "dir": "rx",
+   "text": "cap;346;-1.716;"
+  },
+  {
+   "t_ns": 20488491857207,
+   "dir": "rx",
+   "text": "cap;347;-1.716;"
+  },
+  {
+   "t_ns": 20488492791422,
+   "dir": "rx",
+   "text": "cap;348;-1.716;"
+  },
+  {
+   "t_ns": 20488492791422,
+   "dir": "rx",
+   "text": "cap;349;-1.716;"
+  },
+  {
+   "t_ns": 20488492791422,
+   "dir": "rx",
+   "text": "cap;350;-1.716;"
+  },
+  {
+   "t_ns": 20488492791422,
+   "dir": "rx",
+   "text": "cap;351;-1.716;"
+  },
+  {
+   "t_ns": 20488492791422,
+   "dir": "rx",
+   "text": "cap;end"
+  },
+  {
+   "t_ns": 20488492996286,
+   "dir": "tx",
+   "text": "fetch;522;352;32"
+  },
+  {
+   "t_ns": 20488498982181,
+   "dir": "rx",
+   "text": "ack;522;n=32;k0=352;t0=318773468;dt_us=1000;pre=500;lost=0"
+  },
+  {
+   "t_ns": 20488498982181,
+   "dir": "rx",
+   "text": "cap;352;-1.716;"
+  },
+  {
+   "t_ns": 20488498982181,
+   "dir": "rx",
+   "text": "cap;353;-1.716;"
+  },
+  {
+   "t_ns": 20488498982181,
+   "dir": "rx",
+   "text": "cap;354;-1.716;"
+  },
+  {
+   "t_ns": 20488498982181,
+   "dir": "rx",
+   "text": "cap;355;-1.716;"
+  },
+  {
+   "t_ns": 20488499235887,
+   "dir": "rx",
+   "text": "cap;356;-1.716;"
+  },
+  {
+   "t_ns": 20488499235887,
+   "dir": "rx",
+   "text": "cap;357;-1.716;"
+  },
+  {
+   "t_ns": 20488499235887,
+   "dir": "rx",
+   "text": "cap;358;-1.716;"
+  },
+  {
+   "t_ns": 20488499235887,
+   "dir": "rx",
+   "text": "cap;359;-1.716;"
+  },
+  {
+   "t_ns": 20488499235887,
+   "dir": "rx",
+   "text": "cap;360;-1.716;"
+  },
+  {
+   "t_ns": 20488499235887,
+   "dir": "rx",
+   "text": "cap;361;-1.716;"
+  },
+  {
+   "t_ns": 20488499235887,
+   "dir": "rx",
+   "text": "cap;362;-1.716;"
+  },
+  {
+   "t_ns": 20488499235887,
+   "dir": "rx",
+   "text": "cap;363;-1.716;"
+  },
+  {
+   "t_ns": 20488500062538,
+   "dir": "rx",
+   "text": "cap;364;-1.716;"
+  },
+  {
+   "t_ns": 20488500062538,
+   "dir": "rx",
+   "text": "cap;365;-1.716;"
+  },
+  {
+   "t_ns": 20488500062538,
+   "dir": "rx",
+   "text": "cap;366;-1.716;"
+  },
+  {
+   "t_ns": 20488500062538,
+   "dir": "rx",
+   "text": "cap;367;-1.716;"
+  },
+  {
+   "t_ns": 20488500062538,
+   "dir": "rx",
+   "text": "cap;368;-1.716;"
+  },
+  {
+   "t_ns": 20488500062538,
+   "dir": "rx",
+   "text": "cap;369;-1.716;"
+  },
+  {
+   "t_ns": 20488500062538,
+   "dir": "rx",
+   "text": "cap;370;-1.716;"
+  },
+  {
+   "t_ns": 20488500062538,
+   "dir": "rx",
+   "text": "cap;371;-1.716;"
+  },
+  {
+   "t_ns": 20488500986993,
+   "dir": "rx",
+   "text": "cap;372;-1.716;"
+  },
+  {
+   "t_ns": 20488500986993,
+   "dir": "rx",
+   "text": "cap;373;-1.716;"
+  },
+  {
+   "t_ns": 20488500986993,
+   "dir": "rx",
+   "text": "cap;374;-1.716;"
+  },
+  {
+   "t_ns": 20488500986993,
+   "dir": "rx",
+   "text": "cap;375;-1.716;"
+  },
+  {
+   "t_ns": 20488500986993,
+   "dir": "rx",
+   "text": "cap;376;-1.716;"
+  },
+  {
+   "t_ns": 20488500986993,
+   "dir": "rx",
+   "text": "cap;377;-1.716;"
+  },
+  {
+   "t_ns": 20488500986993,
+   "dir": "rx",
+   "text": "cap;378;-1.716;"
+  },
+  {
+   "t_ns": 20488500986993,
+   "dir": "rx",
+   "text": "cap;379;-1.716;"
+  },
+  {
+   "t_ns": 20488502130984,
+   "dir": "rx",
+   "text": "cap;380;-1.716;"
+  },
+  {
+   "t_ns": 20488502130984,
+   "dir": "rx",
+   "text": "cap;381;-1.716;"
+  },
+  {
+   "t_ns": 20488502130984,
+   "dir": "rx",
+   "text": "cap;382;-1.716;"
+  },
+  {
+   "t_ns": 20488502130984,
+   "dir": "rx",
+   "text": "cap;383;-1.716;"
+  },
+  {
+   "t_ns": 20488502130984,
+   "dir": "rx",
+   "text": "cap;end"
+  },
+  {
+   "t_ns": 20488502341165,
+   "dir": "tx",
+   "text": "fetch;523;384;32"
+  },
+  {
+   "t_ns": 20488507706138,
+   "dir": "rx",
+   "text": "ack;523;n=32;k0=384;t0=318805468;dt_us=1000;pre=500;lost=0"
+  },
+  {
+   "t_ns": 20488507706138,
+   "dir": "rx",
+   "text": "cap;384;-1.716;"
+  },
+  {
+   "t_ns": 20488507706138,
+   "dir": "rx",
+   "text": "cap;385;-1.716;"
+  },
+  {
+   "t_ns": 20488507706138,
+   "dir": "rx",
+   "text": "cap;386;-1.716;"
+  },
+  {
+   "t_ns": 20488507706138,
+   "dir": "rx",
+   "text": "cap;387;-1.716;"
+  },
+  {
+   "t_ns": 20488508825958,
+   "dir": "rx",
+   "text": "cap;388;-1.716;"
+  },
+  {
+   "t_ns": 20488508825958,
+   "dir": "rx",
+   "text": "cap;389;-1.716;"
+  },
+  {
+   "t_ns": 20488508825958,
+   "dir": "rx",
+   "text": "cap;390;-1.716;"
+  },
+  {
+   "t_ns": 20488508825958,
+   "dir": "rx",
+   "text": "cap;391;-1.716;"
+  },
+  {
+   "t_ns": 20488508825958,
+   "dir": "rx",
+   "text": "cap;392;-1.716;"
+  },
+  {
+   "t_ns": 20488508825958,
+   "dir": "rx",
+   "text": "cap;393;-1.716;"
+  },
+  {
+   "t_ns": 20488508825958,
+   "dir": "rx",
+   "text": "cap;394;-1.716;"
+  },
+  {
+   "t_ns": 20488508825958,
+   "dir": "rx",
+   "text": "cap;395;-1.716;"
+  },
+  {
+   "t_ns": 20488509037480,
+   "dir": "rx",
+   "text": "cap;396;-1.716;"
+  },
+  {
+   "t_ns": 20488509037480,
+   "dir": "rx",
+   "text": "cap;397;-1.716;"
+  },
+  {
+   "t_ns": 20488509037480,
+   "dir": "rx",
+   "text": "cap;398;-1.716;"
+  },
+  {
+   "t_ns": 20488509037480,
+   "dir": "rx",
+   "text": "cap;399;-1.716;"
+  },
+  {
+   "t_ns": 20488509037480,
+   "dir": "rx",
+   "text": "cap;400;-1.716;"
+  },
+  {
+   "t_ns": 20488509037480,
+   "dir": "rx",
+   "text": "cap;401;-1.716;"
+  },
+  {
+   "t_ns": 20488509037480,
+   "dir": "rx",
+   "text": "cap;402;-1.716;"
+  },
+  {
+   "t_ns": 20488509037480,
+   "dir": "rx",
+   "text": "cap;403;-1.716;"
+  },
+  {
+   "t_ns": 20488510206204,
+   "dir": "rx",
+   "text": "cap;404;-1.716;"
+  },
+  {
+   "t_ns": 20488510206204,
+   "dir": "rx",
+   "text": "cap;405;-1.716;"
+  },
+  {
+   "t_ns": 20488510206204,
+   "dir": "rx",
+   "text": "cap;406;-1.716;"
+  },
+  {
+   "t_ns": 20488510206204,
+   "dir": "rx",
+   "text": "cap;407;-1.716;"
+  },
+  {
+   "t_ns": 20488510206204,
+   "dir": "rx",
+   "text": "cap;408;-1.716;"
+  },
+  {
+   "t_ns": 20488510206204,
+   "dir": "rx",
+   "text": "cap;409;-1.716;"
+  },
+  {
+   "t_ns": 20488510206204,
+   "dir": "rx",
+   "text": "cap;410;-1.716;"
+  },
+  {
+   "t_ns": 20488510206204,
+   "dir": "rx",
+   "text": "cap;411;-1.716;"
+  },
+  {
+   "t_ns": 20488512023080,
+   "dir": "rx",
+   "text": "cap;412;-1.716;"
+  },
+  {
+   "t_ns": 20488512023080,
+   "dir": "rx",
+   "text": "cap;413;-1.716;"
+  },
+  {
+   "t_ns": 20488512023080,
+   "dir": "rx",
+   "text": "cap;414;-1.716;"
+  },
+  {
+   "t_ns": 20488512023080,
+   "dir": "rx",
+   "text": "cap;415;-1.716;"
+  },
+  {
+   "t_ns": 20488512023080,
+   "dir": "rx",
+   "text": "cap;end"
+  },
+  {
+   "t_ns": 20488512175085,
+   "dir": "tx",
+   "text": "fetch;524;416;32"
+  },
+  {
+   "t_ns": 20488516060835,
+   "dir": "tx",
+   "text": "ping;525"
+  },
+  {
+   "t_ns": 20488519380290,
+   "dir": "rx",
+   "text": "ack;524;n=32;k0=416;t0=318837468;dt_us=1000;pre=500;lost=0"
+  },
+  {
+   "t_ns": 20488519380290,
+   "dir": "rx",
+   "text": "cap;416;-1.716;"
+  },
+  {
+   "t_ns": 20488519380290,
+   "dir": "rx",
+   "text": "cap;417;-1.716;"
+  },
+  {
+   "t_ns": 20488519380290,
+   "dir": "rx",
+   "text": "cap;418;-1.716;"
+  },
+  {
+   "t_ns": 20488519380290,
+   "dir": "rx",
+   "text": "cap;419;-1.716;"
+  },
+  {
+   "t_ns": 20488520724105,
+   "dir": "rx",
+   "text": "cap;420;-1.716;"
+  },
+  {
+   "t_ns": 20488520724105,
+   "dir": "rx",
+   "text": "cap;421;-1.716;"
+  },
+  {
+   "t_ns": 20488520724105,
+   "dir": "rx",
+   "text": "cap;422;-1.716;"
+  },
+  {
+   "t_ns": 20488520724105,
+   "dir": "rx",
+   "text": "cap;423;-1.716;"
+  },
+  {
+   "t_ns": 20488520724105,
+   "dir": "rx",
+   "text": "cap;424;-1.716;"
+  },
+  {
+   "t_ns": 20488520724105,
+   "dir": "rx",
+   "text": "cap;425;-1.716;"
+  },
+  {
+   "t_ns": 20488520724105,
+   "dir": "rx",
+   "text": "cap;426;-1.716;"
+  },
+  {
+   "t_ns": 20488520724105,
+   "dir": "rx",
+   "text": "cap;427;-1.716;"
+  },
+  {
+   "t_ns": 20488521031911,
+   "dir": "rx",
+   "text": "cap;428;-1.716;"
+  },
+  {
+   "t_ns": 20488521031911,
+   "dir": "rx",
+   "text": "cap;429;-1.716;"
+  },
+  {
+   "t_ns": 20488521031911,
+   "dir": "rx",
+   "text": "cap;430;-1.716;"
+  },
+  {
+   "t_ns": 20488521031911,
+   "dir": "rx",
+   "text": "cap;431;-1.716;"
+  },
+  {
+   "t_ns": 20488521031911,
+   "dir": "rx",
+   "text": "cap;432;-1.716;"
+  },
+  {
+   "t_ns": 20488521031911,
+   "dir": "rx",
+   "text": "cap;433;-1.716;"
+  },
+  {
+   "t_ns": 20488521031911,
+   "dir": "rx",
+   "text": "cap;434;-1.716;"
+  },
+  {
+   "t_ns": 20488521031911,
+   "dir": "rx",
+   "text": "cap;435;-1.716;"
+  },
+  {
+   "t_ns": 20488522963753,
+   "dir": "rx",
+   "text": "cap;436;-1.716;"
+  },
+  {
+   "t_ns": 20488522963753,
+   "dir": "rx",
+   "text": "cap;437;-1.716;"
+  },
+  {
+   "t_ns": 20488522963753,
+   "dir": "rx",
+   "text": "cap;438;-1.716;"
+  },
+  {
+   "t_ns": 20488522963753,
+   "dir": "rx",
+   "text": "cap;439;-1.716;"
+  },
+  {
+   "t_ns": 20488522963753,
+   "dir": "rx",
+   "text": "cap;440;-1.716;"
+  },
+  {
+   "t_ns": 20488522963753,
+   "dir": "rx",
+   "text": "cap;441;-1.716;"
+  },
+  {
+   "t_ns": 20488522963753,
+   "dir": "rx",
+   "text": "cap;442;-1.716;"
+  },
+  {
+   "t_ns": 20488522963753,
+   "dir": "rx",
+   "text": "cap;443;-1.716;"
+  },
+  {
+   "t_ns": 20488524126595,
+   "dir": "rx",
+   "text": "cap;444;-1.716;"
+  },
+  {
+   "t_ns": 20488524126595,
+   "dir": "rx",
+   "text": "cap;445;-1.716;"
+  },
+  {
+   "t_ns": 20488524126595,
+   "dir": "rx",
+   "text": "cap;446;-1.716;"
+  },
+  {
+   "t_ns": 20488524126595,
+   "dir": "rx",
+   "text": "cap;447;-1.716;"
+  },
+  {
+   "t_ns": 20488524126595,
+   "dir": "rx",
+   "text": "cap;end"
+  },
+  {
+   "t_ns": 20488524126595,
+   "dir": "rx",
+   "text": "ack;525"
+  },
+  {
+   "t_ns": 20488524332101,
+   "dir": "tx",
+   "text": "fetch;526;448;32"
+  },
+  {
+   "t_ns": 20488529562193,
+   "dir": "rx",
+   "text": "ack;526;n=32;k0=448;t0=318869468;dt_us=1000;pre=500;lost=0"
+  },
+  {
+   "t_ns": 20488529562193,
+   "dir": "rx",
+   "text": "cap;448;-1.716;"
+  },
+  {
+   "t_ns": 20488529562193,
+   "dir": "rx",
+   "text": "cap;449;-1.716;"
+  },
+  {
+   "t_ns": 20488529562193,
+   "dir": "rx",
+   "text": "cap;450;-1.716;"
+  },
+  {
+   "t_ns": 20488529562193,
+   "dir": "rx",
+   "text": "cap;451;-1.716;"
+  },
+  {
+   "t_ns": 20488530648264,
+   "dir": "rx",
+   "text": "cap;452;-1.716;"
+  },
+  {
+   "t_ns": 20488530648264,
+   "dir": "rx",
+   "text": "cap;453;-1.716;"
+  },
+  {
+   "t_ns": 20488530648264,
+   "dir": "rx",
+   "text": "cap;454;-1.716;"
+  },
+  {
+   "t_ns": 20488530648264,
+   "dir": "rx",
+   "text": "cap;455;-1.716;"
+  },
+  {
+   "t_ns": 20488530648264,
+   "dir": "rx",
+   "text": "cap;456;-1.716;"
+  },
+  {
+   "t_ns": 20488530648264,
+   "dir": "rx",
+   "text": "cap;457;-1.716;"
+  },
+  {
+   "t_ns": 20488530648264,
+   "dir": "rx",
+   "text": "cap;458;-1.716;"
+  },
+  {
+   "t_ns": 20488530648264,
+   "dir": "rx",
+   "text": "cap;459;-1.716;"
+  },
+  {
+   "t_ns": 20488531036516,
+   "dir": "rx",
+   "text": "cap;460;-1.716;"
+  },
+  {
+   "t_ns": 20488531036516,
+   "dir": "rx",
+   "text": "cap;461;-1.716;"
+  },
+  {
+   "t_ns": 20488531036516,
+   "dir": "rx",
+   "text": "cap;462;-1.716;"
+  },
+  {
+   "t_ns": 20488531036516,
+   "dir": "rx",
+   "text": "cap;463;-1.716;"
+  },
+  {
+   "t_ns": 20488531036516,
+   "dir": "rx",
+   "text": "cap;464;-1.716;"
+  },
+  {
+   "t_ns": 20488531036516,
+   "dir": "rx",
+   "text": "cap;465;-1.716;"
+  },
+  {
+   "t_ns": 20488531036516,
+   "dir": "rx",
+   "text": "cap;466;-1.716;"
+  },
+  {
+   "t_ns": 20488531036516,
+   "dir": "rx",
+   "text": "cap;467;-1.716;"
+  },
+  {
+   "t_ns": 20488532247243,
+   "dir": "rx",
+   "text": "cap;468;-1.716;"
+  },
+  {
+   "t_ns": 20488532247243,
+   "dir": "rx",
+   "text": "cap;469;-1.716;"
+  },
+  {
+   "t_ns": 20488532247243,
+   "dir": "rx",
+   "text": "cap;470;-1.716;"
+  },
+  {
+   "t_ns": 20488532247243,
+   "dir": "rx",
+   "text": "cap;471;-1.716;"
+  },
+  {
+   "t_ns": 20488532247243,
+   "dir": "rx",
+   "text": "cap;472;-1.716;"
+  },
+  {
+   "t_ns": 20488532247243,
+   "dir": "rx",
+   "text": "cap;473;-1.716;"
+  },
+  {
+   "t_ns": 20488532247243,
+   "dir": "rx",
+   "text": "cap;474;-1.716;"
+  },
+  {
+   "t_ns": 20488532247243,
+   "dir": "rx",
+   "text": "cap;475;-1.716;"
+  },
+  {
+   "t_ns": 20488533203810,
+   "dir": "rx",
+   "text": "cap;476;-1.716;"
+  },
+  {
+   "t_ns": 20488533203810,
+   "dir": "rx",
+   "text": "cap;477;-1.716;"
+  },
+  {
+   "t_ns": 20488533203810,
+   "dir": "rx",
+   "text": "cap;478;-1.716;"
+  },
+  {
+   "t_ns": 20488533203810,
+   "dir": "rx",
+   "text": "cap;479;-1.716;"
+  },
+  {
+   "t_ns": 20488533203810,
+   "dir": "rx",
+   "text": "cap;end"
+  },
+  {
+   "t_ns": 20488533372831,
+   "dir": "tx",
+   "text": "fetch;527;480;32"
+  },
+  {
+   "t_ns": 20488539001974,
+   "dir": "rx",
+   "text": "ack;527;n=20;k0=480;t0=318901468;dt_us=1000;pre=500;lost=0"
+  },
+  {
+   "t_ns": 20488539001974,
+   "dir": "rx",
+   "text": "cap;480;-1.716;"
+  },
+  {
+   "t_ns": 20488539001974,
+   "dir": "rx",
+   "text": "cap;481;-1.716;"
+  },
+  {
+   "t_ns": 20488539001974,
+   "dir": "rx",
+   "text": "cap;482;-1.716;"
+  },
+  {
+   "t_ns": 20488539001974,
+   "dir": "rx",
+   "text": "cap;483;-1.716;"
+  },
+  {
+   "t_ns": 20488539367967,
+   "dir": "rx",
+   "text": "cap;484;-1.716;"
+  },
+  {
+   "t_ns": 20488539367967,
+   "dir": "rx",
+   "text": "cap;485;-1.716;"
+  },
+  {
+   "t_ns": 20488539367967,
+   "dir": "rx",
+   "text": "cap;486;-1.716;"
+  },
+  {
+   "t_ns": 20488539367967,
+   "dir": "rx",
+   "text": "cap;487;-1.716;"
+  },
+  {
+   "t_ns": 20488539367967,
+   "dir": "rx",
+   "text": "cap;488;-1.716;"
+  },
+  {
+   "t_ns": 20488539367967,
+   "dir": "rx",
+   "text": "cap;489;-1.716;"
+  },
+  {
+   "t_ns": 20488539367967,
+   "dir": "rx",
+   "text": "cap;490;-1.716;"
+  },
+  {
+   "t_ns": 20488539367967,
+   "dir": "rx",
+   "text": "cap;491;-1.716;"
+  },
+  {
+   "t_ns": 20488540391124,
+   "dir": "rx",
+   "text": "cap;492;-1.716;"
+  },
+  {
+   "t_ns": 20488540391124,
+   "dir": "rx",
+   "text": "cap;493;-1.716;"
+  },
+  {
+   "t_ns": 20488540391124,
+   "dir": "rx",
+   "text": "cap;494;-1.716;"
+  },
+  {
+   "t_ns": 20488540391124,
+   "dir": "rx",
+   "text": "cap;495;-1.716;"
+  },
+  {
+   "t_ns": 20488540391124,
+   "dir": "rx",
+   "text": "cap;496;-1.716;"
+  },
+  {
+   "t_ns": 20488540391124,
+   "dir": "rx",
+   "text": "cap;497;-1.716;"
+  },
+  {
+   "t_ns": 20488540391124,
+   "dir": "rx",
+   "text": "cap;498;-1.716;"
+  },
+  {
+   "t_ns": 20488540391124,
+   "dir": "rx",
+   "text": "cap;499;-1.716;"
+  },
+  {
+   "t_ns": 20488540589106,
+   "dir": "rx",
+   "text": "cap;end"
+  },
+  {
+   "t_ns": 20488540785241,
+   "dir": "tx",
+   "text": "stream;528;on;50"
+  },
+  {
+   "t_ns": 20488544880426,
+   "dir": "rx",
+   "text": "ack;528"
+  },
+  {
+   "t_ns": 20488556345744,
+   "dir": "tx",
+   "text": "ping;529"
+  },
+  {
+   "t_ns": 20488559254312,
+   "dir": "rx",
+   "text": "ack;529"
+  },
+  {
+   "t_ns": 20488564686985,
+   "dir": "rx",
+   "text": "ev;S;319237730;angle=-0.183;torque="
+  },
+  {
+   "t_ns": 20488584639286,
+   "dir": "rx",
+   "text": "ev;S;319257730;angle=-0.183;torque="
+  },
+  {
+   "t_ns": 20488596681348,
+   "dir": "tx",
+   "text": "ping;530"
+  },
+  {
+   "t_ns": 20488599656756,
+   "dir": "rx",
+   "text": "ack;530"
+  },
+  {
+   "t_ns": 20488605030510,
+   "dir": "rx",
+   "text": "ev;S;319277730;angle=-0.183;torque="
+  },
+  {
+   "t_ns": 20488625547429,
+   "dir": "rx",
+   "text": "ev;S;319297730;angle=-0.183;torque="
+  },
+  {
+   "t_ns": 20488636936765,
+   "dir": "tx",
+   "text": "ping;531"
+  },
+  {
+   "t_ns": 20488640654537,
+   "dir": "rx",
+   "text": "ack;531"
+  },
+  {
+   "t_ns": 20488645705054,
+   "dir": "rx",
+   "text": "ev;S;319317730;angle=-0.183;torque="
+  },
+  {
+   "t_ns": 20488665582203,
+   "dir": "rx",
+   "text": "ev;S;319337730;angle=-0.183;torque="
+  },
+  {
+   "t_ns": 20488677275141,
+   "dir": "tx",
+   "text": "ping;532"
+  },
+  {
+   "t_ns": 20488680315115,
+   "dir": "rx",
+   "text": "ack;532"
+  },
+  {
+   "t_ns": 20488684699437,
+   "dir": "rx",
+   "text": "ev;S;319357730;angle=-0.183;torque="
+  },
+  {
+   "t_ns": 20488704556049,
+   "dir": "rx",
+   "text": "ev;S;319377730;angle=-0.183;torque="
+  },
+  {
+   "t_ns": 20488717609412,
+   "dir": "tx",
+   "text": "ping;533"
+  },
+  {
+   "t_ns": 20488721025611,
+   "dir": "rx",
+   "text": "ack;533"
+  },
+  {
+   "t_ns": 20488725733152,
+   "dir": "rx",
+   "text": "ev;S;319397730;angle=-0.183;torque="
+  },
+  {
+   "t_ns": 20488745810145,
+   "dir": "rx",
+   "text": "ev;S;319417730;angle=-0.183;torque="
+  },
+  {
+   "t_ns": 20488757936043,
+   "dir": "tx",
+   "text": "ping;534"
+  },
+  {
+   "t_ns": 20488760689372,
+   "dir": "rx",
+   "text": "ack;534"
+  },
+  {
+   "t_ns": 20488765790458,
+   "dir": "rx",
+   "text": "ev;S;319437730;angle=-0.183;torque="
+  },
+  {
+   "t_ns": 20488785549333,
+   "dir": "rx",
+   "text": "ev;S;319457730;angle=-0.183;torque="
+  },
+  {
+   "t_ns": 20488798272095,
+   "dir": "tx",
+   "text": "ping;535"
+  },
+  {
+   "t_ns": 20488800969676,
+   "dir": "rx",
+   "text": "ack;535"
+  },
+  {
+   "t_ns": 20488804739035,
+   "dir": "rx",
+   "text": "ev;S;319477730;angle=-0.183;torque="
+  },
+  {
+   "t_ns": 20488824547132,
+   "dir": "rx",
+   "text": "ev;S;319497730;angle=-0.183;torque="
+  },
+  {
+   "t_ns": 20488838613229,
+   "dir": "tx",
+   "text": "ping;536"
+  },
+  {
+   "t_ns": 20488841839396,
+   "dir": "rx",
+   "text": "ack;536"
+  },
+  {
+   "t_ns": 20488843908414,
+   "dir": "rx",
+   "text": "ev;S;319517730;angle=-0.183;torque="
+  },
+  {
+   "t_ns": 20488864490195,
+   "dir": "rx",
+   "text": "ev;S;319537730;angle=-0.183;torque="
+  },
+  {
+   "t_ns": 20488878949331,
+   "dir": "tx",
+   "text": "ping;537"
+  },
+  {
+   "t_ns": 20488882645446,
+   "dir": "rx",
+   "text": "ack;537"
+  },
+  {
+   "t_ns": 20488884868173,
+   "dir": "rx",
+   "text": "ev;S;319557730;angle=-0.183;torque="
+  },
+  {
+   "t_ns": 20488905786144,
+   "dir": "rx",
+   "text": "ev;S;319577730;angle=-0.183;torque="
+  },
+  {
+   "t_ns": 20488919286949,
+   "dir": "tx",
+   "text": "ping;538"
+  },
+  {
+   "t_ns": 20488922672567,
+   "dir": "rx",
+   "text": "ack;538"
+  },
+  {
+   "t_ns": 20488924680132,
+   "dir": "rx",
+   "text": "ev;S;319597730;angle=-0.183;torque="
+  },
+  {
+   "t_ns": 20488944601961,
+   "dir": "rx",
+   "text": "ev;S;319617730;angle=-0.183;torque="
+  },
+  {
+   "t_ns": 20488959611040,
+   "dir": "tx",
+   "text": "ping;539"
+  },
+  {
+   "t_ns": 20488963904847,
+   "dir": "rx",
+   "text": "ack;539"
+  },
+  {
+   "t_ns": 20488963904847,
+   "dir": "rx",
+   "text": "ev;S;319637730;angle=-0.183;torque="
+  },
+  {
+   "t_ns": 20488984536540,
+   "dir": "rx",
+   "text": "ev;S;319657730;angle=-0.183;torque="
+  },
+  {
+   "t_ns": 20488999940607,
+   "dir": "tx",
+   "text": "ping;540"
+  },
+  {
+   "t_ns": 20489003269237,
+   "dir": "rx",
+   "text": "ack;540"
+  },
+  {
+   "t_ns": 20489005195646,
+   "dir": "rx",
+   "text": "ev;S;319677730;angle=-0.183;torque="
+  },
+  {
+   "t_ns": 20489025611769,
+   "dir": "rx",
+   "text": "ev;S;319697730;angle=-0.183;torque="
+  },
+  {
+   "t_ns": 20489040285958,
+   "dir": "tx",
+   "text": "ping;541"
+  },
+  {
+   "t_ns": 20489044475343,
+   "dir": "rx",
+   "text": "ack;541"
+  },
+  {
+   "t_ns": 20489044475343,
+   "dir": "rx",
+   "text": "ev;S;319717730;angle=-0.183;torque="
+  },
+  {
+   "t_ns": 20489064607466,
+   "dir": "rx",
+   "text": "ev;S;319737730;angle=-0.183;torque="
+  },
+  {
+   "t_ns": 20489080621642,
+   "dir": "tx",
+   "text": "ping;542"
+  },
+  {
+   "t_ns": 20489083360101,
+   "dir": "rx",
+   "text": "ack;542"
+  },
+  {
+   "t_ns": 20489085559823,
+   "dir": "rx",
+   "text": "ev;S;319757730;angle=-0.183;torque="
+  },
+  {
+   "t_ns": 20489105566380,
+   "dir": "rx",
+   "text": "ev;S;319777730;angle=-0.183;torque="
+  },
+  {
+   "t_ns": 20489120880199,
+   "dir": "tx",
+   "text": "ping;543"
+  },
+  {
+   "t_ns": 20489125071120,
+   "dir": "rx",
+   "text": "ev;S;319797730;angle=-0.183;torque="
+  },
+  {
+   "t_ns": 20489125071120,
+   "dir": "rx",
+   "text": "ack;543"
+  },
+  {
+   "t_ns": 20489144642994,
+   "dir": "rx",
+   "text": "ev;S;319817730;angle=-0.183;torque="
+  },
+  {
+   "t_ns": 20489161214326,
+   "dir": "tx",
+   "text": "ping;544"
+  },
+  {
+   "t_ns": 20489165141142,
+   "dir": "rx",
+   "text": "ev;S;319837730;angle=-0.183;torque="
+  },
+  {
+   "t_ns": 20489165141142,
+   "dir": "rx",
+   "text": "ack;544"
+  },
+  {
+   "t_ns": 20489185632455,
+   "dir": "rx",
+   "text": "ev;S;319857730;angle=-0.183;torque="
+  },
+  {
+   "t_ns": 20489201540359,
+   "dir": "tx",
+   "text": "ping;545"
+  },
+  {
+   "t_ns": 20489205243344,
+   "dir": "rx",
+   "text": "ev;S;319877730;angle=-0.183;torque="
+  },
+  {
+   "t_ns": 20489205243344,
+   "dir": "rx",
+   "text": "ack;545"
+  },
+  {
+   "t_ns": 20489224628867,
+   "dir": "rx",
+   "text": "ev;S;319897730;angle=-0.183;torque="
+  },
+  {
+   "t_ns": 20489241875760,
+   "dir": "tx",
+   "text": "ping;546"
+  },
+  {
+   "t_ns": 20489245727693,
+   "dir": "rx",
+   "text": "ev;S;319917730;angle=-0.183;torque="
+  },
+  {
+   "t_ns": 20489245727693,
+   "dir": "rx",
+   "text": "ack;546"
+  },
+  {
+   "t_ns": 20489265608256,
+   "dir": "rx",
+   "text": "ev;S;319937730;angle=-0.183;torque="
+  },
+  {
+   "t_ns": 20489282217845,
+   "dir": "tx",
+   "text": "ping;547"
+  },
+  {
+   "t_ns": 20489285642947,
+   "dir": "rx",
+   "text": "ev;S;319957730;angle=-0.183;torque="
+  },
+  {
+   "t_ns": 20489285642947,
+   "dir": "rx",
+   "text": "ack;547"
+  },
+  {
+   "t_ns": 20489304608847,
+   "dir": "rx",
+   "text": "ev;S;319977730;angle=-0.183;torque="
+  },
+  {
+   "t_ns": 20489322470179,
+   "dir": "tx",
+   "text": "ping;548"
+  },
+  {
+   "t_ns": 20489326237584,
+   "dir": "rx",
+   "text": "ev;S;319997730;angle=-0.183;torque="
+  },
+  {
+   "t_ns": 20489326237584,
+   "dir": "rx",
+   "text": "ack;548"
+  },
+  {
+   "t_ns": 20489344750902,
+   "dir": "rx",
+   "text": "ev;S;320017730;angle=-0.183;torque="
+  },
+  {
+   "t_ns": 20489362789292,
+   "dir": "tx",
+   "text": "ping;549"
+  },
+  {
+   "t_ns": 20489365154276,
+   "dir": "rx",
+   "text": "ev;S;320037730;angle=-0.183;torque="
+  },
+  {
+   "t_ns": 20489367165940,
+   "dir": "rx",
+   "text": "ack;549"
+  },
+  {
+   "t_ns": 20489384638869,
+   "dir": "rx",
+   "text": "ev;S;320057730;angle=-0.183;torque="
+  },
+  {
+   "t_ns": 20489403171905,
+   "dir": "tx",
+   "text": "ping;550"
+  },
+  {
+   "t_ns": 20489404666047,
+   "dir": "rx",
+   "text": "ev;S;320077730;angle=-0.183;torque="
+  },
+  {
+   "t_ns": 20489407571209,
+   "dir": "rx",
+   "text": "ack;550"
+  },
+  {
+   "t_ns": 20489425910957,
+   "dir": "rx",
+   "text": "ev;S;320097730;angle=-0.183;torque="
+  },
+  {
+   "t_ns": 20489443508805,
+   "dir": "tx",
+   "text": "ping;551"
+  },
+  {
+   "t_ns": 20489445235313,
+   "dir": "rx",
+   "text": "ev;S;320117730;angle=-0.183;torque="
+  },
+  {
+   "t_ns": 20489447121089,
+   "dir": "rx",
+   "text": "ack;551"
+  },
+  {
+   "t_ns": 20489464673992,
+   "dir": "rx",
+   "text": "ev;S;320137730;angle=-0.183;torque="
+  },
+  {
+   "t_ns": 20489483845279,
+   "dir": "tx",
+   "text": "ping;552"
+  },
+  {
+   "t_ns": 20489484578192,
+   "dir": "rx",
+   "text": "ev;S;320157730;angle=-0.183;torque="
+  },
+  {
+   "t_ns": 20489487277377,
+   "dir": "rx",
+   "text": "ack;552"
+  },
+  {
+   "t_ns": 20489505625206,
+   "dir": "rx",
+   "text": "ev;S;320177730;angle=-0.183;torque="
+  },
+  {
+   "t_ns": 20489524187521,
+   "dir": "tx",
+   "text": "ping;553"
+  },
+  {
+   "t_ns": 20489525767321,
+   "dir": "rx",
+   "text": "ev;S;320197730;angle=-0.183;torque="
+  },
+  {
+   "t_ns": 20489528281944,
+   "dir": "rx",
+   "text": "ack;553"
+  },
+  {
+   "t_ns": 20489544659638,
+   "dir": "rx",
+   "text": "ev;S;320217730;angle=-0.183;torque="
+  },
+  {
+   "t_ns": 20489564672564,
+   "dir": "rx",
+   "text": "ev;S;320237730;angle=-0.183;torque="
+  },
+  {
+   "t_ns": 20489564540550,
+   "dir": "tx",
+   "text": "ping;554"
+  },
+  {
+   "t_ns": 20489568192594,
+   "dir": "rx",
+   "text": "ack;554"
+  },
+  {
+   "t_ns": 20489585915920,
+   "dir": "rx",
+   "text": "ev;S;320257730;angle=-0.183;torque="
+  },
+  {
+   "t_ns": 20489604734669,
+   "dir": "rx",
+   "text": "ev;S;320277730;angle=-0.183;torque="
+  },
+  {
+   "t_ns": 20489604933495,
+   "dir": "tx",
+   "text": "ping;555"
+  },
+  {
+   "t_ns": 20489607877916,
+   "dir": "rx",
+   "text": "ack;555"
+  },
+  {
+   "t_ns": 20489625683162,
+   "dir": "rx",
+   "text": "ev;S;320297730;angle=-0.183;torque="
+  },
+  {
+   "t_ns": 20489645274306,
+   "dir": "tx",
+   "text": "ping;556"
+  },
+  {
+   "t_ns": 20489645589519,
+   "dir": "rx",
+   "text": "ev;S;320317730;angle=-0.183;torque="
+  },
+  {
+   "t_ns": 20489648196647,
+   "dir": "rx",
+   "text": "ack;556"
+  },
+  {
+   "t_ns": 20489664711097,
+   "dir": "rx",
+   "text": "ev;S;320337730;angle=-0.183;torque="
+  },
+  {
+   "t_ns": 20489684588524,
+   "dir": "rx",
+   "text": "ev;S;320357730;angle=-0.183;torque="
+  },
+  {
+   "t_ns": 20489685631207,
+   "dir": "tx",
+   "text": "ping;557"
+  },
+  {
+   "t_ns": 20489689171508,
+   "dir": "rx",
+   "text": "ack;557"
+  },
+  {
+   "t_ns": 20489705622456,
+   "dir": "rx",
+   "text": "ev;S;320377730;angle=-0.183;torque="
+  },
+  {
+   "t_ns": 20489725554474,
+   "dir": "rx",
+   "text": "ev;S;320397730;angle=-0.183;torque="
+  },
+  {
+   "t_ns": 20489725959952,
+   "dir": "tx",
+   "text": "ping;558"
+  },
+  {
+   "t_ns": 20489729168870,
+   "dir": "rx",
+   "text": "ack;558"
+  },
+  {
+   "t_ns": 20489744740720,
+   "dir": "rx",
+   "text": "ev;S;320417730;angle=-0.183;torque="
+  },
+  {
+   "t_ns": 20489764895834,
+   "dir": "rx",
+   "text": "ev;S;320437730;angle=-0.183;torque="
+  },
+  {
+   "t_ns": 20489766290710,
+   "dir": "tx",
+   "text": "ping;559"
+  },
+  {
+   "t_ns": 20489769008186,
+   "dir": "rx",
+   "text": "ack;559"
+  },
+  {
+   "t_ns": 20489784993440,
+   "dir": "rx",
+   "text": "ev;S;320457730;angle=-0.183;torque="
+  },
+  {
+   "t_ns": 20489805529841,
+   "dir": "rx",
+   "text": "ev;S;320477730;angle=-0.183;torque="
+  },
+  {
+   "t_ns": 20489806623984,
+   "dir": "tx",
+   "text": "ping;560"
+  },
+  {
+   "t_ns": 20489809710637,
+   "dir": "rx",
+   "text": "ack;560"
+  },
+  {
+   "t_ns": 20489825689585,
+   "dir": "rx",
+   "text": "ev;S;320497730;angle=-0.183;torque="
+  },
+  {
+   "t_ns": 20489845568428,
+   "dir": "rx",
+   "text": "ev;S;320517730;angle=-0.183;torque="
+  },
+  {
+   "t_ns": 20489847014156,
+   "dir": "tx",
+   "text": "ping;561"
+  },
+  {
+   "t_ns": 20489850286378,
+   "dir": "rx",
+   "text": "ack;561"
+  },
+  {
+   "t_ns": 20489865715155,
+   "dir": "rx",
+   "text": "ev;S;320537730;angle=-0.183;torque="
+  },
+  {
+   "t_ns": 20489885620265,
+   "dir": "rx",
+   "text": "ev;S;320557730;angle=-0.183;torque="
+  },
+  {
+   "t_ns": 20489887272944,
+   "dir": "tx",
+   "text": "ping;562"
+  },
+  {
+   "t_ns": 20489890299896,
+   "dir": "rx",
+   "text": "ack;562"
+  },
+  {
+   "t_ns": 20489904629230,
+   "dir": "rx",
+   "text": "ev;S;320577730;angle=-0.183;torque="
+  },
+  {
+   "t_ns": 20489924840143,
+   "dir": "rx",
+   "text": "ev;S;320597730;angle=-0.183;torque="
+  },
+  {
+   "t_ns": 20489927607876,
+   "dir": "tx",
+   "text": "ping;563"
+  },
+  {
+   "t_ns": 20489931054794,
+   "dir": "rx",
+   "text": "ack;563"
+  },
+  {
+   "t_ns": 20489945701228,
+   "dir": "rx",
+   "text": "ev;S;320617730;angle=-0.183;torque="
+  },
+  {
+   "t_ns": 20489965533699,
+   "dir": "rx",
+   "text": "ev;S;320637730;angle=-0.183;torque="
+  },
+  {
+   "t_ns": 20489967929345,
+   "dir": "tx",
+   "text": "ping;564"
+  },
+  {
+   "t_ns": 20489970836051,
+   "dir": "rx",
+   "text": "ack;564"
+  },
+  {
+   "t_ns": 20489984774097,
+   "dir": "rx",
+   "text": "ev;S;320657730;angle=-0.183;torque="
+  },
+  {
+   "t_ns": 20490004637323,
+   "dir": "rx",
+   "text": "ev;S;320677730;angle=-0.183;torque="
+  },
+  {
+   "t_ns": 20490008251598,
+   "dir": "tx",
+   "text": "ping;565"
+  },
+  {
+   "t_ns": 20490011215714,
+   "dir": "rx",
+   "text": "ack;565"
+  },
+  {
+   "t_ns": 20490025755212,
+   "dir": "rx",
+   "text": "ev;S;320697730;angle=-0.183;torque="
+  },
+  {
+   "t_ns": 20490045577836,
+   "dir": "rx",
+   "text": "ev;S;320717730;angle=-0.183;torque="
+  },
+  {
+   "t_ns": 20490048453018,
+   "dir": "tx",
+   "text": "ping;566"
+  },
+  {
+   "t_ns": 20490051117463,
+   "dir": "rx",
+   "text": "ack;566"
+  },
+  {
+   "t_ns": 20490064732273,
+   "dir": "rx",
+   "text": "ev;S;320737730;angle=-0.183;torque="
+  },
+  {
+   "t_ns": 20490084779511,
+   "dir": "rx",
+   "text": "ev;S;320757730;angle=-0.183;torque="
+  },
+  {
+   "t_ns": 20490088671706,
+   "dir": "tx",
+   "text": "ping;567"
+  },
+  {
+   "t_ns": 20490091715341,
+   "dir": "rx",
+   "text": "ack;567"
+  },
+  {
+   "t_ns": 20490104687599,
+   "dir": "rx",
+   "text": "ev;S;320777730;angle=-0.183;torque="
+  },
+  {
+   "t_ns": 20490124539720,
+   "dir": "rx",
+   "text": "ev;S;320797730;angle=-0.183;torque="
+  },
+  {
+   "t_ns": 20490128992567,
+   "dir": "tx",
+   "text": "ping;568"
+  },
+  {
+   "t_ns": 20490132573597,
+   "dir": "rx",
+   "text": "ack;568"
+  },
+  {
+   "t_ns": 20490144722195,
+   "dir": "rx",
+   "text": "ev;S;320817730;angle=-0.183;torque="
+  },
+  {
+   "t_ns": 20490164537069,
+   "dir": "rx",
+   "text": "ev;S;320837730;angle=-0.183;torque="
+  },
+  {
+   "t_ns": 20490169332805,
+   "dir": "tx",
+   "text": "ping;569"
+  },
+  {
+   "t_ns": 20490172253101,
+   "dir": "rx",
+   "text": "ack;569"
+  },
+  {
+   "t_ns": 20490185650135,
+   "dir": "rx",
+   "text": "ev;S;320857730;angle=-0.183;torque="
+  },
+  {
+   "t_ns": 20490205544760,
+   "dir": "rx",
+   "text": "ev;S;320877730;angle=-0.183;torque="
+  },
+  {
+   "t_ns": 20490209661272,
+   "dir": "tx",
+   "text": "ping;570"
+  },
+  {
+   "t_ns": 20490213016158,
+   "dir": "rx",
+   "text": "ack;570"
+  },
+  {
+   "t_ns": 20490224994395,
+   "dir": "rx",
+   "text": "ev;S;320897730;angle=-0.183;torque="
+  },
+  {
+   "t_ns": 20490245721824,
+   "dir": "rx",
+   "text": "ev;S;320917730;angle=-0.183;torque="
+  },
+  {
+   "t_ns": 20490249990524,
+   "dir": "tx",
+   "text": "ping;571"
+  },
+  {
+   "t_ns": 20490253156253,
+   "dir": "rx",
+   "text": "ack;571"
+  },
+  {
+   "t_ns": 20490265696821,
+   "dir": "rx",
+   "text": "ev;S;320937730;angle=-0.183;torque="
+  },
+  {
+   "t_ns": 20490285600398,
+   "dir": "rx",
+   "text": "ev;S;320957730;angle=-0.183;torque="
+  },
+  {
+   "t_ns": 20490290326012,
+   "dir": "tx",
+   "text": "ping;572"
+  },
+  {
+   "t_ns": 20490292855962,
+   "dir": "rx",
+   "text": "ack;572"
+  },
+  {
+   "t_ns": 20490304741221,
+   "dir": "rx",
+   "text": "ev;S;320977730;angle=-0.183;torque="
+  },
+  {
+   "t_ns": 20490324536849,
+   "dir": "rx",
+   "text": "ev;S;320997730;angle=-0.183;torque="
+  },
+  {
+   "t_ns": 20490330649308,
+   "dir": "tx",
+   "text": "ping;573"
+  },
+  {
+   "t_ns": 20490334061197,
+   "dir": "rx",
+   "text": "ack;573"
+  },
+  {
+   "t_ns": 20490345650033,
+   "dir": "rx",
+   "text": "ev;S;321017730;angle=-0.183;torque="
+  },
+  {
+   "t_ns": 20490365577503,
+   "dir": "rx",
+   "text": "ev;S;321037730;angle=-0.183;torque="
+  },
+  {
+   "t_ns": 20490370974596,
+   "dir": "tx",
+   "text": "ping;574"
+  },
+  {
+   "t_ns": 20490374327146,
+   "dir": "rx",
+   "text": "ack;574"
+  },
+  {
+   "t_ns": 20490384682933,
+   "dir": "rx",
+   "text": "ev;S;321057730;angle=-0.183;torque="
+  },
+  {
+   "t_ns": 20490404871536,
+   "dir": "rx",
+   "text": "ev;S;321077730;angle=-0.183;torque="
+  },
+  {
+   "t_ns": 20490411297160,
+   "dir": "tx",
+   "text": "ping;575"
+  },
+  {
+   "t_ns": 20490414206879,
+   "dir": "rx",
+   "text": "ack;575"
+  },
+  {
+   "t_ns": 20490424849410,
+   "dir": "rx",
+   "text": "ev;S;321097730;angle=-0.183;torque="
+  },
+  {
+   "t_ns": 20490445487808,
+   "dir": "rx",
+   "text": "ev;S;321117730;angle=-0.183;torque="
+  },
+  {
+   "t_ns": 20490451617160,
+   "dir": "tx",
+   "text": "ping;576"
+  },
+  {
+   "t_ns": 20490454336058,
+   "dir": "rx",
+   "text": "ack;576"
+  },
+  {
+   "t_ns": 20490465727082,
+   "dir": "rx",
+   "text": "ev;S;321137730;angle=-0.183;torque="
+  },
+  {
+   "t_ns": 20490485571488,
+   "dir": "rx",
+   "text": "ev;S;321157730;angle=-0.183;torque="
+  },
+  {
+   "t_ns": 20490491955806,
+   "dir": "tx",
+   "text": "ping;577"
+  },
+  {
+   "t_ns": 20490495186136,
+   "dir": "rx",
+   "text": "ack;577"
+  },
+  {
+   "t_ns": 20490504573891,
+   "dir": "rx",
+   "text": "ev;S;321177730;angle=-0.183;torque="
+  },
+  {
+   "t_ns": 20490524502345,
+   "dir": "rx",
+   "text": "ev;S;321197730;angle=-0.183;torque="
+  },
+  {
+   "t_ns": 20490532218247,
+   "dir": "tx",
+   "text": "ping;578"
+  },
+  {
+   "t_ns": 20490535073261,
+   "dir": "rx",
+   "text": "ack;578"
+  },
+  {
+   "t_ns": 20490545219154,
+   "dir": "tx",
+   "text": "stream;579;off"
+  },
+  {
+   "t_ns": 20490545529604,
+   "dir": "rx",
+   "text": "ev;S;321217730;angle=-0.183;torque="
+  },
+  {
+   "t_ns": 20490549619807,
+   "dir": "rx",
+   "text": "ack;579"
+  },
+  {
+   "t_ns": 20490572561807,
+   "dir": "tx",
+   "text": "ping;580"
+  },
+  {
+   "t_ns": 20490575583500,
+   "dir": "rx",
+   "text": "ack;580"
+  },
+  {
+   "t_ns": 20490612901172,
+   "dir": "tx",
+   "text": "ping;581"
+  },
+  {
+   "t_ns": 20490615578373,
+   "dir": "rx",
+   "text": "ack;581"
+  },
+  {
+   "t_ns": 20490649991302,
+   "dir": "tx",
+   "text": "disarm;582"
+  },
+  {
+   "t_ns": 20490653230783,
+   "dir": "tx",
+   "text": "ping;583"
+  },
+  {
+   "t_ns": 20490655469473,
+   "dir": "rx",
+   "text": "ack;582"
+  },
+  {
+   "t_ns": 20490655583062,
+   "dir": "tx",
+   "text": "status;584"
+  },
+  {
+   "t_ns": 20490658132071,
+   "dir": "rx",
+   "text": "ack;583"
+  },
+  {
+   "t_ns": 20490661733568,
+   "dir": "rx",
+   "text": "ack;584;state=HOMED;angle=-0.183;xactual=0.0;torque=;brake=;homed=1;limit=0;faults=0;hv=1;t=321333579"
+  },
+  {
+   "t_ns": 20490661956743,
+   "dir": "tx",
+   "text": "arm;585"
+  },
+  {
+   "t_ns": 20490687983605,
+   "dir": "rx",
+   "text": "ack;585"
+  },
+  {
+   "t_ns": 20490767644302,
+   "dir": "rx",
+   "text": "ev;FAULT;321438531;code=0;detail=host_timeout"
+  },
+  {
+   "t_ns": 20490767802542,
+   "dir": "tx",
+   "text": "status;586"
+  },
+  {
+   "t_ns": 20490772243991,
+   "dir": "rx",
+   "text": "ack;586;state=FAULTED;angle=-0.183;xactual=-0.183;torque=;brake=;homed=1;limit=0;faults=1;hv=0;t=321444667"
+  },
+  {
+   "t_ns": 20490773866045,
+   "dir": "tx",
+   "text": "ping;587"
+  },
+  {
+   "t_ns": 20490776959029,
+   "dir": "rx",
+   "text": "ack;587"
+  },
+  {
+   "t_ns": 20490814197428,
+   "dir": "tx",
+   "text": "ping;588"
+  },
+  {
+   "t_ns": 20490816442862,
+   "dir": "rx",
+   "text": "ack;588"
+  },
+  {
+   "t_ns": 20490854519499,
+   "dir": "tx",
+   "text": "ping;589"
+  },
+  {
+   "t_ns": 20490856772669,
+   "dir": "rx",
+   "text": "ack;589"
+  },
+  {
+   "t_ns": 20490872565516,
+   "dir": "tx",
+   "text": "clrfault;590"
+  },
+  {
+   "t_ns": 20490875576940,
+   "dir": "rx",
+   "text": "ack;590"
+  },
+  {
+   "t_ns": 20490875724862,
+   "dir": "tx",
+   "text": "status;591"
+  },
+  {
+   "t_ns": 20490879304112,
+   "dir": "rx",
+   "text": "ack;591;state=IDLE;angle=-0.183;xactual=-0.183;torque=;brake=;homed=0;limit=0;faults=0;hv=0;t=321552192"
+  },
+  {
+   "t_ns": 20490979616377,
+   "dir": "tx",
+   "text": "id;592"
+  },
+  {
+   "t_ns": 20490984679104,
+   "dir": "rx",
+   "text": "ack;592;hw=rev2;serial=E4654C159F274534;fw=a8cabbe-dirty;proto=2;axes=1;caps=motion+home+instr+hv+watch+fetch+stream+cfg+angout;rxbuf=200;boot=reboot;crumb=0"
+  }
+ ]
+}

@@ -1,0 +1,1 @@
+Gate E run 9 on the quad-lane flash stage 2 (mouse_joystick_qp_rev2_fastflash) with the sampler budget raised from 400 to 700 us (measured RELEASED handler 346 us median / 450 p90 / 620-760 max on the pin, run G2); otherwise as run 8; pyControl 2.1.1 on PYBV11 397734803233, board E4654C159F274534, 36 V on

@@ -1,0 +1,272 @@
+{
+  "qspy": "/home/peter/Repositories/orb-weaver/qp-arduino-example/evidence/2026-10-05-1142-board4-regression/qspy/b_angle-offline-decode.txt",
+  "board": {
+    "counts": {
+      "USER+008": 6,
+      "USER+011": 6,
+      "USER+010": 6,
+      "USER+000": 102,
+      "USER+001": 106,
+      "USER+005": 102,
+      "USER+012": 2,
+      "USER+006": 2,
+      "USER+003": 4,
+      "USER+002": 8,
+      "USER+004": 4,
+      "LINK_RX": 21,
+      "LINK_TX": 22,
+      "LINK_WORK": 21,
+      "LINK_STATE": 3,
+      "OP_START": 1,
+      "OP_DONE": 1,
+      "TRACE_STAT": 84,
+      "SAMPLE_STAT": 84,
+      "LINK_STAT": 84,
+      "BOOT_INFO": 9
+    },
+    "turnaround_us": {
+      "ping": {
+        "n": 16,
+        "min": 571,
+        "p50": 708,
+        "p99": 858,
+        "max": 858,
+        "mean": 717.4375,
+        "stdev": 85.26867005970013
+      },
+      "status": {
+        "n": 2,
+        "min": 1040,
+        "p50": 1160,
+        "p99": 1160,
+        "max": 1160,
+        "mean": 1100,
+        "stdev": 60.0
+      },
+      "moveto": {
+        "n": 1,
+        "min": 1794,
+        "p50": 1794,
+        "p99": 1794,
+        "max": 1794,
+        "mean": 1794,
+        "stdev": 0.0
+      },
+      "other": {
+        "n": 2,
+        "min": 1251,
+        "p50": 1543,
+        "p99": 1543,
+        "max": 1543,
+        "mean": 1397,
+        "stdev": 146.0
+      }
+    },
+    "port_write_cost_us": {
+      "n": 22,
+      "min": 60,
+      "p50": 74,
+      "p99": 126,
+      "max": 126,
+      "mean": 80.81818181818181,
+      "stdev": 19.15638123834354
+    },
+    "rx_without_reply_in_trace": 0,
+    "op_duration_us": {
+      "home": null,
+      "move": {
+        "n": 1,
+        "min": 259266,
+        "p50": 259266,
+        "p99": 259266,
+        "max": 259266,
+        "mean": 259266,
+        "stdev": 0.0
+      }
+    },
+    "states": [
+      "ACTIVE",
+      "ARMED",
+      "HOMED"
+    ],
+    "trace_stat": {
+      "count": 84,
+      "high_water_max": 373,
+      "high_water_p50": 111,
+      "buffer_full_total": 0
+    },
+    "link_stat_last": {
+      "lines_rx": 125,
+      "dropped_pool": 0,
+      "dropped_queue": 0,
+      "replies_dropped": 0,
+      "overlong": 0,
+      "queue_min_free": 9,
+      "pool_min_free": 1
+    },
+    "link_stat_min_free": {
+      "queue": 9,
+      "pool": 1
+    },
+    "work_us": {
+      "advance": {
+        "n": 21,
+        "min": 157,
+        "p50": 259,
+        "p99": 506,
+        "max": 506,
+        "mean": 287.76190476190476,
+        "stdev": 87.73331058867021
+      },
+      "feed": {
+        "n": 21,
+        "min": 254,
+        "p50": 360,
+        "p99": 1433,
+        "max": 1433,
+        "mean": 511.3809523809524,
+        "stdev": 317.919797641522
+      },
+      "output": {
+        "n": 21,
+        "min": 161,
+        "p50": 193,
+        "p99": 384,
+        "max": 384,
+        "mean": 227.76190476190476,
+        "stdev": 67.72978859437366
+      }
+    },
+    "tick_lost_records": 0,
+    "tx_dropped_flag_count": 0,
+    "dac_states": [],
+    "sample_stat": {
+      "skipped_idle_gap": 2,
+      "skipped_decimated": 41498,
+      "decimated_now": 1,
+      "decimated_seconds": 84,
+      "records": 84,
+      "seconds": 83,
+      "ticks": 83000,
+      "handled": 82998,
+      "coalesced": 2,
+      "dropped": 0,
+      "coalesced_total_since_boot": 376,
+      "dropped_total_since_boot": 0,
+      "tick_cost_max_us": 1346,
+      "tick_cost_max_per_second_us": {
+        "n": 84,
+        "min": 367,
+        "p50": 379,
+        "p99": 702,
+        "max": 1346,
+        "mean": 394.92857142857144,
+        "stdev": 110.24191858020659
+      },
+      "tick_cost_last_us": {
+        "n": 84,
+        "min": 139,
+        "p50": 158,
+        "p99": 172,
+        "max": 352,
+        "mean": 159.1547619047619,
+        "stdev": 22.533305533734815
+      },
+      "budget_us": 400,
+      "seconds_over_budget": 2
+    }
+  },
+  "capture": {
+    "spi": {
+      "datagrams": 122423,
+      "clocks_per_datagram": {
+        "n": 122423,
+        "min": 0,
+        "p50": 40,
+        "p99": 40,
+        "max": 40,
+        "mean": 39.99901979203254,
+        "stdev": 0.198008479340215
+      },
+      "datagram_us": {
+        "n": 122423,
+        "min": 0.20000000018626451,
+        "p50": 17.100000001490116,
+        "p99": 27.600000001490116,
+        "max": 226.40000000037253,
+        "mean": 18.699705937607565,
+        "stdev": 3.0776022542903054
+      },
+      "sck_period_us": {
+        "n": 4773277,
+        "min": 0.19999998807907104,
+        "p50": 0.29999999701976776,
+        "p99": 1.5,
+        "max": 4.400000000372529,
+        "mean": 0.37853204412852187,
+        "stdev": 0.38359782868878806
+      },
+      "sck_mhz_median": 3.3333333664470253,
+      "datagrams_per_tick": {
+        "n": 45559,
+        "min": 0,
+        "p50": 2,
+        "p99": 10,
+        "max": 23,
+        "mean": 2.6738075901578173,
+        "stdev": 2.4182112978618298
+      },
+      "datagrams_per_tick_hist": {
+        "0": 2057,
+        "2": 39153,
+        "10": 4347,
+        "17": 1,
+        "23": 1
+      },
+      "intra_tick_gap_us": {
+        "n": 78314,
+        "min": 3.199999988079071,
+        "p50": 5.299999997019768,
+        "p99": 20.0,
+        "max": 180.0,
+        "mean": 5.221249074260576,
+        "stdev": 3.3296678999624407
+      },
+      "ticks_with_levels": 45559,
+      "datagrams_outside_ticks": 607
+    },
+    "tick_period_us": {
+      "n": 90004,
+      "min": 838.0,
+      "p50": 1000.0,
+      "p99": 1020.7999999970198,
+      "max": 1157.7000000001863,
+      "mean": 1000.0003533176305,
+      "stdev": 10.032665720454272,
+      "nominal": 1000.0,
+      "missed": 0,
+      "doubled": 0
+    },
+    "marker_pulses_us": {
+      "n": 46185,
+      "min": 24.0,
+      "p50": 150.10000000149012,
+      "p99": 363.5,
+      "max": 1430.0,
+      "mean": 164.82291436614136,
+      "stdev": 68.9270293130417
+    },
+    "marker_rising_edges": 46185,
+    "tick_level_us": {
+      "n": 45559,
+      "min": 40.5,
+      "p50": 150.10000000149012,
+      "p99": 363.6000000014901,
+      "max": 1430.0,
+      "mean": 166.61960973682994,
+      "stdev": 67.65914178174128
+    },
+    "tick_level_back_to_back": 96,
+    "tick_level_open_at_end": false
+  }
+}

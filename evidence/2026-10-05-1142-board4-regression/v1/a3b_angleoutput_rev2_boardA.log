@@ -1,0 +1,84 @@
+
+================================================
+ mouse-joystick-pcb  stage 5: analog angle output
+================================================
+ Requires 36 V and a v0.3 or later board.
+ The motor is not touched. Send 'b' to begin.
+
+commands
+  ?  this menu
+  b  rail up, bus closed, DAC configured
+  z  output zero scale (code 0)
+  m  output midscale
+  f  output full scale (code 0xFFFF)
+  v  set an output voltage, digits then Enter (mV)
+  c  set a raw code, digits then Enter
+  s  the three-point fit: 0, midscale, full scale, with a
+     pause at each for a meter reading
+  t  step 0 -> full scale, for the filter group delay
+  q  what the driver knows: gain, full scale, LSB
+  d  DEVID and STATUS -- I2C builds only, see below
+  r  soft reset the DAC (blocks data writes until 'b')
+  x  power down: bus open, HV_EN low
+  B  reboot into BOOTSEL      R  reboot
+
+Every value printed is COMMANDED, never measured. This
+board cannot read its own analog output, and over SPI it
+cannot read the DAC's registers either. Use a DMM.
+
+
+##### send 'b' at +4.0 s
+[1] rail
+    [ ok ] +3.3V_SW up in 3 ms
+[2] bus switch
+    [ ok ] closed. GP16/GP17 now reach both DACs.
+[3] I2C
+    [ ok ] SCL GP17, SDA GP16, address 0x48
+[4] DAC configuration
+    [ ok ] GAIN 0x101, full scale 2.5000 V at the DAC, 1.6500 V at the BNC
+    [ ok ] GAIN read back and matched
+
+
+##### send 'z' at +7.2 s
+    code 0 (0x0)  -> DAC 0.000000 V  -> BNC 0.000000 V expected
+    ANGLE_OUT_MON: 0.0121 V measured at the BNC node (15.3 counts)
+
+##### send 'm' at +9.3 s
+    code 32768 (0x8000)  -> DAC 1.250000 V  -> BNC 0.825000 V expected
+    ANGLE_OUT_MON: 0.8236 V measured at the BNC node (1021.9 counts)
+
+##### send 'f' at +11.4 s
+    code 65535 (0xFFFF)  -> DAC 2.499962 V  -> BNC 1.649975 V expected
+    ANGLE_OUT_MON: 1.6415 V measured at the BNC node (2036.8 counts)
+
+##### send 'v' at +13.5 s
+digits then Enter:
+
+##### send '825\n' at +14.1 s
+  requested 0.8250 V at the DAC
+    code 21627 (0x547B)  -> DAC 0.825005 V  -> BNC 0.544503 V expected
+
+##### send 'c' at +16.2 s
+digits then Enter:
+
+##### send '497\n' at +16.8 s
+    code 497 (0x1F1)  -> DAC 0.018959 V  -> BNC 0.012513 V expected
+    ANGLE_OUT_MON: 0.0226 V measured at the BNC node (27.8 counts)
+
+##### send 'z' at +19.0 s
+    code 0 (0x0)  -> DAC 0.000000 V  -> BNC 0.000000 V expected
+    ANGLE_OUT_MON: 0.0129 V measured at the BNC node (15.7 counts)
+
+##### send 'd' at +21.1 s
+  DEVID 0x115
+  plausible: yes
+  resets to: zero scale
+  REF-ALARM: clear
+
+
+##### send 'x' at +23.2 s
+Powered down: DAC at zero scale, bus open, HV_EN low.
++36V_SW takes about 700 ms to bleed down.
+The DAC lost VDD, so its GAIN is back to a 5.0 V full
+scale. Data writes are blocked again until 'b'.
+

@@ -1,0 +1,1711 @@
+{
+ "summary": {
+  "brake": [
+   {
+    "level": 1.0,
+    "ack_ms": 19.431303,
+    "released_after_ack_ms": 0.006657,
+    "released": {
+     "angle": "0.0",
+     "torque": "0.053",
+     "brake": "1.0"
+    },
+    "statuses": [
+     {
+      "state": "RELEASED",
+      "angle": "0.267",
+      "xactual": "0.0",
+      "torque": "0.052",
+      "brake": "1.0",
+      "homed": "1",
+      "limit": "0",
+      "faults": "0",
+      "hv": "1",
+      "t": "9266583"
+     },
+     {
+      "state": "RELEASED",
+      "angle": "0.267",
+      "xactual": "0.0",
+      "torque": "0.023",
+      "brake": "1.0",
+      "homed": "1",
+      "limit": "0",
+      "faults": "0",
+      "hv": "1",
+      "t": "9387242"
+     },
+     {
+      "state": "RELEASED",
+      "angle": "0.267",
+      "xactual": "0.0",
+      "torque": "0.01",
+      "brake": "1.0",
+      "homed": "1",
+      "limit": "0",
+      "faults": "0",
+      "hv": "1",
+      "t": "9506590"
+     }
+    ],
+    "after_stop": {
+     "state": "ARMED",
+     "angle": "0.176",
+     "xactual": "0.176",
+     "torque": "0.076",
+     "brake": "0.0",
+     "homed": "1",
+     "limit": "0",
+     "faults": "0",
+     "hv": "1",
+     "t": "9569009"
+    }
+   },
+   {
+    "level": 3.4,
+    "ack_ms": 22.108598,
+    "released_after_ack_ms": 20.158513,
+    "released": {
+     "angle": "0.176",
+     "torque": "0.012",
+     "brake": "3.4"
+    },
+    "statuses": [
+     {
+      "state": "RELEASED",
+      "angle": "0.267",
+      "xactual": "0.176",
+      "torque": "-0.025",
+      "brake": "3.4",
+      "homed": "1",
+      "limit": "0",
+      "faults": "0",
+      "hv": "1",
+      "t": "10030855"
+     },
+     {
+      "state": "RELEASED",
+      "angle": "0.267",
+      "xactual": "0.176",
+      "torque": "-0.025",
+      "brake": "3.4",
+      "homed": "1",
+      "limit": "0",
+      "faults": "0",
+      "hv": "1",
+      "t": "10150721"
+     },
+     {
+      "state": "RELEASED",
+      "angle": "0.267",
+      "xactual": "0.176",
+      "torque": "-0.024",
+      "brake": "3.4",
+      "homed": "1",
+      "limit": "0",
+      "faults": "0",
+      "hv": "1",
+      "t": "10271271"
+     }
+    ],
+    "after_stop": {
+     "state": "ARMED",
+     "angle": "0.176",
+     "xactual": "0.176",
+     "torque": "0.001",
+     "brake": "0.0",
+     "homed": "1",
+     "limit": "0",
+     "faults": "0",
+     "hv": "1",
+     "t": "10332478"
+    }
+   }
+  ],
+  "id": {
+   "hw": "rev2",
+   "serial": "E4654C159F274534",
+   "fw": "80fdf3b-dirty",
+   "proto": "2",
+   "axes": "1",
+   "caps": "motion+home+instr+hv+watch+fetch+stream+cfg+angout+brake+torque",
+   "rxbuf": "200",
+   "boot": "reboot",
+   "crumb": "0"
+  },
+  "status_hv_on": {
+   "state": "IDLE",
+   "angle": "0.0",
+   "xactual": "0.0",
+   "torque": "-0.302",
+   "brake": "0.0",
+   "homed": "0",
+   "limit": "0",
+   "faults": "0",
+   "hv": "1",
+   "t": "8034430"
+  },
+  "tq_before": {
+   "torque": "-0.302",
+   "raw": "-0.302",
+   "cal": "0"
+  },
+  "tq_after_zero": {
+   "torque": "0.0",
+   "raw": "-0.301",
+   "cal": "0"
+  },
+  "tq_cal_on": {
+   "torque": "0.0",
+   "raw": "-0.301",
+   "cal": "1"
+  },
+  "watch": {
+   "outcome": "ev;NOMOVE;13679763;angle=0.267;torque=-0.025",
+   "touch": [],
+   "trial": "ev;TRIAL;14679763;outcome=NOMOVE;t_rel=10661947;t_touch=;t_move=;t_out=13679763;a0=0.176;a_peak=0.091;a_end=0.091;tq_peak=-0.058;tq_out=-0.025;dur_thr=0"
+  },
+  "fetch": {
+   "ack": {
+    "n": "4",
+    "k0": "0",
+    "t0": "13178947",
+    "dt_us": "1000",
+    "pre": "500",
+    "lost": "0"
+   },
+   "cap": [
+    "cap;0;0.267;-0.026",
+    "cap;1;0.267;-0.025",
+    "cap;2;0.267;-0.026",
+    "cap;3;0.267;-0.025",
+    "cap;end"
+   ]
+  },
+  "final_status": {
+   "state": "HOMED",
+   "angle": "-0.183",
+   "xactual": "-0.183",
+   "torque": "0.0",
+   "brake": "0.0",
+   "homed": "1",
+   "limit": "0",
+   "faults": "0",
+   "hv": "0",
+   "t": "15470001"
+  },
+  "stray_events": []
+ },
+ "log": [
+  {
+   "t_ns": 84460372848795,
+   "dir": "tx",
+   "line": "id;1"
+  },
+  {
+   "t_ns": 84460674701828,
+   "dir": "rx",
+   "line": "Done."
+  },
+  {
+   "t_ns": 84460674746367,
+   "dir": "rx",
+   "line": "mouse-joystick-pcb -- pyControl protocol link over QP/C++"
+  },
+  {
+   "t_ns": 84460674756870,
+   "dir": "rx",
+   "line": "[1] identity"
+  },
+  {
+   "t_ns": 84460674763752,
+   "dir": "rx",
+   "line": "    flash unique id: E4654C159F274534"
+  },
+  {
+   "t_ns": 84460674777044,
+   "dir": "rx",
+   "line": "    ^ this is the board serial. Calibration belongs to it, not"
+  },
+  {
+   "t_ns": 84460674782795,
+   "dir": "rx",
+   "line": "      to a joystick position, and two boards in one rig are"
+  },
+  {
+   "t_ns": 84460674787378,
+   "dir": "rx",
+   "line": "      independently suspect."
+  },
+  {
+   "t_ns": 84460674791899,
+   "dir": "rx",
+   "line": "    usb manufacturer: Orb Weaver"
+  },
+  {
+   "t_ns": 84460674796222,
+   "dir": "rx",
+   "line": "    usb product: mouse-joystick-pcb"
+  },
+  {
+   "t_ns": 84460674800740,
+   "dir": "rx",
+   "line": "    built: Oct  6 2026 09:25:52"
+  },
+  {
+   "t_ns": 84460674809317,
+   "dir": "rx",
+   "line": "    targets board revision: rev 2  (pcb v1.0: I2C DACs, torque ADC, brake, LATCH on GP24)"
+  },
+  {
+   "t_ns": 84460674814078,
+   "dir": "rx",
+   "line": "    Only GP20 and GP22 are spare. GP10-13, GP15-18 reach the"
+  },
+  {
+   "t_ns": 84460674819018,
+   "dir": "rx",
+   "line": "      torque, brake and DAC blocks through the bus switch and"
+  },
+  {
+   "t_ns": 84460674823049,
+   "dir": "rx",
+   "line": "      are left alone: 2 pads, 20 checks. ~{HV_FAULT} is"
+  },
+  {
+   "t_ns": 84460674827604,
+   "dir": "rx",
+   "line": "      GP23 here; GP29 is an ADC input. Confirmed on"
+  },
+  {
+   "t_ns": 84460674831967,
+   "dir": "rx",
+   "line": "      hardware 2026-10-05: 20 checks on E4654C159F274534."
+  },
+  {
+   "t_ns": 84460674836844,
+   "dir": "rx",
+   "line": "Protocol on THIS port (bench build). The 36 V rail is OFF."
+  },
+  {
+   "t_ns": 84460674841787,
+   "dir": "rx",
+   "line": "QS trace: FW_TRIG1, transmit only."
+  },
+  {
+   "t_ns": 84460674845782,
+   "dir": "rx",
+   "line": "Boot: forced reboot, last breadcrumb 0"
+  },
+  {
+   "t_ns": 84460735412375,
+   "dir": "rx",
+   "line": "ev;READY;7498855;fw=80fdf3b-dirty;proto=2;serial=E4654C159F274534"
+  },
+  {
+   "t_ns": 84460735445769,
+   "dir": "rx",
+   "line": "ack;1;hw=rev2;serial=E4654C159F274534;fw=80fdf3b-dirty;proto=2;axes=1;caps=motion+home+instr+hv+watch+fetch+stream+cfg+angout+brake+torque;rxbuf=200;boot=reboot;crumb=0"
+  },
+  {
+   "t_ns": 84460735621564,
+   "dir": "tx",
+   "line": "status;2"
+  },
+  {
+   "t_ns": 84460755637826,
+   "dir": "rx",
+   "line": "ack;2;state=IDLE;angle=0.0;xactual=0.0;torque=0.0;brake=0.0;homed=0;limit=0;faults=0;hv=0;t=7531988"
+  },
+  {
+   "t_ns": 84460755805351,
+   "dir": "tx",
+   "line": "hv;3;on"
+  },
+  {
+   "t_ns": 84460936629999,
+   "dir": "rx",
+   "line": "ack;3"
+  },
+  {
+   "t_ns": 84461236852341,
+   "dir": "tx",
+   "line": "status;4"
+  },
+  {
+   "t_ns": 84461259482649,
+   "dir": "rx",
+   "line": "ack;4;state=IDLE;angle=0.0;xactual=0.0;torque=-0.302;brake=0.0;homed=0;limit=0;faults=0;hv=1;t=8034430"
+  },
+  {
+   "t_ns": 84461259677175,
+   "dir": "tx",
+   "line": "tq;5;get"
+  },
+  {
+   "t_ns": 84461279700130,
+   "dir": "rx",
+   "line": "ack;5;torque=-0.302;raw=-0.302;cal=0"
+  },
+  {
+   "t_ns": 84461279880870,
+   "dir": "tx",
+   "line": "tq;6;zero"
+  },
+  {
+   "t_ns": 84461299908606,
+   "dir": "rx",
+   "line": "ack;6"
+  },
+  {
+   "t_ns": 84461300064801,
+   "dir": "tx",
+   "line": "tq;7;get"
+  },
+  {
+   "t_ns": 84461320055941,
+   "dir": "rx",
+   "line": "ack;7;torque=0.0;raw=-0.301;cal=0"
+  },
+  {
+   "t_ns": 84461320218647,
+   "dir": "tx",
+   "line": "tq;8;cal;on"
+  },
+  {
+   "t_ns": 84461340287552,
+   "dir": "rx",
+   "line": "ack;8"
+  },
+  {
+   "t_ns": 84461340414760,
+   "dir": "tx",
+   "line": "tq;9;get"
+  },
+  {
+   "t_ns": 84461360482449,
+   "dir": "rx",
+   "line": "ack;9;torque=0.0;raw=-0.301;cal=1"
+  },
+  {
+   "t_ns": 84461360637601,
+   "dir": "tx",
+   "line": "tq;10;cal;off"
+  },
+  {
+   "t_ns": 84461380609928,
+   "dir": "rx",
+   "line": "ack;10"
+  },
+  {
+   "t_ns": 84461380715352,
+   "dir": "tx",
+   "line": "home;11"
+  },
+  {
+   "t_ns": 84461501566799,
+   "dir": "rx",
+   "line": "ack;11"
+  },
+  {
+   "t_ns": 84462307289646,
+   "dir": "rx",
+   "line": "ev;HOMED;9082941;angle=0.0"
+  },
+  {
+   "t_ns": 84462307441010,
+   "dir": "tx",
+   "line": "arm;12"
+  },
+  {
+   "t_ns": 84462347654485,
+   "dir": "rx",
+   "line": "ack;12"
+  },
+  {
+   "t_ns": 84462348208738,
+   "dir": "tx",
+   "line": "ping;13"
+  },
+  {
+   "t_ns": 84462348358528,
+   "dir": "tx",
+   "line": "brake;14;1.000"
+  },
+  {
+   "t_ns": 84462367768123,
+   "dir": "rx",
+   "line": "ack;13"
+  },
+  {
+   "t_ns": 84462367792776,
+   "dir": "rx",
+   "line": "ack;14"
+  },
+  {
+   "t_ns": 84462367799031,
+   "dir": "rx",
+   "line": "ev;RELEASED;9157946;angle=0.0;torque=0.053;brake=1.0"
+  },
+  {
+   "t_ns": 84462408044581,
+   "dir": "tx",
+   "line": "ping;15"
+  },
+  {
+   "t_ns": 84462428071130,
+   "dir": "rx",
+   "line": "ack;15"
+  },
+  {
+   "t_ns": 84462468183220,
+   "dir": "tx",
+   "line": "status;16"
+  },
+  {
+   "t_ns": 84462468412952,
+   "dir": "tx",
+   "line": "ping;17"
+  },
+  {
+   "t_ns": 84462488465138,
+   "dir": "rx",
+   "line": "ack;16;state=RELEASED;angle=0.267;xactual=0.0;torque=0.052;brake=1.0;homed=1;limit=0;faults=0;hv=1;t=9266583"
+  },
+  {
+   "t_ns": 84462488490558,
+   "dir": "rx",
+   "line": "ack;17"
+  },
+  {
+   "t_ns": 84462528853047,
+   "dir": "tx",
+   "line": "ping;18"
+  },
+  {
+   "t_ns": 84462548836062,
+   "dir": "rx",
+   "line": "ack;18"
+  },
+  {
+   "t_ns": 84462588707666,
+   "dir": "tx",
+   "line": "status;19"
+  },
+  {
+   "t_ns": 84462589056897,
+   "dir": "tx",
+   "line": "ping;20"
+  },
+  {
+   "t_ns": 84462609193264,
+   "dir": "rx",
+   "line": "ack;19;state=RELEASED;angle=0.267;xactual=0.0;torque=0.023;brake=1.0;homed=1;limit=0;faults=0;hv=1;t=9387242"
+  },
+  {
+   "t_ns": 84462609204426,
+   "dir": "rx",
+   "line": "ack;20"
+  },
+  {
+   "t_ns": 84462649561932,
+   "dir": "tx",
+   "line": "ping;21"
+  },
+  {
+   "t_ns": 84462669425362,
+   "dir": "rx",
+   "line": "ack;21"
+  },
+  {
+   "t_ns": 84462709479211,
+   "dir": "tx",
+   "line": "status;22"
+  },
+  {
+   "t_ns": 84462709699649,
+   "dir": "tx",
+   "line": "ping;23"
+  },
+  {
+   "t_ns": 84462729651961,
+   "dir": "rx",
+   "line": "ack;22;state=RELEASED;angle=0.267;xactual=0.0;torque=0.01;brake=1.0;homed=1;limit=0;faults=0;hv=1;t=9506590"
+  },
+  {
+   "t_ns": 84462729663057,
+   "dir": "rx",
+   "line": "ack;23"
+  },
+  {
+   "t_ns": 84462729825178,
+   "dir": "tx",
+   "line": "stop;24"
+  },
+  {
+   "t_ns": 84462769806705,
+   "dir": "rx",
+   "line": "ack;24"
+  },
+  {
+   "t_ns": 84462769899626,
+   "dir": "tx",
+   "line": "ping;25"
+  },
+  {
+   "t_ns": 84462770079675,
+   "dir": "tx",
+   "line": "status;26"
+  },
+  {
+   "t_ns": 84462789890564,
+   "dir": "rx",
+   "line": "ack;25"
+  },
+  {
+   "t_ns": 84462789900390,
+   "dir": "rx",
+   "line": "ack;26;state=ARMED;angle=0.176;xactual=0.176;torque=0.076;brake=0.0;homed=1;limit=0;faults=0;hv=1;t=9569009"
+  },
+  {
+   "t_ns": 84462830181055,
+   "dir": "tx",
+   "line": "ping;27"
+  },
+  {
+   "t_ns": 84462850175527,
+   "dir": "rx",
+   "line": "ack;27"
+  },
+  {
+   "t_ns": 84462890437876,
+   "dir": "tx",
+   "line": "ping;28"
+  },
+  {
+   "t_ns": 84462910641999,
+   "dir": "rx",
+   "line": "ack;28"
+  },
+  {
+   "t_ns": 84462950946003,
+   "dir": "tx",
+   "line": "ping;29"
+  },
+  {
+   "t_ns": 84462971105189,
+   "dir": "rx",
+   "line": "ack;29"
+  },
+  {
+   "t_ns": 84463011393646,
+   "dir": "tx",
+   "line": "ping;30"
+  },
+  {
+   "t_ns": 84463031657661,
+   "dir": "rx",
+   "line": "ack;30"
+  },
+  {
+   "t_ns": 84463071966965,
+   "dir": "tx",
+   "line": "ping;31"
+  },
+  {
+   "t_ns": 84463090288102,
+   "dir": "tx",
+   "line": "brake;32;3.400"
+  },
+  {
+   "t_ns": 84463092201519,
+   "dir": "rx",
+   "line": "ack;31"
+  },
+  {
+   "t_ns": 84463112400404,
+   "dir": "rx",
+   "line": "ack;32"
+  },
+  {
+   "t_ns": 84463132505465,
+   "dir": "tx",
+   "line": "ping;33"
+  },
+  {
+   "t_ns": 84463132558830,
+   "dir": "rx",
+   "line": "ev;RELEASED;9904947;angle=0.176;torque=0.012;brake=3.4"
+  },
+  {
+   "t_ns": 84463152751495,
+   "dir": "rx",
+   "line": "ack;33"
+  },
+  {
+   "t_ns": 84463193044667,
+   "dir": "tx",
+   "line": "ping;34"
+  },
+  {
+   "t_ns": 84463213293431,
+   "dir": "rx",
+   "line": "ack;34"
+  },
+  {
+   "t_ns": 84463232839200,
+   "dir": "tx",
+   "line": "status;35"
+  },
+  {
+   "t_ns": 84463253581509,
+   "dir": "tx",
+   "line": "ping;36"
+  },
+  {
+   "t_ns": 84463253647698,
+   "dir": "rx",
+   "line": "ack;35;state=RELEASED;angle=0.267;xactual=0.176;torque=-0.025;brake=3.4;homed=1;limit=0;faults=0;hv=1;t=10030855"
+  },
+  {
+   "t_ns": 84463273848210,
+   "dir": "rx",
+   "line": "ack;36"
+  },
+  {
+   "t_ns": 84463314091220,
+   "dir": "tx",
+   "line": "ping;37"
+  },
+  {
+   "t_ns": 84463334233593,
+   "dir": "rx",
+   "line": "ack;37"
+  },
+  {
+   "t_ns": 84463353931228,
+   "dir": "tx",
+   "line": "status;38"
+  },
+  {
+   "t_ns": 84463374425707,
+   "dir": "tx",
+   "line": "ping;39"
+  },
+  {
+   "t_ns": 84463374473037,
+   "dir": "rx",
+   "line": "ack;38;state=RELEASED;angle=0.267;xactual=0.176;torque=-0.025;brake=3.4;homed=1;limit=0;faults=0;hv=1;t=10150721"
+  },
+  {
+   "t_ns": 84463394592805,
+   "dir": "rx",
+   "line": "ack;39"
+  },
+  {
+   "t_ns": 84463434777307,
+   "dir": "tx",
+   "line": "ping;40"
+  },
+  {
+   "t_ns": 84463454927043,
+   "dir": "rx",
+   "line": "ack;40"
+  },
+  {
+   "t_ns": 84463474690947,
+   "dir": "tx",
+   "line": "status;41"
+  },
+  {
+   "t_ns": 84463495131731,
+   "dir": "rx",
+   "line": "ack;41;state=RELEASED;angle=0.267;xactual=0.176;torque=-0.024;brake=3.4;homed=1;limit=0;faults=0;hv=1;t=10271271"
+  },
+  {
+   "t_ns": 84463495210982,
+   "dir": "tx",
+   "line": "ping;42"
+  },
+  {
+   "t_ns": 84463495394348,
+   "dir": "tx",
+   "line": "stop;43"
+  },
+  {
+   "t_ns": 84463535360456,
+   "dir": "rx",
+   "line": "ack;42"
+  },
+  {
+   "t_ns": 84463535383110,
+   "dir": "rx",
+   "line": "ack;43"
+  },
+  {
+   "t_ns": 84463535592051,
+   "dir": "tx",
+   "line": "status;44"
+  },
+  {
+   "t_ns": 84463555469446,
+   "dir": "rx",
+   "line": "ack;44;state=ARMED;angle=0.176;xactual=0.176;torque=0.001;brake=0.0;homed=1;limit=0;faults=0;hv=1;t=10332478"
+  },
+  {
+   "t_ns": 84463575687042,
+   "dir": "tx",
+   "line": "ping;45"
+  },
+  {
+   "t_ns": 84463595712942,
+   "dir": "rx",
+   "line": "ack;45"
+  },
+  {
+   "t_ns": 84463636034304,
+   "dir": "tx",
+   "line": "ping;46"
+  },
+  {
+   "t_ns": 84463655970623,
+   "dir": "rx",
+   "line": "ack;46"
+  },
+  {
+   "t_ns": 84463696247615,
+   "dir": "tx",
+   "line": "ping;47"
+  },
+  {
+   "t_ns": 84463716220867,
+   "dir": "rx",
+   "line": "ack;47"
+  },
+  {
+   "t_ns": 84463756419868,
+   "dir": "tx",
+   "line": "ping;48"
+  },
+  {
+   "t_ns": 84463776474023,
+   "dir": "rx",
+   "line": "ack;48"
+  },
+  {
+   "t_ns": 84463816752429,
+   "dir": "tx",
+   "line": "ping;49"
+  },
+  {
+   "t_ns": 84463836770048,
+   "dir": "rx",
+   "line": "ack;49"
+  },
+  {
+   "t_ns": 84463855765299,
+   "dir": "tx",
+   "line": "brake;50;1.000"
+  },
+  {
+   "t_ns": 84463877026061,
+   "dir": "tx",
+   "line": "ping;51"
+  },
+  {
+   "t_ns": 84463877071666,
+   "dir": "rx",
+   "line": "ack;50"
+  },
+  {
+   "t_ns": 84463877087978,
+   "dir": "rx",
+   "line": "ev;RELEASED;10661947;angle=0.176;torque=0.036;brake=1.0"
+  },
+  {
+   "t_ns": 84463877302984,
+   "dir": "tx",
+   "line": "watch;52;pull=5;push=5;timeout=3000;touch=0.300"
+  },
+  {
+   "t_ns": 84463897179474,
+   "dir": "rx",
+   "line": "ack;51"
+  },
+  {
+   "t_ns": 84463897201408,
+   "dir": "rx",
+   "line": "ack;52"
+  },
+  {
+   "t_ns": 84463937414353,
+   "dir": "tx",
+   "line": "ping;53"
+  },
+  {
+   "t_ns": 84463957445693,
+   "dir": "rx",
+   "line": "ack;53"
+  },
+  {
+   "t_ns": 84463997733315,
+   "dir": "tx",
+   "line": "ping;54"
+  },
+  {
+   "t_ns": 84464017705344,
+   "dir": "rx",
+   "line": "ack;54"
+  },
+  {
+   "t_ns": 84464058070574,
+   "dir": "tx",
+   "line": "ping;55"
+  },
+  {
+   "t_ns": 84464077949964,
+   "dir": "rx",
+   "line": "ack;55"
+  },
+  {
+   "t_ns": 84464118308412,
+   "dir": "tx",
+   "line": "ping;56"
+  },
+  {
+   "t_ns": 84464138198947,
+   "dir": "rx",
+   "line": "ack;56"
+  },
+  {
+   "t_ns": 84464178568104,
+   "dir": "tx",
+   "line": "ping;57"
+  },
+  {
+   "t_ns": 84464198484344,
+   "dir": "rx",
+   "line": "ack;57"
+  },
+  {
+   "t_ns": 84464238682147,
+   "dir": "tx",
+   "line": "ping;58"
+  },
+  {
+   "t_ns": 84464258818903,
+   "dir": "rx",
+   "line": "ack;58"
+  },
+  {
+   "t_ns": 84464300404835,
+   "dir": "tx",
+   "line": "ping;59"
+  },
+  {
+   "t_ns": 84464319195654,
+   "dir": "rx",
+   "line": "ack;59"
+  },
+  {
+   "t_ns": 84464359414517,
+   "dir": "tx",
+   "line": "ping;60"
+  },
+  {
+   "t_ns": 84464379680957,
+   "dir": "rx",
+   "line": "ack;60"
+  },
+  {
+   "t_ns": 84464419861715,
+   "dir": "tx",
+   "line": "ping;61"
+  },
+  {
+   "t_ns": 84464440178142,
+   "dir": "rx",
+   "line": "ack;61"
+  },
+  {
+   "t_ns": 84464480373966,
+   "dir": "tx",
+   "line": "ping;62"
+  },
+  {
+   "t_ns": 84464500652889,
+   "dir": "rx",
+   "line": "ack;62"
+  },
+  {
+   "t_ns": 84464540843409,
+   "dir": "tx",
+   "line": "ping;63"
+  },
+  {
+   "t_ns": 84464561099926,
+   "dir": "rx",
+   "line": "ack;63"
+  },
+  {
+   "t_ns": 84464601465886,
+   "dir": "tx",
+   "line": "ping;64"
+  },
+  {
+   "t_ns": 84464621467665,
+   "dir": "rx",
+   "line": "ack;64"
+  },
+  {
+   "t_ns": 84464661822345,
+   "dir": "tx",
+   "line": "ping;65"
+  },
+  {
+   "t_ns": 84464682044248,
+   "dir": "rx",
+   "line": "ack;65"
+  },
+  {
+   "t_ns": 84464722253350,
+   "dir": "tx",
+   "line": "ping;66"
+  },
+  {
+   "t_ns": 84464742524083,
+   "dir": "rx",
+   "line": "ack;66"
+  },
+  {
+   "t_ns": 84464782684259,
+   "dir": "tx",
+   "line": "ping;67"
+  },
+  {
+   "t_ns": 84464803047399,
+   "dir": "rx",
+   "line": "ack;67"
+  },
+  {
+   "t_ns": 84464843351720,
+   "dir": "tx",
+   "line": "ping;68"
+  },
+  {
+   "t_ns": 84464863575448,
+   "dir": "rx",
+   "line": "ack;68"
+  },
+  {
+   "t_ns": 84464903875207,
+   "dir": "tx",
+   "line": "ping;69"
+  },
+  {
+   "t_ns": 84464924067685,
+   "dir": "rx",
+   "line": "ack;69"
+  },
+  {
+   "t_ns": 84464964293931,
+   "dir": "tx",
+   "line": "ping;70"
+  },
+  {
+   "t_ns": 84464984450355,
+   "dir": "rx",
+   "line": "ack;70"
+  },
+  {
+   "t_ns": 84465024728592,
+   "dir": "tx",
+   "line": "ping;71"
+  },
+  {
+   "t_ns": 84465044921570,
+   "dir": "rx",
+   "line": "ack;71"
+  },
+  {
+   "t_ns": 84465085234863,
+   "dir": "tx",
+   "line": "ping;72"
+  },
+  {
+   "t_ns": 84465105340348,
+   "dir": "rx",
+   "line": "ack;72"
+  },
+  {
+   "t_ns": 84465145720373,
+   "dir": "tx",
+   "line": "ping;73"
+  },
+  {
+   "t_ns": 84465165791733,
+   "dir": "rx",
+   "line": "ack;73"
+  },
+  {
+   "t_ns": 84465206003923,
+   "dir": "tx",
+   "line": "ping;74"
+  },
+  {
+   "t_ns": 84465226155293,
+   "dir": "rx",
+   "line": "ack;74"
+  },
+  {
+   "t_ns": 84465266429943,
+   "dir": "tx",
+   "line": "ping;75"
+  },
+  {
+   "t_ns": 84465286387594,
+   "dir": "rx",
+   "line": "ack;75"
+  },
+  {
+   "t_ns": 84465326737069,
+   "dir": "tx",
+   "line": "ping;76"
+  },
+  {
+   "t_ns": 84465346613175,
+   "dir": "rx",
+   "line": "ack;76"
+  },
+  {
+   "t_ns": 84465386882038,
+   "dir": "tx",
+   "line": "ping;77"
+  },
+  {
+   "t_ns": 84465406970637,
+   "dir": "rx",
+   "line": "ack;77"
+  },
+  {
+   "t_ns": 84465447345751,
+   "dir": "tx",
+   "line": "ping;78"
+  },
+  {
+   "t_ns": 84465467468075,
+   "dir": "rx",
+   "line": "ack;78"
+  },
+  {
+   "t_ns": 84465507834803,
+   "dir": "tx",
+   "line": "ping;79"
+  },
+  {
+   "t_ns": 84465528052099,
+   "dir": "rx",
+   "line": "ack;79"
+  },
+  {
+   "t_ns": 84465568287737,
+   "dir": "tx",
+   "line": "ping;80"
+  },
+  {
+   "t_ns": 84465588443212,
+   "dir": "rx",
+   "line": "ack;80"
+  },
+  {
+   "t_ns": 84465628759739,
+   "dir": "tx",
+   "line": "ping;81"
+  },
+  {
+   "t_ns": 84465648838801,
+   "dir": "rx",
+   "line": "ack;81"
+  },
+  {
+   "t_ns": 84465689198295,
+   "dir": "tx",
+   "line": "ping;82"
+  },
+  {
+   "t_ns": 84465709412404,
+   "dir": "rx",
+   "line": "ack;82"
+  },
+  {
+   "t_ns": 84465749770408,
+   "dir": "tx",
+   "line": "ping;83"
+  },
+  {
+   "t_ns": 84465769982276,
+   "dir": "rx",
+   "line": "ack;83"
+  },
+  {
+   "t_ns": 84465810343552,
+   "dir": "tx",
+   "line": "ping;84"
+  },
+  {
+   "t_ns": 84465830556294,
+   "dir": "rx",
+   "line": "ack;84"
+  },
+  {
+   "t_ns": 84465870908160,
+   "dir": "tx",
+   "line": "ping;85"
+  },
+  {
+   "t_ns": 84465891016896,
+   "dir": "rx",
+   "line": "ack;85"
+  },
+  {
+   "t_ns": 84465931374515,
+   "dir": "tx",
+   "line": "ping;86"
+  },
+  {
+   "t_ns": 84465951586757,
+   "dir": "rx",
+   "line": "ack;86"
+  },
+  {
+   "t_ns": 84465991934850,
+   "dir": "tx",
+   "line": "ping;87"
+  },
+  {
+   "t_ns": 84466012064761,
+   "dir": "rx",
+   "line": "ack;87"
+  },
+  {
+   "t_ns": 84466052408613,
+   "dir": "tx",
+   "line": "ping;88"
+  },
+  {
+   "t_ns": 84466072548948,
+   "dir": "rx",
+   "line": "ack;88"
+  },
+  {
+   "t_ns": 84466112859842,
+   "dir": "tx",
+   "line": "ping;89"
+  },
+  {
+   "t_ns": 84466132874781,
+   "dir": "rx",
+   "line": "ack;89"
+  },
+  {
+   "t_ns": 84466173168521,
+   "dir": "tx",
+   "line": "ping;90"
+  },
+  {
+   "t_ns": 84466193202644,
+   "dir": "rx",
+   "line": "ack;90"
+  },
+  {
+   "t_ns": 84466233550462,
+   "dir": "tx",
+   "line": "ping;91"
+  },
+  {
+   "t_ns": 84466253669537,
+   "dir": "rx",
+   "line": "ack;91"
+  },
+  {
+   "t_ns": 84466294047219,
+   "dir": "tx",
+   "line": "ping;92"
+  },
+  {
+   "t_ns": 84466314285441,
+   "dir": "rx",
+   "line": "ack;92"
+  },
+  {
+   "t_ns": 84466354746180,
+   "dir": "tx",
+   "line": "ping;93"
+  },
+  {
+   "t_ns": 84466374863994,
+   "dir": "rx",
+   "line": "ack;93"
+  },
+  {
+   "t_ns": 84466415210310,
+   "dir": "tx",
+   "line": "ping;94"
+  },
+  {
+   "t_ns": 84466435373954,
+   "dir": "rx",
+   "line": "ack;94"
+  },
+  {
+   "t_ns": 84466475762268,
+   "dir": "tx",
+   "line": "ping;95"
+  },
+  {
+   "t_ns": 84466495982503,
+   "dir": "rx",
+   "line": "ack;95"
+  },
+  {
+   "t_ns": 84466536224931,
+   "dir": "tx",
+   "line": "ping;96"
+  },
+  {
+   "t_ns": 84466556369393,
+   "dir": "rx",
+   "line": "ack;96"
+  },
+  {
+   "t_ns": 84466596602330,
+   "dir": "tx",
+   "line": "ping;97"
+  },
+  {
+   "t_ns": 84466616635370,
+   "dir": "rx",
+   "line": "ack;97"
+  },
+  {
+   "t_ns": 84466656916774,
+   "dir": "tx",
+   "line": "ping;98"
+  },
+  {
+   "t_ns": 84466677138127,
+   "dir": "rx",
+   "line": "ack;98"
+  },
+  {
+   "t_ns": 84466717344315,
+   "dir": "tx",
+   "line": "ping;99"
+  },
+  {
+   "t_ns": 84466737622578,
+   "dir": "rx",
+   "line": "ack;99"
+  },
+  {
+   "t_ns": 84466777855180,
+   "dir": "tx",
+   "line": "ping;100"
+  },
+  {
+   "t_ns": 84466798115696,
+   "dir": "rx",
+   "line": "ack;100"
+  },
+  {
+   "t_ns": 84466838507230,
+   "dir": "tx",
+   "line": "ping;101"
+  },
+  {
+   "t_ns": 84466858747147,
+   "dir": "rx",
+   "line": "ack;101"
+  },
+  {
+   "t_ns": 84466899118469,
+   "dir": "tx",
+   "line": "ping;102"
+  },
+  {
+   "t_ns": 84466899172570,
+   "dir": "rx",
+   "line": "ev;NOMOVE;13679763;angle=0.267;torque=-0.025"
+  },
+  {
+   "t_ns": 84466919370413,
+   "dir": "rx",
+   "line": "ack;102"
+  },
+  {
+   "t_ns": 84466959688070,
+   "dir": "tx",
+   "line": "ping;103"
+  },
+  {
+   "t_ns": 84466979949103,
+   "dir": "rx",
+   "line": "ack;103"
+  },
+  {
+   "t_ns": 84467020200845,
+   "dir": "tx",
+   "line": "ping;104"
+  },
+  {
+   "t_ns": 84467040384321,
+   "dir": "rx",
+   "line": "ack;104"
+  },
+  {
+   "t_ns": 84467080752077,
+   "dir": "tx",
+   "line": "ping;105"
+  },
+  {
+   "t_ns": 84467100748389,
+   "dir": "rx",
+   "line": "ack;105"
+  },
+  {
+   "t_ns": 84467141135593,
+   "dir": "tx",
+   "line": "ping;106"
+  },
+  {
+   "t_ns": 84467161091974,
+   "dir": "rx",
+   "line": "ack;106"
+  },
+  {
+   "t_ns": 84467201429422,
+   "dir": "tx",
+   "line": "ping;107"
+  },
+  {
+   "t_ns": 84467221482343,
+   "dir": "rx",
+   "line": "ack;107"
+  },
+  {
+   "t_ns": 84467261840669,
+   "dir": "tx",
+   "line": "ping;108"
+  },
+  {
+   "t_ns": 84467281948863,
+   "dir": "rx",
+   "line": "ack;108"
+  },
+  {
+   "t_ns": 84467322316664,
+   "dir": "tx",
+   "line": "ping;109"
+  },
+  {
+   "t_ns": 84467342355084,
+   "dir": "rx",
+   "line": "ack;109"
+  },
+  {
+   "t_ns": 84467382663083,
+   "dir": "tx",
+   "line": "ping;110"
+  },
+  {
+   "t_ns": 84467402886045,
+   "dir": "rx",
+   "line": "ack;110"
+  },
+  {
+   "t_ns": 84467443201872,
+   "dir": "tx",
+   "line": "ping;111"
+  },
+  {
+   "t_ns": 84467463431557,
+   "dir": "rx",
+   "line": "ack;111"
+  },
+  {
+   "t_ns": 84467503823878,
+   "dir": "tx",
+   "line": "ping;112"
+  },
+  {
+   "t_ns": 84467524055976,
+   "dir": "rx",
+   "line": "ack;112"
+  },
+  {
+   "t_ns": 84467564334235,
+   "dir": "tx",
+   "line": "ping;113"
+  },
+  {
+   "t_ns": 84467584394157,
+   "dir": "rx",
+   "line": "ack;113"
+  },
+  {
+   "t_ns": 84467624736313,
+   "dir": "tx",
+   "line": "ping;114"
+  },
+  {
+   "t_ns": 84467644808334,
+   "dir": "rx",
+   "line": "ack;114"
+  },
+  {
+   "t_ns": 84467685166371,
+   "dir": "tx",
+   "line": "ping;115"
+  },
+  {
+   "t_ns": 84467705201813,
+   "dir": "rx",
+   "line": "ack;115"
+  },
+  {
+   "t_ns": 84467745496167,
+   "dir": "tx",
+   "line": "ping;116"
+  },
+  {
+   "t_ns": 84467765594378,
+   "dir": "rx",
+   "line": "ack;116"
+  },
+  {
+   "t_ns": 84467805959571,
+   "dir": "tx",
+   "line": "ping;117"
+  },
+  {
+   "t_ns": 84467826176564,
+   "dir": "rx",
+   "line": "ack;117"
+  },
+  {
+   "t_ns": 84467866534116,
+   "dir": "tx",
+   "line": "ping;118"
+  },
+  {
+   "t_ns": 84467886748613,
+   "dir": "rx",
+   "line": "ack;118"
+  },
+  {
+   "t_ns": 84467906951742,
+   "dir": "rx",
+   "line": "ev;TRIAL;14679763;outcome=NOMOVE;t_rel=10661947;t_touch=;t_move=;t_out=13679763;a0=0.176;a_peak=0.091;a_end=0.091;tq_peak=-0.058;tq_out=-0.025;dur_thr=0"
+  },
+  {
+   "t_ns": 84467927031754,
+   "dir": "tx",
+   "line": "ping;119"
+  },
+  {
+   "t_ns": 84467947202945,
+   "dir": "rx",
+   "line": "ack;119"
+  },
+  {
+   "t_ns": 84467987397701,
+   "dir": "tx",
+   "line": "ping;120"
+  },
+  {
+   "t_ns": 84468007541311,
+   "dir": "rx",
+   "line": "ack;120"
+  },
+  {
+   "t_ns": 84468047817267,
+   "dir": "tx",
+   "line": "ping;121"
+  },
+  {
+   "t_ns": 84468067878003,
+   "dir": "rx",
+   "line": "ack;121"
+  },
+  {
+   "t_ns": 84468108168163,
+   "dir": "tx",
+   "line": "ping;122"
+  },
+  {
+   "t_ns": 84468128274252,
+   "dir": "rx",
+   "line": "ack;122"
+  },
+  {
+   "t_ns": 84468168534167,
+   "dir": "tx",
+   "line": "ping;123"
+  },
+  {
+   "t_ns": 84468188582706,
+   "dir": "rx",
+   "line": "ack;123"
+  },
+  {
+   "t_ns": 84468228940757,
+   "dir": "tx",
+   "line": "ping;124"
+  },
+  {
+   "t_ns": 84468248991016,
+   "dir": "rx",
+   "line": "ack;124"
+  },
+  {
+   "t_ns": 84468289250779,
+   "dir": "tx",
+   "line": "ping;125"
+  },
+  {
+   "t_ns": 84468309561597,
+   "dir": "rx",
+   "line": "ack;125"
+  },
+  {
+   "t_ns": 84468349798556,
+   "dir": "tx",
+   "line": "ping;126"
+  },
+  {
+   "t_ns": 84468370095448,
+   "dir": "rx",
+   "line": "ack;126"
+  },
+  {
+   "t_ns": 84468410335994,
+   "dir": "tx",
+   "line": "ping;127"
+  },
+  {
+   "t_ns": 84468430657296,
+   "dir": "rx",
+   "line": "ack;127"
+  },
+  {
+   "t_ns": 84468470982948,
+   "dir": "tx",
+   "line": "ping;128"
+  },
+  {
+   "t_ns": 84468491173656,
+   "dir": "rx",
+   "line": "ack;128"
+  },
+  {
+   "t_ns": 84468507154752,
+   "dir": "tx",
+   "line": "fetch;129;0;4"
+  },
+  {
+   "t_ns": 84468531425043,
+   "dir": "tx",
+   "line": "ping;130"
+  },
+  {
+   "t_ns": 84468531543698,
+   "dir": "rx",
+   "line": "ack;129;n=4;k0=0;t0=13178947;dt_us=1000;pre=500;lost=0"
+  },
+  {
+   "t_ns": 84468531572475,
+   "dir": "rx",
+   "line": "cap;0;0.267;-0.026"
+  },
+  {
+   "t_ns": 84468531580763,
+   "dir": "rx",
+   "line": "cap;1;0.267;-0.025"
+  },
+  {
+   "t_ns": 84468531587512,
+   "dir": "rx",
+   "line": "cap;2;0.267;-0.026"
+  },
+  {
+   "t_ns": 84468531594976,
+   "dir": "rx",
+   "line": "cap;3;0.267;-0.025"
+  },
+  {
+   "t_ns": 84468531602466,
+   "dir": "rx",
+   "line": "cap;end"
+  },
+  {
+   "t_ns": 84468531842839,
+   "dir": "tx",
+   "line": "moveto;131;0.0"
+  },
+  {
+   "t_ns": 84468571985284,
+   "dir": "rx",
+   "line": "ack;130"
+  },
+  {
+   "t_ns": 84468572034024,
+   "dir": "rx",
+   "line": "ack;131"
+  },
+  {
+   "t_ns": 84468612296342,
+   "dir": "tx",
+   "line": "ping;132"
+  },
+  {
+   "t_ns": 84468632516781,
+   "dir": "rx",
+   "line": "ack;132"
+  },
+  {
+   "t_ns": 84468632546826,
+   "dir": "rx",
+   "line": "ev;TARGET;15418937;angle=-0.183"
+  },
+  {
+   "t_ns": 84468632860101,
+   "dir": "tx",
+   "line": "disarm;133"
+  },
+  {
+   "t_ns": 84468652755905,
+   "dir": "rx",
+   "line": "ack;133"
+  },
+  {
+   "t_ns": 84468652863568,
+   "dir": "tx",
+   "line": "hv;134;off"
+  },
+  {
+   "t_ns": 84468672968551,
+   "dir": "rx",
+   "line": "ack;134"
+  },
+  {
+   "t_ns": 84468673063413,
+   "dir": "tx",
+   "line": "status;135"
+  },
+  {
+   "t_ns": 84468693188544,
+   "dir": "rx",
+   "line": "ack;135;state=HOMED;angle=-0.183;xactual=-0.183;torque=0.0;brake=0.0;homed=1;limit=0;faults=0;hv=0;t=15470001"
+  }
+ ]
+}

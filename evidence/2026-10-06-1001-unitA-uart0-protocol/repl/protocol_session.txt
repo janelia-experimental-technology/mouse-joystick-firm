@@ -1,0 +1,149 @@
+--- sent: from machine import UART
+from machine import UART
+>>> 
+--- sent: import time
+import time
+>>> 
+--- sent: u = UART(3, 115200, timeout=20, rxbuf=2048)
+u = UART(3, 115200, timeout=20, rxbuf=2048)
+>>> 
+--- sent: exec("def rd(ms):\n t=time.ticks_ms(); b=b''\n while time.ticks_
+exec("def rd(ms):\n t=time.ticks_ms(); b=b''\n while time.ticks_diff(time.ticks_ms(),t)<ms:\n  r=u.read()\n  if r: b+=r\n return b")
+>>> 
+--- sent: u.write(b'id;1\n'); print(rd(200).decode())
+u.write(b'id;1\n'); print(rd(200).decode())
+5
+ack;1;hw=rev2;serial=E4654C159F274534;fw=9b6d2ef;proto=2;axes=1;caps=motion+home+instr+hv+watch+fetch+stream+cfg+angout+brake+torque;rxbuf=200;boot=reboot;crumb=0
+
+>>> 
+--- sent: u.write(b'status;2\n'); print(rd(200).decode())
+u.write(b'status;2\n'); print(rd(200).decode())
+9
+ack;2;state=IDLE;angle=0.0;xactual=0.0;torque=0.0;brake=0.0;homed=0;limit=0;faults=0;hv=0;t=184132569
+
+>>> 
+--- sent: u.write(b'hv;3;on\n'); print(rd(800).decode())
+u.write(b'hv;3;on\n'); print(rd(800).decode())
+8
+ack;3
+
+>>> 
+--- sent: u.write(b'status;4\n'); print(rd(200).decode())
+u.write(b'status;4\n'); print(rd(200).decode())
+9
+ack;4;state=IDLE;angle=0.0;xactual=0.0;torque=-0.262;brake=0.0;homed=0;limit=0;faults=0;hv=1;t=187136541
+
+>>> 
+--- sent: u.write(b'tq;5;get\n'); print(rd(200).decode()); u.write(b'tq;6;
+u.write(b'tq;5;get\n'); print(rd(200).decode()); u.write(b'tq;6;zero\n'); print(rd(200).decode()); u.write(b'tq;7;get\n'); print(rd(200).decode())
+9
+ack;5;torque=-0.261;raw=-0.261;cal=0
+
+10
+ack;6
+
+9
+ack;7;torque=0.001;raw=-0.26;cal=0
+
+>>> 
+--- sent: u.write(b'home;8\n'); print(rd(3000).decode()) # slow
+u.write(b'home;8\n'); print(rd(3000).decode()) # slow
+7
+ack;8
+ev;HOMED;191003075;angle=0.0
+
+>>> 
+--- sent: exec("def f():\n out=b''\n u.write(b'arm;9\\n'); out+=rd(80)\n u
+exec("def f():\n out=b''\n u.write(b'arm;9\\n'); out+=rd(80)\n u.write(b'brake;10;1.0\\n'); out+=rd(80)\n for i in range(4):\n  u.write(b'ping;%d\\n'%(11+i)); out+=rd(60)\n u.write(b'status;15\\n'); out+=rd(60)\n u.write(b'watch;16;pull=5;push=5;timeout=1500;touch=0.3\\n'); out+=rd(60)\n for i in range(48):\n  u.write(b'ping;%d\\n'%(17+i)); out+=rd(60)\n u.write(b'fetch;65;0;3\\n'); out+=rd(150)\n u.write(b'stop;66\\n'); out+=rd(60)\n u.write(b'status;67\\n'); out+=rd(60)\n u.write(b'brake;68;3.4\\n'); out+=rd(80)\n for i in range(4):\n  u.write(b'ping;%d\\n'%(69+i)); out+=rd(60)\n u.write(b'status;73\\n'); out+=rd(60)\n u.write(b'stop;74\\n'); out+=rd(60)\n u.write(b'disarm;75\\n'); out+=rd(80)\n return out")
+>>> 
+--- sent: print(f().decode()) # slow
+print(f().decode()) # slow
+ack;9
+ack;10
+ev;RELEASED;203760064;angle=0.084;torque=0.016;brake=1.0
+ack;11
+ack;12
+ack;13
+ack;14
+ack;15;state=RELEASED;angle=0.267;xactual=0.084;torque=-0.007;brake=1.0;homed=1;limit=0;faults=0;hv=1;t=204099833
+ack;16
+ack;17
+ack;18
+ack;19
+ack;20
+ack;21
+ack;22
+ack;23
+ack;24
+ack;25
+ack;26
+ack;27
+ack;28
+ack;29
+ack;30
+ack;31
+ack;32
+ack;33
+ack;34
+ack;35
+ack;36
+ack;37
+ev;NOMOVE;205679784;angle=0.267;torque=-0.007
+ack;38
+ack;39
+ack;40
+ack;41
+ack;42
+ack;43
+ack;44
+ack;45
+ack;46
+ack;47
+ack;48
+ack;49
+ack;50
+ack;51
+ack;52
+ev;TRIAL;206679784;outcome=NOMOVE;t_rel=203760064;t_touch=;t_move=;t_out=205679784;a0=0.084;a_peak=0.183;a_end=0.183;tq_peak=-0.009;tq_out=-0.007;dur_thr=0
+ack;53
+ack;54
+ack;55
+ack;56
+ack;57
+ack;58
+ack;59
+ack;60
+ack;61
+ack;62
+ack;63
+ack;64
+ack;65;n=3;k0=0;t0=205179064;dt_us=1000;pre=500;lost=0
+cap;0;0.267;-0.007
+cap;1;0.267;-0.007
+cap;2;0.267;-0.007
+cap;end
+ev;FAULT;207617898;code=0;detail=host_timeout
+ack;66
+ack;67;state=FAULTED;angle=0.267;xactual=0.084;torque=0.0;brake=0.0;homed=1;limit=0;faults=1;hv=0;t=207737499
+nak;68;faulted
+ack;69
+ack;70
+ack;71
+ack;72
+ack;73;state=FAULTED;angle=0.267;xactual=0.084;torque=0.0;brake=0.0;homed=1;limit=0;faults=1;hv=0;t=208159658
+ack;74
+ack;75
+
+>>> 
+--- sent: u.write(b'hv;76;off\n'); print(rd(400).decode())
+u.write(b'hv;76;off\n'); print(rd(400).decode())
+10
+ack;76
+
+>>> 
+--- sent: u.write(b'status;77\n'); print(rd(200).decode())
+u.write(b'status;77\n'); print(rd(200).decode())
+10
+ack;77;state=FAULTED;angle=0.267;xactual=0.084;torque=0.0;brake=0.0;homed=1;limit=0;faults=1;hv=0;t=217178124
+
+>>> 

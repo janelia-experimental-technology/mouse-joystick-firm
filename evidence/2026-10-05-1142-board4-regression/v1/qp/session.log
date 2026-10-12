@@ -1,0 +1,49 @@
+##### QP session on v1.0 E4654C159F274534, mouse_joystick_qp_rev2_usb, HEAD a8cabbe (+ uncommitted PowerSequence fix) 2026-10-05T15:51:19-04:00
+========================= [SUCCESS] Took 4.15 seconds =========================
+mouse_joystick_qp_rev2_usb  SUCCESS   00:00:04.154
+##### step check-id exit 1; aborted: None 2026-10-05T15:51:28-04:00
+serial E4654C159F274534 WRONG BOARD, hw rev2 ok, caps motion+home+instr+hv+watch+fetch+stream+cfg+angout ok
+boot=reboot;crumb=0  (forced reboot (Q_onError))
+capture b_angle running: 90000 ms at 10m on CH0,CH1,CH2,CH8,CH9,CH10,CH11 (2026-10-05T15:51:30-04:00)
+##### step b_angle exit 1; aborted: None 2026-10-05T15:51:38-04:00
+ok   limits: ack;1;travel_lo=-10.125;travel_hi=0.0;v_max=36.0;a_max=180.0;i_max=0.421
+ok   targets from limits: travel [-10.12, 0.00]; angscale -10.12 0.00; angles -7.59, -5.06, -2.53
+ok   angle output present: yes
+ok   status before hv on: ack;8;state=IDLE;angle=0.0;xactual=0.0;torque=;brake=;homed=0;limit=0;faults=0;hv=0;t=9681668
+ok   hv on: ack;9
+ok   home: ack;28
+ok   HOMED: ev;HOMED;11306640;angle=0.0
+ok   angscale -10.12 0.00: ack;53
+ok   angout on: ack;54
+ok   arm: ack;61
+ok   moveto -7.59 (25 % of travel): ack;63
+ok   TARGET at -7.59: ev;TARGET;11977656;angle=-7.566
+ok   moveto -5.06 (50 % of travel): ack;80
+ok   TARGET at -5.06: ev;TARGET;12432666;angle=-5.766
+ok   moveto -2.53 (75 % of travel): ack;94
+ok   TARGET at -2.53: ev;TARGET;12904641;angle=-3.15
+ok   moveto 0.00 (park): ack;107
+ok   TARGET at park: ev;TARGET;13358638;angle=-0.541
+ok   angout off: ack;114
+ok   disarm: ack;122
+capture b_angle complete: 9121676 bytes
+##### decode b_angle: 849 records, SAMPLE_STAT 84, ASSERT 0, BOOT_INFO 18, DAC_STATE/USER+012 2 2026-10-05T15:53:59-04:00
+##### analysis b_angle: 285 lines 2026-10-05T15:56:16-04:00
+capture c_pilot running: 180000 ms at 1m on CH0,CH1,CH2 (2026-10-05T15:56:18-04:00)
+##### pilot c_pilot exit 1; aborted: None 2026-10-05T15:56:46-04:00
+FAIL hand pull -> PULL (PUSH = pull_sign is -1 for this joystick): no outcome within 6 s
+FAIL TRIAL one second after the outcome: no TRIAL
+FAIL fetch window: 500 samples in 16 chunks (153 ms), pre=500, lost=0, expected 1001, angle at k=pre None
+capture c_pilot complete: 2021860 bytes
+##### decode c_pilot: 2922 records, SAMPLE_STAT 173, ASSERT 0, BOOT_INFO 35, DAC_STATE/USER+012 1 2026-10-05T15:59:46-04:00
+##### analysis c_pilot done 2026-10-05T15:59:48-04:00
+capture d_budget running: 90000 ms at 10m on CH0,CH1,CH2,CH8,CH9,CH10,CH11 (2026-10-05T15:59:50-04:00)
+##### pilot d_budget exit 0; aborted: None 2026-10-05T16:02:11-04:00
+capture d_budget complete: 10605179 bytes
+##### decode d_budget: 8575 records, SAMPLE_STAT 84, ASSERT 0, BOOT_INFO 18, DAC_STATE/USER+012 2 2026-10-05T16:02:52-04:00
+##### analysis d_budget done 2026-10-05T16:05:18-04:00
+capture e_hvoff running: 20000 ms at 1m on CH0,CH1,CH2 (2026-10-05T16:05:20-04:00)
+##### step e_hvoff exit 0; aborted: None 2026-10-05T16:05:25-04:00
+capture e_hvoff complete: 199930 bytes
+##### decode e_hvoff: 110 records, SAMPLE_STAT 15, ASSERT 0, BOOT_INFO 4, DAC_STATE/USER+012 1 2026-10-05T16:05:42-04:00
+##### QP session done; rail off by hv off 2026-10-05T16:05:42-04:00

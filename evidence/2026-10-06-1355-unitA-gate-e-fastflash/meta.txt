@@ -1,0 +1,1 @@
+Gate E run 10: as run 9, built against the released TMC51X0 4.2.0 tag (lib_deps https://github.com/janelia-arduino/TMC51X0.git#4.2.0) instead of the symlinked checkout; pyControl 2.1.1 on PYBV11 397734803233, board E4654C159F274534, 36 V on

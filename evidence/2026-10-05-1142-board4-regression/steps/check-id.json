@@ -1,0 +1,171 @@
+{
+ "step": "check-id",
+ "port": "/dev/serial/by-id/usb-Orb_Weaver_mouse-joystick-pcb_E4654C159F171E34-if00",
+ "started_unix": 1791216402.658784,
+ "id": "ack;1;hw=rev1;serial=E4654C159F171E34;fw=ec3b36d;proto=2;axes=1;caps=motion+home+instr+hv+watch+fetch+stream+cfg+angout;rxbuf=200;boot=reboot;crumb=0",
+ "status": "ack;2;state=IDLE;angle=0.0;xactual=0.0;torque=;brake=;homed=0;limit=0;faults=0;hv=0;t=3550678",
+ "boot": "reboot",
+ "crumb": "0",
+ "log": [
+  {
+   "t_ns": 6687937502952,
+   "dir": "rx",
+   "text": "Beaconing board identity on InstrumentPort-40: E4654C159F171E34"
+  },
+  {
+   "t_ns": 6687937761911,
+   "dir": "rx",
+   "text": "  TRIG1 (ch17) high 50 ms starts a frame; TRIG0 (ch16) then"
+  },
+  {
+   "t_ns": 6687938301614,
+   "dir": "rx",
+   "text": "  clocks 64 bits MSB first, each valid on TRIG1 at the"
+  },
+  {
+   "t_ns": 6687938347003,
+   "dir": "rx",
+   "text": "  rising edge. Trigger the capture on ch17 rising."
+  },
+  {
+   "t_ns": 6687939260882,
+   "dir": "rx",
+   "text": "  3 frames, 134 ms each."
+  },
+  {
+   "t_ns": 6687939260882,
+   "dir": "rx",
+   "text": "  No 36 V and no bus needed: U1801 runs from +3.3V_MCU, so"
+  },
+  {
+   "t_ns": 6687939530705,
+   "dir": "rx",
+   "text": "  this reaches the port with the switched domain dark."
+  },
+  {
+   "t_ns": 6688160993574,
+   "dir": "tx",
+   "text": "id;1"
+  },
+  {
+   "t_ns": 6688342877457,
+   "dir": "rx",
+   "text": "Done."
+  },
+  {
+   "t_ns": 6688342931290,
+   "dir": "rx",
+   "text": ""
+  },
+  {
+   "t_ns": 6688343234017,
+   "dir": "rx",
+   "text": "mouse-joystick-pcb -- pyControl protocol link over QP/C++"
+  },
+  {
+   "t_ns": 6688343502420,
+   "dir": "rx",
+   "text": "[1] identity"
+  },
+  {
+   "t_ns": 6688344096826,
+   "dir": "rx",
+   "text": "    flash unique id: E4654C159F171E34"
+  },
+  {
+   "t_ns": 6688344550732,
+   "dir": "rx",
+   "text": "    ^ this is the board serial. Calibration belongs to it, not"
+  },
+  {
+   "t_ns": 6688344624637,
+   "dir": "rx",
+   "text": "      to a joystick position, and two boards in one rig are"
+  },
+  {
+   "t_ns": 6688345024573,
+   "dir": "rx",
+   "text": "      independently suspect."
+  },
+  {
+   "t_ns": 6688345345405,
+   "dir": "rx",
+   "text": "    usb manufacturer: Orb Weaver"
+  },
+  {
+   "t_ns": 6688345984312,
+   "dir": "rx",
+   "text": "    usb product: mouse-joystick-pcb"
+  },
+  {
+   "t_ns": 6688346445390,
+   "dir": "rx",
+   "text": "    built: Oct  5 2026 11:30:37"
+  },
+  {
+   "t_ns": 6688347212617,
+   "dir": "rx",
+   "text": "    targets board revision: rev 1  (pcb v0.3, angle output DAC on SPI1)"
+  },
+  {
+   "t_ns": 6688347212617,
+   "dir": "rx",
+   "text": "    GP10, GP11 and GP13 carry the DAC bus, so they are NOT"
+  },
+  {
+   "t_ns": 6688347556180,
+   "dir": "rx",
+   "text": "      exercised as spare pads: 9 pads here against 12 on"
+  },
+  {
+   "t_ns": 6688347694646,
+   "dir": "rx",
+   "text": "      rev 0, and 24 checks against 27. pcb HEAD is v1.0,"
+  },
+  {
+   "t_ns": 6688347808207,
+   "dir": "rx",
+   "text": "      which is rev 2, not this."
+  },
+  {
+   "t_ns": 6688348173796,
+   "dir": "rx",
+   "text": "Protocol on THIS port (bench build). The 36 V rail is OFF."
+  },
+  {
+   "t_ns": 6688348290570,
+   "dir": "rx",
+   "text": "QS trace: FW_TRIG1, transmit only."
+  },
+  {
+   "t_ns": 6688349234555,
+   "dir": "rx",
+   "text": "Boot: forced reboot, last breadcrumb 0"
+  },
+  {
+   "t_ns": 6688349234555,
+   "dir": "rx",
+   "text": ""
+  },
+  {
+   "t_ns": 6688399935398,
+   "dir": "rx",
+   "text": "ev;READY;3533988;fw=ec3b36d;proto=2;serial=E4654C159F171E34"
+  },
+  {
+   "t_ns": 6688404521502,
+   "dir": "rx",
+   "text": "ack;1;hw=rev1;serial=E4654C159F171E34;fw=ec3b36d;proto=2;axes=1;caps=motion+home+instr+hv+watch+fetch+stream+cfg+angout;rxbuf=200;boot=reboot;crumb=0"
+  },
+  {
+   "t_ns": 6688404694924,
+   "dir": "tx",
+   "text": "status;2"
+  },
+  {
+   "t_ns": 6688408628839,
+   "dir": "rx",
+   "text": "ack;2;state=IDLE;angle=0.0;xactual=0.0;torque=;brake=;homed=0;limit=0;faults=0;hv=0;t=3550678"
+  }
+ ]
+}

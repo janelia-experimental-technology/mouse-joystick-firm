@@ -1,0 +1,9 @@
+id: E4654C159F274534 rev2 80fdf3b-dirty caps angout+brake+cfg+fetch+home+hv+instr+motion+stream+torque+watch
+status: state=IDLE;angle=0.0;xactual=0.0;torque=0.0;brake=0.0;homed=0;limit=0;faults=0;hv=0;t=7559623
+tq get: {'torque': '0.0', 'raw': '0.0', 'cal': '0'}
+tq get after zero: {'torque': '0.0', 'raw': '0.0', 'cal': '0'}
+hv on: ack in 201.1 ms
+status after hv on: state=IDLE;angle=0.0;xactual=0.0;torque=-0.261;brake=0.0;homed=0;limit=0;faults=0;hv=1;t=8163819
+ev;HOMED;9317688;angle=0.0
+ABORT: no ev;RELEASED within 2.0 s
+-> /home/peter/Repositories/orb-weaver/qp-arduino-example/evidence/2026-10-06-0920-unitA-qp-brake-torque/pilot/brake_torque.json

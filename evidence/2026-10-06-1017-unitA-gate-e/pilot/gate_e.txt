@@ -1,0 +1,49 @@
+pyControl v2.1.1 at /home/peter/Repositories/github/pycontrol-code; hardware definition mouse_joystick_bringup.py; task mouse_joystick_check
+
+Micropython version: 1.261
+Framework version: 2.1.1
+pyboard unique id b'M\x00B\x00\x0bQ323459', MicroPython 1.261, framework True 2.1.1
+
+Transfering device driver files ['mouse_joystick_protocol.py', 'mouse_joystick.py'] to pyboard.. OK
+
+Transferring hardware definition to pyboard. OK
+
+Transferring state machine mouse_joystick_check to pyboard. OK
+variables: {'do_move': 1, 'brake_ncm': 1.0, 'do_brake': 1, 'board': 'right', 'move_degrees': -5.0, 'heartbeat_interval': 40, 'watch_timeout_ms': 10000, 'push_degrees': 5.0, 'pull_degrees': 5.0, 'touch_ncm': 0.3, 'serial': '', 'outcome': ''}
+0.000	variable	run_start	{
+			"board": right
+			"brake_ncm": 1.0
+			"do_brake": 1
+			"do_move": 1
+			"heartbeat_interval": 40
+			"move_degrees": -5.0
+			"outcome": 
+			"pull_degrees": 5.0
+			"push_degrees": 5.0
+			"serial": 
+			"touch_ncm": 0.3
+			"watch_timeout_ms": 10000
+			}
+0.000	print	task	identifying the right board
+0.001	state		identifying
+0.019	event	input	joystick_R
+0.024	print	task	board serial E4654C159F274534 fw 9b6d2ef-dirty hw rev2 proto 2 caps motion+home+instr+hv+watch+fetch+stream+cfg+angout+brake+torque
+0.024	state		powering
+0.024	print	task	raising the motor rail
+0.210	error		
+
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+  File "pyControl/framework.py", line 153, in run
+  File "pyControl/state_machine.py", line 74, in process_event
+  File "task_file.py", line 89, in all_states
+  File "task_file.py", line 131, in _handle
+NameError: name 'get_current_state' isn't defined
+PyboardError: Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+  File "pyControl/framework.py", line 153, in run
+  File "pyControl/state_machine.py", line 74, in process_event
+  File "task_file.py", line 89, in all_states
+  File "task_file.py", line 131, in _handle
+NameError: name 'get_current_state' isn't defined
+-> /home/peter/Repositories/orb-weaver/qp-arduino-example/evidence/2026-10-06-1017-unitA-gate-e/pilot/gate_e.json

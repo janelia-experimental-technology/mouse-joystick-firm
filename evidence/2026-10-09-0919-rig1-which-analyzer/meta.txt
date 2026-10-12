@@ -1,0 +1,3 @@
+2026-10-09T09:20:11-04:00  capture la1.sr: ok; profile mouse-joystick-pcb-v1.0-digital50-pycontrol; analyzer kingst-la2016:conn=1.18 (--analyzer topology); CH0,CH1,CH2,CH3 at 1000000 Sa/s for 3 s; 3000716 samples
+2026-10-09T09:20:11-04:00  capture la3.sr: ok; profile mouse-joystick-pcb-v1.0-digital50-pycontrol; analyzer kingst-la2016:conn=1.19 (--analyzer topology); CH0,CH1,CH2,CH3 at 1000000 Sa/s for 3 s; 3001496 samples
+2026-10-09T09:20:11-04:00  capture la4.sr: ok; profile mouse-joystick-pcb-v1.0-digital50-pycontrol; analyzer kingst-la2016:conn=1.20 (--analyzer topology); CH0,CH1,CH2,CH3 at 1000000 Sa/s for 3 s; 3001041 samples

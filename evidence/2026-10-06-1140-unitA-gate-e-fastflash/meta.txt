@@ -1,0 +1,1 @@
+Gate E run 8 on the QUAD-LANE flash stage 2 (env mouse_joystick_qp_rev2_fastflash: boot2_w25q128jvxq_4 instead of boot2_generic_03h_4), everything else as run 7 plus the two-buffer datagram transfer; pyControl 2.1.1 on PYBV11 397734803233, board E4654C159F274534, 36 V on

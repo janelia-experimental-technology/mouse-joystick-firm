@@ -1,0 +1,4 @@
+# Raw captures not copied into this repository (sha256, bytes, path).
+# The files are in the qp-arduino-example repository under evidence/2026-10-06-1132-unitA-tick-attribution/ (see docs/development.md) and available on request.
+1cdda25cd060598b88b530324ea7b3cd7b42d68404a6bf009477a9098a0f9f00      4273423  default/captures/run.sr
+065e131867752338cf1b5a47c14c4a6f7b3c5cd4a0a00efb3c3fcb5b1d29f788      3588184  slow_hb/captures/run.sr

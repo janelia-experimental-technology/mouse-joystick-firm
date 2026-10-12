@@ -1,0 +1,176 @@
+{
+ "step": "check-id",
+ "port": "/dev/serial/by-id/usb-Orb_Weaver_mouse-joystick-pcb_E4654C159F274534-if00",
+ "started_unix": 1791229887.1246834,
+ "id": "ack;1;hw=rev2;serial=E4654C159F274534;fw=a8cabbe-dirty;proto=2;axes=1;caps=motion+home+instr+hv+watch+fetch+stream+cfg+angout;rxbuf=200;boot=reboot;crumb=0",
+ "status": "ack;2;state=IDLE;angle=0.0;xactual=0.0;torque=;brake=;homed=0;limit=0;faults=0;hv=0;t=3546496",
+ "boot": "reboot",
+ "crumb": "0",
+ "log": [
+  {
+   "t_ns": 20172405683668,
+   "dir": "rx",
+   "text": "Beaconing board identity on InstrumentPort-40: E4654C159F274534"
+  },
+  {
+   "t_ns": 20172405924940,
+   "dir": "rx",
+   "text": "  TRIG1 (ch17) high 50 ms starts a frame; TRIG0 (ch16) then"
+  },
+  {
+   "t_ns": 20172406332739,
+   "dir": "rx",
+   "text": "  clocks 64 bits MSB first, each valid on TRIG1 at the"
+  },
+  {
+   "t_ns": 20172406445700,
+   "dir": "rx",
+   "text": "  rising edge. Trigger the capture on ch17 rising."
+  },
+  {
+   "t_ns": 20172407174178,
+   "dir": "rx",
+   "text": "  3 frames, 134 ms each."
+  },
+  {
+   "t_ns": 20172408181936,
+   "dir": "rx",
+   "text": "  No 36 V and no bus needed: U1801 runs from +3.3V_MCU, so"
+  },
+  {
+   "t_ns": 20172408181936,
+   "dir": "rx",
+   "text": "  this reaches the port with the switched domain dark."
+  },
+  {
+   "t_ns": 20172626893457,
+   "dir": "tx",
+   "text": "id;1"
+  },
+  {
+   "t_ns": 20172810442456,
+   "dir": "rx",
+   "text": "Done."
+  },
+  {
+   "t_ns": 20172810442456,
+   "dir": "rx",
+   "text": ""
+  },
+  {
+   "t_ns": 20172810658379,
+   "dir": "rx",
+   "text": "mouse-joystick-pcb -- pyControl protocol link over QP/C++"
+  },
+  {
+   "t_ns": 20172810759730,
+   "dir": "rx",
+   "text": "[1] identity"
+  },
+  {
+   "t_ns": 20172811497688,
+   "dir": "rx",
+   "text": "    flash unique id: E4654C159F274534"
+  },
+  {
+   "t_ns": 20172811497688,
+   "dir": "rx",
+   "text": "    ^ this is the board serial. Calibration belongs to it, not"
+  },
+  {
+   "t_ns": 20172811530256,
+   "dir": "rx",
+   "text": "      to a joystick position, and two boards in one rig are"
+  },
+  {
+   "t_ns": 20172811775246,
+   "dir": "rx",
+   "text": "      independently suspect."
+  },
+  {
+   "t_ns": 20172812170817,
+   "dir": "rx",
+   "text": "    usb manufacturer: Orb Weaver"
+  },
+  {
+   "t_ns": 20172812390803,
+   "dir": "rx",
+   "text": "    usb product: mouse-joystick-pcb"
+  },
+  {
+   "t_ns": 20172812766019,
+   "dir": "rx",
+   "text": "    built: Oct  5 2026 15:34:00"
+  },
+  {
+   "t_ns": 20172813230176,
+   "dir": "rx",
+   "text": "    targets board revision: rev 2  (pcb v1.0: I2C DACs, torque ADC, brake, LATCH on GP24)"
+  },
+  {
+   "t_ns": 20172813549951,
+   "dir": "rx",
+   "text": "    Only GP20 and GP22 are spare. GP10-13, GP15-18 reach the"
+  },
+  {
+   "t_ns": 20172813752124,
+   "dir": "rx",
+   "text": "      torque, brake and DAC blocks through the bus switch and"
+  },
+  {
+   "t_ns": 20172813916009,
+   "dir": "rx",
+   "text": "      are left alone: 2 pads, 20 checks. ~{HV_FAULT} is"
+  },
+  {
+   "t_ns": 20172814208044,
+   "dir": "rx",
+   "text": "      GP23 here; GP29 is an ADC input. Not yet confirmed"
+  },
+  {
+   "t_ns": 20172814322273,
+   "dir": "rx",
+   "text": "      on hardware: this is the first v1.0 firmware."
+  },
+  {
+   "t_ns": 20172814322273,
+   "dir": "rx",
+   "text": "Protocol on THIS port (bench build). The 36 V rail is OFF."
+  },
+  {
+   "t_ns": 20172814480964,
+   "dir": "rx",
+   "text": "QS trace: FW_TRIG1, transmit only."
+  },
+  {
+   "t_ns": 20172814853052,
+   "dir": "rx",
+   "text": "Boot: forced reboot, last breadcrumb 0"
+  },
+  {
+   "t_ns": 20172814927768,
+   "dir": "rx",
+   "text": ""
+  },
+  {
+   "t_ns": 20172865941453,
+   "dir": "rx",
+   "text": "ev;READY;3529451;fw=a8cabbe-dirty;proto=2;serial=E4654C159F274534"
+  },
+  {
+   "t_ns": 20172870389984,
+   "dir": "rx",
+   "text": "ack;1;hw=rev2;serial=E4654C159F274534;fw=a8cabbe-dirty;proto=2;axes=1;caps=motion+home+instr+hv+watch+fetch+stream+cfg+angout;rxbuf=200;boot=reboot;crumb=0"
+  },
+  {
+   "t_ns": 20172870563274,
+   "dir": "tx",
+   "text": "status;2"
+  },
+  {
+   "t_ns": 20172874842461,
+   "dir": "rx",
+   "text": "ack;2;state=IDLE;angle=0.0;xactual=0.0;torque=;brake=;homed=0;limit=0;faults=0;hv=0;t=3546496"
+  }
+ ]
+}

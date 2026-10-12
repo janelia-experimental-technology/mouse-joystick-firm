@@ -1,0 +1,61 @@
+ WARN the lock file is up-to-date but uses an older format (v6), run `pixi lock` to upgrade to v7 for improved reproducibility
+    BRAKE_ISENSE 0.0113 V (14.0 counts) = 0.55 mA   ~BRAKE_FAULT high (not limiting)
+ WARN the lock file is up-to-date but uses an older format (v6), run `pixi lock` to upgrade to v7 for improved reproducibility
+Brake sweep, every point approached from code 0 (the firmware
+contract: the brake's torque-vs-current has two curves, one per
+approach direction). 100 ms settle per point, 64 ISENSE samples.
+  pct   code   cmd_mA   isense_V   meas_mA   err_%FS  fault
+    0  0  0.000   0.0113    0.547   1.12    -
+   10  6553  4.878   0.1096    5.314   0.89    -
+   20  13107  9.756   0.2087    10.120   0.75    -
+   30  19660  14.634   0.3103    15.043   0.84    -
+   40  26214  19.512   0.4102    19.888   0.77    -
+   50  32767  24.390   0.5029    24.381   -0.02    -
+   60  39321  29.268   0.6036    29.265   -0.01    -
+   70  45874  34.145   0.7035    34.110   -0.07    -
+   80  52428  39.024   0.8042    38.994   -0.06    -
+   90  58981  43.901   0.9050    43.878   -0.05    -
+  100  65535  48.780   1.0065    48.801   0.04    -
+  back at 0:    BRAKE_ISENSE 0.0113 V (14.0 counts) = 0.55 mA   ~BRAKE_FAULT high (not limiting)
+Full scale should read about 1.006 V; short of it, stable and
+repeatable, means the gate drive ran out before the current did.
+
+ WARN the lock file is up-to-date but uses an older format (v6), run `pixi lock` to upgrade to v7 for improved reproducibility
+Step 0 -> code -> 0, BRAKE_ISENSE every 200 us for 25 ms each way.
+FW_TRIG1 is high from the rising code write to the falling one.
+    code 65535 (0xFFFF) -> DAC 2.5000 V -> 48.780 mA commanded, 3.484 N.cm nominal
+  rise: from 0.55 mA to 48.80 mA
+    t10 1400 us
+    t50 3000 us
+    t90 6000 us
+    mA at 1 ms steps: 0.5 1.4 14.5 24.7 32.5 38.9 44.1 48.4 52.2 55.4 58.2 60.1 62.0 55.2 50.6 49.2 48.9 48.8 48.9 48.8 48.8 48.8 48.8 48.8 48.9
+  fall: from 48.80 mA to 0.55 mA
+    t10 400 us
+    t50 1200 us
+    t90 3000 us
+    mA at 1 ms steps: 48.9 26.3 10.7 5.2 3.1 2.2 1.9 1.6 1.4 1.2 1.1 1.0 0.8 0.9 0.9 0.8 0.8 0.7 0.8 0.7 0.7 0.7 0.8 0.7 0.6
+  The command filter alone is ~2 ms to 90 %; the coil's L/R
+  against the sink's headroom adds the rest. The brake's
+  mechanical response is 6 ms (datasheet).
+
+ WARN the lock file is up-to-date but uses an older format (v6), run `pixi lock` to upgrade to v7 for improved reproducibility
+Step 0 -> code -> 0, BRAKE_ISENSE every 200 us for 25 ms each way.
+FW_TRIG1 is high from the rising code write to the falling one.
+    code 32768 (0x8000) -> DAC 1.2500 V -> 24.390 mA commanded, 1.742 N.cm nominal
+  rise: from 0.55 mA to 24.38 mA
+    t10 2000 us
+    t50 3000 us
+    t90 4400 us
+    mA at 1 ms steps: 0.5 0.5 3.2 13.0 20.3 23.5 24.4 24.5 24.5 24.5 24.5 24.5 24.5 24.5 24.4 24.4 24.5 24.4 24.4 24.3 24.4 24.4 24.4 24.5 24.4
+  fall: from 24.38 mA to 0.55 mA
+    t10 600 us
+    t50 1400 us
+    t90 3800 us
+    mA at 1 ms steps: 24.5 15.1 7.2 3.9 2.7 2.0 1.5 1.4 1.3 1.1 1.1 1.0 0.9 0.8 0.9 0.8 0.8 0.8 0.7 0.7 0.7 0.7 0.7 0.7 0.7
+  The command filter alone is ~2 ms to 90 %; the coil's L/R
+  against the sink's headroom adds the rest. The brake's
+  mechanical response is 6 ms (datasheet).
+
+ WARN the lock file is up-to-date but uses an older format (v6), run `pixi lock` to upgrade to v7 for improved reproducibility
+    code 0 (0x0) -> DAC 0.0000 V -> 0.000 mA commanded, 0.000 N.cm nominal
+    BRAKE_ISENSE 0.0113 V (13.9 counts) = 0.55 mA   ~BRAKE_FAULT high (not limiting)

@@ -1,0 +1,134 @@
+
+================================================================
+ mouse-joystick-pcb  RP2040 self test
+================================================================
+ 36 V input absent, switched domain off, GPIO bus isolated.
+ This test cannot reach the TMC5130A and does not try.
+
+[1] identity
+    flash unique id: E4654C159F274534
+    ^ this is the board serial. Calibration belongs to it, not
+      to a joystick position, and two boards in one rig are
+      independently suspect.
+    usb manufacturer: Orb Weaver
+    usb product: mouse-joystick-pcb
+    built: Oct  5 2026 11:29:54
+    targets board revision: rev 2  (pcb v1.0: I2C DACs, torque ADC, brake, LATCH on GP24)
+    Only GP20 and GP22 are spare. GP10-13, GP15-18 reach the
+      torque, brake and DAC blocks through the bus switch and
+      are left alone: 2 pads, 20 checks. ~{HV_FAULT} is
+      GP23 here; GP29 is an ADC input. Not yet confirmed
+      on hardware: this is the first v1.0 firmware.
+
+[2] reset
+    reason: software (3)
+    watchdog caused reboot: yes
+
+[3] clocks
+    clk_ref  (xosc): 12000 kHz
+    clk_sys        : 133000 kHz
+    clk_peri       : 48000 kHz
+    clk_usb        : 48000 kHz
+    clk_adc        : 48000 kHz
+    clk_sys measured against clk_ref: 133000 kHz
+    [ ok ] clk_sys within 1% of 133000 kHz
+    note: the counter measures clk_sys *against* the 12 MHz
+      crystal, so it proves the PLL, not the crystal. The
+      crystal's own absolute proof is that you are reading this
+      at all: USB full speed needs 48 MHz within 0.25%, derived
+      from XOSC. Use the 'k' command to measure it against your
+      host clock.
+
+[4] qspi flash (U502 W25Q128JVZPIQ, 16 MiB expected)
+    [ ok ] unique id read back plausible (flash responds)
+    declared size: 16 MiB
+    [ ok ] declared size is 16 MiB
+    offset +2 MiB:
+    [ ok ] does not alias offset 0
+    offset +4 MiB:
+    [ ok ] does not alias offset 0
+    offset +8 MiB:
+    [ ok ] does not alias offset 0
+
+[5] ram
+    heap total/used/free: 252224/96/252128
+    [ ok ] 16 KiB heap allocation
+    [ ok ] pattern walk over 16 KiB
+
+[6] resistor-defined levels
+    Captured at boot, internal pulls off, before anything drove
+      a pin, so each level comes from a board resistor. A failure
+      here is a missing part, not firmware. v1.0 refdes.
+    GP9  ~{BUS_SW_EN}    = high
+    [ ok ] R607 7.87k holds the GPIO bus isolated
+    GP24 HV_LATCH        = low  (informational: switch unpowered; low = auto-retry)
+    GP16 DAC_SDA         = high
+    [ ok ] R403 4.7k holds the I2C SDA tap idle high
+    GP17 DAC_SCL         = high
+    [ ok ] R402 4.7k holds the I2C SCL tap idle high
+    GP1  PYC_UART_RX     = high
+    [ ok ] R401 10k holds the pyControl RX idle high
+    GP23 ~{HV_FAULT}     = high
+    [ ok ] R507 10k present and no latched 36 V fault
+
+[7] spare pads
+    Routed nowhere, so an internal pull must win in both
+      directions. A pad that will not move is shorted; one that
+      reads wrong either way is an open or a bridged neighbour.
+    [ ok ] GP20 pull-up->1 pull-down->0
+    [ ok ] GP22 pull-up->1 pull-down->0
+
+[8] adc
+    GP26 SW_RAIL_SENSE_DIV_2: 11 counts = 0.0089 V divided = 0.0177 V on +3.3V_SW
+    [ ok ] +3.3V_SW is off (below 0.30 V)
+    GP28 HV_SNS: 9 counts = 0.0073 V across R509 249R (behind R505 1k)
+    [ ok ] no 36 V load current (HV_SNS below 0.10 V)
+    note: HV_SNS reads zero regardless while HV_DIAG_EN is low.
+      Stage 1 keeps it low on purpose, so this check confirms the
+      quiet state rather than the sense chain.
+    GP27 BRAKE_ISENSE: 7 counts = 0.0056 V  (0 to 1.006 V is 0 to 48.78 mA with the rail up)
+    [ ok ] brake current monitor at 0 V with the rail off
+    GP29 ANGLE_OUT_MON: 14 counts = 0.0113 V  (the BNC node, 0 to 1.650 V with the rail up)
+    [ ok ] angle output monitor at 0 V with the rail off
+    internal temperature: 30.9 C
+    [ ok ] die temperature plausible (ADC and ADC_AVDD alive)
+
+----------------------------------------------------------------
+ result: 20 checks, 0 failed
+----------------------------------------------------------------
+ Record these numbers in mouse-joystick-pcb/docs/bringup-log.md
+ against this board's serial. Numbers with units, not pass marks.
+
+commands
+  ?  this menu
+  r  re-run the full self test
+  a  read the ADC channels once
+  t  pulse FW_TRIG0/FW_TRIG1 into InstrumentPort-40
+  I  beacon the board serial on the triggers, so a
+     capture identifies which board it came from
+  i  (no effect on v1.0: the Digital-50 buffers have no
+     enable and are always on)
+  k  10 s clock tick stream, for host-side crystal check
+  u  pyControl UART loopback (needs DIO-A shorted to DIO-B)
+  B  reboot into BOOTSEL for reflashing
+  R  reboot
+
+There is deliberately no command to enable HV_EN or the GPIO
+isolation bus switch. Stage 1 cannot energise anything.
+
+
+##### send 'a' at +14.1 s
+[8] adc
+    GP26 SW_RAIL_SENSE_DIV_2: 11 counts = 0.0089 V divided = 0.0177 V on +3.3V_SW
+    [ ok ] +3.3V_SW is off (below 0.30 V)
+    GP28 HV_SNS: 10 counts = 0.0081 V across R509 249R (behind R505 1k)
+    [ ok ] no 36 V load current (HV_SNS below 0.10 V)
+    note: HV_SNS reads zero regardless while HV_DIAG_EN is low.
+      Stage 1 keeps it low on purpose, so this check confirms the
+      quiet state rather than the sense chain.
+    GP27 BRAKE_ISENSE: 11 counts = 0.0089 V  (0 to 1.006 V is 0 to 48.78 mA with the rail up)
+    [ ok ] brake current monitor at 0 V with the rail off
+    GP29 ANGLE_OUT_MON: 12 counts = 0.0097 V  (the BNC node, 0 to 1.650 V with the rail up)
+    [ ok ] angle output monitor at 0 V with the rail off
+    internal temperature: 32.3 C
+    [ ok ] die temperature plausible (ADC and ADC_AVDD alive)

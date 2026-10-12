@@ -1,0 +1,1455 @@
+{
+ "step": "angle-check",
+ "port": "/dev/serial/by-id/usb-Orb_Weaver_mouse-joystick-pcb_E4654C159F274534-if00",
+ "started_unix": 1791229893.295036,
+ "steps": [
+  {
+   "step": "limits",
+   "ok": true,
+   "detail": "ack;1;travel_lo=-10.125;travel_hi=0.0;v_max=36.0;a_max=180.0;i_max=0.421"
+  },
+  {
+   "step": "targets from limits",
+   "ok": true,
+   "detail": "travel [-10.12, 0.00]; angscale -10.12 0.00; angles -7.59, -5.06, -2.53"
+  },
+  {
+   "step": "angle output present",
+   "ok": true,
+   "detail": "yes"
+  },
+  {
+   "step": "status before hv on",
+   "ok": true,
+   "detail": "ack;8;state=IDLE;angle=0.0;xactual=0.0;torque=;brake=;homed=0;limit=0;faults=0;hv=0;t=9681668"
+  },
+  {
+   "step": "hv on",
+   "ok": true,
+   "detail": "ack;9"
+  },
+  {
+   "step": "meter unhomed, hv on, angout off (DAC parked at code 0)",
+   "ok": false,
+   "detail": " V, expected 0.0000"
+  },
+  {
+   "step": "home",
+   "ok": true,
+   "detail": "ack;28"
+  },
+  {
+   "step": "HOMED",
+   "ok": true,
+   "detail": "ev;HOMED;11306640;angle=0.0"
+  },
+  {
+   "step": "angscale -10.12 0.00",
+   "ok": true,
+   "detail": "ack;53"
+  },
+  {
+   "step": "angout on",
+   "ok": true,
+   "detail": "ack;54"
+  },
+  {
+   "step": "meter homed at the parked end (travel_hi), angout on",
+   "ok": false,
+   "detail": " V, expected 3.3000"
+  },
+  {
+   "step": "arm",
+   "ok": true,
+   "detail": "ack;61"
+  },
+  {
+   "step": "moveto -7.59 (25 % of travel)",
+   "ok": true,
+   "detail": "ack;63"
+  },
+  {
+   "step": "TARGET at -7.59",
+   "ok": true,
+   "detail": "ev;TARGET;11977656;angle=-7.566"
+  },
+  {
+   "step": "meter at -7.59 deg (25 % of travel)",
+   "ok": false,
+   "detail": " V, expected 0.8714"
+  },
+  {
+   "step": "moveto -5.06 (50 % of travel)",
+   "ok": true,
+   "detail": "ack;80"
+  },
+  {
+   "step": "TARGET at -5.06",
+   "ok": true,
+   "detail": "ev;TARGET;12432666;angle=-5.766"
+  },
+  {
+   "step": "meter at -5.06 deg (50 % of travel)",
+   "ok": false,
+   "detail": " V, expected 1.4492"
+  },
+  {
+   "step": "moveto -2.53 (75 % of travel)",
+   "ok": true,
+   "detail": "ack;94"
+  },
+  {
+   "step": "TARGET at -2.53",
+   "ok": true,
+   "detail": "ev;TARGET;12904641;angle=-3.15"
+  },
+  {
+   "step": "meter at -2.53 deg (75 % of travel)",
+   "ok": false,
+   "detail": " V, expected 2.2889"
+  },
+  {
+   "step": "moveto 0.00 (park)",
+   "ok": true,
+   "detail": "ack;107"
+  },
+  {
+   "step": "TARGET at park",
+   "ok": true,
+   "detail": "ev;TARGET;13358638;angle=-0.541"
+  },
+  {
+   "step": "angout off",
+   "ok": true,
+   "detail": "ack;114"
+  },
+  {
+   "step": "meter angout off (parked)",
+   "ok": false,
+   "detail": " V, expected 0.0000"
+  },
+  {
+   "step": "disarm",
+   "ok": true,
+   "detail": "ack;122"
+  }
+ ],
+ "readings": [
+  {
+   "label": "unhomed, hv on, angout off (DAC parked at code 0)",
+   "angle_cmd": null,
+   "status": "ack;27;state=IDLE;angle=0.0;xactual=0.0;torque=;brake=;homed=0;limit=0;faults=0;hv=1;t=10363572",
+   "encoder_angle": "0.0",
+   "xactual": "0.0",
+   "expected_v": 0.0,
+   "meter_v": null,
+   "meter_text": ""
+  },
+  {
+   "label": "homed at the parked end (travel_hi), angout on",
+   "angle_cmd": 0.0,
+   "status": "ack;60;state=HOMED;angle=0.0;xactual=0.0;torque=;brake=;homed=1;limit=0;faults=0;hv=1;t=11522732",
+   "encoder_angle": "0.0",
+   "xactual": "0.0",
+   "expected_v": 3.3,
+   "meter_v": null,
+   "meter_text": ""
+  },
+  {
+   "label": "at -7.59 deg (25 % of travel)",
+   "angle_cmd": -7.59375,
+   "status": "ack;79;state=ARMED;angle=-7.566;xactual=-7.587;torque=;brake=;homed=1;limit=0;faults=0;hv=1;t=12182014",
+   "encoder_angle": "-7.566",
+   "xactual": "-7.587",
+   "expected_v": 0.8714074074074075,
+   "meter_v": null,
+   "meter_text": ""
+  },
+  {
+   "label": "at -5.06 deg (50 % of travel)",
+   "angle_cmd": -5.0625,
+   "status": "ack;92;state=ARMED;angle=-5.766;xactual=-5.055;torque=;brake=;homed=1;limit=0;faults=0;hv=1;t=12637424",
+   "encoder_angle": "-5.766",
+   "xactual": "-5.055",
+   "expected_v": 1.4491851851851851,
+   "meter_v": null,
+   "meter_text": ""
+  },
+  {
+   "label": "at -2.53 deg (75 % of travel)",
+   "angle_cmd": -2.53125,
+   "status": "ack;106;state=ARMED;angle=-3.15;xactual=-2.524;torque=;brake=;homed=1;limit=0;faults=0;hv=1;t=13108999",
+   "encoder_angle": "-3.15",
+   "xactual": "-2.524",
+   "expected_v": 2.2888888888888888,
+   "meter_v": null,
+   "meter_text": ""
+  },
+  {
+   "label": "angout off (parked)",
+   "angle_cmd": null,
+   "status": "ack;121;state=ARMED;angle=-0.541;xactual=0.0;torque=;brake=;homed=1;limit=0;faults=0;hv=1;t=13568477",
+   "encoder_angle": "-0.541",
+   "xactual": "0.0",
+   "expected_v": 0.0,
+   "meter_v": null,
+   "meter_text": ""
+  }
+ ],
+ "angscale": [
+  -10.125,
+  0.0
+ ],
+ "angles": [
+  -7.59375,
+  -5.0625,
+  -2.53125
+ ],
+ "log": [
+  {
+   "t_ns": 20178797321801,
+   "dir": "tx",
+   "text": "limits;1"
+  },
+  {
+   "t_ns": 20178801218340,
+   "dir": "rx",
+   "text": "ack;1;travel_lo=-10.125;travel_hi=0.0;v_max=36.0;a_max=180.0;i_max=0.421"
+  },
+  {
+   "t_ns": 20178818390551,
+   "dir": "tx",
+   "text": "ping;2"
+  },
+  {
+   "t_ns": 20178821069249,
+   "dir": "rx",
+   "text": "ack;2"
+  },
+  {
+   "t_ns": 20178858743355,
+   "dir": "tx",
+   "text": "ping;3"
+  },
+  {
+   "t_ns": 20178861539337,
+   "dir": "rx",
+   "text": "ack;3"
+  },
+  {
+   "t_ns": 20178899088520,
+   "dir": "tx",
+   "text": "ping;4"
+  },
+  {
+   "t_ns": 20178901797305,
+   "dir": "rx",
+   "text": "ack;4"
+  },
+  {
+   "t_ns": 20178939411051,
+   "dir": "tx",
+   "text": "ping;5"
+  },
+  {
+   "t_ns": 20178941990969,
+   "dir": "rx",
+   "text": "ack;5"
+  },
+  {
+   "t_ns": 20178979741542,
+   "dir": "tx",
+   "text": "ping;6"
+  },
+  {
+   "t_ns": 20178982280727,
+   "dir": "rx",
+   "text": "ack;6"
+  },
+  {
+   "t_ns": 20179001620409,
+   "dir": "tx",
+   "text": "id;7"
+  },
+  {
+   "t_ns": 20179005518738,
+   "dir": "rx",
+   "text": "ack;7;hw=rev2;serial=E4654C159F274534;fw=a8cabbe-dirty;proto=2;axes=1;caps=motion+home+instr+hv+watch+fetch+stream+cfg+angout;rxbuf=200;boot=reboot;crumb=0"
+  },
+  {
+   "t_ns": 20179005697205,
+   "dir": "tx",
+   "text": "status;8"
+  },
+  {
+   "t_ns": 20179009514724,
+   "dir": "rx",
+   "text": "ack;8;state=IDLE;angle=0.0;xactual=0.0;torque=;brake=;homed=0;limit=0;faults=0;hv=0;t=9681668"
+  },
+  {
+   "t_ns": 20179009668776,
+   "dir": "tx",
+   "text": "hv;9;on"
+  },
+  {
+   "t_ns": 20179020072562,
+   "dir": "tx",
+   "text": "ping;10"
+  },
+  {
+   "t_ns": 20179060371527,
+   "dir": "tx",
+   "text": "ping;11"
+  },
+  {
+   "t_ns": 20179100704075,
+   "dir": "tx",
+   "text": "ping;12"
+  },
+  {
+   "t_ns": 20179141041888,
+   "dir": "tx",
+   "text": "ping;13"
+  },
+  {
+   "t_ns": 20179181397152,
+   "dir": "tx",
+   "text": "ping;14"
+  },
+  {
+   "t_ns": 20179187276904,
+   "dir": "rx",
+   "text": "ack;9"
+  },
+  {
+   "t_ns": 20179195907012,
+   "dir": "rx",
+   "text": "ack;10"
+  },
+  {
+   "t_ns": 20179195907012,
+   "dir": "rx",
+   "text": "ack;11"
+  },
+  {
+   "t_ns": 20179195907012,
+   "dir": "rx",
+   "text": "ack;12"
+  },
+  {
+   "t_ns": 20179195907012,
+   "dir": "rx",
+   "text": "ack;13"
+  },
+  {
+   "t_ns": 20179195907012,
+   "dir": "rx",
+   "text": "ack;14"
+  },
+  {
+   "t_ns": 20179221724203,
+   "dir": "tx",
+   "text": "ping;15"
+  },
+  {
+   "t_ns": 20179224900238,
+   "dir": "rx",
+   "text": "ack;15"
+  },
+  {
+   "t_ns": 20179262068895,
+   "dir": "tx",
+   "text": "ping;16"
+  },
+  {
+   "t_ns": 20179265039715,
+   "dir": "rx",
+   "text": "ack;16"
+  },
+  {
+   "t_ns": 20179302401893,
+   "dir": "tx",
+   "text": "ping;17"
+  },
+  {
+   "t_ns": 20179305764766,
+   "dir": "rx",
+   "text": "ack;17"
+  },
+  {
+   "t_ns": 20179342743759,
+   "dir": "tx",
+   "text": "ping;18"
+  },
+  {
+   "t_ns": 20179345800806,
+   "dir": "rx",
+   "text": "ack;18"
+  },
+  {
+   "t_ns": 20179383075612,
+   "dir": "tx",
+   "text": "ping;19"
+  },
+  {
+   "t_ns": 20179385641234,
+   "dir": "rx",
+   "text": "ack;19"
+  },
+  {
+   "t_ns": 20179423423299,
+   "dir": "tx",
+   "text": "ping;20"
+  },
+  {
+   "t_ns": 20179426410560,
+   "dir": "rx",
+   "text": "ack;20"
+  },
+  {
+   "t_ns": 20179463769292,
+   "dir": "tx",
+   "text": "ping;21"
+  },
+  {
+   "t_ns": 20179467237033,
+   "dir": "rx",
+   "text": "ack;21"
+  },
+  {
+   "t_ns": 20179504047930,
+   "dir": "tx",
+   "text": "ping;22"
+  },
+  {
+   "t_ns": 20179507359245,
+   "dir": "rx",
+   "text": "ack;22"
+  },
+  {
+   "t_ns": 20179544277622,
+   "dir": "tx",
+   "text": "ping;23"
+  },
+  {
+   "t_ns": 20179547588188,
+   "dir": "rx",
+   "text": "ack;23"
+  },
+  {
+   "t_ns": 20179584583745,
+   "dir": "tx",
+   "text": "ping;24"
+  },
+  {
+   "t_ns": 20179587475628,
+   "dir": "rx",
+   "text": "ack;24"
+  },
+  {
+   "t_ns": 20179624833310,
+   "dir": "tx",
+   "text": "ping;25"
+  },
+  {
+   "t_ns": 20179627780048,
+   "dir": "rx",
+   "text": "ack;25"
+  },
+  {
+   "t_ns": 20179665115196,
+   "dir": "tx",
+   "text": "ping;26"
+  },
+  {
+   "t_ns": 20179667468150,
+   "dir": "rx",
+   "text": "ack;26"
+  },
+  {
+   "t_ns": 20179687604858,
+   "dir": "tx",
+   "text": "status;27"
+  },
+  {
+   "t_ns": 20179691933564,
+   "dir": "rx",
+   "text": "ack;27;state=IDLE;angle=0.0;xactual=0.0;torque=;brake=;homed=0;limit=0;faults=0;hv=1;t=10363572"
+  },
+  {
+   "t_ns": 20179692275790,
+   "dir": "tx",
+   "text": "home;28"
+  },
+  {
+   "t_ns": 20179705449964,
+   "dir": "tx",
+   "text": "ping;29"
+  },
+  {
+   "t_ns": 20179745781908,
+   "dir": "tx",
+   "text": "ping;30"
+  },
+  {
+   "t_ns": 20179786106377,
+   "dir": "tx",
+   "text": "ping;31"
+  },
+  {
+   "t_ns": 20179821806883,
+   "dir": "rx",
+   "text": "ack;28"
+  },
+  {
+   "t_ns": 20179825911054,
+   "dir": "rx",
+   "text": "ack;29"
+  },
+  {
+   "t_ns": 20179825911054,
+   "dir": "rx",
+   "text": "ack;30"
+  },
+  {
+   "t_ns": 20179825911054,
+   "dir": "rx",
+   "text": "ack;31"
+  },
+  {
+   "t_ns": 20179826366239,
+   "dir": "tx",
+   "text": "ping;32"
+  },
+  {
+   "t_ns": 20179829678690,
+   "dir": "rx",
+   "text": "ack;32"
+  },
+  {
+   "t_ns": 20179866688370,
+   "dir": "tx",
+   "text": "ping;33"
+  },
+  {
+   "t_ns": 20179870207532,
+   "dir": "rx",
+   "text": "ack;33"
+  },
+  {
+   "t_ns": 20179907016124,
+   "dir": "tx",
+   "text": "ping;34"
+  },
+  {
+   "t_ns": 20179909514120,
+   "dir": "rx",
+   "text": "ack;34"
+  },
+  {
+   "t_ns": 20179947410604,
+   "dir": "tx",
+   "text": "ping;35"
+  },
+  {
+   "t_ns": 20179950615377,
+   "dir": "rx",
+   "text": "ack;35"
+  },
+  {
+   "t_ns": 20179987729647,
+   "dir": "tx",
+   "text": "ping;36"
+  },
+  {
+   "t_ns": 20179990563126,
+   "dir": "rx",
+   "text": "ack;36"
+  },
+  {
+   "t_ns": 20180028120656,
+   "dir": "tx",
+   "text": "ping;37"
+  },
+  {
+   "t_ns": 20180030835506,
+   "dir": "rx",
+   "text": "ack;37"
+  },
+  {
+   "t_ns": 20180068413150,
+   "dir": "tx",
+   "text": "ping;38"
+  },
+  {
+   "t_ns": 20180071522526,
+   "dir": "rx",
+   "text": "ack;38"
+  },
+  {
+   "t_ns": 20180108677650,
+   "dir": "tx",
+   "text": "ping;39"
+  },
+  {
+   "t_ns": 20180112232969,
+   "dir": "rx",
+   "text": "ack;39"
+  },
+  {
+   "t_ns": 20180148944275,
+   "dir": "tx",
+   "text": "ping;40"
+  },
+  {
+   "t_ns": 20180152560857,
+   "dir": "rx",
+   "text": "ack;40"
+  },
+  {
+   "t_ns": 20180189272804,
+   "dir": "tx",
+   "text": "ping;41"
+  },
+  {
+   "t_ns": 20180192690629,
+   "dir": "rx",
+   "text": "ack;41"
+  },
+  {
+   "t_ns": 20180229606144,
+   "dir": "tx",
+   "text": "ping;42"
+  },
+  {
+   "t_ns": 20180233082802,
+   "dir": "rx",
+   "text": "ack;42"
+  },
+  {
+   "t_ns": 20180269952011,
+   "dir": "tx",
+   "text": "ping;43"
+  },
+  {
+   "t_ns": 20180272708782,
+   "dir": "rx",
+   "text": "ack;43"
+  },
+  {
+   "t_ns": 20180310288820,
+   "dir": "tx",
+   "text": "ping;44"
+  },
+  {
+   "t_ns": 20180312780735,
+   "dir": "rx",
+   "text": "ack;44"
+  },
+  {
+   "t_ns": 20180350626067,
+   "dir": "tx",
+   "text": "ping;45"
+  },
+  {
+   "t_ns": 20180354132593,
+   "dir": "rx",
+   "text": "ack;45"
+  },
+  {
+   "t_ns": 20180390950719,
+   "dir": "tx",
+   "text": "ping;46"
+  },
+  {
+   "t_ns": 20180394398618,
+   "dir": "rx",
+   "text": "ack;46"
+  },
+  {
+   "t_ns": 20180431286172,
+   "dir": "tx",
+   "text": "ping;47"
+  },
+  {
+   "t_ns": 20180434286336,
+   "dir": "rx",
+   "text": "ack;47"
+  },
+  {
+   "t_ns": 20180471638642,
+   "dir": "tx",
+   "text": "ping;48"
+  },
+  {
+   "t_ns": 20180474487337,
+   "dir": "rx",
+   "text": "ack;48"
+  },
+  {
+   "t_ns": 20180511979007,
+   "dir": "tx",
+   "text": "ping;49"
+  },
+  {
+   "t_ns": 20180515307063,
+   "dir": "rx",
+   "text": "ack;49"
+  },
+  {
+   "t_ns": 20180552220617,
+   "dir": "tx",
+   "text": "ping;50"
+  },
+  {
+   "t_ns": 20180555804452,
+   "dir": "rx",
+   "text": "ack;50"
+  },
+  {
+   "t_ns": 20180592563017,
+   "dir": "tx",
+   "text": "ping;51"
+  },
+  {
+   "t_ns": 20180595576987,
+   "dir": "rx",
+   "text": "ack;51"
+  },
+  {
+   "t_ns": 20180632894787,
+   "dir": "tx",
+   "text": "ping;52"
+  },
+  {
+   "t_ns": 20180634561209,
+   "dir": "rx",
+   "text": "ev;HOMED;11306640;angle=0.0"
+  },
+  {
+   "t_ns": 20180634730686,
+   "dir": "tx",
+   "text": "angscale;53;-10.12;0.00"
+  },
+  {
+   "t_ns": 20180637586635,
+   "dir": "rx",
+   "text": "ack;52"
+  },
+  {
+   "t_ns": 20180641109231,
+   "dir": "rx",
+   "text": "ack;53"
+  },
+  {
+   "t_ns": 20180641257057,
+   "dir": "tx",
+   "text": "angout;54;on"
+  },
+  {
+   "t_ns": 20180645280223,
+   "dir": "rx",
+   "text": "ack;54"
+  },
+  {
+   "t_ns": 20180673150969,
+   "dir": "tx",
+   "text": "ping;55"
+  },
+  {
+   "t_ns": 20180677145668,
+   "dir": "rx",
+   "text": "ack;55"
+  },
+  {
+   "t_ns": 20180713486610,
+   "dir": "tx",
+   "text": "ping;56"
+  },
+  {
+   "t_ns": 20180716673805,
+   "dir": "rx",
+   "text": "ack;56"
+  },
+  {
+   "t_ns": 20180753819078,
+   "dir": "tx",
+   "text": "ping;57"
+  },
+  {
+   "t_ns": 20180758161705,
+   "dir": "rx",
+   "text": "ack;57"
+  },
+  {
+   "t_ns": 20180794146303,
+   "dir": "tx",
+   "text": "ping;58"
+  },
+  {
+   "t_ns": 20180797400402,
+   "dir": "rx",
+   "text": "ack;58"
+  },
+  {
+   "t_ns": 20180834485294,
+   "dir": "tx",
+   "text": "ping;59"
+  },
+  {
+   "t_ns": 20180838350612,
+   "dir": "rx",
+   "text": "ack;59"
+  },
+  {
+   "t_ns": 20180845605405,
+   "dir": "tx",
+   "text": "status;60"
+  },
+  {
+   "t_ns": 20180851406146,
+   "dir": "rx",
+   "text": "ack;60;state=HOMED;angle=0.0;xactual=0.0;torque=;brake=;homed=1;limit=0;faults=0;hv=1;t=11522732"
+  },
+  {
+   "t_ns": 20180851721097,
+   "dir": "tx",
+   "text": "arm;61"
+  },
+  {
+   "t_ns": 20180874740338,
+   "dir": "tx",
+   "text": "ping;62"
+  },
+  {
+   "t_ns": 20180878958195,
+   "dir": "rx",
+   "text": "ack;61"
+  },
+  {
+   "t_ns": 20180879132091,
+   "dir": "tx",
+   "text": "moveto;63;-7.59"
+  },
+  {
+   "t_ns": 20180882397712,
+   "dir": "rx",
+   "text": "ack;62"
+  },
+  {
+   "t_ns": 20180887399631,
+   "dir": "rx",
+   "text": "ack;63"
+  },
+  {
+   "t_ns": 20180915074665,
+   "dir": "tx",
+   "text": "ping;64"
+  },
+  {
+   "t_ns": 20180918702573,
+   "dir": "rx",
+   "text": "ack;64"
+  },
+  {
+   "t_ns": 20180955406513,
+   "dir": "tx",
+   "text": "ping;65"
+  },
+  {
+   "t_ns": 20180959551102,
+   "dir": "rx",
+   "text": "ack;65"
+  },
+  {
+   "t_ns": 20180995683761,
+   "dir": "tx",
+   "text": "ping;66"
+  },
+  {
+   "t_ns": 20180999415873,
+   "dir": "rx",
+   "text": "ack;66"
+  },
+  {
+   "t_ns": 20181036042787,
+   "dir": "tx",
+   "text": "ping;67"
+  },
+  {
+   "t_ns": 20181039866946,
+   "dir": "rx",
+   "text": "ack;67"
+  },
+  {
+   "t_ns": 20181076406132,
+   "dir": "tx",
+   "text": "ping;68"
+  },
+  {
+   "t_ns": 20181079800050,
+   "dir": "rx",
+   "text": "ack;68"
+  },
+  {
+   "t_ns": 20181116738266,
+   "dir": "tx",
+   "text": "ping;69"
+  },
+  {
+   "t_ns": 20181120466094,
+   "dir": "rx",
+   "text": "ack;69"
+  },
+  {
+   "t_ns": 20181157070493,
+   "dir": "tx",
+   "text": "ping;70"
+  },
+  {
+   "t_ns": 20181160446156,
+   "dir": "rx",
+   "text": "ack;70"
+  },
+  {
+   "t_ns": 20181197413359,
+   "dir": "tx",
+   "text": "ping;71"
+  },
+  {
+   "t_ns": 20181201496520,
+   "dir": "rx",
+   "text": "ack;71"
+  },
+  {
+   "t_ns": 20181237762275,
+   "dir": "tx",
+   "text": "ping;72"
+  },
+  {
+   "t_ns": 20181241465955,
+   "dir": "rx",
+   "text": "ack;72"
+  },
+  {
+   "t_ns": 20181278089825,
+   "dir": "tx",
+   "text": "ping;73"
+  },
+  {
+   "t_ns": 20181282186332,
+   "dir": "rx",
+   "text": "ack;73"
+  },
+  {
+   "t_ns": 20181305159802,
+   "dir": "rx",
+   "text": "ev;TARGET;11977656;angle=-7.566"
+  },
+  {
+   "t_ns": 20181318429263,
+   "dir": "tx",
+   "text": "ping;74"
+  },
+  {
+   "t_ns": 20181322559764,
+   "dir": "rx",
+   "text": "ack;74"
+  },
+  {
+   "t_ns": 20181358766460,
+   "dir": "tx",
+   "text": "ping;75"
+  },
+  {
+   "t_ns": 20181362410873,
+   "dir": "rx",
+   "text": "ack;75"
+  },
+  {
+   "t_ns": 20181399103475,
+   "dir": "tx",
+   "text": "ping;76"
+  },
+  {
+   "t_ns": 20181402464090,
+   "dir": "rx",
+   "text": "ack;76"
+  },
+  {
+   "t_ns": 20181439428716,
+   "dir": "tx",
+   "text": "ping;77"
+  },
+  {
+   "t_ns": 20181443816955,
+   "dir": "rx",
+   "text": "ack;77"
+  },
+  {
+   "t_ns": 20181479764195,
+   "dir": "tx",
+   "text": "ping;78"
+  },
+  {
+   "t_ns": 20181483858053,
+   "dir": "rx",
+   "text": "ack;78"
+  },
+  {
+   "t_ns": 20181505417446,
+   "dir": "tx",
+   "text": "status;79"
+  },
+  {
+   "t_ns": 20181510378982,
+   "dir": "rx",
+   "text": "ack;79;state=ARMED;angle=-7.566;xactual=-7.587;torque=;brake=;homed=1;limit=0;faults=0;hv=1;t=12182014"
+  },
+  {
+   "t_ns": 20181510718294,
+   "dir": "tx",
+   "text": "moveto;80;-5.06"
+  },
+  {
+   "t_ns": 20181516385756,
+   "dir": "rx",
+   "text": "ack;80"
+  },
+  {
+   "t_ns": 20181520037039,
+   "dir": "tx",
+   "text": "ping;81"
+  },
+  {
+   "t_ns": 20181524139081,
+   "dir": "rx",
+   "text": "ack;81"
+  },
+  {
+   "t_ns": 20181560352804,
+   "dir": "tx",
+   "text": "ping;82"
+  },
+  {
+   "t_ns": 20181565056960,
+   "dir": "rx",
+   "text": "ack;82"
+  },
+  {
+   "t_ns": 20181600675717,
+   "dir": "tx",
+   "text": "ping;83"
+  },
+  {
+   "t_ns": 20181605846743,
+   "dir": "rx",
+   "text": "ack;83"
+  },
+  {
+   "t_ns": 20181641011126,
+   "dir": "tx",
+   "text": "ping;84"
+  },
+  {
+   "t_ns": 20181644905296,
+   "dir": "rx",
+   "text": "ack;84"
+  },
+  {
+   "t_ns": 20181681400271,
+   "dir": "tx",
+   "text": "ping;85"
+  },
+  {
+   "t_ns": 20181685838520,
+   "dir": "rx",
+   "text": "ack;85"
+  },
+  {
+   "t_ns": 20181721647847,
+   "dir": "tx",
+   "text": "ping;86"
+  },
+  {
+   "t_ns": 20181725555396,
+   "dir": "rx",
+   "text": "ack;86"
+  },
+  {
+   "t_ns": 20181760195168,
+   "dir": "rx",
+   "text": "ev;TARGET;12432666;angle=-5.766"
+  },
+  {
+   "t_ns": 20181761895206,
+   "dir": "tx",
+   "text": "ping;87"
+  },
+  {
+   "t_ns": 20181765596428,
+   "dir": "rx",
+   "text": "ack;87"
+  },
+  {
+   "t_ns": 20181802225717,
+   "dir": "tx",
+   "text": "ping;88"
+  },
+  {
+   "t_ns": 20181806115233,
+   "dir": "rx",
+   "text": "ack;88"
+  },
+  {
+   "t_ns": 20181842557790,
+   "dir": "tx",
+   "text": "ping;89"
+  },
+  {
+   "t_ns": 20181846726321,
+   "dir": "rx",
+   "text": "ack;89"
+  },
+  {
+   "t_ns": 20181882882702,
+   "dir": "tx",
+   "text": "ping;90"
+  },
+  {
+   "t_ns": 20181886456679,
+   "dir": "rx",
+   "text": "ack;90"
+  },
+  {
+   "t_ns": 20181923207812,
+   "dir": "tx",
+   "text": "ping;91"
+  },
+  {
+   "t_ns": 20181927069120,
+   "dir": "rx",
+   "text": "ack;91"
+  },
+  {
+   "t_ns": 20181960525684,
+   "dir": "tx",
+   "text": "status;92"
+  },
+  {
+   "t_ns": 20181963544344,
+   "dir": "tx",
+   "text": "ping;93"
+  },
+  {
+   "t_ns": 20181966527688,
+   "dir": "rx",
+   "text": "ack;92;state=ARMED;angle=-5.766;xactual=-5.055;torque=;brake=;homed=1;limit=0;faults=0;hv=1;t=12637424"
+  },
+  {
+   "t_ns": 20181966856600,
+   "dir": "tx",
+   "text": "moveto;94;-2.53"
+  },
+  {
+   "t_ns": 20181969598659,
+   "dir": "rx",
+   "text": "ack;93"
+  },
+  {
+   "t_ns": 20181974218943,
+   "dir": "rx",
+   "text": "ack;94"
+  },
+  {
+   "t_ns": 20182003884499,
+   "dir": "tx",
+   "text": "ping;95"
+  },
+  {
+   "t_ns": 20182007775773,
+   "dir": "rx",
+   "text": "ack;95"
+  },
+  {
+   "t_ns": 20182044197608,
+   "dir": "tx",
+   "text": "ping;96"
+  },
+  {
+   "t_ns": 20182048195119,
+   "dir": "rx",
+   "text": "ack;96"
+  },
+  {
+   "t_ns": 20182084462059,
+   "dir": "tx",
+   "text": "ping;97"
+  },
+  {
+   "t_ns": 20182088634467,
+   "dir": "rx",
+   "text": "ack;97"
+  },
+  {
+   "t_ns": 20182124802978,
+   "dir": "tx",
+   "text": "ping;98"
+  },
+  {
+   "t_ns": 20182128626185,
+   "dir": "rx",
+   "text": "ack;98"
+  },
+  {
+   "t_ns": 20182165059881,
+   "dir": "tx",
+   "text": "ping;99"
+  },
+  {
+   "t_ns": 20182168907926,
+   "dir": "rx",
+   "text": "ack;99"
+  },
+  {
+   "t_ns": 20182205425650,
+   "dir": "tx",
+   "text": "ping;100"
+  },
+  {
+   "t_ns": 20182208870504,
+   "dir": "rx",
+   "text": "ack;100"
+  },
+  {
+   "t_ns": 20182232220556,
+   "dir": "rx",
+   "text": "ev;TARGET;12904641;angle=-3.15"
+  },
+  {
+   "t_ns": 20182245755773,
+   "dir": "tx",
+   "text": "ping;101"
+  },
+  {
+   "t_ns": 20182249676373,
+   "dir": "rx",
+   "text": "ack;101"
+  },
+  {
+   "t_ns": 20182286074189,
+   "dir": "tx",
+   "text": "ping;102"
+  },
+  {
+   "t_ns": 20182289426985,
+   "dir": "rx",
+   "text": "ack;102"
+  },
+  {
+   "t_ns": 20182326410605,
+   "dir": "tx",
+   "text": "ping;103"
+  },
+  {
+   "t_ns": 20182330315429,
+   "dir": "rx",
+   "text": "ack;103"
+  },
+  {
+   "t_ns": 20182366745061,
+   "dir": "tx",
+   "text": "ping;104"
+  },
+  {
+   "t_ns": 20182371193386,
+   "dir": "rx",
+   "text": "ack;104"
+  },
+  {
+   "t_ns": 20182407080806,
+   "dir": "tx",
+   "text": "ping;105"
+  },
+  {
+   "t_ns": 20182410765291,
+   "dir": "rx",
+   "text": "ack;105"
+  },
+  {
+   "t_ns": 20182432542445,
+   "dir": "tx",
+   "text": "status;106"
+  },
+  {
+   "t_ns": 20182437680565,
+   "dir": "rx",
+   "text": "ack;106;state=ARMED;angle=-3.15;xactual=-2.524;torque=;brake=;homed=1;limit=0;faults=0;hv=1;t=13108999"
+  },
+  {
+   "t_ns": 20182437990111,
+   "dir": "tx",
+   "text": "moveto;107;0.00"
+  },
+  {
+   "t_ns": 20182442647623,
+   "dir": "rx",
+   "text": "ack;107"
+  },
+  {
+   "t_ns": 20182447438410,
+   "dir": "tx",
+   "text": "ping;108"
+  },
+  {
+   "t_ns": 20182452374454,
+   "dir": "rx",
+   "text": "ack;108"
+  },
+  {
+   "t_ns": 20182487760915,
+   "dir": "tx",
+   "text": "ping;109"
+  },
+  {
+   "t_ns": 20182492852292,
+   "dir": "rx",
+   "text": "ack;109"
+  },
+  {
+   "t_ns": 20182528090089,
+   "dir": "tx",
+   "text": "ping;110"
+  },
+  {
+   "t_ns": 20182532038943,
+   "dir": "rx",
+   "text": "ack;110"
+  },
+  {
+   "t_ns": 20182568477348,
+   "dir": "tx",
+   "text": "ping;111"
+  },
+  {
+   "t_ns": 20182572743143,
+   "dir": "rx",
+   "text": "ack;111"
+  },
+  {
+   "t_ns": 20182608730589,
+   "dir": "tx",
+   "text": "ping;112"
+  },
+  {
+   "t_ns": 20182612531695,
+   "dir": "rx",
+   "text": "ack;112"
+  },
+  {
+   "t_ns": 20182649081087,
+   "dir": "tx",
+   "text": "ping;113"
+  },
+  {
+   "t_ns": 20182653241472,
+   "dir": "rx",
+   "text": "ack;113"
+  },
+  {
+   "t_ns": 20182685976538,
+   "dir": "rx",
+   "text": "ev;TARGET;13358638;angle=-0.541"
+  },
+  {
+   "t_ns": 20182686127829,
+   "dir": "tx",
+   "text": "angout;114;off"
+  },
+  {
+   "t_ns": 20182689411196,
+   "dir": "tx",
+   "text": "ping;115"
+  },
+  {
+   "t_ns": 20182690946380,
+   "dir": "rx",
+   "text": "ack;114"
+  },
+  {
+   "t_ns": 20182693774710,
+   "dir": "rx",
+   "text": "ack;115"
+  },
+  {
+   "t_ns": 20182729754712,
+   "dir": "tx",
+   "text": "ping;116"
+  },
+  {
+   "t_ns": 20182732975879,
+   "dir": "rx",
+   "text": "ack;116"
+  },
+  {
+   "t_ns": 20182770002384,
+   "dir": "tx",
+   "text": "ping;117"
+  },
+  {
+   "t_ns": 20182773122353,
+   "dir": "rx",
+   "text": "ack;117"
+  },
+  {
+   "t_ns": 20182810323917,
+   "dir": "tx",
+   "text": "ping;118"
+  },
+  {
+   "t_ns": 20182813227158,
+   "dir": "rx",
+   "text": "ack;118"
+  },
+  {
+   "t_ns": 20182850583697,
+   "dir": "tx",
+   "text": "ping;119"
+  },
+  {
+   "t_ns": 20182853711431,
+   "dir": "rx",
+   "text": "ack;119"
+  },
+  {
+   "t_ns": 20182890884377,
+   "dir": "tx",
+   "text": "ping;120"
+  },
+  {
+   "t_ns": 20182891157162,
+   "dir": "tx",
+   "text": "status;121"
+  },
+  {
+   "t_ns": 20182896812064,
+   "dir": "rx",
+   "text": "ack;120"
+  },
+  {
+   "t_ns": 20182896812064,
+   "dir": "rx",
+   "text": "ack;121;state=ARMED;angle=-0.541;xactual=0.0;torque=;brake=;homed=1;limit=0;faults=0;hv=1;t=13568477"
+  },
+  {
+   "t_ns": 20182897103460,
+   "dir": "tx",
+   "text": "disarm;122"
+  },
+  {
+   "t_ns": 20182901746740,
+   "dir": "rx",
+   "text": "ack;122"
+  }
+ ]
+}

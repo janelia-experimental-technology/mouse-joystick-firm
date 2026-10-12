@@ -1,0 +1,211 @@
+pyControl v2.1.1 at /home/peter/Repositories/github/pycontrol-code; hardware definition mouse_joystick_bringup.py; task mouse_joystick_check
+
+Micropython version: 1.261
+Framework version: 2.1.1
+pyboard unique id b'M\x00B\x00\x0bQ323459', MicroPython 1.261, framework True 2.1.1
+
+Transferring hardware definition to pyboard. OK
+
+Transferring state machine mouse_joystick_check to pyboard. OK
+variables: {'heartbeat_interval': 40, 'touch_ncm': 0.3, 'brake_ncm': 1.0, 'do_brake': 1, 'instr': 1, 'wdt_ms': 0, 'do_move': 1, 'serial': '', 'move_degrees': -5.0, 'push_degrees': 5.0, 'outcome': '', 'phase': 'identifying', 'watch_timeout_ms': 10000, 'pull_degrees': 5.0, 'board': 'right'}
+set wdt_ms = 500: True
+set heartbeat_interval = 400: True
+0.000	variable	run_start	{
+			"board": right
+			"brake_ncm": 1.0
+			"do_brake": 1
+			"do_move": 1
+			"heartbeat_interval": 400
+			"instr": 1
+			"move_degrees": -5.0
+			"outcome": 
+			"phase": identifying
+			"pull_degrees": 5.0
+			"push_degrees": 5.0
+			"serial": 
+			"touch_ncm": 0.3
+			"watch_timeout_ms": 10000
+			"wdt_ms": 500
+			}
+0.000	print	task	identifying the right board
+0.001	state		identifying
+0.019	event	input	joystick_R
+0.024	print	task	board serial E4654C159F274534 fw 9b6d2ef-dirty hw rev2 proto 2 caps motion+home+instr+hv+watch+fetch+stream+cfg+angout+brake+torque
+0.024	state		powering
+0.024	print	task	raising the motor rail
+0.026	state		homing
+0.026	print	task	homing
+0.198	event	input	joystick_R
+0.229	event	input	joystick_R
+0.404	event	input	joystick_R
+0.805	event	input	joystick_R
+1.025	event	input	joystick_R
+1.026	print	task	ev HOMED t=72740090 {'angle': '0.0'}
+1.027	state		arming
+1.053	event	input	joystick_R
+1.054	state		moving
+1.055	print	task	presenting: moving to -5.0 deg
+1.062	event	input	joystick_R
+1.207	event	input	joystick_R
+1.408	event	input	joystick_R
+1.409	print	task	ev TARGET t=73123094 {'angle': '-4.95'}
+1.410	state		braking
+1.410	print	task	brake 1.0 N.cm, then release
+1.417	event	input	joystick_R
+1.431	event	input	joystick_R
+1.433	print	task	ev RELEASED t=73143095 {'angle': '-5.041', 'torque': '0.175', 'brake': '1.0'}
+1.434	state		watching
+1.434	print	task	watching: pull past 5.0 deg or push past 5.0 deg within 10000 ms
+1.442	event	input	joystick_R
+1.449	event	input	joystick_R
+1.609	event	input	joystick_R
+2.010	event	input	joystick_R
+2.411	event	input	joystick_R
+2.812	event	input	joystick_R
+3.213	event	input	joystick_R
+3.614	event	input	joystick_R
+4.015	event	input	joystick_R
+4.415	event	input	joystick_R
+4.817	event	input	joystick_R
+5.217	event	input	joystick_R
+5.619	event	input	joystick_R
+6.019	event	input	joystick_R
+6.420	event	input	joystick_R
+6.822	event	input	joystick_R
+7.222	event	input	joystick_R
+7.624	event	input	joystick_R
+8.026	event	input	joystick_R
+8.426	event	input	joystick_R
+8.827	event	input	joystick_R
+9.228	event	input	joystick_R
+9.629	event	input	joystick_R
+10.030	event	input	joystick_R
+10.431	event	input	joystick_R
+10.832	event	input	joystick_R
+11.233	event	input	joystick_R
+11.452	event	input	joystick_R
+11.454	print	task	ev NOMOVE t=83163170 {'angle': '-4.774', 'torque': '0.122'}
+11.454	print	task	outcome NOMOVE at angle -4.774 torque 0.122
+11.634	event	input	joystick_R
+12.033	event	input	joystick_R
+12.435	event	input	joystick_R
+12.461	event	input	joystick_R
+12.466	print	task	ev TRIAL t=84163170 {'a_peak': '0.267', 'tq_out': '0.122', 't_rel': '73143095', 't_touch': '', 'a0': '-5.041', 'dur_thr': '0', 't_move': '', 't_out': '83163170', 'tq_peak': '0.201', 'outcome': 'NOMOVE', 'a_end': '0.267'}
+12.466	state		parking
+12.466	print	task	parking at 0 deg
+12.497	event	input	joystick_R
+12.835	event	input	joystick_R
+12.845	event	input	joystick_R
+12.847	print	task	ev TARGET t=84560106 {'angle': '-0.991'}
+12.847	state		done
+12.847	print	task	bring-up sequence complete; serial E4654C159F274534 outcome NOMOVE
+13.236	event	input	joystick_R
+13.637	event	input	joystick_R
+14.038	event	input	joystick_R
+14.439	event	input	joystick_R
+14.841	event	input	joystick_R
+15.242	event	input	joystick_R
+15.642	event	input	joystick_R
+16.043	event	input	joystick_R
+16.443	event	input	joystick_R
+16.845	event	input	joystick_R
+17.246	event	input	joystick_R
+17.647	event	input	joystick_R
+18.049	event	input	joystick_R
+18.450	event	input	joystick_R
+18.850	event	input	joystick_R
+19.251	event	input	joystick_R
+19.652	event	input	joystick_R
+20.054	event	input	joystick_R
+20.455	event	input	joystick_R
+20.855	event	input	joystick_R
+21.256	event	input	joystick_R
+21.657	event	input	joystick_R
+22.058	event	input	joystick_R
+22.460	event	input	joystick_R
+22.860	event	input	joystick_R
+23.261	event	input	joystick_R
+23.662	event	input	joystick_R
+24.063	event	input	joystick_R
+24.464	event	input	joystick_R
+24.865	event	input	joystick_R
+25.266	event	input	joystick_R
+25.667	event	input	joystick_R
+26.069	event	input	joystick_R
+26.470	event	input	joystick_R
+26.870	event	input	joystick_R
+27.271	event	input	joystick_R
+27.673	event	input	joystick_R
+28.074	event	input	joystick_R
+28.475	event	input	joystick_R
+28.875	event	input	joystick_R
+29.277	event	input	joystick_R
+29.677	event	input	joystick_R
+30.078	event	input	joystick_R
+30.479	event	input	joystick_R
+30.881	event	input	joystick_R
+31.282	event	input	joystick_R
+31.683	event	input	joystick_R
+32.083	event	input	joystick_R
+32.485	event	input	joystick_R
+32.886	event	input	joystick_R
+33.287	event	input	joystick_R
+33.688	event	input	joystick_R
+34.088	event	input	joystick_R
+34.490	event	input	joystick_R
+34.891	event	input	joystick_R
+35.292	event	input	joystick_R
+35.692	event	input	joystick_R
+36.093	event	input	joystick_R
+36.495	event	input	joystick_R
+36.896	event	input	joystick_R
+37.297	event	input	joystick_R
+37.698	event	input	joystick_R
+38.099	event	input	joystick_R
+38.500	event	input	joystick_R
+38.901	event	input	joystick_R
+39.302	event	input	joystick_R
+39.703	event	input	joystick_R
+40.103	event	input	joystick_R
+40.504	event	input	joystick_R
+40.906	event	input	joystick_R
+41.307	event	input	joystick_R
+41.708	event	input	joystick_R
+42.109	event	input	joystick_R
+42.510	event	input	joystick_R
+42.910	event	input	joystick_R
+43.311	event	input	joystick_R
+43.713	event	input	joystick_R
+44.114	event	input	joystick_R
+44.514	event	input	joystick_R
+44.916	event	input	joystick_R
+45.317	event	input	joystick_R
+45.718	event	input	joystick_R
+46.119	event	input	joystick_R
+46.520	event	input	joystick_R
+46.921	event	input	joystick_R
+47.322	event	input	joystick_R
+47.723	event	input	joystick_R
+48.124	event	input	joystick_R
+48.525	event	input	joystick_R
+48.926	event	input	joystick_R
+49.326	event	input	joystick_R
+49.728	event	input	joystick_R
+50.001	variable	run_end	{
+			"board": right
+			"brake_ncm": 1.0
+			"do_brake": 1
+			"do_move": 1
+			"heartbeat_interval": 400
+			"instr": 1
+			"move_degrees": -5.0
+			"outcome": NOMOVE
+			"phase": done
+			"pull_degrees": 5.0
+			"push_degrees": 5.0
+			"serial": E4654C159F274534
+			"touch_ncm": 0.3
+			"watch_timeout_ms": 10000
+			"wdt_ms": 500
+			}
+-> /home/peter/Repositories/orb-weaver/qp-arduino-example/evidence/2026-10-06-1132-unitA-tick-attribution/slow_hb/pilot/run.json
