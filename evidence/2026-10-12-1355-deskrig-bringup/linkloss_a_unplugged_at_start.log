@@ -1,0 +1,77 @@
+pyControl v2.1.1 at /home/peter/Repositories/github/joystick-rig/pycontrol; hardware definition hardware_definition_joystick.py; task joystick_trial
+
+Micropython version: 1.261
+Framework version: 2.1.1
+pyboard unique id b'[\x003\x00\x0bQ323459', MicroPython 1.261, framework True 2.1.1
+
+Transferring hardware definition to pyboard. OK
+
+Transferring state machine joystick_trial to pyboard. OK
+variables: {'n_push': 0, 'iti_ms': 3000, 'ack_seq___': -1, 'serial': '', 'board': 'right', 'brake_ncm': 1.0, 'max_resends': 3, 'touch_ncm': 0.3, 'heartbeat_interval': 40, 'home_each_trial': 0, 'push_degrees': 5.0, 'event_timeout_ms': 10000, 'resends___': 0, 'n_trials': 20, 'reply_timeout_ms': 500, 'present_degrees': -5.0, 'phase': 'idle', 'pull_degrees': 5.0, 'reward_duration': 50, 'trial': 0, 'watch_timeout_ms': 10000, 'n_pull': 0, 'n_nomove': 0}
+set board = 'right': True
+set n_trials = 1: True
+set watch_timeout_ms = 2000: True
+set iti_ms = 1000: True
+0.000	variable	run_start	{
+			"ack_seq___": -1
+			"board": right
+			"brake_ncm": 1.0
+			"event_timeout_ms": 10000
+			"heartbeat_interval": 40
+			"home_each_trial": 0
+			"iti_ms": 1000
+			"max_resends": 3
+			"n_nomove": 0
+			"n_pull": 0
+			"n_push": 0
+			"n_trials": 1
+			"phase": idle
+			"present_degrees": -5.0
+			"pull_degrees": 5.0
+			"push_degrees": 5.0
+			"reply_timeout_ms": 500
+			"resends___": 0
+			"reward_duration": 50
+			"serial": 
+			"touch_ncm": 0.3
+			"trial": 0
+			"watch_timeout_ms": 2000
+			}
+0.001	print	task	identifying the right board
+0.003	state		identifying
+0.003	event	sync	rsync
+0.003	print	task	cam_trigger outputting pulses at 150Hz
+0.503	print	task	no ack in identifying, resend 1
+1.004	print	task	no ack in identifying, resend 2
+1.505	print	task	no ack in identifying, resend 3
+1.735	event	sync	rsync
+1.975	event	sync	rsync
+2.006	print	task	no reply in identifying - ending the session
+2.006	state		faulted
+2.006	print	task	FAULTED - reading the fault mask, then ending the session
+2.258	variable	run_end	{
+			"ack_seq___": 54
+			"board": right
+			"brake_ncm": 1.0
+			"event_timeout_ms": 10000
+			"heartbeat_interval": 40
+			"home_each_trial": 0
+			"iti_ms": 1000
+			"max_resends": 3
+			"n_nomove": 0
+			"n_pull": 0
+			"n_push": 0
+			"n_trials": 1
+			"phase": faulted
+			"present_degrees": -5.0
+			"pull_degrees": 5.0
+			"push_degrees": 5.0
+			"reply_timeout_ms": 500
+			"resends___": 3
+			"reward_duration": 50
+			"serial": 
+			"touch_ncm": 0.3
+			"trial": 0
+			"watch_timeout_ms": 2000
+			}
+-> /home/peter/Repositories/orb-weaver/mouse-joystick-firm/evidence/2026-10-12-1355-deskrig-bringup/linkloss_a_unplugged_at_start.json
