@@ -1,6 +1,6 @@
 """Gate C: protocol conformance.
 
-The checklist is `../../../mouse-joystick-pcb/docs/validation-plan.md`, "Gate C:
+The checklist is `mouse-joystick-pcb/docs/validation-plan.md`, "Gate C:
 Protocol Conformance". Each of its bullets is named in a test below so a gap is
 visible as a missing name rather than as an absence.
 

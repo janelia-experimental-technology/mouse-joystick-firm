@@ -22,7 +22,7 @@ constexpr float kAdcReferenceVolts = 3.3f;
 // Rev 1's DAC80501 (GAIN register 0x0101: REF-DIV 1, BUFF-GAIN 1, a 2.5 V
 // full scale) behind the OPA197's 1.32 gain gives 3.300 V at the BNC. The
 // numbers are the board's, cited from
-// `../mouse-joystick-pcb/docs/bringup-log.md`
+// `mouse-joystick-pcb/docs/bringup-log.md`
 // ("ANGLE OUTPUT CHARACTERISED -- 2026-09-10, board 4": unity to 0.03 %, a
 // 4.5 mV floor at code 0) and from `uart-protocol.md` (ANGSCALE maps onto
 // 0.05-3.300 V so that 0 V stays out of band). Which code the firmware parks
@@ -151,7 +151,7 @@ constexpr uint32_t kTmcSpiClockHz = 4000000;
 // -----------------------------------------------------------------------------
 // NEMA 08, 1.8 deg/step, 4-lead bipolar, 0.6 A per phase, 6.5 ohm per phase,
 // 3 oz-in holding torque, no gearbox, rear shaft carrying the encoder.
-// Datasheet: ../mouse-joystick-pcb/docs/datasheets/motor.pdf.
+// Datasheet: mouse-joystick-pcb/docs/datasheets/motor.pdf.
 constexpr int32_t kFullStepsPerRev = 200;       // 1.8 deg/step
 constexpr int32_t kMicrostepsPerFullStep = 256; // CHOPCONF.MRES = 0
 constexpr int32_t kMicrostepsPerRev =
@@ -230,7 +230,7 @@ constexpr uint8_t kCurrentScaleHold = 2;    // 0.070 A RMS
 // 1000 CPR, so 4000 quadrature counts per revolution at the TMC's A/B inputs.
 // 5 V push-pull through the SN74LVC2G17 translator; the board's 100 kohm
 // pull-downs assume push-pull and would be wrong for an open-collector part.
-// Datasheet: ../mouse-joystick-pcb/docs/datasheets/encoder.pdf.
+// Datasheet: mouse-joystick-pcb/docs/datasheets/encoder.pdf.
 //
 // The encoder reaches the TMC5130A only. It does not reach a GPIO on any board
 // revision, so every position reading is an SPI read of X_ENC or XACTUAL.
@@ -456,7 +456,7 @@ constexpr float kMoveSettleToleranceDeg =
 // `kicad-libs`: `brake_current_sink_0_49ma_dac80501`
 // (docs/brake-current-sink-design.md) and `torque_bridge_0_3v3_ina821`
 // (docs/torque-sensor-interface-design.md). The measured behaviour belongs in
-// `../mouse-joystick-pcb/docs/bringup-log.md` per board serial; the numbers
+// `mouse-joystick-pcb/docs/bringup-log.md` per board serial; the numbers
 // here are the DESIGN values the first measurement is compared against.
 
 // -----------------------------------------------------------------------------
@@ -467,7 +467,7 @@ constexpr float kMoveSettleToleranceDeg =
 // direction-dependent hysteresis the datasheet draws as two curves, which is
 // why the firmware contract says to approach every setpoint from zero and why
 // the torque sensor, not the shunt, is the calibration reference. Datasheet:
-// ../mouse-joystick-pcb/docs/datasheets/brake.pdf.
+// mouse-joystick-pcb/docs/datasheets/brake.pdf.
 constexpr float kBrakeCoilOhms = 467.0f;
 constexpr float kBrakeRatedAmps = 0.049f;
 constexpr float kBrakeRatedTorqueNcm = 3.5f;
@@ -533,7 +533,7 @@ constexpr float brakeAmpsToTorqueNcm(float amps) {
 // 5 in-oz = 3.5309 N.cm rated, 1.5 mV/V nominal (the two certificates read
 // 1.544 and 1.577 mV/V: a per-sensor constant to store against the board
 // serial it is paired with), 350 ohm bridge, 10 V excitation, 150 % safe
-// overload. Datasheet: ../mouse-joystick-pcb/docs/datasheets/torque-sensor-specs.png.
+// overload. Datasheet: mouse-joystick-pcb/docs/datasheets/torque-sensor-specs.png.
 constexpr float kTorqueRatedNcm = 3.5309f;
 constexpr float kTorqueSensitivityNominalVPerV = 1.5e-3f;
 constexpr float kTorqueBridgeOhms = 350.0f;

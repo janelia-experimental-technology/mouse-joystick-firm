@@ -1,7 +1,7 @@
 """Codec tests: framing only, no state machine.
 
 Every assertion here is traceable to a line of
-`../../../mouse-joystick-pcb/docs/uart-protocol.md`. Where the draft gives a
+`mouse-joystick-pcb/docs/uart-protocol.md`. Where the draft gives a
 concrete example, the example is the test.
 """
 

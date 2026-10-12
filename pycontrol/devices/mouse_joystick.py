@@ -1,7 +1,7 @@
 """pyControl device class for one mouse-joystick board.
 
 Runs on the pyControl controller in MicroPython. Speaks the protocol in
-`../../../mouse-joystick-pcb/docs/uart-protocol.md` to one RP2040 board over one
+`mouse-joystick-pcb/docs/uart-protocol.md` to one RP2040 board over one
 behavior port. One object per board; two boards means two objects on two ports.
 
 Target controller is **Breakout Board 1.2**, whose UART-capable ports are 1
@@ -11,7 +11,7 @@ only port with both I2C and a free `DIO_C`. The `port.UART` assertion below is w
 turns a wrong port into a loud failure at hardware-definition load rather than a
 link that silently never receives.
 
-Shaped after `~/Repositories/github/syringe-pump`'s `PumpController`, which is the
+Shaped after `syringe-pump`'s `PumpController` (github.com/peterpolidoro/syringe-pump), which is the
 lab's working pyControl peripheral: same `machine.UART`, same `UART_handler` plus
 `UART.IRQ_RXIDLE`, same `;`-delimited newline framing. It differs where this board
 differs - the pump is a request/response dispenser, this drives a motor against an

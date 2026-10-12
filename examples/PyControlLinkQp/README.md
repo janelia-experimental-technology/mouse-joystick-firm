@@ -42,7 +42,7 @@ the release it was the sibling checkout `../qp-arduino`, linked with
 `FW_TRIG1` therefore no longer carries the RELEASED level of `PyControlLink`:
 that state is a `LINK_STATE` record. Which marker roles the v1.0 board's
 InstrumentPort overlay finally assigns is an `OBS-IF` decision still owed
-(`../mouse-joystick-pcb/docs/observability-plan.md`); the two uses here are
+(`mouse-joystick-pcb/docs/observability-plan.md`); the two uses here are
 one-line changes.
 
 ## Trace records
@@ -157,7 +157,7 @@ pixi run build examples/PyControlLinkQp mouse_joystick_qp
 pixi run upload examples/PyControlLinkQp mouse_joystick_qp_sim_usb /dev/ttyACM0
 ```
 
-Drive the bench build with `../qp-arduino-example/tools/link_pilot.py` and
+Drive the bench build with `qp-arduino-example/tools/link_pilot.py` and
 read the trace as `qp-arduino-example/evidence/bench-scripts/link_run.sh`
 does (sigrok `uart` decoder on channel 17, bytes to `qspy -k -f`).
 

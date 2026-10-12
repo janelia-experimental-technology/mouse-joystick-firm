@@ -8,7 +8,7 @@
 // layer and the corpus stay host-testable because they never include it.
 //
 // WHAT THE BENCH DECIDED HERE (v1.0 unit E4654C159F274534, 2026-10-06;
-// numbers in ../mouse-joystick-pcb/docs/bringup-log.md, A4/A5):
+// numbers in mouse-joystick-pcb/docs/bringup-log.md, A4/A5):
 //
 //   * A code step to full scale overshoots the coil current to 127 % of the
 //     setpoint for ~5 ms (90 %: +26 %, 75 %: +15 %, 60 %: +1 %): the coil's

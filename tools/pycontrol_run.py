@@ -7,7 +7,7 @@ board API -- the same path the GUI uses, with no GUI.
         [--set board=right --set do_brake=1] [--load-framework] [--out run.json]
         [--hwd-path <file.py> --task-dir <dir>]   # e.g. the rig's own files
 
-Gate E (`../mouse-joystick-pcb/docs/validation-plan.md`) asks for an unforked
+Gate E (`mouse-joystick-pcb/docs/validation-plan.md`) asks for an unforked
 upstream pyControl loading this repository's device class through its normal
 supported path: `Pycboard.load_hardware_definition()` transfers the hardware
 definition and the device files it names (our `mouse_joystick.py` and

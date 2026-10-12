@@ -1,0 +1,23 @@
+cff-version: 1.2.0
+message: "If you use this firmware in published work, please cite it as below."
+type: software
+title: "mouse-joystick-firm: firmware for the mouse joystick controller board"
+abstract: >-
+  RP2040 firmware for the mouse-joystick-pcb single-axis joystick controller,
+  exposing one TMC5130A-driven joystick axis to a pyControl host over a UART
+  line protocol, together with the pyControl device class, a board simulator
+  and the protocol test corpus.
+authors:
+  - family-names: Polidoro
+    given-names: Peter
+    email: polidorop@janelia.hhmi.org
+    affiliation: "Janelia Research Campus, Howard Hughes Medical Institute"
+repository-code: "https://github.com/peterpolidoro/mouse-joystick-firm"
+license: BSD-3-Clause
+keywords:
+  - pyControl
+  - RP2040
+  - TMC5130
+  - joystick
+  - behavioral neuroscience
+  - firmware

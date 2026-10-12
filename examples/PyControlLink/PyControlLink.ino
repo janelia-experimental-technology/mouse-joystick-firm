@@ -86,7 +86,7 @@ PycUart link;
 //
 // A correctly built LEFT-joystick harness makes the left station look identical
 // from the connector inwards, so these do not change per side. See
-// ../mouse-joystick-pcb/docs/harness-pinouts.md.
+// mouse-joystick-pcb/docs/harness-pinouts.md.
 // ---------------------------------------------------------------------------
 mouse_joystick::MotionConfig motionConfig() {
   mouse_joystick::MotionConfig config;

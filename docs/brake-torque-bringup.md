@@ -5,7 +5,7 @@ the brake sink (`brake_current_sink_0_49ma_dac80501`) and the torque bridge
 (`torque_bridge_0_3v3_ina821`) exist from that revision. Requires 36 V, the
 brake coil and the torque sensor cabled, and stages 1, 2 and A3 passed on the
 unit first. The numbers below are the first unit's; the record for every unit
-is `../../mouse-joystick-pcb/docs/bringup-log.md`, per serial.
+is `mouse-joystick-pcb/docs/bringup-log.md`, per serial.
 
 ## What Changes At This Stage
 

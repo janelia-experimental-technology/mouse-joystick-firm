@@ -216,7 +216,7 @@ def _link_device_files(root: Path, pycontrol_dir: Path, *, unlink: bool, dry_run
 def cmd_link(args: argparse.Namespace, root: Path) -> int:
     """Point an unforked pyControl checkout at this repository's Stage 4 code.
 
-    This is what `../mouse-joystick-pcb/docs/validation-plan.md` Gate E requires:
+    This is what `mouse-joystick-pcb/docs/validation-plan.md` Gate E requires:
     an unforked upstream pyControl loading the device class through its normal
     supported path. Two mechanisms, because pyControl treats the folders
     differently - see LINKED_FOLDERS.

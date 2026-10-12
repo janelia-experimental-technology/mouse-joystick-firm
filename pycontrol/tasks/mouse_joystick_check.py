@@ -14,11 +14,11 @@
 # Use with hardware definition `mouse_joystick_bringup.py`, which constructs
 # `left` (port 1) and `right` (port 4). `v.board` names the one this run
 # drives; the other may be unplugged (its UART is constructed, nothing is sent
-# to it). Gate E, `../../../mouse-joystick-pcb/docs/validation-plan.md`.
+# to it). Gate E, `mouse-joystick-pcb/docs/validation-plan.md`.
 #
 # WHAT TO EXPECT IN THE LOG, in order: the ID reply with the board serial
 # (record it -- it attributes the results in
-# ../../../mouse-joystick-pcb/docs/bringup-log.md), HV on, HOMED, ARM, a
+# mouse-joystick-pcb/docs/bringup-log.md), HV on, HOMED, ARM, a
 # small move ending in TARGET, the brake engaging and RELEASED, WATCH, then
 # NOMOVE after `v.watch_timeout_ms` (or PULL/PUSH/TOUCH if you move the
 # joystick by hand), TRIAL, the park move's TARGET, "done".

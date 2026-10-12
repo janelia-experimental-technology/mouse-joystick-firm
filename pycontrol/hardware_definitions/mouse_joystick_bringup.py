@@ -4,7 +4,7 @@
 # on a bench. It is NOT the rig's hardware definition.
 #
 # The rig's canonical definition is
-#   ~/Repositories/github/joystick-rig/pycontrol/hardware_definitions/
+#   joystick-rig/pycontrol/hardware_definitions/
 #       hardware_definition_joystick.py
 # which owns the rsync output, the 150 Hz camera frame trigger and the reward
 # solenoid. When these boards join the rig, `MouseJoystick` instances are ADDED
@@ -19,7 +19,7 @@
 # Breakout 1.2 exposes a UART on ports 1 (UART4), 3 (USART1) and 4 (USART3) --
 # verified on the live controller 2026-09-03, not just read from source; ports 2,
 # 5 and 6 report UART = None. Source: `devices/breakout_1_2.py`, recorded in
-# `../../../mouse-joystick-pcb/docs/pycontrol-port-pinout.md`.
+# `mouse-joystick-pcb/docs/pycontrol-port-pinout.md`.
 #
 #   Port 1  DIO_A -> board RX, DIO_B -> board TX   left joystick
 #   Port 4  DIO_A -> board RX, DIO_B -> board TX   right joystick
@@ -55,13 +55,13 @@
 # omit pin 5 if a run wants to be clean.
 #
 # Full allocation and reasoning:
-# ../../../mouse-joystick-pcb/docs/pycontrol-port-pinout.md
+# mouse-joystick-pcb/docs/pycontrol-port-pinout.md
 #
 # On the board's RJ-45, pin 1 (DIO-A) is the board's RX and pin 4 (DIO-B) is the
 # board's TX - the controller's TX reaches the board's RX. Pin 6 carries 5 V and
 # is one of the two sources that power the board at all, so **the board stays
 # reachable over pyControl with USB unplugged and the motor rail off**. That is
-# deliberate, per `../../../mouse-joystick-pcb/docs/power.md`.
+# deliberate, per `mouse-joystick-pcb/docs/power.md`.
 #
 # ---------------------------------------------------------------------------
 # What is NOT here, and why
@@ -70,7 +70,7 @@
 # or fault path at all: every event is a UART line with UART latency. That is
 # fine for exercising the interfaces and NOT fine for behavioural data. Do not
 # add BNC wiring here and imply otherwise -
-# `../../../mouse-joystick-pcb/docs/pycontrol-interface.md` draws that line.
+# `mouse-joystick-pcb/docs/pycontrol-interface.md` draws that line.
 #
 # ---------------------------------------------------------------------------
 # EDIT CYCLE - the same trap the rig's definition documents

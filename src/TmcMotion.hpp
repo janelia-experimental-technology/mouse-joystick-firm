@@ -66,7 +66,7 @@
 // `moveto`, `disarm`, `clrfault` on the RJ-45 with the motor moving): homing
 // repeats to about one encoder count and the commanded-move follow ratio is
 // 0.991. Record in `.agents/PLANS.md` ("Stage 4 ran the full motion path on
-// hardware") and `../mouse-joystick-pcb/docs/bringup-log.md` under board 3.
+// hardware") and `mouse-joystick-pcb/docs/bringup-log.md` under board 3.
 // Stage 3 had validated the *blocking* implementations in `MotionSetup`; this
 // is the non-blocking rearrangement of the same calls. What is deliberately NOT
 // reimplemented here is the second homing stage -- see `startHome()`.
@@ -527,7 +527,7 @@ public:
     // mid-ramp. On a board with the electronic brake this ordering is not
     // sufficient and this call must not exist separately -- the brake has to
     // engage BEFORE drive is released. See `FREEWHEEL` in
-    // `../mouse-joystick-pcb/docs/uart-protocol.md`.
+    // `mouse-joystick-pcb/docs/uart-protocol.md`.
     if (bus_up_) {
       MotionSetup::stopAndHold(stepper_);
       MotionSetup::disableDriver(stepper_);
@@ -708,7 +708,7 @@ private:
     // a slipping coupling or a dead encoder. SPEC: the draft has no fault bit
     // for a stall, so this borrows `over_travel` -- the commanded position went
     // somewhere the mechanism could not. Raised as an open question in
-    // `../mouse-joystick-pcb/docs/uart-protocol.md`.
+    // `mouse-joystick-pcb/docs/uart-protocol.md`.
     if (!following(s)) {
       fail(fault::kOverTravel, "not_following");
       return;

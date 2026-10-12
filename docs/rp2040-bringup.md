@@ -7,7 +7,7 @@ on 2026-09-09 — see the env table below, which is not the same env.
 for a v0.1/v0.2 board, `mouse_joystick_rev1` (`MJ_BOARD_REV=1`) for v0.3.
 **Scope:** everything on the always-on `+3.3V_MCU` domain. Nothing else.
 
-Record results in `../mouse-joystick-pcb/docs/bringup-log.md` under the board's
+Record results in `mouse-joystick-pcb/docs/bringup-log.md` under the board's
 serial, as numbers with units.
 
 ## Which PCB Revision This Matches
@@ -54,7 +54,7 @@ Section `[6]` prints the designators for whichever revision was built, and they
 differ: the `~{HV_FAULT}` pull-up is `R205` on v0.1/v0.2 and **`R1905`** on
 v0.3, and the `HV_SNS` bottom leg is `R207` against **`R1907`**. `R601` and
 `R403` are unchanged. The full v0.2→v0.3 mapping is in
-`../mouse-joystick-pcb/docs/bringup-log.md` → *Board 4*.
+`mouse-joystick-pcb/docs/bringup-log.md` → *Board 4*.
 
 **Reference designators in this document are v0.1 designators, and they are not
 stable.** Automatic annotation orders by sheet position, so inserting a part
@@ -104,7 +104,7 @@ running from `+3.3V_MCU`, so **they work with the 36 V input absent** — the
 buffers are not on the switched domain.
 
 The channel mapping is documented but **not bench-verified**; see
-`../board-interfaces/docs/la5032-instrument-port-40-mapping.md`. Confirm it with
+`board-interfaces/docs/la5032-instrument-port-40-mapping.md`. Confirm it with
 the boot signature, which is a known pattern on known pins.
 
 For stage 1 only channels 16 and 17 matter, plus a ground.
@@ -282,7 +282,7 @@ fault. With one, this tests GP0, GP1, `R301`, `R302`, and the connector.
 
 ## Step 5 — Record It
 
-Copy the numbers into `../mouse-joystick-pcb/docs/bringup-log.md` under this
+Copy the numbers into `mouse-joystick-pcb/docs/bringup-log.md` under this
 board's serial — the flash unique id from section 1. Not pass marks: the whole
 point of recording a serial is that two boards in a rig are independently
 calibrated and independently suspect.

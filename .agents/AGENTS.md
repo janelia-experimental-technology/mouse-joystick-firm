@@ -241,3 +241,24 @@ Measured board behaviour belongs in `../mouse-joystick-pcb/docs/bringup-log.md`,
 per board serial, not in this repository. Two boards in a rig are independently
 calibrated and independently suspect; the serial is the flash unique id the self
 test prints.
+
+## Publication Layers
+
+This repository is mirrored to GitHub for the rig's researchers, so it has two
+layers (decided 2026-10-12):
+
+- **Citable layer**: `README.md`, `CITATION.cff`, `LICENSE`, `pixi.toml`,
+  `pixi.lock`, `platformio.ini`, `src/`, `examples/`, `test/`, `tools/`,
+  `pycontrol/` and the documents the README lists. Building, flashing and
+  testing must work from `pixi` alone on Linux, macOS and Windows, with no
+  Orb Weaver checkout, and nothing in the layer refers to codeberg.org or to
+  `orb-weaver-*` repositories. Files in other repositories are cited as
+  `<repository>/<path>` with no `../` and no URL; `docs/development.md` maps
+  each repository name to its URL. The USB manufacturer string `Orb Weaver`
+  in `platformio.ini` is the boards' USB identity and stays.
+- **Development layer**: `docs/development.md`, the documents it lists,
+  `AGENTS.md`, `.agents/` and the `identify-analyzers` pixi task, which
+  needs the `instrument-control` sibling. These may name the sibling
+  checkouts and the Orb Weaver repositories.
+
+A new document goes into exactly one of the two lists.

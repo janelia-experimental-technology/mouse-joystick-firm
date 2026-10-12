@@ -7,7 +7,7 @@
 **Scope:** everything downstream of the driver. Stages 1 and 2 are assumed, not
 re-proven.
 
-Record results in `../mouse-joystick-pcb/docs/bringup-log.md` under the board's
+Record results in `mouse-joystick-pcb/docs/bringup-log.md` under the board's
 serial, as numbers with units.
 
 ## What Changes At This Stage
@@ -36,7 +36,7 @@ Swap in `symlink:///path/to/TMC51X0` to build against a local working copy.
 ## The Fitted Parts
 
 Both identified 2026-09-02; datasheets in
-`../mouse-joystick-pcb/docs/datasheets/`.
+`mouse-joystick-pcb/docs/datasheets/`.
 
 | | Part | What matters |
 |---|---|---|
@@ -257,7 +257,7 @@ travel in motor coordinates.
 joystick's cable swaps one motor coil's leads and the encoder's A/B channels, so
 both stations look identical from the connector inwards and no board carries any
 left/right state. Tables and the verification procedure are in
-`../mouse-joystick-pcb/docs/harness-pinouts.md`.
+`mouse-joystick-pcb/docs/harness-pinouts.md`.
 
 `MotionConfig` still holds all three, because they are what the bench measures
 and because a cable can be built wrong. `m`, `o` and `y` flip them for

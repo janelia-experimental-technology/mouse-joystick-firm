@@ -1,6 +1,6 @@
 """Framing codec for the mouse-joystick UART protocol.
 
-Specification: `../../../mouse-joystick-pcb/docs/uart-protocol.md` (Draft v0.1).
+Specification: `mouse-joystick-pcb/docs/uart-protocol.md` (Draft v0.1).
 That document owns the protocol. This file implements it and must not extend it
 silently - every place this file had to decide something the draft left open is
 marked `SPEC:` below and listed in `../README.md`.
@@ -117,7 +117,7 @@ class JoystickProtocol:
     # ------------------------------------------- retransmission classification
     #
     # Which commands may have their reply served from the retransmission cache.
-    # Resolved in `../../../mouse-joystick-pcb/docs/uart-protocol.md`, open
+    # Resolved in `mouse-joystick-pcb/docs/uart-protocol.md`, open
     # question 1: the cache is restricted to state-changing commands, because
     # re-executing a read is better than replaying one -- a retried STATUS
     # returning fresh state beats a stale one, and a retried CLRFAULT

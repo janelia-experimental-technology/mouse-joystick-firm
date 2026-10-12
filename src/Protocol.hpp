@@ -1,6 +1,6 @@
 // pyControl UART application protocol — framing codec.
 //
-// The board half of `../mouse-joystick-pcb/docs/uart-protocol.md`. The host
+// The board half of `mouse-joystick-pcb/docs/uart-protocol.md`. The host
 // half is `pycontrol/devices/mouse_joystick_protocol.py`, and the two are held
 // to a shared corpus, `pycontrol/tests/fixtures/protocol_cases.txt`. Until both
 // exist the corpus proves nothing: one implementation agreeing with a fixture
@@ -540,7 +540,7 @@ inline bool decodeCommand(const char *line, Command *out) {
 
 // ---------------------------------------------------- retransmission policy
 //
-// Resolved 2026-09-03 in `../mouse-joystick-pcb/docs/uart-protocol.md`, open
+// Resolved 2026-09-03 in `mouse-joystick-pcb/docs/uart-protocol.md`, open
 // question 1: the cache holds state-changing commands only. Reads and
 // heartbeats are re-executed, because a retried STATUS returning fresh state
 // beats a replayed stale one and a retried CLRFAULT re-evaluates whether the

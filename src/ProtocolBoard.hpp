@@ -21,7 +21,7 @@
 //    +/-20 deg while the mechanism has 28 deg of travel would refuse valid
 //    positions or command impossible ones. `test_protocol.cpp` asserts the
 //    default configuration is self-consistent. The measured bench figures are
-//    in `../mouse-joystick-pcb/docs/bringup-log.md` under board 2.
+//    in `mouse-joystick-pcb/docs/bringup-log.md` under board 2.
 
 #pragma once
 
@@ -347,7 +347,7 @@ private:
       // Deliberately BEFORE the watchdog refresh: a frame that does not parse
       // does not prove the host is alive. A wedged serial driver emitting
       // garbage must not hold the safety timeout open. Resolved 2026-09-03 in
-      // `../mouse-joystick-pcb/docs/uart-protocol.md` open question 1.
+      // `mouse-joystick-pcb/docs/uart-protocol.md` open question 1.
       protocol::Line reply;
       if (cmd.has_seq) {
         reply.nak(cmd.seq, protocol::kNakBadFrame);
@@ -603,7 +603,7 @@ private:
   // So the board clears and re-faults instead: CLRFAULT succeeds, and if the
   // cause is still there the next command that touches it faults again
   // immediately. That is recoverable, and it reports the truth just as loudly.
-  // Raised as an open question in `../mouse-joystick-pcb/docs/uart-protocol.md`.
+  // Raised as an open question in `mouse-joystick-pcb/docs/uart-protocol.md`.
   void raiseFault(uint8_t bit, const char *detail, bool cause_active) {
     motion_.abort();
     watchdog_armed_ = false;
@@ -985,7 +985,7 @@ private:
     // is the one motion that is safe while unhomed -- it is bounded by the
     // switch stop, the follow check and a timeout, and no host argument reaches
     // it. So HOME manages the driver for itself and the `ARM`-requires-`homed`
-    // rule stands. Raised in `../mouse-joystick-pcb/docs/uart-protocol.md`.
+    // rule stands. Raised in `mouse-joystick-pcb/docs/uart-protocol.md`.
     //
     // The driver is deliberately LEFT enabled afterwards, so the joystick holds
     // the position homing just parked it at instead of going limp.

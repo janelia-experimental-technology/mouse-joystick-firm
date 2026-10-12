@@ -1,6 +1,6 @@
 """A host-side simulator of the mouse-joystick board's UART protocol.
 
-`../../../mouse-joystick-pcb/docs/uart-protocol.md` asks for exactly this:
+`mouse-joystick-pcb/docs/uart-protocol.md` asks for exactly this:
 
     Provide a host-side simulator or protocol fixture so both this firmware and
     the pyControl device class can be tested before real hardware and a real
@@ -109,7 +109,7 @@ class BoardSim:
     """One board on one link. Two instances share nothing."""
 
     # The draft now bounds the cache at 2 entries
-    # (`../../../mouse-joystick-pcb/docs/uart-protocol.md`, framing). The case
+    # (`mouse-joystick-pcb/docs/uart-protocol.md`, framing). The case
     # it exists for is "the host retried immediately because a reply was lost";
     # a deeper window buys nothing and is the only thing that makes `seq` reuse
     # across a 65536 wrap reachable. Bounding it also matters because an
@@ -117,7 +117,7 @@ class BoardSim:
     # with no way to report one.
     RETRANSMIT_CACHE_SIZE = 2
 
-    # Cited from `../../../mouse-joystick-pcb/docs/pycontrol-port-pinout.md`.
+    # Cited from `mouse-joystick-pcb/docs/pycontrol-port-pinout.md`.
     DEFAULT_HOST_TIMEOUT_US = 100_000
     # The firmware's maximum for one homing cycle; `home;<s>;<timeout_ms>` is
     # clipped to it (TmcMotion::Config::home_timeout_us is the same 8 s).
@@ -385,7 +385,7 @@ class BoardSim:
         # command, before dispatch, cache hit or miss -- and not inside any
         # handler. Liveness is a property of the link, so it is decided where
         # the frame arrives. Resolved 2026-09-03 in
-        # `../../../mouse-joystick-pcb/docs/uart-protocol.md` open question 1;
+        # `mouse-joystick-pcb/docs/uart-protocol.md` open question 1;
         # the draft used to reset it inside PING, which put a link-layer fact
         # behind an application-layer decision and made the retransmission rule
         # a safety rule by accident.

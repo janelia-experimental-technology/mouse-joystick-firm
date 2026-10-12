@@ -2,9 +2,9 @@
 
 Status: revised development intent, 2026-09-30. This repository owns `OBS-FW`: application
 semantics, a non-QP baseline, and a possible later QP trace comparison.
-The shared [architecture](../../orb-weaver-context/context/experimental-system-observability.md)
+The shared architecture (`orb-weaver-context/context/experimental-system-observability.md`)
 records the intent and the shared
-[roadmap](../../orb-weaver-context/context/experimental-system-observability-plan.md)
+roadmap (`orb-weaver-context/context/experimental-system-observability-plan.md`)
 owns cross-repository stages `G0`–`G5`. These are separate from the existing
 board bring-up stages and protocol gates in [.agents/PLANS.md](../.agents/PLANS.md).
 
@@ -22,7 +22,7 @@ protocol state machine and `MotionBackend` boundary are the baseline. Structured
 application events from this implementation are valid inputs to the observation
 system even if QP is never adopted.
 
-The [QP port plan](../../qp-arduino-example/docs/observability-plan.md) now makes
+The QP port plan (`qp-arduino-example/docs/observability-plan.md`) now makes
 RP2040 the primary QP `v7.3.4`/QV qualification target, using the Earle
 Philhower Arduino core family already selected in this repository's
 `platformio.ini`. That effort starts on a simple non-actuating fixture in
@@ -37,10 +37,10 @@ requires actual integration and measurement; Cortex-M0+ PRIMASK masking does
 not protect against another core. Port qualification does not by itself qualify
 this application's protocol, motion, power sequencing or board revision.
 
-The [PCB interface map](../../mouse-joystick-pcb/docs/interface-map.md),
-[power notes](../../mouse-joystick-pcb/docs/power.md),
-[protocol specification](../../mouse-joystick-pcb/docs/uart-protocol.md), and
-[bring-up log](../../mouse-joystick-pcb/docs/bringup-log.md) own board facts,
+The [PCB interface map](https://github.com/peterpolidoro/mouse-joystick-pcb/blob/main/docs/interface-map.md),
+[power notes](https://github.com/peterpolidoro/mouse-joystick-pcb/blob/main/docs/power.md),
+[protocol specification](https://github.com/peterpolidoro/mouse-joystick-pcb/blob/main/docs/uart-protocol.md), and
+[bring-up log](https://github.com/peterpolidoro/mouse-joystick-pcb/blob/main/docs/bringup-log.md) own board facts,
 protocol decisions and measured board behavior. Select a manufactured PCB tag
 and serial before deriving wiring or capabilities; current PCB development and
 historical firmware examples describe different revisions. Reconcile the

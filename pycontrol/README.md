@@ -1,7 +1,7 @@
 # pyControl Host Side (Stage 4)
 
 The other end of the UART protocol in
-[`../../mouse-joystick-pcb/docs/uart-protocol.md`](../../mouse-joystick-pcb/docs/uart-protocol.md).
+[`mouse-joystick-pcb/docs/uart-protocol.md`](https://github.com/peterpolidoro/mouse-joystick-pcb/blob/main/docs/uart-protocol.md).
 The RP2040 firmware in `../src` speaks it over RJ-45 pins 1 and 4; the MicroPython
 device class here speaks it from the pyControl board.
 
@@ -11,7 +11,7 @@ version independently.
 
 **Target controller: Breakout Board 1.2.** UART-capable ports are **1**
 (`UART4`), **3** (`USART1`), and **4** (`USART3`) — see
-`../../mouse-joystick-pcb/docs/pycontrol-port-pinout.md`. Two boards fit with a
+`mouse-joystick-pcb/docs/pycontrol-port-pinout.md`. Two boards fit with a
 port to spare. The device class asserts `port.UART is not None`, so a
 non-UART port fails loudly rather than silently not receiving.
 
@@ -40,7 +40,7 @@ which cannot run `UART_handler` at all. Check the interpreter, not the framework
 
 The bench controller was upgraded 1.22.2 -> 1.26.1 on 2026-09-03 (standard
 `PYBV11` build, not `THREAD`). **The rig's controller has not been checked.**
-Full account in `../../mouse-joystick-pcb/docs/pycontrol-interface.md`.
+Full account in `mouse-joystick-pcb/docs/pycontrol-interface.md`.
 
 ## Setting Up Another Controller (and what the delivered one carries)
 
@@ -127,7 +127,7 @@ runtime test on a host can reproduce the board's import environment.
 
 ## Two Delivery Mechanisms, Not One
 
-`../../mouse-joystick-pcb/docs/validation-plan.md` Gate E requires that "an
+`mouse-joystick-pcb/docs/validation-plan.md` Gate E requires that "an
 unforked upstream pyControl installation loads the device class through its
 normal supported mechanism". `make pycontrol-link` does that, and it needs two
 different mechanisms because pyControl treats the folders differently:
@@ -298,7 +298,7 @@ time there, so the 40 ms heartbeat is fine as it is.
 ## Editing Cycle, And The Trap In It
 
 The collaborator's rig hardware definition
-(`~/Repositories/github/joystick-rig/pycontrol/hardware_definitions/hardware_definition_joystick.py`)
+(`joystick-rig/pycontrol/hardware_definitions/hardware_definition_joystick.py`)
 documents this from experience, and it applies here unchanged:
 
 > Editing this file on disk does NOT change the pyboard. To make a change take
@@ -312,7 +312,7 @@ definition, or task upload fails with `ImportError: no module named
 
 ## Gate C
 
-`../../mouse-joystick-pcb/docs/uart-protocol.md` asks for "a host-side simulator
+`mouse-joystick-pcb/docs/uart-protocol.md` asks for "a host-side simulator
 or protocol fixture so both this firmware and the pyControl device class can be
 tested before real hardware and a real pyControl installation are both
 available." `make pycontrol-test` runs it: no board, no breakout, no pyControl
@@ -365,7 +365,7 @@ nothing for the corpus to disagree with.
 Read a green corpus as "the two ends agree about the wire", never as "the
 firmware is right". Anything the firmware does that this side cannot express is
 unverified by construction. Account in
-`../../mouse-joystick-pcb/docs/bringup-log.md` under board 3, stage 4.
+`mouse-joystick-pcb/docs/bringup-log.md` under board 3, stage 4.
 
 The simulator is **not** a model of the board. No TMC5130A, no encoder, no
 current control, no real motion profile. Position moves linearly at a configured
@@ -459,7 +459,7 @@ retries, retry served from cache without resetting, repeat. On a degraded link
 no retry in the burst resets the watchdog, so the board faults exactly when the
 link is marginal, while the host is receiving acks.
 
-**Resolved as a layering fix, in `../../../mouse-joystick-pcb/docs/uart-protocol.md`
+**Resolved as a layering fix, in `mouse-joystick-pcb/docs/uart-protocol.md`
 open question 1.** Two changes, now implemented here:
 
 - **The watchdog is reset on receipt of any well-formed command**, in

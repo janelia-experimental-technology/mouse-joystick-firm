@@ -1,6 +1,6 @@
 // The WATCH classifier, the 1 kHz capture ring and the per-trial summary.
 //
-// Protocol v1 (`../mouse-joystick-pcb/docs/uart-protocol.md`, "Protocol v1
+// Protocol v1 (`mouse-joystick-pcb/docs/uart-protocol.md`, "Protocol v1
 // Proposal — 2026-10-01"). Arduino-free and allocation-free like the rest of
 // the protocol layer, so the corpus can hold the simulator and this to the
 // same bytes. Nothing here knows about time sources: `ProtocolBoard` feeds it

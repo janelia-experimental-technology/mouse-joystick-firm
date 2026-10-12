@@ -1,82 +1,92 @@
 # mouse-joystick-firm
 
-Firmware for `mouse-joystick-pcb`: an RP2040 driving one TMC5130A stepper
-controller, exposed to a pyControl host over one UART. One board, one joystick
-axis. Two of these boards serve the rig's two joysticks.
+Firmware for [mouse-joystick-pcb](https://github.com/peterpolidoro/mouse-joystick-pcb):
+an RP2040 driving one TMC5130A stepper controller, exposed to a pyControl host
+over one UART. One board, one joystick axis. Two of these boards serve the
+rig's two joysticks.
 
-The board lives in
-[`../mouse-joystick-pcb`](../mouse-joystick-pcb) and owns every electrical fact
-this firmware depends on. The driver library is
-[`TMC51X0`](https://github.com/janelia-arduino/TMC51X0).
+The board repository owns every electrical fact this firmware depends on, the
+[UART protocol](https://github.com/peterpolidoro/mouse-joystick-pcb/blob/main/docs/uart-protocol.md)
+pyControl speaks to the board, and the
+[bring-up log](https://github.com/peterpolidoro/mouse-joystick-pcb/blob/main/docs/bringup-log.md)
+where every measurement is recorded per board serial. The driver library is
+[TMC51X0](https://github.com/janelia-arduino/TMC51X0).
 
-**Status:** stages 1 to 3 have passed on hardware.
-
-- **Stage 1**, 2026-09-01, board `E4654C159F2C2534`: 27 checks, 0 failed.
-- **Stage 2**, 2026-09-02, both boards: `IOIN.VERSION` = `0x11`.
-- **Stage 3**, 2026-09-02, board `E4654C159F4D1334`: motor turns, encoder
-  tracks it to 1.000, homing repeats to 4 encoder counts.
-
-Results are recorded in `../mouse-joystick-pcb/docs/bringup-log.md`, per board
-serial. Stage 3's procedure and findings are in `docs/motion-bringup.md`.
+**Status, October 2026:** both pcb v1.0 boards in the rig have been brought up
+on the bench, and the rig's trial task has run end to end through pyControl
+against a v1.0 board (Gate E, 2026-10-06). The table below records each
+bring-up stage; the delivery builds for v1.0 are the `mouse_joystick_qp_rev2`
+environments. Each stage's procedure and findings are in `docs/`.
 
 The pin map is verified against PCB git tag **v0.1**, the revision manufactured
 as rev 0. Tags v0.1 and v0.2 have byte-identical RP2040 pad-to-net maps.
 
-## Observability Development
-
-The [observability plan](docs/observability-plan.md) tracks `OBS-FW`: define
-application event semantics, establish a non-QP evidence baseline, and evaluate
-an optional QP/QV trace pilot. It links to the shared architecture and parallel
-workstreams. Current delivery remains non-QP; this work does not require a
-firmware rewrite or delay existing board bring-up and delivery.
-
-The [QP port plan](../qp-arduino-example/docs/observability-plan.md) now targets RP2040
-first with the same Earle Philhower Arduino core family, on a separate simple
-non-actuating fixture. Exact core/fixture versions and qualification gates are
-open. Teensy hardware work is deferred and does not block this path;
-STM32G0B1CEU6 is the later second target. Port qualification remains separate
-from a decision to adopt QP in this application.
-
-The hardware direction keeps passive Digital-50 plus a separate optional
-debug/trace connector and reusable external RP2040 probe. New connections and
-trace throughput need their own board/probe evidence; they are not present
-capabilities or new pin allocations. Combined 60-pin wiring and an onboard
-second MCU are deferred.
-
 ## Quick Start
 
+Everything runs through [pixi](https://pixi.sh), which installs PlatformIO,
+Python and the RP2040 toolchain into the repository on Linux, macOS and
+Windows; nothing else has to be installed. The commands are the same on every
+platform apart from the serial port name (`/dev/ttyACM0`, `/dev/cu.usbmodem…`
+or `COM3`; `pixi run ports` lists them). On Linux, install PlatformIO's udev
+rules once (`make udev-rules`) so the port is usable without root.
+
 ```sh
-make install                  # resolve the pixi environment (pixi + platformio)
-make build                    # compile examples/RP2040SelfTest
-make test                     # host-native tests, no board needed
+pixi install                                    # resolve the firmware environment
+pixi run build                                  # compile examples/RP2040SelfTest
+pixi run test                                   # host-native tests, no board needed (Linux and macOS)
 
 # with the board on USB and the 36 V input UNPLUGGED:
-make upload PORT=/dev/ttyACM0
-make monitor PORT=/dev/ttyACM0
+pixi run upload examples/RP2040SelfTest mouse_joystick_rev2 /dev/ttyACM0
+pixi run monitor /dev/ttyACM0
 ```
 
-The pyControl host side is a **separate pixi environment** with no PlatformIO in
-it, so building firmware never downloads Qt and running the GUI never downloads a
-toolchain:
+`pixi run build`, `upload`, `flash` and `rebuild` take the example directory,
+the environment and, for uploads, the port as positional arguments; the
+defaults are `examples/RP2040SelfTest` and `mouse_joystick`, which is the
+**pcb v0.1/v0.2** build. A v1.0 board is `mouse_joystick_rev2` (see
+[Environments](#environments)). The Makefile is a thin wrapper over the same
+tasks for a shell with `make`: `make upload EXAMPLE=… ENV=… PORT=…`.
+
+### Reprogramming a v1.0 board
+
+The firmware the rig runs is `examples/PyControlLinkQp` built for
+`mouse_joystick_qp_rev2`:
 
 ```sh
-make pycontrol-install        # resolve it (numpy, pyserial, pyqtgraph, PyQt6, pytest)
-make pycontrol-check          # verify pyControl's dependency gate
-make pycontrol-test           # host-side tests, no board and no pyControl needed
-
-export PYCONTROL_DIR=~/Repositories/github/pycontrol-code
-make pycontrol-link           # point that checkout at pycontrol/
-make pycontrol-run            # run a task on the pyboard through pyControl's own board API, no GUI (Gate E)
-make gui                      # launch the pyControl GUI
+pixi run upload examples/PyControlLinkQp mouse_joystick_qp_rev2 /dev/ttyACM0
 ```
 
-`make pycontrol-check` exists because **pyControl fails its own dependency check
-silently**: `pyControl_GUI.pyw` catches the exception, writes `ErrorLog.txt`, and
-exits. The symptom is a GUI that does not open with nothing on the terminal.
+A board already running this firmware reboots into the bootloader on the
+1200 baud touch, so nothing has to be pressed. A blank or unresponsive board
+has to be put into BOOTSEL by hand, which on this board needs both USB and the
+pyControl cable unplugged first; [`docs/rp2040-bringup.md`](docs/rp2040-bringup.md)
+has the procedure. If `picotool` refuses to write, copy the built UF2,
+`.pio/build/examples/PyControlLinkQp/mouse_joystick_qp_rev2/firmware.uf2`,
+onto the `RPI-RP2` drive the bootloader presents. The board announces its
+firmware version in the protocol's `ID` reply.
 
-Uploading the first time needs the board in BOOTSEL. See
-[`docs/rp2040-bringup.md`](docs/rp2040-bringup.md) — on this board that is more
-awkward than usual, and the self test gives you a way to avoid repeating it.
+### The pyControl host side
+
+The pyControl host side is a **separate pixi environment** with no PlatformIO
+in it, so building firmware never downloads Qt and running the GUI never
+downloads a toolchain:
+
+```sh
+pixi install -e pycontrol                       # numpy, pyserial, pyqtgraph, PyQt6, pytest
+pixi run -e pycontrol pycontrol-check           # verify pyControl's dependency gate
+pixi run -e pycontrol pycontrol-test            # host-side tests, no board and no pyControl needed
+
+export PYCONTROL_DIR=/path/to/pycontrol-code    # a pyControl 2.1.1 checkout
+pixi run -e pycontrol pycontrol-link            # point that checkout at pycontrol/
+pixi run -e pycontrol pycontrol-run             # run a task on the pyboard through pyControl's own board API, no GUI (Gate E)
+pixi run -e pycontrol gui                       # launch the pyControl GUI
+```
+
+`pycontrol-check` exists because **pyControl fails its own dependency check
+silently**: `pyControl_GUI.pyw` catches the exception, writes `ErrorLog.txt`,
+and exits. The symptom is a GUI that does not open with nothing on the
+terminal. [`pycontrol/README.md`](pycontrol/README.md) covers the device
+class, what the rig's controller carries and how to set up another one.
 
 ## Bring-Up Is Staged
 
@@ -193,21 +203,6 @@ failed": all bytes `0x00` means CIPO is undriven, which on this board points at
 the bus switch enable, then `+3.3V_SW` at the driver's `VCC_IO`, then CS. All
 bytes `0xFF` means CIPO is stuck high, which the board's 10 kΩ pull-down should
 prevent.
-
-### Watching it with the LA5032
-
-`FW_TRIG1` goes high for the whole register-read burst, so:
-
-```sh
-cd ../instrument-control
-guix shell -m manifest.scm -- sigrok-cli --driver kingst-la2016 \
-  --channels CH2,CH3,CH4,CH5,CH17 --config samplerate=10m \
-  --triggers CH17=r --samples 2000000 \
-  -P spi:clk=CH2:mosi=CH3:miso=CH4:cs=CH5:cpol=1:cpha=1 -A spi
-```
-
-`CH2`–`CH5` are `SCK`, `COPI`, `CIPO`, `~CS`. The TMC5130A is SPI mode 3, hence
-`cpol=1:cpha=1`.
 
 ## Pin Map
 
@@ -381,6 +376,30 @@ between them does not invalidate a cache. Same arrangement as `TMC51X0`.
 
 ## Recording Results
 
-Measured behaviour goes in `../mouse-joystick-pcb/docs/bringup-log.md`, under the
-board's serial, as numbers with units. Two boards in one rig are independently
-calibrated and independently suspect.
+Measured behaviour goes in
+[mouse-joystick-pcb/docs/bringup-log.md](https://github.com/peterpolidoro/mouse-joystick-pcb/blob/main/docs/bringup-log.md),
+under the board's serial, as numbers with units. Two boards in one rig are
+independently calibrated and independently suspect.
+
+## Related Repositories
+
+- [mouse-joystick-pcb](https://github.com/peterpolidoro/mouse-joystick-pcb): the board, the protocol and the bring-up log.
+- [camera-gpio-interface-pcb](https://github.com/peterpolidoro/camera-gpio-interface-pcb): the rig's camera interface board.
+- [joystick-rig](https://github.com/sourishmukh/joystick-rig): the rig's pyControl tasks, hardware definition and operating notes.
+- [TMC51X0](https://github.com/janelia-arduino/TMC51X0): the stepper driver library.
+
+## Development
+
+[docs/development.md](docs/development.md) covers the sibling repositories
+this firmware was developed beside, the logic-analyzer tooling used to watch
+the board, and the observability workstream. Agent guidance is in `AGENTS.md`
+and `.agents/`.
+
+## License
+
+3-clause BSD; see [LICENSE](LICENSE).
+
+## Citation
+
+[CITATION.cff](CITATION.cff) carries the citation metadata; GitHub renders it
+under "Cite this repository".

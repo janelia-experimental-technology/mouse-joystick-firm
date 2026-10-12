@@ -196,7 +196,7 @@ uint8_t run_current_scale = conv::kCurrentScaleBringUp;
 //
 // The encoder counts UP with XACTUAL, so ENC_CONST is positive. That is with
 // the harness built to the table in
-// ../mouse-joystick-pcb/docs/harness-pinouts.md, where the encoder's A and B
+// mouse-joystick-pcb/docs/harness-pinouts.md, where the encoder's A and B
 // channels are crossed relative to the board's ENC_A/ENC_B pins -- the E4T sits
 // on the motor's rear shaft, so its "A leads B for clockwise" is referenced to
 // the opposite end from the one the gear train is driven from. Measured both
@@ -711,7 +711,7 @@ bool applyCurrent(Print &out) {
 // boards disagreed -- E4654C159F2C2534 read REFL_STEP = 1 and
 // E4654C159F4D1334 read 0 -- so neither value is a known-good baseline, and the
 // level with a switch attached has to be measured. See
-// ../mouse-joystick-pcb/docs/bringup-log.md, "The two rig boards disagree on
+// mouse-joystick-pcb/docs/bringup-log.md, "The two rig boards disagree on
 // REFL_STEP and ENCB".
 void witnessSwitch(Print &out, uint32_t window_ms) {
   if (!bus_up) {
@@ -1642,7 +1642,7 @@ void homeRepeatability(Print &out, uint8_t runs) {
     out.print(static_cast<float>(spread) / conv::kMicrostepsPerEncoderCount, 1);
     out.println(F(" encoder counts)"));
     out.println(
-        F("  Record this in ../mouse-joystick-pcb/docs/bringup-log.md"));
+        F("  Record this in mouse-joystick-pcb/docs/bringup-log.md"));
     out.println(F("  under Homing, WITH the homing velocity: the MAX6816's"));
     out.println(F("  debounce delay scales the offset with speed, so a"));
     out.println(F("  repeatability figure without a velocity means nothing."));

@@ -1,7 +1,7 @@
 // The mechanism and protocol configuration of this board, shared by the real
 // and the simulated backend builds. Copied from examples/PyControlLink, which
 // explains each number; the facts behind them were measured on the rig
-// 2026-09-02 and live in ../mouse-joystick-pcb/docs/bringup-log.md.
+// 2026-09-02 and live in mouse-joystick-pcb/docs/bringup-log.md.
 
 #pragma once
 

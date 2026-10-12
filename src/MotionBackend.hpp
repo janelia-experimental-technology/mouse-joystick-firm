@@ -158,7 +158,7 @@ public:
 //    move distances divide evenly. The bench measured travel at ~4000
 //    microsteps (~28 deg at the motor shaft), jogs at 0.100 rev/s, and homing at
 //    2531 ms of which the approach is 365 ms -- see
-//    `../mouse-joystick-pcb/docs/bringup-log.md` under board 2. Changing these
+//    `mouse-joystick-pcb/docs/bringup-log.md` under board 2. Changing these
 //    changes corpus timings, so it is a deliberate act with a corpus update
 //    alongside, not a tidy-up.
 // ---------------------------------------------------------------------------
