@@ -1,0 +1,2 @@
+port 1 (left)   UART(4): b'ack;1;hw=rev2;serial=E4654C159F504534;fw=316f802;proto=2;axes=1;caps=motion+home+instr+hv+watch+fetch+stream+cfg+angout+brake+torque;rxbuf=200;boot=reboot;crumb=0\n'
+port 4 (right)  UART(3): b'ack;1;hw=rev2;serial=E4654C159F234234;fw=316f802;proto=2;axes=1;caps=motion+home+instr+hv+watch+fetch+stream+cfg+angout+brake+torque;rxbuf=200;boot=reboot;crumb=0\n'

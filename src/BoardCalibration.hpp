@@ -41,6 +41,18 @@ constexpr PullSign kPullSigns[] = {
     // the decreasing-angle direction as well. Its torque sensor reads the
     // pull NEGATIVE where unit A's reads positive; TOUCH uses the magnitude.
     {"E4654C159F404534", -1.0},
+    // Board 8, pcb v1.0 unit C, the LEFT joystick of Peter's desk rig: a hand
+    // pull from the presented -5.041 deg was classified PUSH with pull_sign +1
+    // on 2026-10-12 (evidence/2026-10-12-1355-deskrig-bringup/pull_left_60s.log:
+    // ev;PUSH at -10.083, TRIAL a_peak=-5.041 from a0=-5.041), so its pull is
+    // the decreasing-angle direction. Its torque sensor reads the pull
+    // NEGATIVE, as unit B's does.
+    {"E4654C159F504534", -1.0},
+    // Board 9, pcb v1.0 unit D, the RIGHT joystick of the desk rig: the same
+    // hand pull from -4.95 deg classified PUSH under +1 the same day
+    // (pull_right_60s.log: ev;PUSH at -9.991, a_peak=-5.041), so -1 as well;
+    // its torque sensor reads the pull positive, as unit A's does.
+    {"E4654C159F234234", -1.0},
 };
 
 constexpr double kPullSignUnmeasured = 1.0;

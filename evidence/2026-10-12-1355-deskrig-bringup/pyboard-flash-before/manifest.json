@@ -1,0 +1,92 @@
+[
+ {
+  "path": "/flash/boot.py",
+  "size": 45,
+  "copied": 45
+ },
+ {
+  "path": "/flash/main.py",
+  "size": 34,
+  "copied": 34
+ },
+ {
+  "path": "/flash/pybcdc.inf",
+  "size": 2597,
+  "copied": 2597
+ },
+ {
+  "path": "/flash/README.txt",
+  "size": 526,
+  "copied": 526
+ },
+ {
+  "path": "/flash/pyControl/audio.py",
+  "size": 3775,
+  "copied": 3775
+ },
+ {
+  "path": "/flash/pyControl/framework.py",
+  "size": 7099,
+  "copied": 7099
+ },
+ {
+  "path": "/flash/pyControl/hardware.py",
+  "size": 21922,
+  "copied": 21922
+ },
+ {
+  "path": "/flash/pyControl/state_machine.py",
+  "size": 4357,
+  "copied": 4357
+ },
+ {
+  "path": "/flash/pyControl/timer.py",
+  "size": 2691,
+  "copied": 2691
+ },
+ {
+  "path": "/flash/pyControl/utility.py",
+  "size": 6061,
+  "copied": 6061
+ },
+ {
+  "path": "/flash/pyControl/__init__.py",
+  "size": 137,
+  "copied": 137
+ },
+ {
+  "path": "/flash/devices/__init__.py",
+  "size": 276,
+  "copied": 276
+ },
+ {
+  "path": "/flash/devices/frame_trigger.py",
+  "size": 1093,
+  "copied": 1093
+ },
+ {
+  "path": "/flash/devices/breakout_1_2.py",
+  "size": 927,
+  "copied": 927
+ },
+ {
+  "path": "/flash/devices/uart_handler.py",
+  "size": 871,
+  "copied": 871
+ },
+ {
+  "path": "/flash/devices/opto_led.py",
+  "size": 4298,
+  "copied": 4298
+ },
+ {
+  "path": "/flash/task_file.py",
+  "size": 1551,
+  "copied": 1551
+ },
+ {
+  "path": "/flash/hardware_definition.py",
+  "size": 13049,
+  "copied": 13049
+ }
+]

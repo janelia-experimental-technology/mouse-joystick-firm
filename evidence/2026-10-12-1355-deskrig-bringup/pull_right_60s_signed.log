@@ -1,0 +1,234 @@
+pyControl v2.1.1 at /home/peter/Repositories/github/joystick-rig/pycontrol; hardware definition hardware_definition_joystick.py; task joystick_trial
+
+Micropython version: 1.261
+Framework version: 2.1.1
+pyboard unique id b'[\x003\x00\x0bQ323459', MicroPython 1.261, framework True 2.1.1
+
+Transferring hardware definition to pyboard. OK
+
+Transferring state machine joystick_trial to pyboard. OK
+variables: {'n_push': 0, 'iti_ms': 3000, 'ack_seq___': -1, 'serial': '', 'board': 'right', 'brake_ncm': 1.0, 'max_resends': 3, 'touch_ncm': 0.3, 'heartbeat_interval': 40, 'home_each_trial': 0, 'push_degrees': 5.0, 'event_timeout_ms': 10000, 'resends___': 0, 'n_trials': 20, 'reply_timeout_ms': 500, 'present_degrees': -5.0, 'phase': 'idle', 'pull_degrees': 5.0, 'reward_duration': 50, 'trial': 0, 'watch_timeout_ms': 10000, 'n_pull': 0, 'n_nomove': 0}
+set board = 'right': True
+set n_trials = 1: True
+set watch_timeout_ms = 60000: True
+set iti_ms = 1000: True
+0.000	variable	run_start	{
+			"ack_seq___": -1
+			"board": right
+			"brake_ncm": 1.0
+			"event_timeout_ms": 10000
+			"heartbeat_interval": 40
+			"home_each_trial": 0
+			"iti_ms": 1000
+			"max_resends": 3
+			"n_nomove": 0
+			"n_pull": 0
+			"n_push": 0
+			"n_trials": 1
+			"phase": idle
+			"present_degrees": -5.0
+			"pull_degrees": 5.0
+			"push_degrees": 5.0
+			"reply_timeout_ms": 500
+			"resends___": 0
+			"reward_duration": 50
+			"serial": 
+			"touch_ncm": 0.3
+			"trial": 0
+			"watch_timeout_ms": 60000
+			}
+0.001	print	task	identifying the right board
+0.003	state		identifying
+0.003	event	sync	rsync
+0.003	print	task	cam_trigger outputting pulses at 150Hz
+0.004	event	input	joystick_R
+0.018	event	input	joystick_R
+0.023	print	task	board serial E4654C159F234234 fw 316f802-dirty hw rev2 proto 2 caps motion+home+instr+hv+watch+fetch+stream+cfg+angout+brake+torque
+0.023	state		powering
+0.024	print	task	raising the motor rail
+0.189	event	sync	rsync
+0.192	event	input	joystick_R
+0.194	state		homing
+0.198	event	input	joystick_R
+0.243	event	input	joystick_R
+0.243	event	input	joystick_R
+0.249	event	input	joystick_R
+0.289	event	input	joystick_R
+0.330	event	input	joystick_R
+0.371	event	input	joystick_R
+0.411	event	input	joystick_R
+0.453	event	input	joystick_R
+0.494	event	input	joystick_R
+0.535	event	input	joystick_R
+0.576	event	input	joystick_R
+0.617	event	input	joystick_R
+0.657	event	input	joystick_R
+0.683	event	sync	rsync
+0.698	event	input	joystick_R
+0.740	event	input	joystick_R
+0.781	event	input	joystick_R
+0.822	event	input	joystick_R
+0.863	event	input	joystick_R
+0.903	event	input	joystick_R
+0.944	event	input	joystick_R
+0.986	event	input	joystick_R
+1.027	event	input	joystick_R
+1.051	event	input	joystick_R
+1.052	print	task	ev HOMED t=285284994 {'angle': '0.0'}
+1.052	state		arming
+1.077	event	input	joystick_R
+1.078	state		presenting
+1.079	print	task	trial 1 of 1: presenting at -5.0 deg
+1.078	event	input	joystick_R
+1.084	event	input	joystick_R
+1.108	event	input	joystick_R
+1.150	event	input	joystick_R
+1.191	event	input	joystick_R
+1.232	event	input	joystick_R
+1.273	event	input	joystick_R
+1.315	event	input	joystick_R
+1.355	event	input	joystick_R
+1.396	event	input	joystick_R
+1.434	event	input	joystick_R
+1.437	print	task	ev TARGET t=285668007 {'angle': '-5.041'}
+1.437	state		braking
+1.437	event	input	joystick_R
+1.442	event	input	joystick_R
+1.455	event	input	joystick_R
+1.458	print	task	ev RELEASED t=285687015 {'angle': '-5.041', 'torque': '0.073', 'brake': '1.0'}
+1.458	state		watching
+1.466	event	input	joystick_R
+1.470	event	input	joystick_R
+1.478	event	input	joystick_R
+1.520	event	input	joystick_R
+1.561	event	input	joystick_R
+1.601	event	input	joystick_R
+1.643	event	input	joystick_R
+1.683	event	input	joystick_R
+1.725	event	input	joystick_R
+1.765	event	input	joystick_R
+1.806	event	input	joystick_R
+1.848	event	input	joystick_R
+1.889	event	input	joystick_R
+1.929	event	input	joystick_R
+1.971	event	input	joystick_R
+2.011	event	input	joystick_R
+2.053	event	input	joystick_R
+2.094	event	input	joystick_R
+2.134	event	input	joystick_R
+2.176	event	input	joystick_R
+2.216	event	input	joystick_R
+2.258	event	input	joystick_R
+2.298	event	input	joystick_R
+2.339	event	input	joystick_R
+2.350	event	sync	rsync
+2.381	event	input	joystick_R
+2.421	event	input	joystick_R
+2.463	event	input	joystick_R
+2.503	event	input	joystick_R
+2.545	event	input	joystick_R
+2.585	event	input	joystick_R
+2.627	event	input	joystick_R
+2.668	event	input	joystick_R
+2.708	event	input	joystick_R
+2.749	event	input	joystick_R
+2.790	event	input	joystick_R
+2.832	event	input	joystick_R
+2.872	event	input	joystick_R
+2.916	event	input	joystick_R
+2.957	event	input	joystick_R
+2.999	event	input	joystick_R
+3.039	event	input	joystick_R
+3.081	event	input	joystick_R
+3.121	event	input	joystick_R
+3.127	event	input	joystick_R
+3.129	print	task	ev TOUCH t=287360015 {'angle': '-4.95', 'torque': '0.304'}
+3.163	event	input	joystick_R
+3.203	event	input	joystick_R
+3.241	event	input	joystick_R
+3.244	print	task	ev PULL t=287474015 {'angle': '-10.083', 'torque': '0.359'}
+3.245	event	input	joystick_R
+3.285	event	input	joystick_R
+3.326	event	input	joystick_R
+3.368	event	input	joystick_R
+3.408	event	input	joystick_R
+3.449	event	input	joystick_R
+3.490	event	input	joystick_R
+3.521	event	sync	rsync
+3.531	event	input	joystick_R
+3.573	event	input	joystick_R
+3.613	event	input	joystick_R
+3.654	event	input	joystick_R
+3.696	event	input	joystick_R
+3.736	event	input	joystick_R
+3.778	event	input	joystick_R
+3.819	event	input	joystick_R
+3.860	event	input	joystick_R
+3.900	event	input	joystick_R
+3.941	event	input	joystick_R
+3.983	event	input	joystick_R
+4.023	event	input	joystick_R
+4.064	event	input	joystick_R
+4.106	event	input	joystick_R
+4.147	event	input	joystick_R
+4.187	event	input	joystick_R
+4.228	event	input	joystick_R
+4.253	event	input	joystick_R
+4.258	print	task	ev TRIAL t=288474015 {'a_peak': '5.041', 'tq_out': '0.359', 't_rel': '285687015', 't_touch': '287360015', 'a0': '-5.041', 'dur_thr': '0', 't_move': '287382015', 't_out': '287474015', 'tq_peak': '0.359', 'outcome': 'PULL', 'a_end': '5.041'}
+4.259	state		parking
+4.285	event	input	joystick_R
+4.287	event	input	joystick_R
+4.310	event	input	joystick_R
+4.351	event	input	joystick_R
+4.392	event	input	joystick_R
+4.433	event	input	joystick_R
+4.475	event	input	joystick_R
+4.516	event	sync	rsync
+4.520	event	input	joystick_R
+4.560	event	input	joystick_R
+4.601	event	input	joystick_R
+4.642	event	input	joystick_R
+4.683	event	input	joystick_R
+4.724	event	input	joystick_R
+4.765	event	input	joystick_R
+4.807	event	input	joystick_R
+4.847	event	input	joystick_R
+4.888	event	input	joystick_R
+4.929	event	input	joystick_R
+4.970	event	input	joystick_R
+5.012	event	input	joystick_R
+5.052	event	input	joystick_R
+5.093	event	input	joystick_R
+5.134	event	input	joystick_R
+5.175	event	input	joystick_R
+5.178	event	input	joystick_R
+5.180	print	task	ev TARGET t=289412072 {'angle': '-0.091'}
+5.180	state		iti
+5.190	state		done
+5.190	print	task	session complete: 1 trials, pull 1 push 0 nomove 0
+5.191	variable	run_end	{
+			"ack_seq___": -1
+			"board": right
+			"brake_ncm": 1.0
+			"event_timeout_ms": 10000
+			"heartbeat_interval": 40
+			"home_each_trial": 0
+			"iti_ms": 1000
+			"max_resends": 3
+			"n_nomove": 0
+			"n_pull": 1
+			"n_push": 0
+			"n_trials": 1
+			"phase": done
+			"present_degrees": -5.0
+			"pull_degrees": 5.0
+			"push_degrees": 5.0
+			"reply_timeout_ms": 500
+			"resends___": 0
+			"reward_duration": 50
+			"serial": E4654C159F234234
+			"touch_ncm": 0.3
+			"trial": 1
+			"watch_timeout_ms": 60000
+			}
+-> /home/peter/Repositories/orb-weaver/mouse-joystick-firm/evidence/2026-10-12-1355-deskrig-bringup/pull_right_60s_signed.json

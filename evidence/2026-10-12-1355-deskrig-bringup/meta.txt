@@ -1,0 +1,37 @@
+Desk rig (Peter's desk) first bring-up, 2026-10-12, started 13:55 local.
+firmware: 316f802 (HEAD of mouse-joystick-firm, clean), built this session with pixi (CONDA_OVERRIDE_GLIBC=2.41 because the shell runs in a Guix profile)
+builds: examples/RP2040SelfTest mouse_joystick_rev2 (stage 1), examples/PyControlLinkQp mouse_joystick_qp_rev2 (delivery)
+host: Peter's Linux computer (Debian 13, kernel 6.12), all devices on one USB hub behind the dock (USB path 1-5)
+boards: two mouse-joystick-pcb v1.0, never powered before this session, enumerated as the RP2040 ROM bootloader (2e8a:0003) on arrival
+  board A: USB path 1-5.1.1, flashed with picotool load -x --bus 1 --address 39; serial E4654C159F504534; stage 1 by the console ('r'): 20 checks, 0 failed (s1_selftest_rev2_boardA_E4654C159F504534.log)
+  board B: USB path 1-5.1.2, flashed with picotool load -x --bus 1 --address 41; serial E4654C159F234234; stage 1 in s1_selftest_rev2_boardB_E4654C159F234234.log
+  both enumerate as manufacturer "Janelia Research Campus", product "mouse-joystick-pcb" (the first boards flashed with the renamed string)
+  36 V, mechanisms, brake, torque: not connected or not recorded at the start of the session (USB only for stage 1)
+pyboard: PYBv1.1 (STM32F405RG), USB serial 3968348E3233, /dev/ttyACM0, on a second Breakout 1.2; found with MicroPython 1.22.2 and pyControl 2.1.1 (framework, devices: breakout_1_2, frame_trigger, uart_handler, opto_led; a 13 KB hardware_definition.py and a 1.5 KB task_file.py; no joystick device files)
+  pyboard-flash-before/: every file off /flash before the upgrade, through the raw REPL (manifest.json)
+  upgrade: machine.bootloader() then dfu-util --alt 0 -D PYBV11-20250911-v1.26.1.dfu (sha256 a1f35171612d4987…), standard PYBV11 build
+analyzers: two LA5032 (77a1:01a2) on USB paths 1-5.1.4 and 1-5.2.1; which one sits on which board's instrument port not yet identified
+
+results, 14:10:
+  stage 1: board A 20 checks 0 failed; board B 20 checks 0 failed (both "watchdog caused reboot: yes", which is picotool's reboot after load)
+  delivery build (examples/PyControlLinkQp, mouse_joystick_qp_rev2, fw 316f802) on board A via `pixi run upload` (1200-baud touch, picotool): SUCCESS in 7.3 s
+  the same on board B via `pixi run upload`: the touch worked, picotool then failed "The RP2040 device returned an error: <unknown>" (the failure the bring-up log recorded on unit B on 2026-10-07); a direct `picotool load -x --bus 1 --address 51` on the board left in BOOTSEL succeeded
+  both boards enumerate as 2e8a:f00a "Janelia Research Campus" "mouse-joystick-pcb": board A E4654C159F504534 at USB path 1-5.1.1, board B E4654C159F234234 at 1-5.1.2; the ttyACM numbers moved during the session, address boards by /dev/serial/by-id
+  the delivery build is silent on USB (protocol on UART0); boardA_delivery_usb_banner.log is empty because the console was opened after boot
+  pyboard: DFU download of 1.26.1 completed but the bootloader did not jump (dfu-util without -s :leave); a zero-length download with :leave did not either; re-downloaded with `-s :leave`
+  pyboard left DFU only after `dfu-util -a 0 -s :leave -D <image>` (a second download with the leave modifier); then MicroPython 1.26.1, files intact
+  14:15 uart_id_probe.log: `id` from the pyboard's REPL over each port: port 1 (UART4, the hardware definition's `left`) = board A E4654C159F504534; port 4 (UART(3), `right`) = board B E4654C159F234234; both fw=316f802 hw=rev2 proto=2 caps=motion+home+instr+hv+watch+fetch+stream+cfg+angout+brake+torque
+  14:20 run_right_1trial.log/.json: `run_task_headless.py --load-framework --set board=right --set n_trials=1 --set watch_timeout_ms=2000 --set iti_ms=1000`: framework, hardware definition, device files and task uploaded; board 9 E4654C159F234234: HOMED 1.39 s after hv on, TARGET −5.041° 0.36 s after moveto, RELEASED 20 ms after brake (torque −1.786 N·cm before the tare), NOMOVE at −4.774° (torque 0.018 after the tare), TRIAL NOMOVE a_peak 0.267 tq_peak 0.085, park TARGET −0.091° in 0.54 s, session complete; no resend, bad frame or nak
+  14:24 run_left_1trial.log/.json: the same with board=left; board 8 E4654C159F504534: HOMED 1.32 s, TARGET −5.041° 0.36 s, RELEASED 21 ms (torque 0.397 before the tare), NOMOVE at −4.866° (0.014), TRIAL NOMOVE a_peak 0.176 tq_peak 0.037, park TARGET 0.0° in 0.51 s, session complete; no resend, bad frame or nak
+  mechanism side, learned from the runs: both stations have 36 V, motor, encoder, limit switch, brake and torque sensor connected and the harness right for the mechanism (homing faults otherwise)
+  not done: hand-pull test for the pull sign of boards 8 and 9 (BoardCalibration.hpp lacks both serials), scope on the analog outputs, analyzer-to-board identification by beacon
+  14:35 pull_right_60s.log/.json (board 9, right, watch_timeout_ms=60000, Peter's hand): released −4.95°, TOUCH 1.55 s later at 0.309 N·cm, PUSH at −9.991° under the default pull_sign +1, TRIAL a_peak −5.041 tq_peak 0.383, park −0.091°
+  14:38 pull_left_60s.log/.json (board 8, left): released −5.041°, TOUCH 1.78 s later at −0.319 N·cm, PUSH at −10.083° under +1, TRIAL a_peak −5.041 tq_peak −0.392, park 0.0°
+  both pull signs −1 (decreasing angle), added to src/BoardCalibration.hpp; the left sensor reads a pull negative, the right positive, as units B and A
+  14:45 BoardCalibration.hpp gained boards 8 and 9 (-1.0 each); delivery build rebuilt (316f802-dirty). Board 8 took it through `pixi run upload` (4.3 s). Board 9 again failed the picotool step and this time did not even enter BOOTSEL: a 1200-baud open from pyserial (DTR deasserted) and one from termios left it running, `picotool reboot -f -u` found no reset interface; board 8 under the same build honours the touch. Manual BOOTSEL requested from Peter. Over the RJ-45 board 9 still answers `id` with fw=316f802 (uart probe), board 8 with fw=316f802-dirty.
+  14:50 pyboard incident: after a probe exec on UART(3) timed out (the pyboard left in raw REPL), a Ctrl-B/Ctrl-D soft reset brought the friendly REPL back; the next `run_task_headless.py` printed the version, then failed transferring opto_led.py with "PyboardError: could not exec command"; the retry hung for its full 150 s with no output; the pyboard now streams "OK" continuously (6 KB in 15 s, ignoring Ctrl-C/Ctrl-B/Enter). No host process holds the port. Hardware reset (RST or USB replug) requested from Peter. pull_left_60s_signed.log/.json from these two attempts are the failed runs, kept as such.
+  15:00 Peter reset the pyboard (RST) and put board 9 into BOOTSEL by hand; `picotool load -x --bus 1 --address 67` loaded the calibrated build; both ports now answer fw=316f802-dirty
+  15:03 and 15:06 pull_right_60s_signed attempts ended NOMOVE (nobody at the lever in the window; overwritten by the confirming run)
+  15:10 pull_right_60s_signed.log/.json: board 9 with pull_sign -1: TOUCH 0.304 N·cm, PULL at -10.083°, TRIAL a_peak +5.041 tq_peak 0.359, reward pulse, park -0.091°
+  15:14 pull_left_60s_signed.log/.json: board 8 with pull_sign -1: TOUCH -0.314 N·cm, PULL at -10.083°, TRIAL a_peak +5.041 tq_peak -0.418, reward pulse, park +0.084°
+  end state: both boards on the calibrated delivery build, pyboard on MicroPython 1.26.1 with pyControl 2.1.1, the rig hardware definition, device files and joystick_trial.py loaded, 8.7 KB free

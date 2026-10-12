@@ -62,8 +62,12 @@ has to be put into BOOTSEL by hand, which on this board needs both USB and the
 pyControl cable unplugged first; [`docs/rp2040-bringup.md`](docs/rp2040-bringup.md)
 has the procedure. If `picotool` refuses to write, copy the built UF2,
 `.pio/build/examples/PyControlLinkQp/mouse_joystick_qp_rev2/firmware.uf2`,
-onto the `RPI-RP2` drive the bootloader presents. The board announces its
-firmware version in the protocol's `ID` reply.
+onto the `RPI-RP2` drive the bootloader presents, or load it with
+`picotool load -x firmware.uf2 --bus B --address N` (the RP2040 ROM
+bootloader reports the same USB serial on every board, so with two boards in
+BOOTSEL the USB address is what selects one). Two of the four v1.0 boards so
+far ignore the 1200 baud touch under this build and need the button every
+time. The board announces its firmware version in the protocol's `ID` reply.
 
 On USB a board enumerates as manufacturer `Janelia Research Campus`, product
 `mouse-joystick-pcb`, with the RP2040 flash unique id as its serial, so on

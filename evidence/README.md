@@ -2,7 +2,8 @@
 
 The record of how the `mouse-joystick-pcb` v1.0 boards and this firmware were
 verified, from the first v1.0 power-up on 2026-10-05 to the installed rig's
-first observed experiment on 2026-10-09: one directory per bench or rig
+first observed experiment on 2026-10-09, and the desk rig's bring-up on
+2026-10-12: one directory per bench or rig
 session, named by date, time and subject. Each holds the console logs,
 protocol transcripts, pyControl session outputs, trace analyses and small
 logic-analyzer captures of that session, with `meta.txt` naming the firmware
@@ -26,14 +27,17 @@ with its size and hash so the raw files can be identified and requested.
 | `E4654C159F274534` | board 6, pcb v1.0 unit A | right joystick | −1 |
 | `E4654C159F404534` | board 7, pcb v1.0 unit B | left joystick | −1 |
 | `E4654C159F171E34` | board 4, pcb v0.3 | bench, not in the rig | −1 |
+| `E4654C159F504534` | board 8, pcb v1.0 unit C | desk rig, left joystick (port 1) | −1 |
+| `E4654C159F234234` | board 9, pcb v1.0 unit D | desk rig, right joystick (port 4) | −1 |
 
 The pull sign is the only per-board calibration the firmware carries
-(`src/BoardCalibration.hpp`); on all three boards a pull is the
+(`src/BoardCalibration.hpp`); on all five boards a pull is the
 decreasing-angle direction, found by a hand pull classified `PUSH` under the
 default sign (`2026-10-07-0855-unitA-solenoid-pull/pilot/pull1_60s.txt`,
-`2026-10-07-0908-unitB-bringup/pilot/pull_left_60s.txt`). Unit B's torque
-sensor reads a pull negative where unit A's reads positive; the firmware uses
-the magnitude.
+`2026-10-07-0908-unitB-bringup/pilot/pull_left_60s.txt`,
+`2026-10-12-1355-deskrig-bringup/pull_right_60s.log` and `pull_left_60s.log`).
+The left joysticks' torque sensors read a pull negative where the right ones
+read positive; the firmware uses the magnitude.
 
 ## What Was Verified
 
@@ -69,6 +73,7 @@ time) and the PlatformIO environment.
 
 | Session | What it shows | Firmware |
 | --- | --- | --- |
+| [`2026-10-12-1355-deskrig-bringup/`](2026-10-12-1355-deskrig-bringup/) | **Peter's desk rig, first bring-up**: two never-powered v1.0 boards (8 `E4654C159F504534` on port 1, 9 `E4654C159F234234` on port 4) found in the ROM bootloader, flashed with the stage 1 self test by `picotool load -x --bus 1 --address N` (20 checks, 0 failed each), then the delivery build (board 9 needed a direct picotool load after `pixi run upload`'s picotool step failed as on unit B); `id` over each RJ-45 from the pyboard's REPL; the second pyboard found on MicroPython 1.22.2, its 18 files copied off through the REPL (`pyboard-flash-before/`), upgraded to 1.26.1 by dfu-util (the ST bootloader jumps only after a download with `-s :leave`); the rig's `joystick_trial.py` with the new reply timeouts run once per board through `run_task_headless.py`: home 1.3–1.4 s, present 0.36 s, `RELEASED`, `NOMOVE`, `TRIAL`, park within 0.1°, session complete, no resends; then the pull sign of both boards by hand pull (PUSH under +1, PULL at −10.08° after `−1` went into BoardCalibration.hpp), board 9 needing manual BOOTSEL because it ignores the 1200 baud touch, and the pyboard wedged once by an overlapping REPL probe. Numbers in the PCB bring-up log, "Desk rig" | firmware `316f802` `mouse_joystick_qp_rev2` (first boards with the `Janelia Research Campus` USB string); pyControl 2.1.1 on MicroPython 1.26.1 |
 | [`2026-10-09-0920-rig1-mock-experiment/`](2026-10-09-0920-rig1-mock-experiment/) | **the laptop observer's first run, watching the desktop's mock experiment** (two `joystick_trial` trials on the left board at 09:23:18, two on the right at 09:23:33, from the `joystick-rig` branch files through `pycontrol_run.py`): `lai monitor live` on all three LA5032s from the laptop, 15 s windows armed on `marker0`, 2 MSa/s; unit B (`1-5.4`) `ok` 2 `NOMOVE`, unit A (`1-5.1`) `ok` 2 `NOMOVE`, heartbeat 24.3 Hz, 0 naks / faults / framing errors, camera board `ok` with 150 Hz triggers and every follower matched, one `degraded` that is the health model's count-over-span rate across the 5 s pause between the tasks (its README explains; `instrument-control` PLANS Phase 3). Also the laptop's setup record: firmware from the nonfree artifacts, udev rule, qspy built with `CONDA_OVERRIDE_GLIBC=2.41` | firmware `51322e7`-dirty `mouse_joystick_qp_rev2`; pyControl 2.1.1; `instrument-control` f350621 on the laptop |
 | [`2026-10-09-0919-rig1-which-analyzer/`](2026-10-09-0919-rig1-which-analyzer/) | **which laptop analyzer sits on which kind of board**, the 3 s identification capture before the run above: `1-5.1` and `1-5.4` trace alive (`silent`, joystick boards), `1-5.3` `dead` (the camera board, no MCU); the serials came from the `ok` windows' identity acks | as above |
 | [`2026-10-07-1040-unitA-soak/`](2026-10-07-1040-unitA-soak/) | **400-trial soak** of the rig task on the right joystick, nobody at the lever, ~35 min (`pilot/soak400.txt`): **400 `NOMOVE`, 0 `nak`, 0 `FAULT`, 33 min 53 s**; every present and park within one encoder count (park 0.0 × 399, −0.091 × 1), trial period 5.081 ± 0.023 s with no drift, 53 190 link lines; numbers in the PCB bring-up log | firmware `51322e7`-dirty `mouse_joystick_qp_rev2`; pyControl 2.1.1 |
