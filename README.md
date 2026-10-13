@@ -12,11 +12,15 @@ pyControl speaks to the board, and the
 where every measurement is recorded per board serial. The driver library is
 [TMC51X0](https://github.com/janelia-arduino/TMC51X0).
 
-**Status, October 2026:** both pcb v1.0 boards in the rig have been brought up
-on the bench, and the rig's trial task has run end to end through pyControl
-against a v1.0 board (Gate E, 2026-10-06). The table below records each
-bring-up stage; the delivery builds for v1.0 are the `mouse_joystick_qp_rev2`
-environments. Each stage's procedure and findings are in `docs/`.
+**Status, October 2026:** four pcb v1.0 boards run this firmware on two
+rigs. Rig 1 at the lab bench (installed 2026-10-09) has units A and B, the
+right and left joysticks; the verification rig at Peter's desk (since
+2026-10-12) has units C and D, where firmware and task changes run before
+they reach Rig 1. Every board passed the staged bench bring-up below and
+ran the rig's trial task end to end through pyControl; the delivery build is
+`examples/PyControlLinkQp` for the `mouse_joystick_qp_rev2` environment.
+Each stage's procedure and findings are in `docs/`; the per-session record
+is [`evidence/`](evidence/README.md).
 
 The pin map is verified against PCB git tag **v0.1**, the revision manufactured
 as rev 0. Tags v0.1 and v0.2 have byte-identical RP2040 pad-to-net maps.

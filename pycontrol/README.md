@@ -39,8 +39,11 @@ which cannot run `UART_handler` at all. Check the interpreter, not the framework
 ```
 
 The bench controller was upgraded 1.22.2 -> 1.26.1 on 2026-09-03 (standard
-`PYBV11` build, not `THREAD`). **The rig's controller has not been checked.**
-Full account in `mouse-joystick-pcb/docs/pycontrol-interface.md`.
+`PYBV11` build, not `THREAD`) and became Rig 1's controller on 2026-10-09
+(the inventory below was read off it that morning). The desk rig's
+controller was found on 1.22.2 and upgraded the same way on 2026-10-12. Both
+controllers in service are on 1.26.1. Full account in
+`mouse-joystick-pcb/docs/pycontrol-interface.md`.
 
 ## Setting Up Another Controller (and what the delivered one carries)
 

@@ -2,7 +2,30 @@
 
 ## Current Goal
 
-Stage 4: the pyControl UART protocol. Stages 1 to 3 have passed on hardware.
+Delivered: protocol v1 on four pcb v1.0 boards across two rigs (Rig 1
+2026-10-09, the desk rig 2026-10-12). Next: tag `v1.0.0` on the calibration
+commit and reflash both rigs so `ID` stops reporting `-dirty`; then the
+researcher-facing documentation
+(`orb-weaver-context/context/mouse-joystick-rig-documentation-plan.md`,
+phase 2: architecture page, circuit-to-code map, diagrams).
+
+## Open Item — Two of four v1.0 units ignore the 1200 baud touch (opened 2026-10-13)
+
+Units B and D (boards 7 and 9) take the bootloader touch at most once and
+then need the button under `mouse_joystick_qp_rev2`; units A and C take it
+every time with the same build. The board-side item is in
+`mouse-joystick-pcb/.agents/PLANS.md`. Firmware side:
+
+- [ ] Confirm on a failing unit whether the host's line-coding request
+      reaches the CDC at all (USB capture, or a QS record on the CDC
+      callback) before anything in the application is suspected; the two
+      units took the touch from the self-test build, which has the same
+      core.
+- [ ] If the request arrives and is ignored, look at what the delivery
+      build does differently around USB: the 1 kHz hardware-alarm tick and
+      the watchdog (`Bsp.cpp`), and whether TinyUSB's task gets starved.
+- [ ] Either way, keep the `B` protocol verb and the button procedure in the
+      README as the documented routes into BOOTSEL.
 
 ## Task: pcb v1.0 Bring-Up (opened 2026-10-04; boards arrive 2026-10-05)
 

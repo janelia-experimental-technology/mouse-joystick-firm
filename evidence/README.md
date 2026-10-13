@@ -64,6 +64,16 @@ read positive; the firmware uses the magnitude.
 - **The installed rig**: the laptop observer identifying which analyzer sits on
   which board and watching the desktop's mock experiment
   (`2026-10-09-0919-rig1-which-analyzer/`, `2026-10-09-0920-rig1-mock-experiment/`).
+- **The desk rig**: two further v1.0 boards (units C and D) from the ROM
+  bootloader through the stage 1 self test and the delivery build, `id` over
+  both RJ-45 ports, one trial of the rig's task per board through the
+  headless runner, and both pull signs by hand
+  (`2026-10-12-1355-deskrig-bringup/`).
+- **Link loss on hardware**: the task's reply timeouts exercised by unplugging
+  the RJ-45 before a session (three resends, session ended at 2.0 s) and
+  during a watch (ended at the deadline, board latched `host_timeout` with
+  its rail off, next session recovered)
+  (`2026-10-12-1355-deskrig-bringup/`).
 
 ## Sessions
 
