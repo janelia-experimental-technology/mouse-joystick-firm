@@ -1,0 +1,42 @@
+// The board's two power domains, the bus switch between them, and the one
+// piece of firmware that crosses the boundary. Facts from
+// mouse-joystick-pcb docs/power.md ("Rail Chain") and src/PowerSequence.hpp.
+digraph power {
+  graph [rankdir=LR, fontname="Helvetica", fontsize=11, labelloc=t, nodesep=0.2, ranksep=0.45,
+         label="Two power domains: the MCU is always on; everything that moves is behind HV_EN"];
+  node  [shape=box, style="rounded,filled", fillcolor="#f4f5f7", color="#5c6b7a", fontname="Helvetica", fontsize=10];
+  edge  [fontname="Helvetica", fontsize=9, color="#5c6b7a"];
+
+  subgraph cluster_mcu {
+    label="always-on MCU domain (USB or the pyControl port's 5 V; with only 36 V the board does not boot)";
+    style="rounded"; color="#9aa5b1"; node [fillcolor="#e3ecf5"];
+    usb   [label="USB-C VBUS\nJ201"]; pyc [label="RJ-45 pin 6, 5 V\nJ301"];
+    or    [label="ORing diodes\n+5V_MCU"]; ldo1 [label="TPS73733\n+3.3V_MCU"];
+    rp    [label="RP2040\nUART0 to pyControl, USB console"];
+    bus   [label="SN74CB3Q3245 x4\nGPIO bus switch\n~BUS_SW_EN, isolated at reset", fillcolor="#fff4e0"];
+    usb -> or; pyc -> or; or -> ldo1 -> rp; rp -> bus [label="SPI0, SPI1, I2C0,\nDIAG, DRV_EN, CS, CAL"];
+  }
+  subgraph cluster_sw {
+    label="switched domain, alive only while HV_EN is high";
+    style="rounded"; color="#9aa5b1"; node [fillcolor="#eef7ea"];
+    hvin  [label="36 V terminal J501\nreverse diode"];
+    sw    [label="TPS1HTC100-Q1 high-side switch\nHV_EN, HV_LATCH, HV_DIAG_EN,\n~HV_FAULT, HV_SNS", fillcolor="#fde9e7"];
+    v36   [label="+36V_SW"];
+    tmc   [label="TMC5130A VS\nmotor"];
+    b12   [label="TPSM365R6\n+12V_SW"];
+    b5    [label="TPSM365R6\n+5V_SW"];
+    ldo2  [label="TPS73733\n+3.3V_SW"];
+    brk   [label="brake current sink\nOPA197, BUK7D36 pass device"];
+    tq    [label="torque front end\nINA821, ADS8689, excitation"];
+    enc   [label="encoder supply,\nSchmitt buffers, MAX6816 debouncer"];
+    tmcio [label="TMC5130A VCC_IO, VCC"];
+    hvin -> sw -> v36; v36 -> tmc; v36 -> b12; v36 -> b5;
+    b12 -> brk; b12 -> tq; b5 -> ldo2; b5 -> enc; b5 -> tmcio; ldo2 -> tmcio; ldo2 -> enc; b5 -> tq;
+  }
+  bus -> tmc [label="SPI0, DIAG, DRV_EN", style=dashed];
+  bus -> brk [label="I2C0 0x49, ~BRAKE_FAULT", style=dashed];
+  bus -> tq  [label="SPI1, CONVST, TQ_CAL_EN", style=dashed];
+  rp  -> sw  [label="HV_EN, HV_LATCH, HV_DIAG_EN", color="#b4493a", fontcolor="#b4493a"];
+  rules [shape=note, fillcolor="#fff8f7", color="#b4493a", fontsize=9, label="PowerSequence.hpp is the only code that raises HV_EN.\lUp: HV_EN high, wait for +3.3V_SW, then close the bus switch.\lDown: open the bus switch, then HV_EN low.\lHV_DIAG_EN only while reading HV_SNS or ~HV_FAULT, never idle high.\lhv on arms the 100 ms host-loss watchdog: host lost = rail off, FAULTED.\l"];
+  rules -> sw [style=invis];
+}

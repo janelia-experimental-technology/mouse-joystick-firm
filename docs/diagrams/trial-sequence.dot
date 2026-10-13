@@ -1,0 +1,42 @@
+// One trial as the rig's task runs it: the task's states, the command each
+// state sends on entry, and the board reply or event that moves it on.
+// Source of truth: joystick-rig pycontrol/tasks/rig1/joystick_trial.py (PR 9)
+// and the protocol's V1 section. Rendered with dot -Tsvg.
+digraph trial {
+  graph [rankdir=TB, fontname="Helvetica", fontsize=11, labelloc=t, nodesep=0.3, ranksep=0.4,
+         label="joystick_trial.py: task states (boxes), the command sent on entry, and what moves the task on"];
+  node  [shape=box, style="rounded,filled", fillcolor="#f4f5f7", color="#5c6b7a", fontname="Helvetica", fontsize=10];
+  edge  [fontname="Helvetica", fontsize=9, color="#5c6b7a"];
+
+  start   [shape=plaintext, label="run_start: heartbeat every 40 ms,\nclear_fault, identify", fontsize=9];
+  ident   [label="identifying"];
+  power   [label="powering\nhv on"];
+  home    [label="homing\nhome"];
+  arm     [label="arming\narm"];
+  present [label="presenting\nmove_to(present_degrees)", fillcolor="#e3ecf5"];
+  brake   [label="braking\nbrake(brake_ncm)", fillcolor="#e3ecf5"];
+  watch   [label="watching\ntorque_zero, watch(pull, push, timeout, touch)", fillcolor="#e3ecf5"];
+  park    [label="parking\nmove_to(0)", fillcolor="#e3ecf5"];
+  iti     [label="iti\npause iti_ms", fillcolor="#e3ecf5"];
+  done    [label="done\nsession complete", fillcolor="#eef7ea"];
+  faulted [label="faulted\nsolenoid off, faults, then stop", fillcolor="#fde9e7"];
+  end     [shape=plaintext, label="run_end on every exit:\nsolenoid off, stop, disarm, hv off", fontsize=9];
+
+  start -> ident;
+  ident -> power   [label="ack (ID)"];
+  power -> home    [label="ack"];
+  home  -> arm     [label="ev HOMED"];
+  arm   -> present [label="ack"];
+  present -> brake [label="ev TARGET"];
+  brake -> watch   [label="ev RELEASED"];
+  watch -> watch   [label="ev PULL: reward_duration on the solenoid\nev PUSH, ev NOMOVE, ev TOUCH: counted"];
+  watch -> park    [label="ev TRIAL (1 s after the outcome)"];
+  park  -> iti     [label="ev TARGET"];
+  iti   -> present [label="iti_ms, trial < n_trials"];
+  iti   -> home    [label="iti_ms, home_each_trial", style=dashed];
+  iti   -> done    [label="trial >= n_trials"];
+  {ident power arm home present brake watch park} -> faulted [color="#b4493a", style=dashed, arrowsize=0.7];
+  legend [shape=note, fillcolor="#fff8f7", color="#b4493a", fontsize=9, label="Dashed red, from every waiting state: the reply never came.\lA command's ack: three resends 500 ms apart, then faulted.\lAn expected event (HOMED, TARGET, RELEASED, TRIAL): 10 s late, then faulted.\lAny ev FAULT or any nak, in any state: faulted.\l"];
+  legend -> faulted [style=invis];
+  faulted -> end; done -> end;
+}

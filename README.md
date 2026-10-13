@@ -20,7 +20,22 @@ they reach Rig 1. Every board passed the staged bench bring-up below and
 ran the rig's trial task end to end through pyControl; the delivery build is
 `examples/PyControlLinkQp` for the `mouse_joystick_qp_rev2` environment.
 Each stage's procedure and findings are in `docs/`; the per-session record
-is [`evidence/`](evidence/README.md).
+is [`evidence/`](evidence/README.md). The delivered state is tagged
+`v1.0.0` (2026-10-13); the installed boards report the commits they were
+built from (`51322e7-dirty`, `316f802-dirty`, functionally the same code)
+until they are reflashed from the tag.
+
+## Read This First
+
+| If you | Read |
+| --- | --- |
+| run sessions on the rig | the researcher guide in the rig's repository, then [the glossary](docs/glossary.md) for the words in the log |
+| want to know how the firmware is organised and what talks to what | [Architecture](docs/architecture.md), with the trial and power diagrams |
+| need to know which code drives which circuit, connector or part | [Circuit-to-code map](docs/circuit-code-map.md) |
+| write or change a pyControl task | [The pyControl device class](docs/pycontrol-api.md) and [`pycontrol/README.md`](pycontrol/README.md) |
+| build, flash or bring up a board | the rest of this README, then `docs/rp2040-bringup.md`, `docs/motion-bringup.md`, `docs/brake-torque-bringup.md` |
+
+![What runs where](docs/diagrams/architecture.svg)
 
 The pin map is verified against PCB git tag **v0.1**, the revision manufactured
 as rev 0. Tags v0.1 and v0.2 have byte-identical RP2040 pad-to-net maps.
@@ -339,6 +354,14 @@ src/                           board support library
                                CHOPCONF.vsense, which TMC51X0 cannot express
 test/native/                   host tests for the Arduino-free arithmetic
 tools/pio_task.py              example selection without editing platformio.ini
+tools/circuit_code_map.py      writes docs/circuit-code-map.md from the rig's
+                               component registry and the board's records
+tools/pycontrol_api_doc.py     writes docs/pycontrol-api.md from the device class
+docs/architecture.md           how the firmware is organised, with the diagrams in
+                               docs/diagrams/ (Graphviz sources and rendered SVG)
+docs/circuit-code-map.md       generated: which code drives which circuit and part
+docs/pycontrol-api.md          generated: the device class's methods and verbs
+docs/glossary.md               the words the protocol, the task and the log use
 docs/rp2040-bringup.md         stage 1: the procedure, and each failure's meaning
 docs/motion-bringup.md         stage 3: the same, plus the rig's measured facts
 docs/brake-torque-bringup.md   stages A4/A5: the brake sink and torque bridge

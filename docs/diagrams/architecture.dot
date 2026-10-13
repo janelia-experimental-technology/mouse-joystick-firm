@@ -1,0 +1,64 @@
+// The firmware's shape: what runs where, from the rig PC to the parts of one
+// joystick station. Rendered to architecture.svg and .png with Graphviz:
+//   dot -Tsvg architecture.dot -o architecture.svg
+digraph architecture {
+  graph [rankdir=TB, fontname="Helvetica", fontsize=11, labelloc=t, nodesep=0.25, ranksep=0.35,
+         label="mouse-joystick-firm: what runs where (v1.0.0)"];
+  node  [shape=box, style="rounded,filled", fillcolor="#f4f5f7", color="#5c6b7a", fontname="Helvetica", fontsize=10];
+  edge  [fontname="Helvetica", fontsize=9, color="#5c6b7a"];
+
+  subgraph cluster_pc {
+    label="Rig PC"; style="rounded"; color="#9aa5b1";
+    gui [label="pyControl 2.1.1 GUI\nor tools/pycontrol_run.py", fillcolor="#e8edf2"];
+  }
+  subgraph cluster_pyboard {
+    label="pyControl controller (pyboard on Breakout 1.2), MicroPython"; style="rounded"; color="#9aa5b1";
+    task  [label="joystick_trial.py\n(joystick-rig): the experiment\nstates, heartbeat, reward"];
+    dev   [label="MouseJoystick\ndevices/mouse_joystick.py\none object per board"];
+    codec [label="JoystickProtocol\nmouse_joystick_protocol.py\nframing codec, shared with the host tests"];
+    uarth [label="UART_handler (pyControl)\nIRQ_RXIDLE on port 1 or 4"];
+    task -> dev [label="home(), move_to(), brake(), watch(), ping()"];
+    dev -> task [label="poll(): ack, nak, events"];
+    dev -> codec; codec -> uarth;
+  }
+  link [shape=plaintext, label="RJ-45, 115200 8N1\nack/nak with sequence numbers, events, a 100 ms host-loss watchdog", fontsize=9];
+  subgraph cluster_board {
+    label="mouse-joystick-pcb v1.0, RP2040, examples/PyControlLinkQp (QP/C++)"; style="rounded"; color="#9aa5b1";
+    pycuart [label="PycUart.hpp\nUART0, 64-bit microsecond clock"];
+    linkao  [label="LinkAo.cpp\nactive object: lines in, lines out,\n1 kHz tick"];
+    pb      [label="ProtocolBoard.hpp\nstate machine, watchdog,\nretransmission cache", fillcolor="#e3ecf5"];
+    tw      [label="TrialWatch.hpp\nWATCH classifier,\n1 kHz capture ring, TRIAL summary", fillcolor="#e3ecf5"];
+    mb      [label="MotionBackend seam", shape=hexagon, fillcolor="#fff4e0"];
+    btb     [label="BrakeTorqueBackend seam", shape=hexagon, fillcolor="#fff4e0"];
+    tmcm    [label="TmcMotion.hpp\nnon-blocking moves, homing,\nencoder tracking"];
+    tmcspi  [label="MotionSetup.hpp, TmcSpi.hpp\nTMC51X0 library"];
+    bth     [label="BrakeTorqueHw.hpp\nramped brake setpoint,\nBRAKE_ISENSE supervision,\ntorque sampled on the tick"];
+    dac     [label="DAC80501 (I2C0)\n0x49 brake, 0x48 angle out"];
+    adc     [label="ADS8689 (SPI1)\ntorque, 1 kHz"];
+    ps      [label="PowerSequence.hpp, SafeState.hpp\nthe only code that raises HV_EN;\nrail up, then bus closed", fillcolor="#fde9e7"];
+    bsp     [label="Bsp.cpp\nhardware-alarm tick, hardware watchdog,\nboot signature, QS trace on FW_TRIG1"];
+    pycuart -> linkao -> pb;
+    pb -> tw;
+    pb -> mb -> tmcm -> tmcspi;
+    pb -> btb -> bth;
+    bth -> dac; bth -> adc;
+    pb -> ps [label="HV on/off"];
+    bsp -> linkao [style=dashed, label="TICK"];
+  }
+  subgraph cluster_station {
+    label="one joystick station"; style="rounded"; color="#9aa5b1";
+    node [fillcolor="#eef7ea"];
+    tmc   [label="TMC5130A driver\nX_ENC counts the encoder,\nREFL is the limit switch"];
+    motor [label="motor, encoder,\nlimit switch\nJ1102, J1103, J1601"];
+    brake [label="brake coil\nJ1801 via the current sink"];
+    torque[label="torque sensor bridge\nJ2001 via the INA821 front end"];
+    hv    [label="36 V switch, 12 V and 5 V\nregulators, GPIO bus switch"];
+    bnc   [label="angle and torque BNCs\nJ1101, J901 to the OneBox"];
+    instr [label="instrument port J1301\n32 digital taps"];
+    tmcspi -> tmc -> motor;
+    dac -> brake; torque -> adc; dac -> bnc; torque -> bnc [style=dotted];
+    ps -> hv; bsp -> instr [style=dotted];
+  }
+  gui -> task [label="upload, start, log"];
+  uarth -> link -> pycuart [dir=both];
+}
