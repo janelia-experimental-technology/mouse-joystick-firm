@@ -1,0 +1,29 @@
+Desk rig reflash from Peter's laptop, 2026-10-14, 09:02-09:20 local. A practice
+run for the same update on Rig 1 (boards 6 and 7).
+firmware: v1.0.0-2-g109169f (HEAD of mouse-joystick-firm, clean; no change under
+  src/, examples/ or platformio.ini since tag v1.0.0, which the two later commits
+  follow with documentation only), examples/PyControlLinkQp, mouse_joystick_qp_rev2
+host: Peter's laptop (Debian 13, kernel 6.12, pixi 0.81 from a Guix profile).
+  `pixi install` needed CONDA_OVERRIDE_GLIBC=2.41 (pixi lists no __glibc virtual
+  package on this machine); first build 2 min including the toolchain download.
+  Both boards on the dock hub at USB paths 1-5.2.1 (board 9) and 1-5.2.4 (board 8).
+boards before: both on 316f802-dirty (the 2026-10-12 end state), enumerated
+  2e8a:f00a "Janelia Research Campus" "mouse-joystick-pcb".
+09:10:45 board 8 E4654C159F504534, `pixi run upload examples/PyControlLinkQp
+  mouse_joystick_qp_rev2 /dev/serial/by-id/...E4654C159F504534-if00`: 1200 baud
+  touch honoured, picotool load -v -x, "Verifying Flash ... OK", rebooted,
+  SUCCESS in 7.57 s.
+09:11:10 board 9 E4654C159F234234, the same command: touch honoured (this board
+  had refused it on 2026-10-12 from the desk computer), load, verify, rebooted,
+  SUCCESS in 4.35 s. A USB snapshot taken within a second of the reboot caught
+  the board still re-enumerating (2e8a:0003); the next showed the application.
+09:12:36 board 8 touched again by a pyserial 1200 baud open (DTR low): in BOOTSEL
+  0.5 s later; `picotool info -a`: RP2040 B2, 16384K, flash id 0xE4654C159F504534,
+  no program or build information in the image; `picotool reboot`; the CDC port
+  reappeared 0.99 s after the reboot, after the application's banner check, so
+  the delivery build's banner cannot be read this way.
+09:20 the desk rig's pyboard (PYBv1.1 3968348E3233, MicroPython 1.26.1) plugged
+  into the laptop; `id;1` from its raw REPL over port 1 UART(4) and port 4
+  UART(3) with the 2026-10-12 session's pyb_uart_probe.py (uart_id_probe.log):
+  both boards fw=v1.0.0-2-g109169f, hw=rev2, proto=2, caps unchanged,
+  boot=reboot, crumb=0. 36 V not applied; no motion, no measurements.

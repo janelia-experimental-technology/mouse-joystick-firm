@@ -3,8 +3,11 @@
 ## Current Goal
 
 Delivered: protocol v1 on four pcb v1.0 boards across two rigs (Rig 1
-2026-10-09, the desk rig 2026-10-12). Next: tag `v1.0.0` on the calibration
-commit and reflash both rigs so `ID` stops reporting `-dirty`; then the
+2026-10-09, the desk rig 2026-10-12). `v1.0.0` is tagged; the desk rig's two
+boards were reflashed from `v1.0.0-2-g109169f` (same code as the tag, docs
+only after it) on 2026-10-14 from Peter's laptop. Next: the same reflash on
+Rig 1 (procedure in the README, "Reprogramming a v1.0 board"; the Status
+entry for 2026-10-14 has what the laptop needs), then the
 researcher-facing documentation
 (`orb-weaver-context/context/mouse-joystick-rig-documentation-plan.md`,
 phase 2: architecture page, circuit-to-code map, diagrams).
@@ -26,6 +29,13 @@ every time with the same build. The board-side item is in
       the watchdog (`Bsp.cpp`), and whether TinyUSB's task gets starved.
 - [ ] Either way, keep the `B` protocol verb and the button procedure in the
       README as the documented routes into BOOTSEL.
+- [ ] 2026-10-14, Peter's laptop: board 9 (unit D) **took the touch** from the
+      delivery build `316f802-dirty` and flashed in 4.3 s; board 8 in 7.6 s;
+      board 8 took a second touch (a pyserial 1200 baud open, DTR low) a
+      minute later. So "ignores it every time" is wrong for board 9 — it is
+      intermittent, and the host (laptop vs desk computer, hub) may matter.
+      One board at a time: PlatformIO skips the touch when any RP2040 is
+      already in BOOTSEL and `picotool load` takes no address.
 
 ## Task: pcb v1.0 Bring-Up (opened 2026-10-04; boards arrive 2026-10-05)
 
@@ -484,6 +494,28 @@ items. Preserve selected manufactured-tag/serial context rather than assuming
 historical firmware wiring matches current PCB development.
 
 ## Status
+
+**2026-10-14, 09:10, Peter's laptop: the desk rig's boards reflashed.**
+Practice run for Rig 1. Laptop setup: `pixi install` fails on this machine
+until `CONDA_OVERRIDE_GLIBC=2.41` is in the environment (the Guix-built pixi
+does not see Debian's glibc; every `pixi run` needs it too). First build of
+`examples/PyControlLinkQp mouse_joystick_qp_rev2` 2 min (toolchain and
+framework download); image `v1.0.0-2-g109169f` (HEAD; no code change since
+the tag, `git diff v1.0.0 HEAD --stat -- src examples platformio.ini` is
+empty). `pixi run upload … /dev/serial/by-id/…<serial>-if00` on board 8
+(`E4654C159F504534`): touch, load, verify, reboot, 7.6 s. The same on board 9
+(`E4654C159F234234`): 4.3 s, touch honoured. Both re-enumerate as `2e8a:f00a`
+with their by-id links; `picotool info -a` in BOOTSEL shows the flash id
+and no binary info, and the delivery build's USB banner cannot be caught (the
+CDC port appears ~1 s after reboot, after the `if (Serial)` check), so the
+only read of `fw` is `id` over the RJ-45. Done at 09:20 once Peter plugged
+the desk rig's pyboard into the laptop: `id;1` from the pyboard's raw REPL
+(the desk-rig session's `pyb_uart_probe.py`, now `tools/pyb_id_probe.py`)
+over port 1 `UART(4)` and port 4 `UART(3)`: both boards answer
+`fw=v1.0.0-2-g109169f`, `boot=reboot`, caps unchanged
+(`evidence/2026-10-14-0910-deskrig-reflash/`). Rig 1 plan: laptop, both
+boards' USB and the pyboard's USB plugged in, one upload per board, then the
+probe.
 
 **2026-10-06, later: Gate E passed on v1.0 unit A.** pyControl 2.1.1 on
 the PYBV11 ran `mouse_joystick_check` against the board over the RJ-45 three

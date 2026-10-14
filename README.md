@@ -21,9 +21,11 @@ ran the rig's trial task end to end through pyControl; the delivery build is
 `examples/PyControlLinkQp` for the `mouse_joystick_qp_rev2` environment.
 Each stage's procedure and findings are in `docs/`; the per-session record
 is [`evidence/`](evidence/README.md). The delivered state is tagged
-`v1.0.0` (2026-10-13); the installed boards report the commits they were
-built from (`51322e7-dirty`, `316f802-dirty`, functionally the same code)
-until they are reflashed from the tag.
+`v1.0.0` (2026-10-13). The desk rig's boards were reflashed on 2026-10-14
+and report `v1.0.0-2-g109169f` (HEAD; the two commits after the tag change
+only documentation). Rig 1's boards report the commits they were built from
+(`51322e7-dirty`, `316f802-dirty`, functionally the same code) until they
+are reflashed.
 
 ## Read This First
 
@@ -84,9 +86,18 @@ has the procedure. If `picotool` refuses to write, copy the built UF2,
 onto the `RPI-RP2` drive the bootloader presents, or load it with
 `picotool load -x firmware.uf2 --bus B --address N` (the RP2040 ROM
 bootloader reports the same USB serial on every board, so with two boards in
-BOOTSEL the USB address is what selects one). Two of the four v1.0 boards so
-far ignore the 1200 baud touch under this build and need the button every
-time. The board announces its firmware version in the protocol's `ID` reply.
+BOOTSEL the USB address is what selects one). Two of the four v1.0 boards
+(units B and D) have ignored the 1200 baud touch under this build on some
+hosts and needed the button; on 2026-10-14 unit D took it first time from a
+laptop, so try the touch first and reach for the button when the upload
+says no new device appeared. Do one board at a time: the uploader skips the
+touch when any RP2040 is already in BOOTSEL, and it loads without an address.
+The board announces its firmware version in the protocol's `ID` reply; the
+delivery build prints nothing on USB after boot, so `ID` over the RJ-45 is
+the only way to read it. With the pyboard also on USB and nothing else holding
+its port, `tools/pyb_id_probe.py <pyboard tty>` sends `id;1` over Breakout
+ports 1 and 4 and prints both replies; expect `fw=` to name the build just
+flashed.
 
 On USB a board enumerates as manufacturer `Janelia Research Campus`, product
 `mouse-joystick-pcb`, with the RP2040 flash unique id as its serial, so on
@@ -354,6 +365,7 @@ src/                           board support library
                                CHOPCONF.vsense, which TMC51X0 cannot express
 test/native/                   host tests for the Arduino-free arithmetic
 tools/pio_task.py              example selection without editing platformio.ini
+tools/pyb_id_probe.py          `id` over both RJ-45 links through the pyboard REPL
 tools/circuit_code_map.py      writes docs/circuit-code-map.md from the rig's
                                component registry and the board's records
 tools/pycontrol_api_doc.py     writes docs/pycontrol-api.md from the device class
