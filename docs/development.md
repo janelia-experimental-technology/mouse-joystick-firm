@@ -43,7 +43,7 @@ live.
 
 ## Observability Development
 
-The [observability plan](docs/observability-plan.md) tracks `OBS-FW`: define
+The [observability plan](observability-plan.md) tracks `OBS-FW`: define
 application event semantics, establish a non-QP evidence baseline, and evaluate
 an optional QP/QV trace pilot. It links to the shared architecture and parallel
 workstreams. Current delivery remains non-QP; this work does not require a

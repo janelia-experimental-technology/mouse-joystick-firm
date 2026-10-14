@@ -29,6 +29,7 @@ help:
 	@printf "  ports        list connected serial ports\\n"
 	@printf "  test         run host-native tests\\n"
 	@printf "  format       clang-format staged changes\\n"
+	@printf "  docs         regenerate the generated docs and the diagrams\\n"
 	@printf "  clean        clean build artifacts for EXAMPLE/ENV\\n"
 	@printf "  deepclean    delete the build directory for EXAMPLE\\n"
 	@printf "  udev-rules   install the PlatformIO udev rules (needs sudo)\\n"
@@ -77,6 +78,10 @@ test:
 .PHONY: format
 format:
 	$(PIXI) run format
+
+.PHONY: docs
+docs:
+	$(PIXI) run docs
 
 .PHONY: clean
 clean:

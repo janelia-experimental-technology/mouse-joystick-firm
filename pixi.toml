@@ -13,6 +13,10 @@ platformio = ">=6.1.19,<7"
 python = ">=3.12,<=3.14"
 clang-format = ">=18,<21"
 git = "*"
+# For `pixi run docs`: `dot` for the diagrams in docs/diagrams/, PyYAML for the
+# registry and manifest the circuit-to-code map reads.
+graphviz = "*"
+pyyaml = ">=6"
 
 # --------------------------------------------------------------------------------------
 # PlatformIO helpers
@@ -86,6 +90,14 @@ cmd = "python tools/pio_task.py monitor --port {{ port }} --baud {{ baud }}"
 description = "Run host-native Unity tests. Covers only the Arduino-free arithmetic."
 args = [{ arg = "env", default = "native" }]
 cmd = "python tools/pio_task.py test --env {{ env }}"
+
+# --------------------------------------------------------------------------------------
+# Generated documentation
+# --------------------------------------------------------------------------------------
+
+[tasks.docs]
+description = "Regenerate docs/circuit-code-map.md, docs/pycontrol-api.md and the SVG and PNG of every diagram in docs/diagrams/. The map reads the sibling mouse-joysticks-mech and mouse-joystick-pcb checkouts."
+cmd = "python tools/circuit_code_map.py && python tools/pycontrol_api_doc.py && python tools/render_diagrams.py"
 
 # --------------------------------------------------------------------------------------
 # clang-format

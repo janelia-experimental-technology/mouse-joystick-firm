@@ -357,6 +357,8 @@ tools/pio_task.py              example selection without editing platformio.ini
 tools/circuit_code_map.py      writes docs/circuit-code-map.md from the rig's
                                component registry and the board's records
 tools/pycontrol_api_doc.py     writes docs/pycontrol-api.md from the device class
+tools/render_diagrams.py       renders docs/diagrams/*.dot to SVG and PNG; the three
+                               run together as `make docs`
 docs/architecture.md           how the firmware is organised, with the diagrams in
                                docs/diagrams/ (Graphviz sources and rendered SVG)
 docs/circuit-code-map.md       generated: which code drives which circuit and part
