@@ -64,18 +64,21 @@ second MCU are deferred.
 
 ## Watching Stage 2 With The LA5032
 
-`FW_TRIG1` goes high for the whole register-read burst, so:
+`FW_TRIG1` goes high for the whole register-read burst. On a v1.0 board through
+the adapter v2.0 (`CHn` observes `DIGn`):
 
 ```sh
 cd ../instrument-control
 guix shell -m manifest.scm -- sigrok-cli --driver kingst-la2016 \
-  --channels CH2,CH3,CH4,CH5,CH17 --config samplerate=10m \
-  --triggers CH17=r --samples 2000000 \
-  -P spi:clk=CH2:mosi=CH3:miso=CH4:cs=CH5:cpol=1:cpha=1 -A spi
+  --channels CH8,CH9,CH10,CH11,CH1 --config samplerate=10m \
+  --triggers CH1=r --samples 2000000 \
+  -P spi:clk=CH8:mosi=CH10:miso=CH11:cs=CH9:cpol=1:cpha=1 -A spi
 ```
 
-`CH2`–`CH5` are `SCK`, `COPI`, `CIPO`, `~CS`. The TMC5130A is SPI mode 3, hence
-`cpol=1:cpha=1`.
+`CH8`–`CH11` are `SCK`, `~CS`, `COPI`, `CIPO` and `CH1` is `FW_TRIG1`. On a
+rev 0/1 board through the adapter v1.0 the bus is `CH2`–`CH5` (`SCK`, `COPI`,
+`CIPO`, `~CS`) and the trigger is `CH17`. The TMC5130A is SPI mode 3, hence
+`cpol=1:cpha=1`. `docs/rp2040-bringup.md` has both channel maps in full.
 
 ## Agent Guidance
 

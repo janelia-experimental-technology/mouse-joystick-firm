@@ -39,8 +39,10 @@ are reflashed.
 
 ![What runs where](docs/diagrams/architecture.svg)
 
-The pin map is verified against PCB git tag **v0.1**, the revision manufactured
-as rev 0. Tags v0.1 and v0.2 have byte-identical RP2040 pad-to-net maps.
+The v1.0 pin map (`MJ_BOARD_REV=2`) is read off footprint `U601` at pcb tag
+**v1.0**. The rev 0 and rev 1 maps came from `U501` at tags v0.1 and v0.3;
+tags v0.1 and v0.2 have byte-identical RP2040 pad-to-net maps. The
+[Pin Map](#pin-map) section below has all three.
 
 ## Quick Start
 
@@ -172,10 +174,11 @@ one safe ordering: rail up before the bus closes, bus open before the rail drops
 Run `examples/RP2040SelfTest`, read the USB serial monitor. Roughly twenty
 checks, each reporting a number or a level:
 
-- **Boot signature and heartbeat** — a distinctive pattern on the InstrumentPort
+- **Boot signature and heartbeat** — a distinctive pattern on the instrument port
   triggers before Serial comes up, then a 1 Hz square wave forever after. This is
   the only proof that the RP2040 is running your code that does not depend on
-  USB. Watch LA5032 channels 16 and 17.
+  USB. On a v1.0 board watch LA5032 channels 0 and 1 (`FW_TRIG0`/`FW_TRIG1` on
+  `DIG0`/`DIG1` of InstrumentPort-Digital-50); on rev 0/1, channels 16 and 17.
 - **Identity** — the flash unique id, which *is* this board's serial. Calibration
   belongs to the serial, not to a joystick position.
 - **Clocks** — every derived clock, plus `clk_sys` measured against the crystal.
@@ -193,7 +196,7 @@ checks, each reporting a number or a level:
 - **ADC** — the switched-rail sense (expected ~0 V), the 36 V current sense
   (expected ~0 V), and the die temperature, which proves the ADC and `ADC_AVDD`.
 
-Then an interactive menu: re-run, read the ADC, pulse the InstrumentPort
+Then an interactive menu: re-run, read the ADC, pulse the instrument port
 triggers, stream clock ticks, try a pyControl UART loopback, or reboot into
 BOOTSEL.
 
@@ -201,14 +204,16 @@ BOOTSEL.
 
 Collected here because none of them are guessable from the code:
 
-- **There are no LEDs.** Not one. USB CDC and the two `FW_TRIG` pins on
-  InstrumentPort-40 are the entire observable surface. `LED_BUILTIN` resolves to
-  GPIO 25, which here is `FW_TRIG0`.
+- **There are no LEDs.** Not one. USB CDC and the two `FW_TRIG` pins on the
+  instrument port are the entire observable surface: InstrumentPort-Digital-50
+  (`J1301`, a 50-way FFC with 32 buffered taps, always enabled) on v1.0,
+  InstrumentPort-40 (`J1501`, enabled by firmware) on rev 0/1. `LED_BUILTIN`
+  resolves to GPIO 25, which here is `FW_TRIG0`.
 - **There are no test points, anywhere.** Reach a signal at a component pin or
-  through InstrumentPort-40.
-- **Rev 0 has no SWD header and no `RUN` connection.** No debugger during
-  bring-up. BOOTSEL recovery needs USB *and* pyControl unplugged, because the MCU
-  domain is ORed from both.
+  through the instrument port's taps.
+- **No SWD header on any revision; rev 0 also has no `RUN` connection** (v1.0
+  adds a reset switch). No debugger during bring-up. BOOTSEL recovery needs USB
+  *and* pyControl unplugged, because the MCU domain is ORed from both.
 - **`Serial2` and `Wire1` must never be called.** The `generic` board definition
   maps them onto GPIO 8/9 and 26/27, which on this board are `TMC_DIAG1`,
   `~{BUS_SW_EN}`, the rail sense ADC, and a spare pad.
@@ -393,7 +398,7 @@ between them does not invalidate a cache. Same arrangement as `TMC51X0`.
 | `mouse_joystick` | `MJ_BOARD_REV=0`, for pcb **v0.1 and v0.2 only**. Quad-lane `boot2_w25q128jvxq` stage 2 since 2026-10-06 (every env inherits it); see `mouse_joystick_safeflash` for the generic one. |
 | `mouse_joystick_safeflash` | Same board on the universal single-lane `boot2_generic_03h` stage 2, which boots regardless of the flash's quad-enable bit: for a first-article board before its flash is proven. Slow XIP: on the link build it cost the 1 kHz sampler most of its budget (bring-up log, "the tick budget attributed"). Not for delivery. |
 | `mouse_joystick_rev1` | `MJ_BOARD_REV=1`, for pcb **v0.3 only**, where GP10/GP11/GP13 carry the angle DAC on SPI1. **This is not a future-only env — a v0.3 board needs it.** Building rev 0 against v0.3 drives the spare-pad test onto the DAC's SPI bus and chip select. The check count is the tell: a v0.3 board reporting 27 checks in stage 1 was built with the wrong env; rev 1 reports 24. **Not for v1.0**, where GP13 is an input from the brake block. |
-| `mouse_joystick_rev2` | `MJ_BOARD_REV=2`, for pcb **v1.0** (board file `d5ae4b0` through HEAD; no tag yet). I2C DACs on GP16/GP17, torque ADC on SPI1, `~{BRAKE_FAULT}` GP13, `HV_LATCH` GP24, `~{HV_FAULT}` GP23, two spare pads, **20 stage 1 checks**. The transport is chosen by the revision; `MJ_DAC_I2C` is not needed. **On hardware since 2026-10-05** (unit `E4654C159F274534`: stages 1, 2, A3, A6, and A4/A5 on 2026-10-06). Replaces `mouse_joystick_rev1_i2c`, which described a board that never existed. |
+| `mouse_joystick_rev2` | `MJ_BOARD_REV=2`, for pcb **v1.0** (board file `d5ae4b0` through tag `v1.0`). I2C DACs on GP16/GP17, torque ADC on SPI1, `~{BRAKE_FAULT}` GP13, `HV_LATCH` GP24, `~{HV_FAULT}` GP23, two spare pads, **20 stage 1 checks**. The transport is chosen by the revision; `MJ_DAC_I2C` is not needed. **On hardware since 2026-10-05** (unit `E4654C159F274534`: stages 1, 2, A3, A6, and A4/A5 on 2026-10-06). Replaces `mouse_joystick_rev1_i2c`, which described a board that never existed. |
 | `mouse_joystick_qp` | `examples/PyControlLinkQp` only: the stage-4 protocol inside a QP/C++ active object with a QS trace on `FW_TRIG1`, rev 0, `TmcMotion`, pyControl on UART0. qp-arduino comes from its `v7.3.4` tag on GitHub. |
 | `mouse_joystick_qp_rev1` | Same for rev 1. |
 | `mouse_joystick_qp_rev2`, `mouse_joystick_qp_rev2_usb` | Same for pcb v1.0, delivery and bench (USB protocol, tick probe) builds. Since 2026-10-06 the brake sink and the torque bridge are driven through `src/BrakeTorqueHw.hpp`: `caps` reports `brake` and `torque`, `BRAKE` ramps the coil and releases the drive once the current has settled, `TQ` answers, torque rides in `STATUS`, the events, `TRIAL` and the capture. |

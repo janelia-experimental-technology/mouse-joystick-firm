@@ -1084,10 +1084,10 @@ Board serial `E4654C159F2C2534`, 36 V absent, USB only.
 
 ## Still Unconfirmed
 
-- **The LA5032 channel mapping.** Documented but not bench-verified. The boot
-  signature is a known pattern on known pins, so it doubles as the confirmation
-  once the adapter is connected. Nothing in stage 1 needed it, because USB came
-  up on the first try.
+- ~~**The LA5032 channel mapping.**~~ Confirmed: the rev 0/1 map through the
+  adapter v1.0 carried the stage 1 to 3 captures, and the v1.0 Digital-50 map
+  through the adapter v2.0 was confirmed straight (`CHn` observes `DIGn`) on
+  2026-10-05 (bring-up log, unit `E4654C159F274534`).
 - `env:mouse_joystick_fastflash` on hardware. (Done 2026-10-06, see the tick budget item.)
 - Everything on the far side of `HV_EN`: the switched rails, the TMC5130A, the
   16 MHz oscillator `X1201`, the motor, encoder, and limit switch.

@@ -24,9 +24,11 @@
 //     and cost a way to leave the chip misconfigured.
 //
 // Watching it with a logic analyser: FW_TRIG1 goes high for the duration of
-// each register-read burst, so trigger on LA5032 channel 17 rising and capture
-// channels 2, 3, 4, 5 -- SCK, COPI, CIPO, CS. sigrok's `spi` decoder will then
-// give you the datagrams to compare against the bytes printed here.
+// each register-read burst. On a v1.0 board trigger on LA5032 channel 1 rising
+// and capture channels 8, 9, 10, 11 -- SCK, CS, COPI, CIPO; on rev 0/1 trigger
+// on channel 17 and capture 2, 3, 4, 5 -- SCK, COPI, CIPO, CS. sigrok's `spi`
+// decoder will then give you the datagrams to compare against the bytes
+// printed here.
 
 #include <MouseJoystickBoard.hpp>
 
@@ -236,7 +238,8 @@ void reportRegisters(Print &out) {
     return;
   }
 
-  // Mark the burst for the logic analyser: CH17 high for the whole read.
+  // Mark the burst for the logic analyser: FW_TRIG1 (CH1 on v1.0, CH17 on
+  // rev 0/1) high for the whole read.
   SafeState::setInstrumentationEnabled(true);
   SafeState::setTrigger1(true);
 

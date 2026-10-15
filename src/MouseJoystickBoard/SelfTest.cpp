@@ -649,17 +649,29 @@ void SelfTest::emitIdentityBeacon(Print &out, uint32_t repeats) {
                             (kBeaconIdBits * 2u * kBeaconHalfBitUs) / 1000u +
                             kBeaconGapMs;
 
+#if MJ_BOARD_REV < 2
   out.print(F("Beaconing board identity on InstrumentPort-40: "));
   out.println(id);
   out.println(F("  TRIG1 (ch17) high 50 ms starts a frame; TRIG0 (ch16) then"));
   out.println(F("  clocks 64 bits MSB first, each valid on TRIG1 at the"));
   out.println(F("  rising edge. Trigger the capture on ch17 rising."));
+#else
+  out.print(F("Beaconing board identity on InstrumentPort-Digital-50: "));
+  out.println(id);
+  out.println(F("  DIG1 (ch1) high 50 ms starts a frame; DIG0 (ch0) then"));
+  out.println(F("  clocks 64 bits MSB first, each valid on DIG1 at the"));
+  out.println(F("  rising edge. Trigger the capture on ch1 rising."));
+#endif
   out.print(F("  "));
   out.print(repeats);
   out.print(F(" frames, "));
   out.print(frame_ms);
   out.println(F(" ms each."));
+#if MJ_BOARD_REV < 2
   out.println(F("  No 36 V and no bus needed: U1801 runs from +3.3V_MCU, so"));
+#else
+  out.println(F("  No 36 V and no bus needed: U1301 runs from +3.3V_MCU, so"));
+#endif
   out.println(F("  this reaches the port with the switched domain dark."));
 
   const bool was_enabled = SafeState::instrumentationEnabled();

@@ -45,7 +45,7 @@ void printMenu(Print &out) {
   out.println(F("  ?  this menu"));
   out.println(F("  r  re-run the full self test"));
   out.println(F("  a  read the ADC channels once"));
-  out.println(F("  t  pulse FW_TRIG0/FW_TRIG1 into InstrumentPort-40"));
+  out.println(F("  t  pulse FW_TRIG0/FW_TRIG1 into the instrument port"));
   out.println(F("  I  beacon the board serial on the triggers, so a"));
   out.println(F("     capture identifies which board it came from"));
 #if MJ_BOARD_REV < 2
@@ -79,11 +79,12 @@ void setup() {
   //    disabled.
   SafeState::apply();
 
-  // 3. Boot signature on the InstrumentPort triggers. No LEDs, no test points
+  // 3. Boot signature on the instrument port triggers. No LEDs, no test points
   //    and no SWD header on this board, so if USB does not come up this is the
   //    only thing that can say whether the RP2040 runs your code at all.
-  //    Watch LA5032 channel 16 (TRIG0, J1501 pin 26) and channel 17 (TRIG1,
-  //    J1501 pin 28). It leaves the port enabled so the heartbeat is visible.
+  //    On v1.0 watch LA5032 channels 0 and 1 (DIG0/DIG1 of J1301); on rev 0/1
+  //    channel 16 (TRIG0, J1501 pin 26) and channel 17 (TRIG1, J1501 pin 28).
+  //    It leaves the port enabled so the heartbeat is visible.
   SelfTest::emitBootSignature();
 
   Serial.begin(kSerialBaudRate);

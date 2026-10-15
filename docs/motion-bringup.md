@@ -405,19 +405,21 @@ against tag `4.0.3`; line references are to that tag.
 
 `FW_TRIG1` is high for the duration of each motion command and `FW_TRIG0` pulses
 on each switch transition the hand witness sees. Through the
-`la5032-instrument-port-adapter`:
+`la5032-instrument-port-adapter`, the channels differ by board revision:
 
-| Signal | `J1501` pin | LA5032 channel |
-|--------|------------|----------------|
-| `FW_TRIG0` | 26 | 16 |
-| `FW_TRIG1` | 28 | 17 |
-| `ENC_A` | 2 | 0 |
-| `ENC_B` | 3 | 1 |
-| `LIMIT_SW` | 19 | 11 |
+| Signal | rev 0/1: `J1501` pin → LA5032 channel | v1.0: `J1301` strand = LA5032 channel |
+|--------|---------------------------------------|---------------------------------------|
+| `FW_TRIG0` | 26 → 16 | `DIG0` = 0 |
+| `FW_TRIG1` | 28 → 17 | `DIG1` = 1 |
+| `ENC_A` | 2 → 0 | `DIG28` = 28 |
+| `ENC_B` | 3 → 1 | `DIG29` = 29 |
+| `LIMIT_SW` | 19 → 11 | `DIG15` = 15 |
 
-Trigger on channel 17 rising and capture 0, 1 and 11 to see the quadrature and
-the switch against the firmware's own view of the move. Send `i` to enable the
-buffers if the port is silent — it is silent from reset by design.
+On rev 0/1, trigger on channel 17 rising and capture 0, 1 and 11; on v1.0,
+trigger on channel 1 and capture 28, 29 and 15. Either way the quadrature and
+the switch appear against the firmware's own view of the move. On rev 0/1,
+send `i` to enable the buffers if the port is silent — it is silent from reset
+by design; the v1.0 port is always on.
 
 ## What Stage 3 Still Cannot Tell You
 

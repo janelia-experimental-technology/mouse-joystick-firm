@@ -19,7 +19,7 @@ three pins — `GP10`, `GP11`, `GP13` — which it routes to the angle-output DA
 and v0.1/v0.2 leave unrouted. No connected pin moved.
 
 **pcb v1.0** (the board file from commit `d5ae4b0`, 2026-09-21, unchanged
-through the fabrication package and HEAD; no tag yet) is a different map, read
+through the fabrication package and tag `v1.0`) is a different map, read
 off footprint **`U601`** — the RP2040 moved into the combined MCU block and
 `U501` is now the 36 V switch. Eight pins change role and one leaves; see
 `src/BoardPins.hpp` and the README's pin map. Its first firmware was written
@@ -66,23 +66,47 @@ series resistors at HEAD. Identify parts by **value and net**, not by designator
 ## Watching The Board With The LA5032
 
 Worth setting up before you plug in USB, because it is the only diagnostic that
-works when USB does not.
+works when USB does not. The port differs by revision; the two maps follow.
 
-**pcb v1.0 has a different port.** InstrumentPort-Digital-50 is `J1301`, a
-50-way 0.5 mm FFC, read-only and always enabled; it mates the
-`la5032-instrument-port-adapter` **v2.0** (built and received, mechanical fit
-checked by hand on 2026-09-28, continuity and cable permutation **not yet
-measured**) through a Molex Premo-Flex 15020 same-side FFC. Designed mapping:
-`CHn` observes `DIGn`, so **`FW_TRIG0` is CH0 and `FW_TRIG1` is CH1**, the
-TMC bus is CH8–CH14, the pyControl UART CH2/CH3, the DAC I2C pair CH22/CH23,
-the torque bus CH16–CH20, `PG_5V`/`PG_12V` CH30/CH31. A fully reversing cable
-would map `CHn` to `CH31-n` instead; the boot signature on CH0/CH1 (or CH31/
-CH30) is how to find out. The adapter's own bring-up log owns that result.
-The rest of this section is the rev 0/1 port.
+### v1.0: InstrumentPort-Digital-50
 
-InstrumentPort-40 is `J1501`. Through the `la5032-instrument-port-adapter`
-v1.0, channels 0–17 map straight onto Strands `DIG0`–`DIG15` and
-`TRIG0`–`TRIG1`:
+`J1301` is a 50-way 0.5 mm FFC (Hirose FH12-50S) carrying 32 buffered taps,
+`DIG0`–`DIG31`, through four `SN74LV541A` on `+3.3V_MCU`. The port is
+read-only and **always enabled**: there is no buffer enable, so the `i`
+command does nothing on this revision and the heartbeat cannot be silenced.
+It mates the `la5032-instrument-port-adapter` **v2.0** through a Molex
+Premo-Flex 15020 same-side FFC, and the mapping is straight: **`CHn` observes
+`DIGn`**, confirmed on the bench on 2026-10-05 against three known pull
+resistors and the boot signature (`mouse-joystick-pcb/docs/bringup-log.md`,
+unit `E4654C159F274534`; a reversing cable would have shown `CHn` as
+`CH31-n`).
+
+| Signal | `DIG` strand = LA5032 channel | Useful for |
+|--------|------------------------------|------------|
+| `FW_TRIG0` | 0 | **stage 1 proof of life**, heartbeat |
+| `FW_TRIG1` | 1 | **stage 1 boot signature**, firmware markers |
+| `PYC_UART_TX`, `PYC_UART_RX` | 2, 3 | stage 4 |
+| `TMC_SPI_SCK`, `~{TMC_CS}`, `TMC_SPI_COPI`, `TMC_SPI_CIPO` | 8, 9, 10, 11 | stage 2 |
+| `TMC_DIAG0`, `TMC_DIAG1`, `~{TMC_DRV_EN}` | 12, 13, 14 | stage 3 |
+| `LIMIT_SW` | 15 | stage 3 |
+| `TQ_SPI_SCK`, `TQ_CONVST_CS`, `TQ_SPI_COPI`, `TQ_SPI_CIPO`, `TQ_CAL_EN` | 16–20 | stage A5 (torque) |
+| `~{BRAKE_FAULT}` | 21 | stage A4 (brake) |
+| `DAC_SDA`, `DAC_SCL` | 22, 23 | angle and brake DACs |
+| `HV_EN`, `HV_DIAG_EN`, `~{HV_FAULT}`, `~{BUS_SW_EN}` | 24, 25, 26, 27 | power sequencing |
+| `ENCA`, `ENCB` | 28, 29 | stage 3 |
+| `PG_5V`, `PG_12V` | 30, 31 | the two bucks, which firmware never sees |
+
+`DIG4`–`DIG7` are tied to ground. The TMC, torque, brake and DAC taps sit on
+the peripheral side of the bus switch, so they are live only with the rail
+up; the triggers, the UART pair and the power-sequencing lines read with the
+36 V input absent. `src/BoardPins.hpp` carries the same table with its
+history; `mouse-joystick-pcb/docs/interface-map.md` is the source.
+
+### Rev 0/1: InstrumentPort-40
+
+InstrumentPort-40 is `J1501`, enabled by firmware through `~{INSTR_BUF_OE}`
+and silent from reset. Through the `la5032-instrument-port-adapter` v1.0,
+channels 0–17 map straight onto Strands `DIG0`–`DIG15` and `TRIG0`–`TRIG1`:
 
 | Signal | `J1501` pin | Strand | LA5032 channel | Useful for |
 |--------|------------|--------|----------------|------------|
@@ -103,11 +127,13 @@ or many-channel capture. All eleven taps are buffered by `SN74LVC125A` packages
 running from `+3.3V_MCU`, so **they work with the 36 V input absent** — the
 buffers are not on the switched domain.
 
-The channel mapping is documented but **not bench-verified**; see
-`board-interfaces/docs/la5032-instrument-port-40-mapping.md`. Confirm it with
-the boot signature, which is a known pattern on known pins.
+This mapping carried stages 1 to 3 on the rev 0 boards (`t` burst, `I`
+beacon and the stage 3 encoder captures in `mouse-joystick-pcb/docs/bringup-log.md`).
+Confirm it on a new setup with the boot signature, which is a known pattern on
+known pins.
 
-For stage 1 only channels 16 and 17 matter, plus a ground.
+For stage 1 only the two trigger channels matter (0 and 1 on v1.0, 16 and 17
+on rev 0/1), plus a ground.
 
 ## Before You Plug Anything In
 
@@ -133,8 +159,8 @@ A mass storage device named `RPI-RP2` should appear.
 lsblk -o NAME,LABEL,SIZE | grep -i RPI-RP2
 ```
 
-If you have the LA5032 on channels 16/17, note that **the bootloader drives
-neither** — no edges at this stage is correct.
+If you have the LA5032 on the trigger channels, note that **the bootloader
+drives neither** — no edges at this stage is correct.
 
 **If it appears, a great deal is already proven:** the 3.3 V regulator, the
 RP2040 itself, the 12 MHz crystal (USB full speed needs 48 MHz within 0.25%,
@@ -173,12 +199,14 @@ both.
 
 ## Step 2 — Proof Of Life That Does Not Need USB
 
-The firmware emits a **boot signature** on the InstrumentPort triggers before it
-brings up Serial, and then a **1 Hz heartbeat** on `FW_TRIG0` forever after:
+The firmware emits a **boot signature** on the instrument port triggers before
+it brings up Serial, and then a **1 Hz heartbeat** on `FW_TRIG0` forever after.
+`FW_TRIG1` is LA5032 channel 1 on v1.0 (`DIG1`) and 17 on rev 0/1 (`TRIG1`);
+`FW_TRIG0` is channel 0 (`DIG0`) and 16 (`TRIG0`):
 
 ```
-TRIG1 (ch 17):  ___|‾|_|‾|_|‾|______________________   3 pulses, 10 ms half period
-TRIG0 (ch 16):  ______________|||||||| _|‾‾‾‾|____|‾   8 pulses at 1 ms, then 1 Hz
+FW_TRIG1 (ch 1 | 17):  ___|‾|_|‾|_|‾|______________________   3 pulses, 10 ms half period
+FW_TRIG0 (ch 0 | 16):  ______________|||||||| _|‾‾‾‾|____|‾   8 pulses at 1 ms, then 1 Hz
 ```
 
 The 10 ms cadence on `TRIG1` appears nowhere else in this firmware, so it is
@@ -189,12 +217,13 @@ unambiguous. Read the combinations:
 | present | present | The RP2040 booted from flash and is running `loop()`. If USB is also silent, the fault is in USB or CDC, not in the MCU, the crystal, or the flash. |
 | present | stops | Firmware hung or crashed after `setup()`. Note when it stopped relative to the serial output. |
 | absent | absent | The RP2040 is not reaching your code. Suspect flash contents, `boot2`, or power. Retry step 0. |
-| absent | present | Wiring or channel mapping is wrong — the two are 2 pins apart on `J1501`. Check the adapter map. |
+| absent | present | Wiring or channel mapping is wrong — the two are adjacent strands on either port. Check the adapter map above. |
 
 This exists because the board has no LEDs, no test points, and no SWD header on
-rev 0. It is the only independent witness to firmware execution.
+any revision. It is the only independent witness to firmware execution.
 
-Send `i` on the serial console to silence the port and the heartbeat with it.
+On rev 0/1, send `i` on the serial console to silence the port and the
+heartbeat with it. On v1.0 the buffers have no enable and `i` does nothing.
 
 ## Step 3 — Read The Serial Output
 
@@ -272,7 +301,7 @@ block.
 (GP25) with `FW_TRIG1` (GP21) at half the rate. Faster than the heartbeat, so it
 also shows the pins work at a rate a real timing marker would use. A capture
 showing one trigger but not the other separates a pin fault from a buffer fault
-in `U1801`.
+(`U1301` on v1.0, `U1801` on rev 0/1).
 
 **`u` — pyControl UART loopback.** Needs `DIO-A` shorted to `DIO-B` on the RJ45.
 Without a loopback fitted, zero bytes received is the correct result, not a

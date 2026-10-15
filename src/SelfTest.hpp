@@ -9,10 +9,11 @@
 // USB CDC is the whole feedback channel. Every check therefore reports a number
 // or a level, not a bare pass mark.
 //
-// The comments below say InstrumentPort-40 and TRIG0/TRIG1. On pcb v1.0
-// (MJ_BOARD_REV 2) the same two marker pins reach InstrumentPort-Digital-50 as
-// DIG0/DIG1, the buffers have no enable, and `SafeState::setInstrumentationEnabled()`
-// is a no-op; the checks themselves differ per revision as BoardPins.hpp says.
+// Where the comments below say InstrumentPort-40 and TRIG0/TRIG1, that is
+// rev 0/1. On pcb v1.0 (MJ_BOARD_REV 2) the same two marker pins reach
+// InstrumentPort-Digital-50 as DIG0/DIG1, the buffers have no enable, and
+// `SafeState::setInstrumentationEnabled()` is a no-op; the checks themselves
+// differ per revision as BoardPins.hpp says.
 
 #pragma once
 
@@ -66,24 +67,28 @@ public:
   // On-demand tests that need either an instrument or a fixture.
 
   // Square wave on FW_TRIG0 and FW_TRIG1, with the instrumentation buffers
-  // enabled so the edges reach InstrumentPort-40 TRIG0/TRIG1. Needs a scope or
-  // logic analyser on the port; there is no other way to see these pins.
+  // enabled (rev 0/1) so the edges reach the instrument port: TRIG0/TRIG1 on
+  // InstrumentPort-40, DIG0/DIG1 on InstrumentPort-Digital-50. Needs a scope
+  // or logic analyser on the port; there is no other way to see these pins.
   static void pulseTriggers(Print &out, uint32_t half_period_us,
                             uint32_t cycles);
 
   // Clock this board's flash unique id out of the InstrumentPort triggers, so
   // a capture says which board it came from without anyone writing it down.
   //
-  //   FW_TRIG1 (TRIG1, ch17) high for 50 ms   frame start
-  //   FW_TRIG0 (TRIG0, ch16)                  64 clocks, one per bit
+  //   FW_TRIG1 high for 50 ms                 frame start
+  //   FW_TRIG0                                64 clocks, one per bit
   //   FW_TRIG1                                the bit, valid at each rising
   //                                           clock edge, MSB first
+  //
+  // On the LA5032, FW_TRIG1/FW_TRIG0 are ch1/ch0 through the v1.0 board's
+  // Digital-50 port and ch17/ch16 through the rev 0/1 InstrumentPort-40.
   //
   // The 64 bits are the same ones the USB serial string is built from, so a
   // decoded frame compares directly against /dev/serial/by-id.
   //
-  // Needs nothing but USB: `U1801` runs from +3.3V_MCU and reaches `J1501`
-  // through 33 ohm series resistors, so this works with HV_EN low and the bus
+  // Needs nothing but USB: the port buffers (`U1301` on v1.0, `U1801` on
+  // rev 0/1) run from +3.3V_MCU, so this works with HV_EN low and the bus
   // switch open. That is what makes it usable to tell two analysers apart
   // before any joystick is energised. Emits `repeats` frames so a capture
   // started mid-frame still contains a whole one.

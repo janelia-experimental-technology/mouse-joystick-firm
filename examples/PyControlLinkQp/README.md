@@ -159,7 +159,8 @@ pixi run upload examples/PyControlLinkQp mouse_joystick_qp_sim_usb /dev/ttyACM0
 
 Drive the bench build with `qp-arduino-example/tools/link_pilot.py` and
 read the trace as `evidence/bench-scripts/link_run.sh`
-does (sigrok `uart` decoder on channel 17, bytes to `qspy -k -f`).
+does (sigrok `uart` decoder on the `FW_TRIG1` channel, 17 through the rev 0/1
+adapter the script was written for and 1 on a v1.0 board, bytes to `qspy -k -f`).
 
 ## Status
 

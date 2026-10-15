@@ -27,8 +27,9 @@
 //
 // Watching it with a logic analyser: FW_TRIG1 is high for the duration of each
 // motion command and FW_TRIG0 pulses on each switch transition the witness test
-// sees. Trigger on LA5032 channel 17 or 16 and capture channels 0 and 1 for
-// ENC_A/ENC_B and channel 11 for LIMIT_SW.
+// sees. On a v1.0 board trigger on LA5032 channel 1 or 0 and capture 28 and 29
+// for ENCA/ENCB and 15 for LIMIT_SW; on rev 0/1 trigger on 17 or 16 and capture
+// 0 and 1 for ENC_A/ENC_B and 11 for LIMIT_SW.
 
 #include <MotionSetup.hpp>
 #include <MouseJoystickBoard.hpp>
@@ -744,8 +745,8 @@ void witnessSwitch(Print &out, uint32_t window_ms) {
     const bool now = ioin.refl_step();
     if (now != level) {
       ++transitions;
-      // A marker on FW_TRIG0, so a capture on LA5032 channel 16 lines the
-      // firmware's view up against LIMIT_SW itself on channel 11.
+      // A marker on FW_TRIG0, so a capture lines the firmware's view up against
+      // LIMIT_SW itself (channels 0 and 15 on v1.0, 16 and 11 on rev 0/1).
       SafeState::setTrigger0(true);
       out.print(F("    t="));
       out.print(millis() - started);

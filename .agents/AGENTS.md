@@ -150,14 +150,17 @@ oversight to be helpfully fixed.
   stop guards the direction that moves away from the switch. Measured
   2026-09-02; the board fact lives in
   `../mouse-joystick-pcb/docs/bringup-log.md`.
-- **There are no LEDs, no test points, and on rev 0 no SWD header.** USB CDC and
-  the two `FW_TRIG` pins on InstrumentPort-40 are the entire observable surface.
+- **There are no LEDs, no test points, and no SWD header on any revision.** USB
+  CDC and the two `FW_TRIG` pins on the instrument port are the entire
+  observable surface: InstrumentPort-Digital-50 (`J1301`, 32 taps, always
+  enabled) on v1.0, InstrumentPort-40 (`J1501`, firmware-enabled) on rev 0/1.
   Do not write a diagnostic that assumes an LED or a debugger.
 - **Keep a proof of life that does not depend on USB.** `FW_TRIG0` carries a 1 Hz
-  heartbeat and `FW_TRIG1` a boot signature, both reaching InstrumentPort-40
-  through `U1801` on the always-on rail. On a board with no LED and no debugger
-  that is the only way to distinguish "firmware is not running" from "USB is not
-  working". Do not remove it to tidy up.
+  heartbeat and `FW_TRIG1` a boot signature, both reaching the instrument port
+  through buffers on the always-on rail (`U1301` on v1.0, `U1801` on rev 0/1).
+  On a board with no LED and no debugger that is the only way to distinguish
+  "firmware is not running" from "USB is not working". Do not remove it to tidy
+  up.
 - **pyControl owns experiment sequencing.** This board owns local motion timing
   and safety. Never expose unbounded trajectories or raw motor power as the
   normal API.
