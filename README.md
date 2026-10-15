@@ -460,6 +460,7 @@ the per-board calibration they produced is `src/BoardCalibration.hpp`.
 
 - [mouse-joystick-pcb](https://github.com/peterpolidoro/mouse-joystick-pcb): the board, the protocol and the bring-up log.
 - [camera-gpio-interface-pcb](https://github.com/peterpolidoro/camera-gpio-interface-pcb): the rig's camera interface board.
+- [mouse-joysticks-mech](https://github.com/peterpolidoro/mouse-joysticks-mech): the two-joystick mechanical assembly, part by part, with [the atlas site](https://peterpolidoro.github.io/mouse-joysticks-mech/) and the PDF manual of the whole rig.
 - [joystick-rig](https://github.com/sourishmukh/joystick-rig): the rig's pyControl tasks, hardware definition and operating notes.
 - [TMC51X0](https://github.com/janelia-arduino/TMC51X0): the stepper driver library.
 
