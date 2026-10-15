@@ -1,0 +1,145 @@
+ WARN the lock file is up-to-date but uses an older format (v6), run `pixi lock` to upgrade to v7 for improved reproducibility
+Pixi task (upload in default): python tools/pio_task.py upload --example examples/PyControlLinkQp --env mouse_joystick_qp_rev2 --port /dev/serial/by-id/usb-Orb_Weaver_mouse-joystick-pcb_E4654C159F274534-if00: (Build and upload. Needs the board in BOOTSEL, or already running firmware that honours the 1200 baud touch.)
+Processing mouse_joystick_qp_rev2 (platform: https://github.com/janelia-arduino/platform-raspberrypi.git; board: generic; framework: arduino)
+--------------------------------------------------------------------------------
+Tool Manager: Installing https://github.com/earlephilhower/pico-quick-toolchain/releases/download/4.0.1/x86_64-linux-gnu.openocd-ebec9504d.240929.tar.gz
+Downloading 0% 10% 20% 30% 40% 50% 60% 70% 80% 90% 100%
+Unpacking 0% 10% 20% 30% 40% 50% 60% 70% 80% 90% 100%
+Tool Manager: tool-openocd-rp2040-earlephilhower@5.140200.240929 has been installed!
+Tool Manager: Installing earlephilhower/tool-mklittlefs-rp2040-earlephilhower @ ~5.100300.0
+Downloading 0% 10%
+Unpacking 0% 10% 20% 30%
+Tool Manager: tool-mklittlefs-rp2040-earlephilhower@5.100300.230216 has been installed!
+Verbose mode can be enabled via `-v, --verbose` option
+CONFIGURATION: https://docs.platformio.org/page/boards/raspberrypi/generic.html
+PLATFORM: Raspberry Pi RP2040 (1.14.0+sha.5e4e06b) > RP2040
+HARDWARE: RP2040 133MHz, 256KB RAM, 16MB Flash
+DEBUG: Current (blackmagic) External (blackmagic, cmsis-dap, jlink, picoprobe, raspberrypi-swd)
+PACKAGES: 
+ - framework-arduinopico @ 1.40200.0+sha.c4b65218 
+ - tool-mklittlefs-rp2040-earlephilhower @ 5.100300.230216 (10.3.0) 
+ - tool-openocd-rp2040-earlephilhower @ 5.140200.240929 (14.2.0) 
+ - tool-picotool-rp2040-earlephilhower @ 5.140200.240929 (14.2.0) 
+ - toolchain-rp2040-earlephilhower @ 5.140200.240929 (14.2.0)
+Converting PyControlLinkQp.ino
+Flash size: 16.00MB
+Sketch size: 16.00MB
+Filesystem size: 0.00MB
+PSRAM size: 0.00MB
+Maximium Sketch size: 16773120 EEPROM start: 0x10fff000 Filesystem start: 0x10fff000 Filesystem end: 0x10fff000
+LDF: Library Dependency Finder -> https://bit.ly/configure-pio-ldf
+LDF Modes: Finder ~ off, Compatibility ~ soft
+Found 80 compatible libraries
+Scanning dependencies...
+Dependency Graph
+|-- SPI @ 1.0
+|-- Wire @ 1.0
+|-- MouseJoystickBoard @ 0.1.0
+|-- DAC80501 @ 0.1.0
+|-- ADS8689 @ 0.1.0
+|-- TMC51X0 @ 4.2.0+sha.9b58cb6
+|-- qp-arduino @ 7.3.4+sha.cfd870b
+Building in release mode
+Compiling .pio/build/examples/PyControlLinkQp/mouse_joystick_qp_rev2/src/PyControlLinkQp.ino.cpp.o
+Retrieving maximum program size .pio/build/examples/PyControlLinkQp/mouse_joystick_qp_rev2/firmware.elf
+Flash size: 16.00MB
+Sketch size: 16.00MB
+Filesystem size: 0.00MB
+PSRAM size: 0.00MB
+Maximium Sketch size: 16773120 EEPROM start: 0x10fff000 Filesystem start: 0x10fff000 Filesystem end: 0x10fff000
+Checking size .pio/build/examples/PyControlLinkQp/mouse_joystick_qp_rev2/firmware.elf
+Advanced Memory Usage is available via "PlatformIO Home > Project Inspect"
+RAM:   [==        ]  16.8% (used 43956 bytes from 262144 bytes)
+Flash: [          ]   0.8% (used 131484 bytes from 16773120 bytes)
+Configuring upload protocol...
+AVAILABLE: blackmagic, cmsis-dap, jlink, picoprobe, picotool, raspberrypi-swd
+CURRENT: upload_protocol = picotool
+Looking for upload port...
+Using manually specified: /dev/serial/by-id/usb-Orb_Weaver_mouse-joystick-pcb_E4654C159F274534-if00
+Forcing reset using 1200bps open/close on port /dev/serial/by-id/usb-Orb_Weaver_mouse-joystick-pcb_E4654C159F274534-if00
+Device rebooted into BOOTSEL mode successfully.
+Uploading .pio/build/examples/PyControlLinkQp/mouse_joystick_qp_rev2/firmware.elf
+Loading into Flash: [                              ]  0%
+Loading into Flash: [                              ]  2%
+Loading into Flash: [=                             ]  5%
+Loading into Flash: [==                            ]  8%
+Loading into Flash: [===                           ]  11%
+Loading into Flash: [====                          ]  14%
+Loading into Flash: [=====                         ]  17%
+Loading into Flash: [=====                         ]  19%
+Loading into Flash: [======                        ]  22%
+Loading into Flash: [=======                       ]  25%
+Loading into Flash: [========                      ]  28%
+Loading into Flash: [=========                     ]  31%
+Loading into Flash: [==========                    ]  34%
+Loading into Flash: [===========                   ]  37%
+Loading into Flash: [===========                   ]  39%
+Loading into Flash: [============                  ]  42%
+Loading into Flash: [=============                 ]  45%
+Loading into Flash: [==============                ]  48%
+Loading into Flash: [===============               ]  51%
+Loading into Flash: [================              ]  54%
+Loading into Flash: [=================             ]  57%
+Loading into Flash: [=================             ]  59%
+Loading into Flash: [==================            ]  62%
+Loading into Flash: [===================           ]  65%
+Loading into Flash: [====================          ]  68%
+Loading into Flash: [=====================         ]  71%
+Loading into Flash: [======================        ]  74%
+Loading into Flash: [=======================       ]  77%
+Loading into Flash: [=======================       ]  79%
+Loading into Flash: [========================      ]  82%
+Loading into Flash: [=========================     ]  85%
+Loading into Flash: [==========================    ]  88%
+Loading into Flash: [===========================   ]  91%
+Loading into Flash: [============================  ]  94%
+Loading into Flash: [============================= ]  97%
+Loading into Flash: [============================= ]  99%
+Loading into Flash: [==============================]  100%
+Verifying Flash:    [                              ]  0%
+Verifying Flash:    [                              ]  2%
+Verifying Flash:    [=                             ]  5%
+Verifying Flash:    [==                            ]  8%
+Verifying Flash:    [===                           ]  11%
+Verifying Flash:    [====                          ]  14%
+Verifying Flash:    [=====                         ]  17%
+Verifying Flash:    [=====                         ]  19%
+Verifying Flash:    [======                        ]  22%
+Verifying Flash:    [=======                       ]  25%
+Verifying Flash:    [========                      ]  28%
+Verifying Flash:    [=========                     ]  31%
+Verifying Flash:    [==========                    ]  34%
+Verifying Flash:    [===========                   ]  37%
+Verifying Flash:    [===========                   ]  39%
+Verifying Flash:    [============                  ]  42%
+Verifying Flash:    [=============                 ]  45%
+Verifying Flash:    [==============                ]  48%
+Verifying Flash:    [===============               ]  51%
+Verifying Flash:    [================              ]  54%
+Verifying Flash:    [=================             ]  57%
+Verifying Flash:    [=================             ]  59%
+Verifying Flash:    [==================            ]  62%
+Verifying Flash:    [===================           ]  65%
+Verifying Flash:    [====================          ]  68%
+Verifying Flash:    [=====================         ]  71%
+Verifying Flash:    [======================        ]  74%
+Verifying Flash:    [=======================       ]  77%
+Verifying Flash:    [=======================       ]  79%
+Verifying Flash:    [========================      ]  82%
+Verifying Flash:    [=========================     ]  85%
+Verifying Flash:    [==========================    ]  88%
+Verifying Flash:    [===========================   ]  91%
+Verifying Flash:    [============================  ]  94%
+Verifying Flash:    [============================= ]  97%
+Verifying Flash:    [============================= ]  99%
+Verifying Flash:    [==============================]  100%
+  OK
+
+The device was rebooted to start the application.
+========================= [SUCCESS] Took 9.14 seconds =========================
+
+Environment             Status    Duration
+----------------------  --------  ------------
+mouse_joystick_qp_rev2  SUCCESS   00:00:09.139
+========================= 1 succeeded in 00:00:09.139 =========================
++ pio run -e mouse_joystick_qp_rev2 -t upload --upload-port /dev/serial/by-id/usb-Orb_Weaver_mouse-joystick-pcb_E4654C159F274534-if00

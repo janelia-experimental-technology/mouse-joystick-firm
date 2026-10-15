@@ -1,0 +1,45 @@
+Rig 1 reflash and check from Peter's laptop, 2026-10-15, 13:21-13:24 local, at
+the rig. The researcher's two boards updated to the tagged build and run through
+the rig's own task with the rig's own pyControl board, all three on the laptop.
+firmware: v1.0.0-6-g4213e48 (HEAD of mouse-joystick-firm, clean; since tag
+  v1.0.0 only console strings in SelfTest.cpp, comments and documentation),
+  examples/PyControlLinkQp, mouse_joystick_qp_rev2, UF2 built 12:47 at the desk.
+host: Peter's laptop (Debian 13, kernel 6.12, pixi 0.81 from a Guix profile,
+  CONDA_OVERRIDE_GLIBC=2.41 in the environment as on 2026-10-14). USB paths
+  1-1.1 board 7, 1-1.5 board 6, 1-1.6 the rig's pyboard (PYBv1.1 397734803233,
+  MicroPython 1.26.1, pyControl 2.1.1). The pyControl GUI on the rig PC was
+  closed; 36 V on throughout; nothing on the levers; no logic analyzers.
+boards before: both on 51322e7-dirty (installed 2026-10-09), enumerated
+  2e8a:f00a "Orb Weaver" "mouse-joystick-pcb" (the pre-2026-10-12 USB string).
+13:22:05 board 6 E4654C159F274534 (unit A, right, port 4), `pixi run upload
+  examples/PyControlLinkQp mouse_joystick_qp_rev2 /dev/serial/by-id/...-if00`
+  with both boards on USB: 1200 baud touch honoured, picotool load -v -x,
+  "Verifying Flash ... OK", rebooted, SUCCESS, 9.6 s wall (upload_*.log).
+13:22:25 board 7 E4654C159F404534 (unit B, left, port 1), the same: touch
+  honoured first time (this unit had refused it on other hosts), load, verify,
+  rebooted, SUCCESS, 4.8 s. Both re-enumerate as "Janelia Research Campus"
+  (usb_snapshots.log).
+13:22:37 `id;1` from the pyboard's raw REPL (tools/pyb_id_probe.py) over port 1
+  UART(4) and port 4 UART(3): fw=v1.0.0-6-g4213e48 on both, serials on the
+  expected ports, boot=reboot, crumb=0, caps unchanged (uart_id_probe.log).
+13:22:44 joystick_trial on the right board through tools/pycontrol_run.py with
+  the rig branch's hardware_definition_joystick.py and tasks/rig1/joystick_trial.py
+  (worktree at origin/feat/mouse-joystick d3d30a8), board=right n_trials=2
+  watch_timeout_ms=2000 iti_ms=1000. pyControl re-uploaded mouse_joystick.py,
+  opto_led.py and mouse_joystick_protocol.py (hash mismatch: this repo's
+  dist/ copy of mouse_joystick.py is one commit newer than the pyboard's), the
+  hardware definition and the task. Identify (serial, fw as above), hv on,
+  HOMED at 1.245 s angle 0.0, TARGET -5.041, RELEASED (torque -0.747 then
+  0.108, brake 1.0), NOMOVE at +2.0 s, TRIAL outcome NOMOVE, park TARGET 0.0,
+  twice; session complete 10.6 s; no nak, no fault, no resend
+  (trial_right_2.log/.json).
+13:23:20 the same on the left board: HOMED at 1.317 s, TARGET -4.95 both
+  trials (one encoder count short of -5.041, as unit A's dry run on
+  2026-10-07), RELEASED at -4.95 torque 1.889 (a brake-step transient; -0.105
+  on trial 2 at -5.041), NOMOVE, TRIAL, park -0.091 then 0.0; session complete
+  10.4 s; no nak, no fault (trial_left_2.log/.json).
+after: the pyboard holds the rig's hardware definition and task plus this
+  repo's dist/devices/mouse_joystick.py (61162fe, the UnicodeError guard in
+  poll()); the rig PC's GUI will restore the rig branch's older copy the next
+  time it loads the hardware definition unless the rig branch is updated.
+scripts/rig1_session.sh is the helper every step above ran through.

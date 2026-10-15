@@ -21,11 +21,12 @@ ran the rig's trial task end to end through pyControl; the delivery build is
 `examples/PyControlLinkQp` for the `mouse_joystick_qp_rev2` environment.
 Each stage's procedure and findings are in `docs/`; the per-session record
 is [`evidence/`](evidence/README.md). The delivered state is tagged
-`v1.0.0` (2026-10-13). The desk rig's boards were reflashed on 2026-10-14
-and report `v1.0.0-2-g109169f` (HEAD; the two commits after the tag change
-only documentation). Rig 1's boards report the commits they were built from
-(`51322e7-dirty`, `316f802-dirty`, functionally the same code) until they
-are reflashed.
+`v1.0.0` (2026-10-13), and every board now runs its code: the desk rig's
+boards were reflashed on 2026-10-14 and report `v1.0.0-2-g109169f`, Rig 1's
+on 2026-10-15 and report `v1.0.0-6-g4213e48` (the commits after the tag
+change documentation and console strings only), both from a laptop with
+`pixi run upload`, Rig 1's then checked through the rig's own pyboard and
+trial task.
 
 ## Read This First
 

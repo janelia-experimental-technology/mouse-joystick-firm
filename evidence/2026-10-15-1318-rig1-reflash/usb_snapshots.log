@@ -1,0 +1,8 @@
+== usb 13:21:57
+2e8a:f00a  1-1.1         E4654C159F404534  Orb Weaver mouse-joystick-pcb
+2e8a:f00a  1-1.5         E4654C159F274534  Orb Weaver mouse-joystick-pcb
+f055:9802  1-1.6         397734803233  MicroPython Pyboard Virtual Comm Port in FS Mode
+== usb 13:23:58
+2e8a:f00a  1-1.1         E4654C159F404534  Janelia Research Campus mouse-joystick-pcb
+2e8a:f00a  1-1.5         E4654C159F274534  Janelia Research Campus mouse-joystick-pcb
+f055:9802  1-1.6         397734803233  MicroPython Pyboard Virtual Comm Port in FS Mode

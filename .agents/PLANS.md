@@ -3,12 +3,14 @@
 ## Current Goal
 
 Delivered: protocol v1 on four pcb v1.0 boards across two rigs (Rig 1
-2026-10-09, the desk rig 2026-10-12). `v1.0.0` is tagged; the desk rig's two
-boards were reflashed from `v1.0.0-2-g109169f` (same code as the tag, docs
-only after it) on 2026-10-14 from Peter's laptop. Next: the same reflash on
-Rig 1 (procedure in the README, "Reprogramming a v1.0 board"; the Status
-entry for 2026-10-14 has what the laptop needs), then the
-researcher-facing documentation
+2026-10-09, the desk rig 2026-10-12). `v1.0.0` is tagged and every board
+now runs its code: the desk rig's two boards were reflashed to
+`v1.0.0-2-g109169f` on 2026-10-14 and Rig 1's two to `v1.0.0-6-g4213e48`
+on 2026-10-15, both from Peter's laptop, Rig 1's checked with the rig's own
+pyboard and trial task (Status entries). The rig branch
+(`joystick-rig` `feat/mouse-joystick`) carries the matching device class
+since the local commit of 2026-10-15 (the `poll()` UnicodeError guard;
+Peter pushes it). Next: the researcher-facing documentation
 (`orb-weaver-context/context/mouse-joystick-rig-documentation-plan.md`,
 phase 2: architecture page, circuit-to-code map, diagrams).
 
@@ -36,6 +38,11 @@ every time with the same build. The board-side item is in
       intermittent, and the host (laptop vs desk computer, hub) may matter.
       One board at a time: PlatformIO skips the touch when any RP2040 is
       already in BOOTSEL and `picotool load` takes no address.
+- [ ] 2026-10-15, Peter's laptop at Rig 1: board 7 (unit B) **took the
+      touch** first time from `51322e7-dirty` (4.8 s; board 6 9.6 s), with
+      both boards on USB but only one addressed. No unit has refused the
+      touch from the laptop yet, so look at the host side first (hub,
+      kernel, what the desk computer sends) when this is picked up.
 
 ## Task: pcb v1.0 Bring-Up (opened 2026-10-04; boards arrive 2026-10-05)
 
@@ -494,6 +501,30 @@ items. Preserve selected manufactured-tag/serial context rather than assuming
 historical firmware wiring matches current PCB development.
 
 ## Status
+
+**2026-10-15, 13:21–13:24, Peter's laptop at Rig 1: the researcher's boards
+reflashed and checked with the rig's pyboard.** Both boards' USB and the
+pyboard's USB on the laptop, the rig PC's GUI closed, 36 V on, no analyzers.
+`pixi run upload examples/PyControlLinkQp mouse_joystick_qp_rev2 …<serial>-if00`
+with both boards attached: board 6 (`E4654C159F274534`, right, port 4) took
+the 1200 baud touch, verified, rebooted in 9.6 s; board 7 (`E4654C159F404534`,
+left, port 1) the same in 4.8 s, the touch honoured first time on a unit
+that had refused it elsewhere. `tools/pyb_id_probe.py` over the RJ-45:
+`fw=v1.0.0-6-g4213e48` on both ports, `boot=reboot`. Then the controller
+recipe's verification step with the rig's own files
+(`joystick-rig` `feat/mouse-joystick` `d3d30a8`: `hardware_definition_joystick.py`,
+`tasks/rig1/joystick_trial.py`) through `tools/pycontrol_run.py`, two trials
+per side: identify, `hv on`, `HOMED` (1.25 s right, 1.32 s left), `TARGET`
+(−5.041° right; −4.95° left, one count short as in unit A's 2026-10-07 dry
+run), `RELEASED`, `NOMOVE` at +2.0 s, `TRIAL`, park at 0.0 (left −0.091 once);
+no nak, fault or resend. pyControl re-uploaded `mouse_joystick.py` (hash
+mismatch: `dist/` is one commit newer than the rig branch), so the pyboard
+now carries `61162fe`'s device class until the GUI restores the rig branch's
+copy; Peter decided to copy `dist/devices/mouse_joystick*.py` onto the rig
+branch, committed there the same afternoon with the rig's provenance header
+kept (one more GUI upload, then the hashes agree). Record:
+`evidence/2026-10-15-1318-rig1-reflash/` (`meta.txt`, upload logs, the probe,
+both trial logs and JSON, `scripts/rig1_session.sh`).
 
 **2026-10-14, 09:10, Peter's laptop: the desk rig's boards reflashed.**
 Practice run for Rig 1. Laptop setup: `pixi install` fails on this machine

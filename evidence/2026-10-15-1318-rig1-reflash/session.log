@@ -1,0 +1,21 @@
+13:21:57  boards:
+lrwxrwxrwx 1 root root 13 Oct 15 13:21 usb-MicroPython_Pyboard_Virtual_Comm_Port_in_FS_Mode_397734803233-if00 -> ../../ttyACM2
+lrwxrwxrwx 1 root root 13 Oct 15 13:21 usb-Orb_Weaver_mouse-joystick-pcb_E4654C159F274534-if00 -> ../../ttyACM1
+lrwxrwxrwx 1 root root 13 Oct 15 13:21 usb-Orb_Weaver_mouse-joystick-pcb_E4654C159F404534-if00 -> ../../ttyACM0
+2e8a:f00a  1-1.1         E4654C159F404534  Orb Weaver mouse-joystick-pcb
+2e8a:f00a  1-1.5         E4654C159F274534  Orb Weaver mouse-joystick-pcb
+f055:9802  1-1.6         397734803233  MicroPython Pyboard Virtual Comm Port in FS Mode
+13:22:05  flash E4654C159F274534 via /dev/serial/by-id/usb-Orb_Weaver_mouse-joystick-pcb_E4654C159F274534-if00 (2 joystick board(s) on USB; fw to be v1.0.0-6-g4213e48)
+13:22:14  flash E4654C159F274534: upload exit 0 in 9.6 s (full log upload_E4654C159F274534.log)
+lrwxrwxrwx 1 root root 13 Oct 15 13:22 usb-Janelia_Research_Campus_mouse-joystick-pcb_E4654C159F274534-if00 -> ../../ttyACM1
+13:22:25  flash E4654C159F404534 via /dev/serial/by-id/usb-Orb_Weaver_mouse-joystick-pcb_E4654C159F404534-if00 (2 joystick board(s) on USB; fw to be v1.0.0-6-g4213e48)
+13:22:30  flash E4654C159F404534: upload exit 0 in 4.8 s (full log upload_E4654C159F404534.log)
+lrwxrwxrwx 1 root root 13 Oct 15 13:22 usb-Janelia_Research_Campus_mouse-joystick-pcb_E4654C159F404534-if00 -> ../../ttyACM0
+13:22:37  id probe through /dev/serial/by-id/usb-MicroPython_Pyboard_Virtual_Comm_Port_in_FS_Mode_397734803233-if00 (nothing else may hold this port)
+ WARN the lock file is up-to-date but uses an older format (v6), run `pixi lock` to upgrade to v7 for improved reproducibility
+port 1 (left)   UART(4): b'ack;1;hw=rev2;serial=E4654C159F404534;fw=v1.0.0-6-g4213e48;proto=2;axes=1;caps=motion+home+instr+hv+watch+fetch+stream+cfg+angout+brake+torque;rxbuf=200;boot=reboot;crumb=0\n'
+port 4 (right)  UART(3): b'ack;1;hw=rev2;serial=E4654C159F274534;fw=v1.0.0-6-g4213e48;proto=2;axes=1;caps=motion+home+instr+hv+watch+fetch+stream+cfg+angout+brake+torque;rxbuf=200;boot=reboot;crumb=0\n'
+13:22:44  joystick_trial on right, n_trials=2, up to 60 s, pyboard /dev/serial/by-id/usb-MicroPython_Pyboard_Virtual_Comm_Port_in_FS_Mode_397734803233-if00 -> /home/peter/Repositories/orb-weaver/mouse-joystick-firm/evidence/2026-10-15-1318-rig1-reflash/trial_right_2.json (36 V must be on, nothing on the lever)
+13:23:15  trial right: exit 0
+13:23:20  joystick_trial on left, n_trials=2, up to 60 s, pyboard /dev/serial/by-id/usb-MicroPython_Pyboard_Virtual_Comm_Port_in_FS_Mode_397734803233-if00 -> /home/peter/Repositories/orb-weaver/mouse-joystick-firm/evidence/2026-10-15-1318-rig1-reflash/trial_left_2.json (36 V must be on, nothing on the lever)
+13:23:36  trial left: exit 0
