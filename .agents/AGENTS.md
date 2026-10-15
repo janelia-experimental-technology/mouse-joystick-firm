@@ -18,9 +18,9 @@ If sibling checkouts exist, read:
 - `../mouse-joystick-pcb/docs/power.md` — the two power domains and the
   switched-rail rules.
 - `../mouse-joystick-pcb/docs/uart-protocol.md` — the pyControl protocol this
-  firmware will eventually speak.
+  firmware speaks.
 - `../mouse-joystick-pcb/docs/bringup-log.md` — where real measurements go.
-- `~/Repositories/arduino/TMC51X0` — the driver library this firmware will use,
+- `~/Repositories/arduino/TMC51X0` — the driver library this firmware uses,
   and the source of this repository's Pixi/PlatformIO layout.
 - `../instrument-control` — host-side logic-analyzer control. It owns the
   `sigrok-cli` environment, the LA5032 quirks, and the identity-beacon decoder;
@@ -73,7 +73,10 @@ else. The stages follow that hardware boundary, not convenience:
    then motion, the encoder, and homing against the limit switch.
    `examples/MotionAndHoming`, over `TMC51X0`, which is the right layer once the
    bus is known good. Procedure and findings in `docs/motion-bringup.md`.
-4. **pyControl UART protocol.** Not written yet.
+4. **pyControl UART protocol.** `examples/PyControlLinkQp` built for
+   `mouse_joystick_qp_rev2` is the delivery build, in service on the four
+   pcb v1.0 boards since 2026-10-09; `docs/architecture.md` says what runs
+   where and `pycontrol/` is the host side.
 
 **Do not let a later stage's code leak into an earlier stage's example.** Stage 1
 deliberately has no way to raise `HV_EN` or enable the bus switch. That is not an
@@ -164,7 +167,11 @@ oversight to be helpfully fixed.
 - **pyControl owns experiment sequencing.** This board owns local motion timing
   and safety. Never expose unbounded trajectories or raw motor power as the
   normal API.
-- Rev 0 and rev 1 share the GPIO allocation. One env serves both.
+- Rev 0 and rev 1 share the GPIO allocation except `GP10`/`GP11`/`GP13`, the
+  v0.3 angle DAC, so each has its own env (`mouse_joystick`,
+  `mouse_joystick_rev1`). pcb v1.0 is a different map, `MJ_BOARD_REV=2`
+  (`mouse_joystick_rev2`); the README's Pin Map and `src/BoardPins.hpp` carry
+  all three.
 
 ## Safety Rules
 
