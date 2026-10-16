@@ -1,0 +1,23 @@
+{
+ "board": "right",
+ "uart": 3,
+ "radius_mm": 73.0,
+ "levels": [
+  3.5,
+  0.0,
+  1.0,
+  2.0,
+  0.5
+ ],
+ "present_deg": -5.0,
+ "hold_min_s": 40.0,
+ "hold_max_s": 150.0,
+ "quiet_s": 5.0,
+ "tq_tol_ncm": 0.15,
+ "ang_tol_deg": 0.2,
+ "gauge": "Mark-10 M3-05, serial 3706367, `?` at 9600 baud, gF",
+ "gauge_period_s": 0.1,
+ "started": "2026-10-16 09:51:46",
+ "note": "board 9 E4654C159F234234, right mechanism, Peter pulling with the Mark-10 M3-05 hook at 73 mm, pull direction; run1 aborted on host_timeout before motion (script slept without pinging)",
+ "log": "board9_right_run2.log"
+}

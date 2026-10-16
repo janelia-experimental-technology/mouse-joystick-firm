@@ -1,0 +1,156 @@
+{
+ "board": "right",
+ "uart": 3,
+ "radius_mm": 72.0,
+ "levels": [
+  3.5,
+  0.0,
+  1.0,
+  2.0,
+  0.5
+ ],
+ "hold_min_s": {
+  "3.5": 52.0,
+  "0.0": 30.0,
+  "1.0": 26.0,
+  "2.0": 45.0,
+  "0.5": 26.0
+ },
+ "choreography": {
+  "3.5": [
+   [
+    "ramp_up",
+    10,
+    "Brake at full. Pull slowly, up to forty grams over ten seconds. Do not let it slip."
+   ],
+   [
+    "steady",
+    3,
+    "Hold it steady."
+   ],
+   [
+    "ramp_down",
+    10,
+    "Ease off slowly, over ten seconds."
+   ],
+   [
+    "rest",
+    3,
+    "Hands off."
+   ],
+   [
+    "slide_pull",
+    10,
+    "Now pull harder until it slips, and slide slowly, a few degrees."
+   ],
+   [
+    "rest",
+    4,
+    "Let go."
+   ],
+   [
+    "slide_push",
+    10,
+    "Now push the other way until it slips, and slide slowly back."
+   ]
+  ],
+  "0.0": [
+   [
+    "slide_pull",
+    7,
+    "Brake off. Pull the free lever slowly, a few degrees."
+   ],
+   [
+    "slide_push",
+    7,
+    "Push it slowly back."
+   ],
+   [
+    "slide_pull",
+    7,
+    "Again. Pull slowly, a few degrees."
+   ],
+   [
+    "slide_push",
+    7,
+    "Push slowly back."
+   ]
+  ],
+  "1.0": [
+   [
+    "slide_pull",
+    10,
+    "Brake at 1.0. Pull until it slips, and slide slowly, a few degrees."
+   ],
+   [
+    "rest",
+    4,
+    "Let go."
+   ],
+   [
+    "slide_push",
+    10,
+    "Now push the other way until it slips, and slide slowly back."
+   ]
+  ],
+  "2.0": [
+   [
+    "ramp_up",
+    10,
+    "Brake at two. Pull slowly, up to twenty grams over ten seconds. Do not let it slip."
+   ],
+   [
+    "ramp_down",
+    6,
+    "Ease off slowly."
+   ],
+   [
+    "rest",
+    3,
+    "Hands off."
+   ],
+   [
+    "slide_pull",
+    10,
+    "Now pull until it slips, and slide slowly, a few degrees."
+   ],
+   [
+    "rest",
+    4,
+    "Let go."
+   ],
+   [
+    "slide_push",
+    10,
+    "Now push the other way until it slips, and slide slowly back."
+   ]
+  ],
+  "0.5": [
+   [
+    "slide_pull",
+    10,
+    "Brake at 0.5. Pull until it slips, and slide slowly, a few degrees."
+   ],
+   [
+    "rest",
+    4,
+    "Let go."
+   ],
+   [
+    "slide_push",
+    10,
+    "Now push the other way until it slips, and slide slowly back."
+   ]
+  ]
+ },
+ "present_deg": -5.0,
+ "hold_max_s": 150.0,
+ "quiet_s": 5.0,
+ "tq_tol_ncm": 0.15,
+ "ang_tol_deg": 0.2,
+ "gauge": "Mark-10 M3-05, serial 3706367, `?` at 9600 baud, gF; a pull on the hook reads negative",
+ "gauge_period_s": 0.1,
+ "started": "2026-10-16 10:11:31",
+ "note": "board 9 E4654C159F234234, right mechanism, Peter with the Mark-10 M3-05 hook at 72 mm following the cue window; run2 was the same levels with fast unscripted pulls",
+ "log": "board9_right_run3.log"
+}

@@ -530,12 +530,20 @@ constexpr float brakeAmpsToTorqueNcm(float amps) {
 // -----------------------------------------------------------------------------
 // The torque sensor. Transducer Techniques RTS-5 reaction torque sensor.
 // -----------------------------------------------------------------------------
-// 5 in-oz = 3.5309 N.cm rated, 1.5 mV/V nominal (the two certificates read
-// 1.544 and 1.577 mV/V: a per-sensor constant to store against the board
-// serial it is paired with), 350 ohm bridge, 10 V excitation, 150 % safe
+// 5 in-oz = 3.5309 N.cm rated, 350 ohm bridge, 10 V excitation, 150 % safe
 // overload. Datasheet: mouse-joystick-pcb/docs/datasheets/torque-sensor-specs.png.
+// Sensitivity: 1.5 mV/V nominal on the datasheet. The two calibration
+// certificates in hand read 1.544 and 1.577 mV/V and are not matched to the
+// four sensors, so the chain runs on their mean, 1.5605 mV/V (decided
+// 2026-10-16; each sensor is then within 1.1 % of it). A force gauge on a
+// string loop with the gear out read the right desk station's sensor at
+// 0.965 of the true torque on the nominal scale, against 0.961 expected from
+// this mean (mouse-joystick-pcb/docs/bringup-log.md, 2026-10-16;
+// docs/torque-calibration.md). Builds before this change, tag v1.0.0 and the
+// documentation commits after it, reported every torque 4.0 % high.
 constexpr float kTorqueRatedNcm = 3.5309f;
-constexpr float kTorqueSensitivityNominalVPerV = 1.5e-3f;
+constexpr float kTorqueSensitivityNominalVPerV = 1.5e-3f; // datasheet
+constexpr float kTorqueSensitivityVPerV = 1.5605e-3f;     // certificate mean, in use
 constexpr float kTorqueBridgeOhms = 350.0f;
 constexpr float kTorqueExcitationVolts = 10.0f;
 
@@ -552,11 +560,12 @@ constexpr float kTorqueOutputDivider = 1.0f / 3.0f;
 constexpr float kTorqueBncDivider = 0.5f;
 constexpr float kTorqueZeroVolts = kTorqueMidVolts * kTorqueOutputDivider; // 1.6667
 
-// Volts at AMP_VOUT per N.cm, for the nominal sensitivity: 15 mV x 191.73 / 3
-// over 3.5309 N.cm = 0.2715 V per N.cm, so +/-rated spans 0.708-2.625 V and
-// +/-150 % 0.229-3.105 V, all inside the ADC's 0-5.12 V range.
+// Volts at AMP_VOUT per N.cm on the certificate mean: 15.605 mV x 191.73 / 3
+// over 3.5309 N.cm = 0.2825 V per N.cm (0.1412 V per N.cm at the BNC), so
+// +/-rated spans 0.669-2.664 V and +/-150 % 0.171-3.163 V, all inside the
+// ADC's 0-5.12 V range. (The nominal 1.5 mV/V gave 0.2715 V per N.cm.)
 constexpr float kTorqueVoltsPerNcm =
-    kTorqueSensitivityNominalVPerV * kTorqueExcitationVolts * kTorqueInaGain *
+    kTorqueSensitivityVPerV * kTorqueExcitationVolts * kTorqueInaGain *
     kTorqueOutputDivider / kTorqueRatedNcm;
 
 // The ADS8689 on the 0 to 1.25 x VREF range: 5.12 V over 65536 codes.
@@ -570,8 +579,8 @@ constexpr float torqueAdcCodeToVolts(uint16_t code) {
 }
 
 // Torque from the ADC reading, relative to a zero. The zero is a MEASURED
-// code (a tare at rest), falling back to the nominal; the scale is nominal
-// until the per-sensor certificate constant replaces it (rig plan C3).
+// code (a tare at rest), falling back to the nominal; the scale is the
+// certificate mean above, one constant for every board (rig plan C3).
 constexpr float torqueVoltsToNcm(float volts, float zero_volts = kTorqueZeroVolts,
                                  float volts_per_ncm = kTorqueVoltsPerNcm) {
   return (volts - zero_volts) / volts_per_ncm;

@@ -19,8 +19,9 @@ board that can read its own outputs back:
   ceiling amplifier's `~{BRAKE_FAULT}` (GP13) is low while it limits.
 - The torque ADC, an `ADS8689` on SPI1 (GP10/11/12, CONVST/CS on GP15), reads
   `AMP_VOUT`, the conditioned bridge signal before the ÷2 to the BNC: ideal
-  zero 1.6667 V, 0.2715 V per N·cm nominal, 78.125 µV per code on the
-  0–5.12 V range. `TQ_CAL_EN` (GP18) is meant to switch a 75 kΩ shunt across
+  zero 1.6667 V, 0.2715 V per N·cm on the sensor's nominal 1.5 mV/V (0.2825
+  on the certificate mean the firmware converts with since 2026-10-16),
+  78.125 µV per code on the 0–5.12 V range. `TQ_CAL_EN` (GP18) is meant to switch a 75 kΩ shunt across
   one bridge arm.
 
 Both parts reset with the switched rail, so the console re-asserts what it
@@ -107,9 +108,12 @@ and `unitA_brake_steps.sh`.
 - The coil current in amps: `BRAKE_ISENSE` is read against the RP2040's
   3.3 V supply, so ±1 % is the instrument. A meter in series with the coil
   is the calibration.
-- The torque scale: the certificate constant (1.544 or 1.577 mV/V per
-  sensor) and weights on the lever arm (rig plan C3) give N·cm; this console
-  reports the nominal 1.5 mV/V.
+- The torque scale: this console reported on the nominal 1.5 mV/V when the
+  table above was taken. Since 2026-10-16 `Conversions.hpp` carries the
+  certificate mean, 1.5605 mV/V (the two certificates read 1.544 and 1.577 and
+  are not matched to sensors), confirmed by a force gauge
+  (`docs/torque-calibration.md`), so the same console now reports 4 % lower
+  for the same reading.
 - `VEXC` and `VMID`: a meter.
 - Which of the three explanations for the silent `~{BRAKE_FAULT}` holds: a
   scope on `V_SENSE` and `LIMIT_OUT`.

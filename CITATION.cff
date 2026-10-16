@@ -13,8 +13,8 @@ authors:
     email: polidorop@janelia.hhmi.org
     affiliation: "Janelia Research Campus, Howard Hughes Medical Institute"
 repository-code: "https://github.com/peterpolidoro/mouse-joystick-firm"
-version: "1.0.0"
-date-released: "2026-10-13"
+version: "1.0.1"
+date-released: "2026-10-16"
 license: BSD-3-Clause
 keywords:
   - pyControl

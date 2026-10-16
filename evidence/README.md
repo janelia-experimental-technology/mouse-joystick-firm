@@ -3,8 +3,9 @@
 The record of how the `mouse-joystick-pcb` v1.0 boards and this firmware were
 verified, from the first v1.0 power-up on 2026-10-05 to the installed rig's
 first observed experiment on 2026-10-09, the desk rig's bring-up on
-2026-10-12, its reflash on 2026-10-14 and Rig 1's reflash and check on
-2026-10-15: one directory per bench or rig session, named by date, time and
+2026-10-12, its reflash on 2026-10-14, Rig 1's reflash and check on
+2026-10-15 and the desk rig's torque calibration against a force gauge on
+2026-10-16: one directory per bench or rig session, named by date, time and
 subject. Each holds the console logs,
 protocol transcripts, pyControl session outputs, trace analyses and small
 logic-analyzer captures of that session, with `meta.txt` naming the firmware
@@ -70,6 +71,13 @@ read positive; the firmware uses the magnitude.
   both RJ-45 ports, one trial of the rig's task per board through the
   headless runner, and both pull signs by hand
   (`2026-10-12-1355-deskrig-bringup/`).
+- **The torque chain against a known torque**: a Mark-10 M3-05 force gauge
+  logged over USB beside the boards' 50 Hz stream while Peter loaded each
+  desk-rig lever at five brake levels; with the gear out and the gauge on a
+  string the sensor read 0.965 of the torque through the brake against 0.961
+  expected from its certificate; friction in the lever axis 0.25–0.5 N·cm per
+  station and the brake curve per station measured
+  (`2026-10-16-0951-deskrig-torque-cal/`).
 - **Link loss on hardware**: the task's reply timeouts exercised by unplugging
   the RJ-45 before a session (three resends, session ended at 2.0 s) and
   during a watch (ended at the deadline, board latched `host_timeout` with
@@ -84,6 +92,7 @@ time) and the PlatformIO environment.
 
 | Session | What it shows | Firmware |
 | --- | --- | --- |
+| [`2026-10-16-0951-deskrig-torque-cal/`](2026-10-16-0951-deskrig-torque-cal/) | **the torque chain calibrated against a force gauge on both desk-rig boards**: a Mark-10 M3-05 polled at 10 Hz over USB beside the boards' 50 Hz `STREAM`, Peter at the lever following a cue window, brake at 3.5, 0, 1.0, 2.0 and 0.5 N·cm; `board9_right_run4.log` and `board8_left_run1.log` with the gear in (sensor over torque through the brake 0.85 right, 0.94 left, hand-held hook), `board9_right_pinion_run1.log` with the pinion off and the gauge on a string (0.965 against 0.961 from the certificates); friction 0.42–0.50 N·cm right and 0.23–0.38 left in the lever axis, the brakes delivering 0.4–0.7 at the commanded 1.0 and 3.0 / 4.0 at full; `meta.txt` names every run and the two that produced no data; `scripts/` ran and reduced it | `v1.0.0-2-g109169f`, `mouse_joystick_qp_rev2` (the delivery build, unchanged) |
 | [`2026-10-15-1318-rig1-reflash/`](2026-10-15-1318-rig1-reflash/) | **Rig 1's boards reflashed and checked at the rig from Peter's laptop**, with the rig's own pyboard on the laptop too: both boards took the 1200 baud touch through `pixi run upload` with both on USB (board 6 in 9.6 s, board 7 in 4.8 s, unit B's first-time acceptance), picotool verified each image, `id;1` over each RJ-45 from the pyboard's REPL (`uart_id_probe.log`) answered `fw=v1.0.0-6-g4213e48` on both, and the rig's `joystick_trial` with its hardware definition (`joystick-rig` `feat/mouse-joystick` `d3d30a8`) ran two trials per side through `pycontrol_run.py`: home 1.25 / 1.32 s, present −5.041° / −4.95°, `RELEASED`, `NOMOVE`, `TRIAL`, park within 0.1°, no nak or fault (`trial_right_2.*`, `trial_left_2.*`). 36 V on, nothing on the levers, no analyzers; `meta.txt` notes that pyControl re-uploaded the newer `mouse_joystick.py` from `dist/` | firmware `v1.0.0-6-g4213e48` `mouse_joystick_qp_rev2` (the code of tag `v1.0.0`); pyControl 2.1.1 on MicroPython 1.26.1 |
 | [`2026-10-14-0910-deskrig-reflash/`](2026-10-14-0910-deskrig-reflash/) | **the desk rig reflashed from Peter's laptop**, the practice run for Rig 1: both boards took the 1200 baud touch through `pixi run upload` (board 8 in 7.6 s, board 9 in 4.3 s, the board that had refused the touch on 2026-10-12), picotool verified each image, and `id;1` over each RJ-45 from the pyboard's REPL (`uart_id_probe.log`) answered `fw=v1.0.0-2-g109169f` on both; the delivery build's USB banner cannot be caught after a reboot (the CDC port appears ~1 s later), so the RJ-45 is the only read of the version. No 36 V, no measurements; `meta.txt` has the laptop's `CONDA_OVERRIDE_GLIBC` requirement | firmware `v1.0.0-2-g109169f` `mouse_joystick_qp_rev2` (the code of tag `v1.0.0`) |
 | [`2026-10-12-1355-deskrig-bringup/`](2026-10-12-1355-deskrig-bringup/) | **Peter's desk rig, first bring-up**: two never-powered v1.0 boards (8 `E4654C159F504534` on port 1, 9 `E4654C159F234234` on port 4) found in the ROM bootloader, flashed with the stage 1 self test by `picotool load -x --bus 1 --address N` (20 checks, 0 failed each), then the delivery build (board 9 needed a direct picotool load after `pixi run upload`'s picotool step failed as on unit B); `id` over each RJ-45 from the pyboard's REPL; the second pyboard found on MicroPython 1.22.2, its 18 files copied off through the REPL (`pyboard-flash-before/`), upgraded to 1.26.1 by dfu-util (the ST bootloader jumps only after a download with `-s :leave`); the rig's `joystick_trial.py` with the new reply timeouts run once per board through `run_task_headless.py`: home 1.3–1.4 s, present 0.36 s, `RELEASED`, `NOMOVE`, `TRIAL`, park within 0.1°, session complete, no resends; then the pull sign of both boards by hand pull (PUSH under +1, PULL at −10.08° after `−1` went into BoardCalibration.hpp), board 9 needing manual BOOTSEL because it ignores the 1200 baud touch, and the pyboard wedged once by an overlapping REPL probe; finally the lost-reply case on hardware: RJ-45 unplugged at start (three resends, session ended at 2.0 s) and pulled during the watch (ended at the 15 s deadline, board latched `host_timeout` with its rail off, next session recovered). Numbers in the PCB bring-up log, "Desk rig" | firmware `316f802` `mouse_joystick_qp_rev2` (first boards with the `Janelia Research Campus` USB string); pyControl 2.1.1 on MicroPython 1.26.1 |

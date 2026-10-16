@@ -25,8 +25,9 @@
 //   * The shunt-calibration switch is inert on the as-built board, so
 //     `torqueCal()` drives TQ_CAL_EN faithfully and changes nothing.
 //   * The torque reading at rest sat 69 mV below the ideal zero; the tare
-//     (`torqueZero()`) is in ADC codes and the nominal 0.2715 V per N.cm
-//     stands until the per-sensor certificate constant replaces it.
+//     (`torqueZero()`) is in ADC codes. The scale was the nominal 0.2715 V
+//     per N.cm until 2026-10-16, the certificate mean's 0.2825 since
+//     (Conversions.hpp).
 //
 // BRING-UP IS THE BSP'S, in ticks. The parts live on the switched domain and
 // share `Wire` with the angle DAC, so the BSP's rail-up phase machine calls

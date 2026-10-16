@@ -1,0 +1,23 @@
+logging to /home/peter/Repositories/orb-weaver/mouse-joystick-firm/evidence/2026-10-16-0951-deskrig-torque-cal/board9_right_run1.log
+H 948954833411293 start board=right radius_mm=73.0 levels=[3.5, 0.0, 1.0, 2.0, 0.5]
+B 948955423365928 2074017 > clrfault;2
+B 948955427777384 2074022 < ack;2
+B 948955428616428 2074023 > id;3
+B 948955446710622 2074040 < ack;3;hw=rev2;serial=E4654C159F234234;fw=v1.0.0-2-g109169f;proto=2;axes=1;caps=motion+home+instr+hv+watch+fetch+stream+cfg+angout+brake+torque;rxbuf=200;boot=por;crumb=0
+B 948955446979753 2074041 H ack;3;hw=rev2;serial=E4654C159F234234;fw=v1.0.0-2-g109169f;proto=2;axes=1;caps=motion+home+instr+hv+watch+fetch+stream+cfg+angout+brake+torque;rxbuf=200;boot=por;crumb=0
+B 948955447996281 2074042 > hv;4;on
+B 948955619726885 2074214 < ack;4
+B 948956120407811 2074714 > home;9
+B 948956125779553 2074720 < ev;FAULT;2074209373;code=0;detail=host_timeout
+B 948956126059547 2074720 < nak;9;faulted
+B 948956127538967 2074721 H ABORT Exception("home -> 'nak;9;faulted' (fault='ev;FAULT;2074209373;code=0;detail=host_timeout')",)
+B 948956129037061 2074723 > stream;11;off
+B 948956179377345 2074773 > stop;12
+B 948956481782107 2075076 < ack;11
+B 948956481937691 2075076 < ack;12
+B 948956483369784 2075077 > disarm;13
+B 948956684655899 2075279 < ack;13
+B 948956686000894 2075280 > hv;14;off
+B 948956987788731 2075582 < ack;14
+B 948956987898174 2075582 H program end
+H 948957044196311 end rc=0

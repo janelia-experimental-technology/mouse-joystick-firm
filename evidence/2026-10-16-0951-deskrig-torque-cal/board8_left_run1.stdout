@@ -1,0 +1,48 @@
+logging to /home/peter/Repositories/orb-weaver/mouse-joystick-firm/evidence/2026-10-16-0951-deskrig-torque-cal/board8_left_run1.log
+H 950701661025549 start board=left radius_mm=72.0 levels=[3.5, 0.0, 1.0, 2.0, 0.5]
+CUE level - countdown: Starting in 10 seconds. Hands off, the lever will move.
+CUE level - countdown: Starting in 9 seconds. Hands off, the lever will move.
+CUE level - countdown: Starting in 8 seconds. Hands off, the lever will move.
+CUE level - countdown: Starting in 7 seconds. Hands off, the lever will move.
+CUE level - countdown: Starting in 6 seconds. Hands off, the lever will move.
+CUE level - countdown: Starting in 5 seconds. Hands off, the lever will move.
+CUE level - countdown: Starting in 4 seconds. Hands off, the lever will move.
+CUE level - countdown: Starting in 3 seconds. Hands off, the lever will move.
+CUE level - countdown: Starting in 2 seconds. Hands off, the lever will move.
+CUE level - countdown: Starting in 1 seconds. Hands off, the lever will move.
+CUE level - start: Starting. Hands off, the lever is about to move.
+CUE level 3.5 ramp_up: Brake at full. Pull slowly, up to forty grams over ten seconds. Do not let it slip.
+CUE level 3.5 steady: Hold it steady.
+CUE level 3.5 ramp_down: Ease off slowly, over ten seconds.
+CUE level 3.5 rest: Hands off.
+CUE level 3.5 slide_pull: Now pull harder until it slips, and slide slowly, a few degrees.
+CUE level 3.5 rest: Let go.
+CUE level 3.5 slide_push: Now push the other way until it slips, and slide slowly back.
+CUE level 3.5 handsoff: Hands off. Wait for the lever to move back.
+CUE level 3.5 moving: Hands off. The lever is moving back.
+CUE level 0.0 slide_pull: Brake off. Pull the free lever slowly, a few degrees.
+CUE level 0.0 slide_push: Push it slowly back.
+CUE level 0.0 slide_pull: Again. Pull slowly, a few degrees.
+CUE level 0.0 slide_push: Push slowly back.
+CUE level 0.0 handsoff: Hands off. Wait for the lever to move back.
+CUE level 0.0 moving: Hands off. The lever is moving back.
+CUE level 1.0 slide_pull: Brake at 1.0. Pull until it slips, and slide slowly, a few degrees.
+CUE level 1.0 rest: Let go.
+CUE level 1.0 slide_push: Now push the other way until it slips, and slide slowly back.
+CUE level 1.0 handsoff: Hands off. Wait for the lever to move back.
+CUE level 1.0 moving: Hands off. The lever is moving back.
+CUE level 2.0 ramp_up: Brake at two. Pull slowly, up to twenty grams over ten seconds. Do not let it slip.
+CUE level 2.0 ramp_down: Ease off slowly.
+CUE level 2.0 rest: Hands off.
+CUE level 2.0 slide_pull: Now pull until it slips, and slide slowly, a few degrees.
+CUE level 2.0 rest: Let go.
+CUE level 2.0 slide_push: Now push the other way until it slips, and slide slowly back.
+CUE level 2.0 handsoff: Hands off. Wait for the lever to move back.
+CUE level 2.0 moving: Hands off. The lever is moving back.
+CUE level 0.5 slide_pull: Brake at 0.5. Pull until it slips, and slide slowly, a few degrees.
+CUE level 0.5 rest: Let go.
+CUE level 0.5 slide_push: Now push the other way until it slips, and slide slowly back.
+CUE level 0.5 handsoff: Hands off. Wait for the lever to move back.
+CUE level 0.5 moving: Hands off. The lever is moving back.
+CUE level - done: Done. The rail is off.
+H 951006467776907 end rc=0

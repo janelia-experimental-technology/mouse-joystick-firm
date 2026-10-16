@@ -1,0 +1,14 @@
+logging to /home/peter/Repositories/orb-weaver/mouse-joystick-firm/evidence/2026-10-16-0951-deskrig-torque-cal/board9_right_run3.log
+H 950177099297837 start board=right radius_mm=72.0 levels=[3.5, 0.0, 1.0, 2.0, 0.5]
+CUE level - start: Starting. Hands off, the lever is about to move.
+CUE level 3.5 ramp_up: Brake at full. Pull slowly, up to forty grams over ten seconds. Do not let it slip.
+CUE level 3.5 steady: Hold it steady.
+CUE level 3.5 ramp_down: Ease off slowly, over ten seconds.
+CUE level 3.5 rest: Hands off.
+CUE level 3.5 slide_pull: Now pull harder until it slips, and slide slowly, a few degrees.
+CUE level 3.5 rest: Let go.
+CUE level 3.5 slide_push: Now push the other way until it slips, and slide slowly back.
+CUE level 3.5 handsoff: Hands off. Wait for the lever to move back.
+CUE level 3.5 moving: Hands off. The lever is moving back.
+CUE level - abort: Stopped. Hands off.
+H 950239428130614 end rc=0

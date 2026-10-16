@@ -153,6 +153,25 @@ section 9, Phase A.
       0.1 mV. **The shunt-cal switch is inert** (0.0 codes of a 0.744 V step),
       as the 2026-10-04 design review predicted; `TQ cal` stays a verb and
       not a calibration.
+- [x] **Torque calibration against a force gauge (2026-10-16, desk rig, both
+      boards).** `tools/torque_cal_run.py` drives a board through the pyboard
+      REPL with a Mark-10 logged beside the 50 Hz stream and a cue window for
+      the person at the lever; `tools/torque_cal_reduce.py` and
+      `tools/torque_cal_cycles.py` reduce it; `docs/torque-calibration.md` is
+      the procedure. Result: the chain is on its certificate (0.965 measured
+      against 0.961 expected, gear out, string loop); friction 0.25–0.5 N·cm
+      per station in the lever axis; the brakes deliver 0.4–0.7 at the
+      commanded 1.0. Numbers in the PCB bring-up log, 2026-10-16.
+      **Decided 2026-10-16: the firmware carries the certificate mean.**
+      `kTorqueSensitivityVPerV` = 1.5605e-3 in `Conversions.hpp` is the
+      chain's constant; every reported torque is 0.961 of what the same
+      reading gave on `v1.0.0`, `WATCH`'s `touch` is in true N·cm, the BNC
+      is analog and unchanged, and pyControl's log now agrees with the
+      0.141 V/N·cm of `mouse-joystick-pcb/docs/bnc-conversion.md`. The
+      desk boards take the new build on 2026-10-16; Rig 1's boards are
+      reflashed at the rig before their calibration run (the checklist in
+      `docs/torque-calibration.md`). Two lessons in the run script: a pause without pings faults the 100 ms
+      watchdog; `brake 0` answers `ack` and `ev;RELEASED` in one read.
 - [x] **Brake and torque in the protocol (2026-10-06, both ends, run on unit
       A).** `src/BrakeTorqueBackend.hpp` is the seam (with the simulated
       backend the corpus runs against); `src/BrakeTorqueHw.hpp` the real one

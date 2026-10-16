@@ -1,0 +1,195 @@
+{
+ "radius_mm": 72.0,
+ "friction": {
+  "slide_pull": 0.466937524,
+  "slide_push": 0.42101200800000005
+ },
+ "results": [
+  {
+   "level": 0.0,
+   "end_how": "quiet",
+   "angle0": -4.324,
+   "baseline": -1.79,
+   "n_pairs": 344,
+   "gauge_peak_pull_gf": -9.0,
+   "gauge_peak_push_gf": 2.6,
+   "exc_min": -0.04800000000000004,
+   "exc_max": 0.062000000000000055,
+   "angle_min": -23.4,
+   "angle_max": -4.324,
+   "n_static": 0,
+   "slide_pull": {
+    "n": 36,
+    "tau_g": 0.515437524,
+    "exc": 0.04849999999999999,
+    "vel": -2.2884034135646525,
+    "angle": [
+     -23.4,
+     -4.416
+    ]
+   },
+   "slide_push": {
+    "n": 72,
+    "tau_g": 0.466012008,
+    "exc": 0.04499999999999993,
+    "vel": -2.2652137109284602,
+    "angle": [
+     -22.416,
+     -6.391
+    ]
+   }
+  },
+  {
+   "level": 1.0,
+   "end_how": "quiet",
+   "angle0": -4.591,
+   "baseline": -1.792,
+   "n_pairs": 274,
+   "gauge_peak_pull_gf": -14.0,
+   "gauge_peak_push_gf": 6.8,
+   "exc_min": -0.32000000000000006,
+   "exc_max": 0.3620000000000001,
+   "angle_min": -14.766,
+   "angle_max": -4.591,
+   "n_static": 0,
+   "slide_pull": {
+    "n": 34,
+    "tau_g": 0.8896592879999999,
+    "exc": 0.3245,
+    "vel": -2.2874234122261576,
+    "angle": [
+     -13.416,
+     -4.683
+    ],
+    "ratio": 0.7676444120818914,
+    "through_sensor": 0.42272176399999994
+   },
+   "slide_push": {
+    "n": 28,
+    "tau_g": -0.409525704,
+    "exc": -0.3019999999999998,
+    "vel": 2.2766581243228794,
+    "angle": [
+     -14.583,
+     -8.1
+    ],
+    "ratio": 0.3636198520989012,
+    "through_sensor": -0.830537712
+   }
+  },
+  {
+   "level": 2.0,
+   "end_how": "quiet",
+   "angle0": -4.683,
+   "baseline": -1.747,
+   "n_pairs": 477,
+   "gauge_peak_pull_gf": -28.6,
+   "gauge_peak_push_gf": 19.4,
+   "exc_min": -1.075,
+   "exc_max": 1.133,
+   "angle_min": -16.383,
+   "angle_max": -4.683,
+   "n_static": 4,
+   "slide_pull": {
+    "n": 34,
+    "tau_g": 1.878169608,
+    "exc": 1.0790000000000002,
+    "vel": -2.2778390062151113,
+    "angle": [
+     -15.933,
+     -8.191
+    ],
+    "ratio": 0.7645801227404635,
+    "through_sensor": 1.411232084
+   },
+   "slide_push": {
+    "n": 24,
+    "tau_g": -1.2568202640000001,
+    "exc": -0.9929999999999999,
+    "vel": 2.2903743703069557,
+    "angle": [
+     -16.116,
+     -10.624
+    ],
+    "ratio": 0.5918350818323035,
+    "through_sensor": -1.6778322720000003
+   }
+  },
+  {
+   "level": 0.5,
+   "end_how": "quiet",
+   "angle0": -4.774,
+   "baseline": -1.781,
+   "n_pairs": 270,
+   "gauge_peak_pull_gf": -10.0,
+   "gauge_peak_push_gf": 4.8,
+   "exc_min": -0.15100000000000002,
+   "exc_max": 0.137,
+   "angle_min": -15.033,
+   "angle_max": -4.774,
+   "n_static": 0,
+   "slide_pull": {
+    "n": 37,
+    "tau_g": 0.6637140720000001,
+    "exc": 0.12199999999999989,
+    "vel": -2.298305344554206,
+    "angle": [
+     -13.95,
+     -4.866
+    ],
+    "ratio": 0.6199925816363027,
+    "through_sensor": 0.1967765480000001
+   },
+   "slide_push": {
+    "n": 23,
+    "tau_g": -0.22594521600000003,
+    "exc": -0.139,
+    "vel": 2.296227413171499,
+    "angle": [
+     -14.85,
+     -9.0
+    ],
+    "ratio": 0.2148519173193435,
+    "through_sensor": -0.6469572240000001
+   }
+  },
+  {
+   "level": 3.5,
+   "end_how": "quiet",
+   "angle0": -5.041,
+   "baseline": -1.847,
+   "n_pairs": 539,
+   "gauge_peak_pull_gf": -53.6,
+   "gauge_peak_push_gf": 43.2,
+   "exc_min": -2.443,
+   "exc_max": 2.934,
+   "angle_min": -18.816,
+   "angle_max": -5.041,
+   "n_static": 2,
+   "slide_pull": {
+    "n": 43,
+    "tau_g": 3.572758728,
+    "exc": 2.661,
+    "vel": -2.2759196991504536,
+    "angle": [
+     -16.65,
+     -8.374
+    ],
+    "ratio": 0.8567782319770652,
+    "through_sensor": 3.105821204
+   },
+   "slide_push": {
+    "n": 23,
+    "tau_g": -2.8243152,
+    "exc": -2.32,
+    "vel": 2.2698868528752403,
+    "angle": [
+     -18.0,
+     -13.324
+    ],
+    "ratio": 0.7148739869067772,
+    "through_sensor": -3.245327208
+   }
+  }
+ ]
+}

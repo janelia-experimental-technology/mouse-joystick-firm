@@ -72,7 +72,7 @@ On the lever axis behind the gear. The board's current sink drives its coil from
 
 ### Reaction torque sensor
 
-350 ohm bridge, 1.5 mV/V, 5 in-oz, at the rear of the lever axis. The board excites it, amplifies it, samples it at 1 kHz and puts a copy on the torque BNC. The left station reads a pull negative where the right reads positive.
+350 ohm bridge, 1.5 mV/V nominal (the firmware converts on the certificate mean, 1.5605 mV/V), 5 in-oz, at the rear of the lever axis. The board excites it, amplifies it, samples it at 1 kHz and puts a copy on the torque BNC. The left station reads a pull negative where the right reads positive.
 
 | | |
 | --- | --- |

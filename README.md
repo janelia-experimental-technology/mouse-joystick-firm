@@ -36,6 +36,7 @@ trial task.
 | want to know how the firmware is organised and what talks to what | [Architecture](docs/architecture.md), with the trial and power diagrams |
 | need to know which code drives which circuit, connector or part | [Circuit-to-code map](docs/circuit-code-map.md) |
 | write or change a pyControl task | [The pyControl device class](docs/pycontrol-api.md) and [`pycontrol/README.md`](pycontrol/README.md) |
+| calibrate a station's torque reading against a force gauge, or measure its friction and brake curve | [Torque calibration](docs/torque-calibration.md) |
 | build, flash or bring up a board | the rest of this README, then `docs/rp2040-bringup.md`, `docs/motion-bringup.md`, `docs/brake-torque-bringup.md` |
 
 ![What runs where](docs/diagrams/architecture.svg)
@@ -372,6 +373,12 @@ src/                           board support library
 test/native/                   host tests for the Arduino-free arithmetic
 tools/pio_task.py              example selection without editing platformio.ini
 tools/pyb_id_probe.py          `id` over both RJ-45 links through the pyboard REPL
+tools/torque_cal_run.py        a torque calibration run against a force gauge, the
+                               Mark-10 logged beside the board's stream, cues for the
+                               person at the lever (docs/torque-calibration.md)
+tools/torque_cal_reduce.py     its reduction by lever velocity (gear in)
+tools/torque_cal_cycles.py     its reduction by gauge cycle (gear out)
+tools/cue_display.py           the cue window those runs drive
 tools/circuit_code_map.py      writes docs/circuit-code-map.md from the rig's
                                component registry and the board's records
 tools/pycontrol_api_doc.py     writes docs/pycontrol-api.md from the device class

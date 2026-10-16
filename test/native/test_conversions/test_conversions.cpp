@@ -134,15 +134,20 @@ void test_brake_isense_scale(void) {
 void test_torque_front_end_design_values(void) {
   TEST_ASSERT_FLOAT_WITHIN(1e-2f, 191.73f, kTorqueInaGain);
   TEST_ASSERT_FLOAT_WITHIN(1e-4f, 1.6667f, kTorqueZeroVolts);
-  // 15 mV x 191.73 / 3 over 3.5309 N.cm.
-  TEST_ASSERT_FLOAT_WITHIN(1e-4f, 0.2715f, kTorqueVoltsPerNcm);
+  // The certificate mean, 15.605 mV x 191.73 / 3 over 3.5309 N.cm, 4.0 %
+  // above the datasheet's nominal 1.5 mV/V (0.2715 V per N.cm, the scale of
+  // tag v1.0.0).
+  TEST_ASSERT_FLOAT_WITHIN(1e-7f, 1.5605e-3f, kTorqueSensitivityVPerV);
+  TEST_ASSERT_FLOAT_WITHIN(1e-4f, 0.2825f, kTorqueVoltsPerNcm);
+  TEST_ASSERT_FLOAT_WITHIN(1e-4f, 1.0403f,
+                           kTorqueSensitivityVPerV / kTorqueSensitivityNominalVPerV);
   TEST_ASSERT_FLOAT_WITHIN(1e-9f, 78.125e-6f, kTorqueAdcVoltsPerCode);
   TEST_ASSERT_EQUAL_UINT16(21333, kTorqueZeroCodeNominal);
   // +/-rated and +/-150 % both fit the 0-5.12 V range.
   const float rated_lo = kTorqueZeroVolts - kTorqueRatedNcm * kTorqueVoltsPerNcm;
   const float rated_hi = kTorqueZeroVolts + kTorqueRatedNcm * kTorqueVoltsPerNcm;
-  TEST_ASSERT_FLOAT_WITHIN(2e-3f, 0.708f, rated_lo);
-  TEST_ASSERT_FLOAT_WITHIN(2e-3f, 2.625f, rated_hi);
+  TEST_ASSERT_FLOAT_WITHIN(2e-3f, 0.669f, rated_lo);
+  TEST_ASSERT_FLOAT_WITHIN(2e-3f, 2.664f, rated_hi);
   TEST_ASSERT_TRUE(kTorqueZeroVolts - 1.5f * kTorqueRatedNcm * kTorqueVoltsPerNcm > 0.0f);
   TEST_ASSERT_TRUE(kTorqueZeroVolts + 1.5f * kTorqueRatedNcm * kTorqueVoltsPerNcm <
                    kTorqueAdcFullScaleVolts);
@@ -151,21 +156,27 @@ void test_torque_front_end_design_values(void) {
 void test_torque_code_to_ncm(void) {
   TEST_ASSERT_FLOAT_WITHIN(1e-4f, 1.66664f, torqueAdcCodeToVolts(21333));
   TEST_ASSERT_FLOAT_WITHIN(1e-3f, 0.0f, torqueAdcCodeToNcm(21333));
-  // One N.cm is 0.2715 V = 3475 codes above zero.
-  TEST_ASSERT_FLOAT_WITHIN(2e-3f, 1.0f, torqueAdcCodeToNcm(21333 + 3475));
-  TEST_ASSERT_FLOAT_WITHIN(2e-3f, -1.0f, torqueAdcCodeToNcm(21333 - 3475));
+  // One N.cm is 0.2825 V = 3615 codes above zero (3475 on the nominal scale).
+  TEST_ASSERT_FLOAT_WITHIN(2e-3f, 1.0f, torqueAdcCodeToNcm(21333 + 3615));
+  TEST_ASSERT_FLOAT_WITHIN(2e-3f, -1.0f, torqueAdcCodeToNcm(21333 - 3615));
   // A measured tare moves the zero, not the scale.
   TEST_ASSERT_FLOAT_WITHIN(1e-3f, 0.0f, torqueAdcCodeToNcm(21500, 21500));
-  TEST_ASSERT_FLOAT_WITHIN(2e-3f, 1.0f, torqueAdcCodeToNcm(21500 + 3475, 21500));
+  TEST_ASSERT_FLOAT_WITHIN(2e-3f, 1.0f, torqueAdcCodeToNcm(21500 + 3615, 21500));
+  // The old scale reads the same codes 4.0 % high.
+  TEST_ASSERT_FLOAT_WITHIN(2e-3f, 1.0403f,
+                           torqueAdcCodeToNcm(21333 + 3615) /
+                               torqueAdcCodeToNcm(21333 + 3475));
 }
 
 void test_torque_shunt_cal_step(void) {
   // 350 / (2 (2 x 75k + 350)) = 1.164 mV/V -> 0.744 V at AMP_VOUT.
   TEST_ASSERT_FLOAT_WITHIN(1e-6f, 1.164e-3f, kTorqueShuntCalVoltsPerVolt);
   TEST_ASSERT_FLOAT_WITHIN(2e-3f, 0.744f, kTorqueShuntCalStepVolts);
-  // That is 77.6 % of the nominal rated output.
+  // That is 77.6 % of the nominal rated output, 74.6 % of the certificate mean's.
   TEST_ASSERT_FLOAT_WITHIN(1e-2f, 0.776f,
                            kTorqueShuntCalVoltsPerVolt / kTorqueSensitivityNominalVPerV);
+  TEST_ASSERT_FLOAT_WITHIN(1e-2f, 0.746f,
+                           kTorqueShuntCalVoltsPerVolt / kTorqueSensitivityVPerV);
 }
 
 int main(int, char **) {

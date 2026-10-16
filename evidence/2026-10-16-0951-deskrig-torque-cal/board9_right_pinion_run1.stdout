@@ -1,0 +1,28 @@
+logging to /home/peter/Repositories/orb-weaver/mouse-joystick-firm/evidence/2026-10-16-0951-deskrig-torque-cal/board9_right_pinion_run1.log
+H 953057429683343 start board=right radius_mm=72.5 levels=[3.5, 0.0, 1.0, 2.0]
+CUE level - countdown: Starting in 10 seconds. Hands off, the lever will move.
+CUE level - countdown: Starting in 9 seconds. Hands off, the lever will move.
+CUE level - countdown: Starting in 8 seconds. Hands off, the lever will move.
+CUE level - countdown: Starting in 7 seconds. Hands off, the lever will move.
+CUE level - countdown: Starting in 6 seconds. Hands off, the lever will move.
+CUE level - countdown: Starting in 5 seconds. Hands off, the lever will move.
+CUE level - countdown: Starting in 4 seconds. Hands off, the lever will move.
+CUE level - countdown: Starting in 3 seconds. Hands off, the lever will move.
+CUE level - countdown: Starting in 2 seconds. Hands off, the lever will move.
+CUE level - countdown: Starting in 1 seconds. Hands off, the lever will move.
+CUE level - start: Starting. Hands off, the lever is about to move.
+CUE level 3.5 remove_pinion: Brake at full, drive released, the brake holds the lever. Remove the pinion now. Take your time: the pull cycles start when this countdown ends.
+CUE level 3.5 slip_cycles: With the string: pull slowly until it slips, slide a little, ease off. Repeat until the countdown ends.
+CUE level 3.5 handsoff: Hands off. Wait for the lever to move back.
+CUE level 3.5 moving: Hands off. The lever is moving back.
+CUE level 0.0 free_slide: Brake off. The lever is now completely free, so hold it. Slide it slowly each way, over and over, until the countdown ends.
+CUE level 0.0 handsoff: Hands off. Wait for the lever to move back.
+CUE level 0.0 moving: Hands off. The lever is moving back.
+CUE level 1.0 slip_cycles: Brake at 1.0. Pull slowly until it slips, slide a little, ease off. Repeat until the countdown ends.
+CUE level 1.0 handsoff: Hands off. Wait for the lever to move back.
+CUE level 1.0 moving: Hands off. The lever is moving back.
+CUE level 2.0 slip_cycles: Brake at 2.0. Pull slowly until it slips, slide a little, ease off. Repeat until the countdown ends.
+CUE level 2.0 handsoff: Hands off. Wait for the lever to move back.
+CUE level 2.0 moving: Hands off. The lever is moving back.
+CUE level - done: Done. The rail is off.
+H 953697259612756 end rc=0

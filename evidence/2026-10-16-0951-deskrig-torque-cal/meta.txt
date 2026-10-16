@@ -1,0 +1,64 @@
+Desk rig torque calibration against a force gauge, 2026-10-16, 09:51-10:50 local.
+boards: board 9 E4654C159F234234 (v1.0 unit D, right mechanism, Breakout port 4, UART(3));
+  board 8 E4654C159F504534 (v1.0 unit C, left mechanism, port 1, UART(4)); both on the
+  delivery build v1.0.0-2-g109169f (examples/PyControlLinkQp, mouse_joystick_qp_rev2), the
+  pyboard 3968348E3233 on MicroPython 1.26.1 with no pyControl runner attached.
+host: Peter's desk computer (Debian 13, XFCE), scripts/ run with the Guix python3 -I.
+reference: Mark-10 M3-05 force gauge (250 gF x 0.2 gF, +/-0.3 % FS), serial 3706367, polled
+  with `?` at 9600 baud over its Silicon Labs USB serial every 100 ms; a pull on the hook reads
+  negative. Peter held the gauge and hooked the lever at 72 mm from the lever axis (first
+  stated as 73, then 72), pulling toward the mouse's side (decreasing angle) and pushing back.
+method: scripts/torque_cal_run2.py drives the board through the pyboard's raw REPL: clrfault,
+  hv on, home, arm, present at -5 deg, stream 50 Hz, then brake L -> RELEASED and a hold per
+  level while the cue window (scripts/cue_display.py in an xterm; spd-say produced no sound)
+  led Peter through ramps and slow slides; hands-off detection then moveto -5; park, disarm,
+  hv off. No `tq zero`, so every streamed torque is the raw reading about the nominal zero.
+  Pings every 40 ms. Reduction: scripts/torque_cal_reduce.py (by lever velocity) and
+  scripts/torque_cal_analyze2.py (by cue phase).
+runs:
+  board9_right_run1  aborted before motion: the script slept 500 ms after `hv on` without
+                     pinging and the board faulted host_timeout (watchdog 100 ms).
+  board9_right_run2  levels 3.5, 0, 1.0, 2.0, 0.5 with unscripted hand pulls (torque_cal_run.py):
+                     the 3.5 pull ramped to slip in 0.6 s and slid 22 deg to the stop; 1.0 and
+                     2.0 were not pulled past 5 gF. Kept for the free-lever friction and the
+                     full-brake slide.
+  board9_right_run3  choreographed (torque_cal_run2.py); level 3.5 complete, then aborted at
+                     brake 0 because `ack` and `ev;RELEASED` arrived in one UART read and the
+                     wait loop dropped the second line (fixed: PENDING queue in wait_for).
+  board9_right_run4  levels 0, 1.0, 2.0, 0.5, 3.5 complete, no faults. 9858 stream samples,
+                     2147 gauge readings.
+  board8_left_run1   levels 3.5, 0, 1.0, 2.0, 0.5 complete, no faults. The 3.5 hold ran to
+                     its 150 s maximum because the sensor's rest reading moved from +0.20 to
+                     +0.55 N.cm after the first full-brake pull and never returned within the
+                     0.15 N.cm hands-off tolerance. 14590 stream samples, 3039 gauge readings.
+results (pull-direction slow slides, the lever moving at about 2.3 deg/s, friction from the
+  brake-off slide; sensor on the firmware's nominal 1.5 mV/V scale; see the bring-up log):
+  right (board 9): kinetic friction the gauge pays and the sensor never sees 0.45-0.51 N.cm;
+    sensor/torque-through-brake 0.85 at full brake; brake delivers about 3.0 N.cm at the
+    commanded 3.5, 1.2 at 2.0, 0.39 at 1.0, 0.15 at 0.5, 0.06 of drag at 0 (sensor/0.85).
+    Rest reading -1.75 to -1.85 N.cm raw throughout.
+  left (board 8): friction 0.23-0.38 N.cm; sensor/through-brake 0.93-0.96 at full brake;
+    brake delivers about 4.0 at 3.5, 1.6 at 2.0, 0.47 at 1.0, 0.14 at 0.5; 0.25 N.cm of drag
+    with the brake off (five times the right station's). Rest reading +0.20 then +0.55 to
+    +0.64 raw.
+  static holds below slip read lower (0.77 right, 0.88 left): static friction takes an
+    indeterminate share, so the slides are the calibration regime.
+  gauge-side systematics (pull angle, radius, friction model) all make the gauge-implied
+  torque read high, so the sensor shortfall above is an upper bound.
+  board9_right_pinion_run1  mode pinion, no park, levels 3.5, 0, 1.0, 2.0, string loop at 72-73 mm
+                     (radius 72.5 recorded). Homed with the gear in, brake to full, then
+                     Peter removed the pinion during the 5 min first phase and ran slip
+                     cycles with the string; brake off, 1.0 and 2.0 followed with the gear
+                     out, so the stream's angle is the free motor's and says nothing about
+                     the lever: reduce with scripts/torque_cal_cycles.py (by gauge cycle),
+                     not by velocity. Ended with stop, disarm, hv off; the pinion refitted
+                     afterwards to Peter's marks. 29880+ stream samples.
+  pinion-off result (full brake, 8 clean pull cycles, friction 0.41 from the free-lever
+    cycles): sensor/torque-through-brake 0.94 to 1.03, median 0.965, against 0.961 expected
+    from the certificate average 1.5605 mV/V over the firmware's nominal 1.5. The sensor
+    chain is on its certificate; the 0.85 of the hand-held hook runs was geometry.
+    Free-lever friction with the gear out 0.41-0.55 N.cm: the friction is in the lever
+    axis, not the gear train. The raw rest reading moved from -1.82 to -2.08 when the
+    pinion came off: the gear mesh loads the sensor path by about 0.3 N.cm.
+    Levels 1.0 and 2.0 with the gear out were pulled without releasing between cycles and
+    are not used; the brake curve stands on board9_right_run4.

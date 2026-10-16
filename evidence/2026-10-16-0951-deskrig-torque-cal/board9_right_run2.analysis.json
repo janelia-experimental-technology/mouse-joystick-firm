@@ -1,0 +1,104 @@
+{
+ "radius_mm": 73.0,
+ "invert": false,
+ "results": [
+  {
+   "level": 3.5,
+   "rest_tq": -1.72,
+   "end_how": "quiet",
+   "angle0": -4.95,
+   "n_pairs": 399,
+   "n_holding": 18,
+   "n_loaded": 18,
+   "n_slipping": 381,
+   "gauge_max_gf": 55.2,
+   "torque_min": -1.945,
+   "torque_max": 0.959,
+   "fit_a": -0.7490522089573773,
+   "fit_b": -2.1310957273062536,
+   "fit_rms": 0.03774617741100494,
+   "slip_sensor_median": -1.802,
+   "slip_gauge_median": -0.028635418000000003,
+   "slip_angle_span": [
+    -28.266,
+    -5.674
+   ]
+  },
+  {
+   "level": 0.0,
+   "rest_tq": -1.79,
+   "end_how": "quiet",
+   "angle0": -4.866,
+   "n_pairs": 399,
+   "n_holding": 34,
+   "n_loaded": 20,
+   "n_slipping": 365,
+   "gauge_max_gf": 9.4,
+   "torque_min": -1.839,
+   "torque_max": -1.747,
+   "fit_a": -0.06916328165768279,
+   "fit_b": -1.8095064935064935,
+   "fit_rms": 0.005374573374793476,
+   "slip_sensor_median": -1.789,
+   "slip_gauge_median": 0.057270836000000006,
+   "slip_angle_span": [
+    -24.216,
+    -5.766
+   ]
+  },
+  {
+   "level": 1.0,
+   "rest_tq": -1.826,
+   "end_how": "quiet",
+   "angle0": -5.224,
+   "n_pairs": 396,
+   "n_holding": 396,
+   "n_loaded": 216,
+   "n_slipping": 0,
+   "gauge_max_gf": 4.8,
+   "torque_min": -1.802,
+   "torque_max": -1.75,
+   "fit_a": -0.007965810141150801,
+   "fit_b": -1.7825116325075523,
+   "fit_rms": 0.0032163570474039436
+  },
+  {
+   "level": 2.0,
+   "rest_tq": -1.81,
+   "end_how": "quiet",
+   "angle0": -4.866,
+   "n_pairs": 400,
+   "n_holding": 400,
+   "n_loaded": 72,
+   "n_slipping": 0,
+   "gauge_max_gf": 3.8,
+   "torque_min": -1.811,
+   "torque_max": -1.74,
+   "fit_a": 0.02377653658940108,
+   "fit_b": -1.780078014184397,
+   "fit_rms": 0.0019989654534685528
+  },
+  {
+   "level": 0.5,
+   "rest_tq": -1.78,
+   "end_how": "quiet",
+   "angle0": -4.95,
+   "n_pairs": 399,
+   "n_holding": 63,
+   "n_loaded": 15,
+   "n_slipping": 336,
+   "gauge_max_gf": 10.4,
+   "torque_min": -1.905,
+   "torque_max": -1.661,
+   "fit_a": -0.0034876019061796494,
+   "fit_b": -1.7871823066841415,
+   "fit_rms": 0.016945517248742704,
+   "slip_sensor_median": -1.813,
+   "slip_gauge_median": -0.14317709,
+   "slip_angle_span": [
+    -28.266,
+    -5.583
+   ]
+  }
+ ]
+}

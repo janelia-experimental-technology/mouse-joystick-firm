@@ -1,0 +1,64 @@
+{
+ "board": "right",
+ "uart": 3,
+ "radius_mm": 72.5,
+ "levels": [
+  3.5,
+  0.0,
+  1.0,
+  2.0
+ ],
+ "hold_min_s": {
+  "3.5": 392.0,
+  "0.0": 77.0,
+  "1.0": 77.0,
+  "2.0": 77.0
+ },
+ "choreography": {
+  "3.5": [
+   [
+    "remove_pinion",
+    300,
+    "Brake at full, drive released, the brake holds the lever. Remove the pinion now. Take your time: the pull cycles start when this countdown ends."
+   ],
+   [
+    "slip_cycles",
+    90,
+    "With the string: pull slowly until it slips, slide a little, ease off. Repeat until the countdown ends."
+   ]
+  ],
+  "0.0": [
+   [
+    "free_slide",
+    75,
+    "Brake off. The lever is now completely free, so hold it. Slide it slowly each way, over and over, until the countdown ends."
+   ]
+  ],
+  "1.0": [
+   [
+    "slip_cycles",
+    75,
+    "Brake at 1.0. Pull slowly until it slips, slide a little, ease off. Repeat until the countdown ends."
+   ]
+  ],
+  "2.0": [
+   [
+    "slip_cycles",
+    75,
+    "Brake at 2.0. Pull slowly until it slips, slide a little, ease off. Repeat until the countdown ends."
+   ]
+  ]
+ },
+ "mode": "pinion",
+ "park": false,
+ "present_deg": -5.0,
+ "hold_max_s": 150.0,
+ "quiet_s": 5.0,
+ "tq_tol_ncm": 0.15,
+ "ang_tol_deg": 0.2,
+ "gauge": "Mark-10 M3-05, serial 3706367, `?` at 9600 baud, gF; a pull on the hook reads negative",
+ "gauge_period_s": 0.1,
+ "started": "2026-10-16 10:59:32",
+ "note": "board 9 E4654C159F234234, right mechanism; homed with the gear in, pinion removed during the first hold with the brake at full, then string-and-gauge slip cycles at 3.5, free slides at 0, slip cycles at 1.0 and 2.0; string loop at 72-73 mm; no park at the end",
+ "log": "board9_right_pinion_run1.log"
+}
