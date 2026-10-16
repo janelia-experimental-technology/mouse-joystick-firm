@@ -33,6 +33,13 @@ If sibling checkouts exist, read:
 If `.agents/handoff.local.md` exists, read it before planning or editing. Treat
 it as local, current-session context rather than permanent project policy.
 
+If the session is at Rig 1 or on the desk rig with a person at the lever, read
+`.agents/handoff-rig1-torque-calibration-2026-10-16.md`: the brief for
+reflashing the rig's boards to `v1.0.1` and running the force-gauge torque
+calibration there, written for an agent on Peter's laptop with none of the
+desk machine's session memory. The durable rules it relies on are under
+"Hardware Sessions" below.
+
 If the task is multi-step, risky, or likely to span more than one session, read
 `.agents/PLANS.md` and keep it updated as work progresses.
 
@@ -244,6 +251,50 @@ asserts on this so a merge fails loudly.
   with units, not pass marks.
 
 State plainly what you ran and what you did not. A compile is not a bring-up.
+
+## Hardware Sessions
+
+Rules for a session that drives a board, learned on the desk rig between
+2026-10-12 and 2026-10-16. They are not derivable from the code.
+
+- **Peter commits and pushes himself.** Prepare the tree and suggest the
+  messages; never commit.
+- **Serial devices are invisible to the sandboxed shell.** A step that opens
+  `/dev/serial/by-id/...` or `/dev/ttyACM*` runs with the sandbox disabled.
+  Address boards and the pyboard by their `/dev/serial/by-id` names; the
+  `ttyACM` numbers move.
+- **pixi needs `CONDA_OVERRIDE_GLIBC=2.41`** on Peter's machines (pixi lives in
+  `~/.pixi/bin`, from a Guix profile that cannot see the host glibc). The Guix
+  shell lacks `lsusb`, `curl`, `setsid` and the terminal emulators; use
+  `/sys/bus/usb/devices/*/` for USB facts and `/usr/bin/xterm`,
+  `/usr/bin/setsid` by full path.
+- **One process on the pyboard's USB port at a time.** Never run a REPL probe
+  (`tools/pyb_id_probe.py`, `tools/torque_cal_run.py`) while pyControl's GUI or
+  runner holds the port: the pyboard wedged that way once and needed its reset
+  button. Close the GUI first.
+- **Every wait in a board-driving loop keeps pinging.** The board's host
+  watchdog is 100 ms; a 500 ms `sleep` without a ping faults it
+  (`host_timeout`). Expect `ack` and an event (`ev;RELEASED` after `brake 0`)
+  in one read.
+- **Reflash by `pixi run upload` with the board's by-id port, one board at a
+  time.** Every board has taken the 1200 baud touch since 2026-10-14, but
+  picotool can still stop part way through the write (board 8, 2026-10-16);
+  the board is then in BOOTSEL with its `RPI-RP2` drive auto-mounted, and
+  `cp firmware.uf2 /media/$USER/RPI-RP2/ && sync` finishes it. Build from a
+  clean, tagged tree so `ID` reports a clean version, and read `fw=` back over
+  the RJ-45 with `tools/pyb_id_probe.py`.
+- **A timed run with a person at the lever is choreographed through the cue
+  window** (`tools/cue_display.py` in a large-font xterm), never through
+  speech: `spd-say` exits 0 and stays silent on Peter's machines. Before the
+  lever moves, explain the run, ask for a one-word "ready", start on that
+  reply, and say when the lever will move. Ask for one physical action per
+  message. Peter prefers alternating pull and push without pauses, and can
+  remove or refit the pinion before or after a run, not during a hold.
+- **Every session leaves an `evidence/<date>-<time>-<what>/` directory** with
+  `meta.txt` (firmware by `git describe`, host, boards, a timeline with the
+  failures), the raw logs, the scripts that ran it verbatim under `scripts/`,
+  a row in `evidence/README.md`, and the measured numbers in
+  `../mouse-joystick-pcb/docs/bringup-log.md` under each board's serial.
 
 ## Recording Results
 

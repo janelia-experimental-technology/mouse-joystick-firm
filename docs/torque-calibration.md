@@ -46,7 +46,8 @@ indeterminate share of the applied torque, and both desk stations read 0.77 to
   10 % high on 2026-10-16 from pulls that were not quite perpendicular.
   Measure the radius from the lever axis to the loop to the millimetre.
 - The station's pyboard on USB with no pyControl runner attached (close the
-  GUI), the board on its delivery firmware. Nothing is reflashed.
+  GUI), the board on the current firmware; the Rig 1 checklist below starts
+  with the reflash, and the run itself changes nothing on the board.
 - A terminal with a large font for the cue window, on a screen visible from
   the lever.
 
