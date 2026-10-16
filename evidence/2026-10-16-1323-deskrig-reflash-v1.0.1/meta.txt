@@ -1,0 +1,36 @@
+Desk rig reflash to v1.0.1 from Peter's desk computer, 2026-10-16, 13:24-13:26 local.
+why: v1.0.1 (commit 4517a6a, tagged and pushed by Peter minutes before) moves the torque
+  conversion from the sensor's nominal 1.5 mV/V to the two certificates' mean, 1.5605 mV/V
+  (`kTorqueSensitivityVPerV`, src/Conversions.hpp). Every torque a board reports is 0.961 of
+  what the same reading gave on v1.0.0; the torque BNC is analog and unchanged. Decided after
+  the morning's force-gauge calibration (2026-10-16-0951-deskrig-torque-cal/) so that the
+  pyControl log and the OneBox trace are on one scale before the researcher collects data.
+firmware: v1.0.1, examples/PyControlLinkQp, mouse_joystick_qp_rev2; `git describe` clean.
+  Native tests: 156 of 156 passed before the commit (the Guix shell needed ar/gcc/g++
+  symlinked under plain names for PlatformIO's native platform).
+host: Peter's desk computer (Debian 13, Guix shell), pixi 0.81 from ~/.pixi/bin with
+  CONDA_OVERRIDE_GLIBC=2.41; both boards on the hub at USB 1-5.1.2 (board 9) and 1-5.1.3
+  (board 8); the pyboard 3968348E3233 on 1-5.1.x; the Mark-10 still plugged in, unused.
+  36 V off throughout; no motion, no measurements.
+boards before: both v1.0.0-2-g109169f (the 2026-10-14 reflash), confirmed by the morning's
+  calibration session.
+13:24:07 board 9 E4654C159F234234, `pixi run upload examples/PyControlLinkQp
+  mouse_joystick_qp_rev2 /dev/serial/by-id/...E4654C159F234234-if00` (upload_board9.log):
+  build 1200 baud touch honoured, "Device rebooted into BOOTSEL mode successfully", picotool
+  load, "Verifying Flash 100%", rebooted, SUCCESS in 9.91 s.
+13:24:42 board 8 E4654C159F504534, the same command (upload_board8.log): touch honoured,
+  BOOTSEL, then picotool's load stopped at 39 % with "ERROR: The RP2040 device returned an
+  error: <unknown>" (Error 157), FAILED after 2.78 s, the board left in BOOTSEL as "RP2 Boot"
+  (bus 1 devnum 86, bootrom serial E0C9125B0D9B) with its RPI-RP2 drive auto-mounted at
+  /media/peter/RPI-RP2. The README's recovery: copy the UF2 to the drive.
+13:25:35 `cp .pio/build/examples/PyControlLinkQp/mouse_joystick_qp_rev2/firmware.uf2
+  /media/peter/RPI-RP2/ && sync` (uf2_copy_board8.log): both exit 0, the application's CDC
+  port back 1.0 s later, both boards enumerated as 2e8a:f00a.
+13:25:48 `id;1` over port 1 UART(4) and port 4 UART(3) from the pyboard's raw REPL with
+  tools/pyb_id_probe.py (uart_id_probe.log): board 8 fw=v1.0.1, board 9 fw=v1.0.1, hw=rev2,
+  proto=2, caps unchanged, boot=reboot, crumb=0.
+note: picotool failing part way through a write on this host is the pattern of 2026-09-10
+  (README, "When picotool will not write") and of unit B on 2026-10-07; the UF2 copy through
+  the bootrom's mass storage has not failed yet. Rig 1's boards 6 and 7 are still on
+  v1.0.0-6-g4213e48 and are to be reflashed from the laptop at the rig before their
+  calibration run (docs/torque-calibration.md, "At Rig 1").

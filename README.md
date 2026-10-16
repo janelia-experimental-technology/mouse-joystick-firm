@@ -21,12 +21,15 @@ ran the rig's trial task end to end through pyControl; the delivery build is
 `examples/PyControlLinkQp` for the `mouse_joystick_qp_rev2` environment.
 Each stage's procedure and findings are in `docs/`; the per-session record
 is [`evidence/`](evidence/README.md). The delivered state is tagged
-`v1.0.0` (2026-10-13), and every board now runs its code: the desk rig's
-boards were reflashed on 2026-10-14 and report `v1.0.0-2-g109169f`, Rig 1's
-on 2026-10-15 and report `v1.0.0-6-g4213e48` (the commits after the tag
-change documentation and console strings only), both from a laptop with
-`pixi run upload`, Rig 1's then checked through the rig's own pyboard and
-trial task.
+`v1.0.0` (2026-10-13); `v1.0.1` (2026-10-16) changes one number, the torque
+conversion from the sensor's nominal 1.5 mV/V to the two certificates' mean
+of 1.5605 mV/V (`src/Conversions.hpp`; every reported torque is 0.961 of
+`v1.0.0`'s, the torque BNC is analog and unchanged). The desk rig's boards
+run `v1.0.1` since 2026-10-16 (`evidence/2026-10-16-1323-deskrig-reflash-v1.0.1/`);
+Rig 1's were reflashed on 2026-10-15 to `v1.0.0-6-g4213e48` (the code of
+`v1.0.0`) from a laptop with `pixi run upload` and checked through the rig's
+own pyboard and trial task, and take `v1.0.1` at the rig before their torque
+calibration (`docs/torque-calibration.md`).
 
 ## Read This First
 
@@ -94,7 +97,10 @@ BOOTSEL the USB address is what selects one). Two of the four v1.0 boards
 (units B and D) have ignored the 1200 baud touch under this build on some
 hosts and needed the button; on 2026-10-14 unit D took it first time from a
 laptop, so try the touch first and reach for the button when the upload
-says no new device appeared. Do one board at a time: the uploader skips the
+says no new device appeared. The touch can succeed and the write still fail:
+on 2026-10-16 unit C went into BOOTSEL on the touch and picotool stopped at
+39 % of the load with "device returned an error"; the UF2 copy below ("When
+`picotool` will not write") finished it in two seconds. Do one board at a time: the uploader skips the
 touch when any RP2040 is already in BOOTSEL, and it loads without an address.
 The board announces its firmware version in the protocol's `ID` reply; the
 delivery build prints nothing on USB after boot, so `ID` over the RJ-45 is

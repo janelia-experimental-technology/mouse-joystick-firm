@@ -1,0 +1,4 @@
+13:25:48 id;1 over both RJ-45s from the pyboard raw REPL (tools/pyb_id_probe.py), 36 V off
+port 1 (left)   UART(4): b'ack;1;hw=rev2;serial=E4654C159F504534;fw=v1.0.1;proto=2;axes=1;caps=motion+home+instr+hv+watch+fetch+stream+cfg+angout+brake+torque;rxbuf=200;boot=reboot;crumb=0\n'
+port 4 (right)  UART(3): b'ack;1;hw=rev2;serial=E4654C159F234234;fw=v1.0.1;proto=2;axes=1;caps=motion+home+instr+hv+watch+fetch+stream+cfg+angout+brake+torque;rxbuf=200;boot=reboot;crumb=0\n'
+exit 0

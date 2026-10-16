@@ -1,0 +1,79 @@
+13:24:42 start board 8
+Pixi task (upload in default): python tools/pio_task.py upload --example examples/PyControlLinkQp --env mouse_joystick_qp_rev2 --port /dev/serial/by-id/usb-Janelia_Research_Campus_mouse-joystick-pcb_E4654C159F504534-if00: (Build and upload. Needs the board in BOOTSEL, or already running firmware that honours the 1200 baud touch.)
+Processing mouse_joystick_qp_rev2 (platform: https://github.com/janelia-arduino/platform-raspberrypi.git; board: generic; framework: arduino)
+--------------------------------------------------------------------------------
+Verbose mode can be enabled via `-v, --verbose` option
+CONFIGURATION: https://docs.platformio.org/page/boards/raspberrypi/generic.html
+PLATFORM: Raspberry Pi RP2040 (1.14.0+sha.5e4e06b) > RP2040
+HARDWARE: RP2040 133MHz, 256KB RAM, 16MB Flash
+DEBUG: Current (blackmagic) External (blackmagic, cmsis-dap, jlink, picoprobe, raspberrypi-swd)
+PACKAGES: 
+ - framework-arduinopico @ 1.40200.0+sha.c4b65218 
+ - tool-mklittlefs-rp2040-earlephilhower @ 5.100300.230216 (10.3.0) 
+ - tool-openocd-rp2040-earlephilhower @ 5.140200.240929 (14.2.0) 
+ - tool-picotool-rp2040-earlephilhower @ 5.140200.240929 (14.2.0) 
+ - toolchain-rp2040-earlephilhower @ 5.140200.240929 (14.2.0)
+Converting PyControlLinkQp.ino
+Flash size: 16.00MB
+Sketch size: 16.00MB
+Filesystem size: 0.00MB
+PSRAM size: 0.00MB
+Maximium Sketch size: 16773120 EEPROM start: 0x10fff000 Filesystem start: 0x10fff000 Filesystem end: 0x10fff000
+LDF: Library Dependency Finder -> https://bit.ly/configure-pio-ldf
+LDF Modes: Finder ~ off, Compatibility ~ soft
+Found 80 compatible libraries
+Scanning dependencies...
+Dependency Graph
+|-- SPI @ 1.0
+|-- Wire @ 1.0
+|-- MouseJoystickBoard @ 0.1.0
+|-- DAC80501 @ 0.1.0
+|-- ADS8689 @ 0.1.0
+|-- TMC51X0 @ 4.2.0+sha.9b58cb6
+|-- qp-arduino @ 7.3.4+sha.cfd870b
+Building in release mode
+Compiling .pio/build/examples/PyControlLinkQp/mouse_joystick_qp_rev2/src/PyControlLinkQp.ino.cpp.o
+Retrieving maximum program size .pio/build/examples/PyControlLinkQp/mouse_joystick_qp_rev2/firmware.elf
+Flash size: 16.00MB
+Sketch size: 16.00MB
+Filesystem size: 0.00MB
+PSRAM size: 0.00MB
+Maximium Sketch size: 16773120 EEPROM start: 0x10fff000 Filesystem start: 0x10fff000 Filesystem end: 0x10fff000
+Checking size .pio/build/examples/PyControlLinkQp/mouse_joystick_qp_rev2/firmware.elf
+Advanced Memory Usage is available via "PlatformIO Home > Project Inspect"
+RAM:   [==        ]  16.8% (used 43956 bytes from 262144 bytes)
+Flash: [          ]   0.8% (used 131476 bytes from 16773120 bytes)
+Configuring upload protocol...
+AVAILABLE: blackmagic, cmsis-dap, jlink, picoprobe, picotool, raspberrypi-swd
+CURRENT: upload_protocol = picotool
+Looking for upload port...
+Using manually specified: /dev/serial/by-id/usb-Janelia_Research_Campus_mouse-joystick-pcb_E4654C159F504534-if00
+Forcing reset using 1200bps open/close on port /dev/serial/by-id/usb-Janelia_Research_Campus_mouse-joystick-pcb_E4654C159F504534-if00
+Device rebooted into BOOTSEL mode successfully.
+Uploading .pio/build/examples/PyControlLinkQp/mouse_joystick_qp_rev2/firmware.elf
+Loading into Flash: [                              ]  0%
+Loading into Flash: [                              ]  2%
+Loading into Flash: [=                             ]  5%
+Loading into Flash: [==                            ]  8%
+Loading into Flash: [===                           ]  11%
+Loading into Flash: [====                          ]  14%
+Loading into Flash: [=====                         ]  17%
+Loading into Flash: [=====                         ]  19%
+Loading into Flash: [======                        ]  22%
+Loading into Flash: [=======                       ]  25%
+Loading into Flash: [========                      ]  28%
+Loading into Flash: [=========                     ]  31%
+Loading into Flash: [==========                    ]  34%
+Loading into Flash: [===========                   ]  37%
+Loading into Flash: [===========                   ]  39%
+ERROR: The RP2040 device returned an error: <unknown>
+*** [upload] Error 157
+========================== [FAILED] Took 2.78 seconds ==========================
+
+Environment             Status    Duration
+----------------------  --------  ------------
+mouse_joystick_qp_rev2  FAILED    00:00:02.782
+==================== 1 failed, 0 succeeded in 00:00:02.782 ====================
++ pio run -e mouse_joystick_qp_rev2 -t upload --upload-port /dev/serial/by-id/usb-Janelia_Research_Campus_mouse-joystick-pcb_E4654C159F504534-if00
+exit 1
+13:24:45 end
