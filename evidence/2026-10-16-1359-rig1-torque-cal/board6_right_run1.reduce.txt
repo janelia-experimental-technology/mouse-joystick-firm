@@ -1,0 +1,12 @@
+=== /home/peter/Repositories/orb-weaver/mouse-joystick-firm/evidence/2026-10-16-1359-rig1-torque-cal/board6_right_run1.log ===
+level 3.5 (92 s) baseline -0.779 | pull slide n=269 gauge 3.839 sensor +3.025 | push slide n=292 gauge -2.560 sensor -2.933 | static n=275
+    static fit: sensor = +0.898 x gauge -0.404, rms 0.117, gauge -2.70..4.21
+level 0.0 (77 s) baseline -0.767 | pull slide n=259 gauge 0.640 sensor +0.025 | push slide n=281 gauge +0.313 sensor -0.051 | static n=186
+    static fit: sensor = +0.120 x gauge -0.071, rms 0.013, gauge 0.31..0.67
+level 1.0 (77 s) baseline -0.771 | pull slide n=255 gauge 0.967 sensor +0.356 | push slide n=270 gauge -0.028 sensor -0.359 | static n=190
+    static fit: sensor = +0.167 x gauge -0.076, rms 0.060, gauge -0.44..1.22
+level 2.0 (3 s) baseline -0.797 | pull slide n=  0 gauge nan sensor +nan | push slide n=  0 gauge +nan sensor +nan | static n=8
+    static fit: sensor = +0.000 x gauge +0.000, rms 0.000, gauge 0.36..0.47
+  pull slides across levels: sensor = +0.934 x (gauge - 0.600), rms 0.010  -> |sensor/true| 0.934, true/sensor 1.070, friction 0.600 N.cm
+  friction from the brake-off slide alone: 0.613 N.cm; per-level |sensor/true| with it: ['3.5: 0.94', '1.0: 1.01']
+wrote /home/peter/Repositories/orb-weaver/mouse-joystick-firm/evidence/2026-10-16-1359-rig1-torque-cal/board6_right_run1.json

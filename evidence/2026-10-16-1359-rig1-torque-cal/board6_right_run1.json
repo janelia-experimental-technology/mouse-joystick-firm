@@ -1,0 +1,72 @@
+{
+ "/home/peter/Repositories/orb-weaver/mouse-joystick-firm/evidence/2026-10-16-1359-rig1-torque-cal/board6_right_run1.log": {
+  "radius_mm": 72.5,
+  "levels": [
+   {
+    "level": 3.5,
+    "hold_s": 92.007394877,
+    "baseline": -0.779,
+    "pull": {
+     "n": 269,
+     "gauge": 3.8393034749999995,
+     "sensor": 3.025
+    },
+    "push": {
+     "n": 292,
+     "gauge": -2.55953565,
+     "sensor": -2.9330000000000003
+    }
+   },
+   {
+    "level": 0.0,
+    "hold_s": 77.00622678,
+    "baseline": -0.767,
+    "pull": {
+     "n": 259,
+     "gauge": 0.6398839125,
+     "sensor": 0.025000000000000022
+    },
+    "push": {
+     "n": 281,
+     "gauge": 0.312832135,
+     "sensor": -0.050999999999999934
+    }
+   },
+   {
+    "level": 1.0,
+    "hold_s": 76.999589796,
+    "baseline": -0.771,
+    "pull": {
+     "n": 255,
+     "gauge": 0.96693569,
+     "sensor": 0.35600000000000004
+    },
+    "push": {
+     "n": 270,
+     "gauge": -0.028439285000000005,
+     "sensor": -0.35949999999999993
+    }
+   },
+   {
+    "level": 2.0,
+    "hold_s": 2.577180957,
+    "baseline": -0.797,
+    "pull": {
+     "n": 0,
+     "gauge": NaN,
+     "sensor": NaN
+    },
+    "push": {
+     "n": 0,
+     "gauge": NaN,
+     "sensor": NaN
+    }
+   }
+  ],
+  "pull_fit": {
+   "a": 0.9343390670268488,
+   "f": 0.6002551659319594,
+   "rms": 0.010423864025028913
+  }
+ }
+}

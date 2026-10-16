@@ -1,0 +1,13 @@
+=== board6_right_run1.log (gauge zero interpolated through the slack windows) ===
+  zero knots (s, gF): (0, +0.0), (93, -1.0), (171, +2.0), (250, +4.0)
+level 3.5 (92 s) baseline -0.779 zero -0.0..-1.0 gF | pull slide n=269 gauge 3.807 sensor +3.025 | push slide n=292 gauge -2.594 sensor -2.933
+level 0.0 (77 s) baseline -0.767 zero -1.0..+2.0 gF | pull slide n=259 gauge 0.677 sensor +0.025 | push slide n=281 gauge +0.359 sensor -0.051
+level 1.0 (77 s) baseline -0.771 zero +2.0..+4.0 gF | pull slide n=255 gauge 1.188 sensor +0.356 | push slide n=270 gauge +0.186 sensor -0.359
+level 2.0 (3 s) baseline -0.797 zero +4.0..+4.0 gF | pull slide n=  0 gauge nan sensor +nan | push slide n=  0 gauge +nan sensor +nan
+  pull slides across levels: sensor = +0.978 x (gauge - 0.730), rms 0.070 -> |sensor/true| 0.978, friction 0.730 N.cm
+  friction from the brake-off slide alone: 0.651 N.cm; per-level |sensor/true| with it: ['3.5: 0.96', '1.0: 0.66']
+=== board6_right_run2.log (gauge zero interpolated through the slack windows) ===
+  zero knots (s, gF): (0, +0.0), (78, +4.6), (157, -3.2)
+level 2.0 (77 s) baseline -0.782 zero +0.0..+4.6 gF | pull slide n=273 gauge 1.578 sensor +1.157 | push slide n=266 gauge -1.188 sensor -1.093  RE-ZERO SUSPECTED (zero +0.0 -> +4.6 gF across the hold)
+level 0.5 (77 s) baseline -0.758 zero +4.5..-3.1 gF | pull slide n=278 gauge 0.831 sensor +0.135 | push slide n=272 gauge +0.253 sensor -0.136  RE-ZERO SUSPECTED (zero +4.5 -> -3.1 gF across the hold)
+wrote evidence/2026-10-16-1359-rig1-torque-cal/board6_right_zero_corrected.json

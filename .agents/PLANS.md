@@ -3,11 +3,12 @@
 ## Current Goal
 
 Delivered: protocol v1 on four pcb v1.0 boards across two rigs (Rig 1
-2026-10-09, the desk rig 2026-10-12). `v1.0.0` is tagged and every board
-now runs its code: the desk rig's two boards were reflashed to
-`v1.0.0-2-g109169f` on 2026-10-14 and Rig 1's two to `v1.0.0-6-g4213e48`
-on 2026-10-15, both from Peter's laptop, Rig 1's checked with the rig's own
-pyboard and trial task (Status entries). The rig branch
+2026-10-09, the desk rig 2026-10-12). `v1.0.1` (the certificate-mean torque
+scale) is tagged and every board runs it since 2026-10-16: the desk rig's
+two from the desk machine, Rig 1's two from Peter's laptop at the rig, read
+back over the RJ-45s through the rig's own pyboard, and every station has
+its force-gauge torque row in `mouse-joystick-pcb/docs/station-torque-table.csv`
+(`evidence/2026-10-16-1359-rig1-torque-cal/`). The rig branch
 (`joystick-rig` `feat/mouse-joystick`) carries the matching device class
 since the local commit of 2026-10-15 (the `poll()` UnicodeError guard;
 Peter pushes it). Next: the researcher-facing documentation
@@ -38,6 +39,9 @@ every time with the same build. The board-side item is in
       intermittent, and the host (laptop vs desk computer, hub) may matter.
       One board at a time: PlatformIO skips the touch when any RP2040 is
       already in BOOTSEL and `picotool load` takes no address.
+- [ ] 2026-10-16, Peter's laptop at Rig 1 again: both boards took the touch
+      first time from the `v1.0.1` build (board 6 in 7.9 s, board 7 in
+      4.4 s), no picotool error on either.
 - [ ] 2026-10-15, Peter's laptop at Rig 1: board 7 (unit B) **took the
       touch** first time from `51322e7-dirty` (4.8 s; board 6 9.6 s), with
       both boards on USB but only one addressed. No unit has refused the
@@ -168,10 +172,23 @@ section 9, Phase A.
       reading gave on `v1.0.0`, `WATCH`'s `touch` is in true N·cm, the BNC
       is analog and unchanged, and pyControl's log now agrees with the
       0.141 V/N·cm of `mouse-joystick-pcb/docs/bnc-conversion.md`. The
-      desk boards take the new build on 2026-10-16; Rig 1's boards are
-      reflashed at the rig before their calibration run (the checklist in
-      `docs/torque-calibration.md`). Two lessons in the run script: a pause without pings faults the 100 ms
-      watchdog; `brake 0` answers `ack` and `ev;RELEASED` in one read.
+      desk boards took the new build on 2026-10-16 and Rig 1's the same
+      afternoon at the rig, followed by both Rig 1 stations' runs
+      (`evidence/2026-10-16-1359-rig1-torque-cal/`: friction 0.27/0.12 N·cm
+      right and 0.18/0.15 left, the brakes delivering 0.36 and 0.43 at the
+      commanded 1.0, sensor over gauge 0.85–1.07 with the hand-held
+      geometry; the Rig 1 rows of the station table are filled). Two
+      lessons in the run script: a pause without pings faults the 100 ms
+      watchdog; `brake 0` answers `ack` and `ev;RELEASED` in one read. Two
+      more from Rig 1: soft-reset the pyboard before a REPL-driven run
+      (`tools/pyb_soft_reset.py`; pyControl's leftover framework halves the
+      heap and the run died of `MemoryError`), and the gauge's zero wanders
+      by up to 13 gF, so zero once before the run, never during it, let the
+      string go slack at every hands-off and reduce with
+      `tools/torque_cal_reduce_zero.py`.
+- [ ] Repeat the gear-out string-loop scale check on a Rig 1 station when
+      the pinion can be pulled there, and try the slides at the desk's
+      2–3 °/s: Rig 1's ran at 4–13 °/s and the friction may depend on it.
 - [x] **Brake and torque in the protocol (2026-10-06, both ends, run on unit
       A).** `src/BrakeTorqueBackend.hpp` is the seam (with the simulated
       backend the corpus runs against); `src/BrakeTorqueHw.hpp` the real one

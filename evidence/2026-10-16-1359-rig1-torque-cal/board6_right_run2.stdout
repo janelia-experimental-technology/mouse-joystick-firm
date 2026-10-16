@@ -1,0 +1,21 @@
+logging to /home/peter/Repositories/orb-weaver/mouse-joystick-firm/evidence/2026-10-16-1359-rig1-torque-cal/board6_right_run2.log
+H 1297898887912 start board=right radius_mm=72.5 levels=[2.0, 0.5]
+CUE level - countdown: Starting in 10 seconds. Hands off, the lever will move.
+CUE level - countdown: Starting in 9 seconds. Hands off, the lever will move.
+CUE level - countdown: Starting in 8 seconds. Hands off, the lever will move.
+CUE level - countdown: Starting in 7 seconds. Hands off, the lever will move.
+CUE level - countdown: Starting in 6 seconds. Hands off, the lever will move.
+CUE level - countdown: Starting in 5 seconds. Hands off, the lever will move.
+CUE level - countdown: Starting in 4 seconds. Hands off, the lever will move.
+CUE level - countdown: Starting in 3 seconds. Hands off, the lever will move.
+CUE level - countdown: Starting in 2 seconds. Hands off, the lever will move.
+CUE level - countdown: Starting in 1 seconds. Hands off, the lever will move.
+CUE level - start: Starting. Hands off, the lever is about to move.
+CUE level 2.0 slip_cycles: Brake at 2.0. Pull slowly until it slips and slide a little, then push slowly until it slips and slide back. Keep alternating until the countdown ends.
+CUE level 2.0 handsoff: Hands off. Wait for the lever to move back.
+CUE level 2.0 moving: Hands off. The lever is moving back.
+CUE level 0.5 slip_cycles: Brake at 0.5. Pull slowly until it slips and slide a little, then push slowly until it slips and slide back. Keep alternating until the countdown ends.
+CUE level 0.5 handsoff: Hands off. Wait for the lever to move back.
+CUE level 0.5 moving: Hands off. The lever is moving back.
+CUE level - done: Done. The rail is off.
+H 1467675212797 end rc=0

@@ -1,0 +1,10 @@
+=== board6_right_run1.log
+before the first hold (lever untouched): n=127 median -4.0 gF, min -8.2 max +2.2
+level 3.5: gauge while lever still & sensor at baseline: n=158 median -4.8 gF (p25 -6.2 p75 +1.2)
+level 0.0: gauge while lever still & sensor at baseline: n=224 median -6.4 gF (p25 -6.8 p75 -4.4)
+level 1.0: gauge while lever still & sensor at baseline: n=180 median -6.2 gF (p25 -6.6 p75 -4.8)
+level 2.0: gauge while lever still & sensor at baseline: n= 26 median +2.4 gF (p25 -5.7 p75 +3.8)
+=== board6_right_run2.log
+before the first hold (lever untouched): n=124 median +3.7 gF, min -8.8 max +18.4
+level 2.0: gauge while lever still & sensor at baseline: n=136 median +1.4 gF (p25 +1.0 p75 +2.0)
+level 0.5: gauge while lever still & sensor at baseline: n=206 median -5.8 gF (p25 -6.6 p75 -5.0)

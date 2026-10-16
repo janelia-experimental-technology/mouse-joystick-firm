@@ -1,0 +1,37 @@
+{
+ "/home/peter/Repositories/orb-weaver/mouse-joystick-firm/evidence/2026-10-16-1359-rig1-torque-cal/board6_right_run2.log": {
+  "radius_mm": 72.5,
+  "levels": [
+   {
+    "level": 2.0,
+    "hold_s": 77.008022425,
+    "baseline": -0.7815000000000001,
+    "pull": {
+     "n": 273,
+     "gauge": 1.42196425,
+     "sensor": 1.1565
+    },
+    "push": {
+     "n": 266,
+     "gauge": -1.36508568,
+     "sensor": -1.0935
+    }
+   },
+   {
+    "level": 0.5,
+    "hold_s": 77.002146423,
+    "baseline": -0.758,
+    "pull": {
+     "n": 278,
+     "gauge": 0.79629998,
+     "sensor": 0.135
+    },
+    "push": {
+     "n": 272,
+     "gauge": 0.199074995,
+     "sensor": -0.136
+    }
+   }
+  ]
+ }
+}

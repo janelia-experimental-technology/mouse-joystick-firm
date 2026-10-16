@@ -1,0 +1,7 @@
+=== board7_left_run1.log
+  pre-hold window (0 s): n=0 median +nan gF p25 +0.0 p75 +0.0
+  after hold 3.5 (t=104 s): slack window 1.1 s n=11 median +1.0 gF p25 +0.8 p75 +1.4
+  after hold 0.0 (t=183 s): slack window 1.7 s n=17 median +1.6 gF p25 +1.6 p75 +1.6
+  after hold 1.0 (t=261 s): slack window 1.7 s n=18 median +0.9 gF p25 +0.8 p75 +1.0
+  after hold 2.0 (t=340 s): slack window 1.5 s n=15 median +2.2 gF p25 -0.4 p75 +10.2
+  after hold 0.5 (t=419 s): slack window 3.0 s n=19 median +4.4 gF p25 +4.0 p75 +4.4

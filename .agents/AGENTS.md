@@ -272,6 +272,17 @@ Rules for a session that drives a board, learned on the desk rig between
   (`tools/pyb_id_probe.py`, `tools/torque_cal_run.py`) while pyControl's GUI or
   runner holds the port: the pyboard wedged that way once and needed its reset
   button. Close the GUI first.
+- **Soft-reset the pyboard before a REPL-driven run** (`tools/pyb_soft_reset.py`,
+  what pyControl does on connect). pyControl leaves its framework, hardware
+  definition and task loaded in the REPL namespace, half the PYBv1.1's heap;
+  `torque_cal_run.py` on top of that died of `MemoryError` four minutes into
+  Rig 1's first run on 2026-10-16 and the board faulted `host_timeout`.
+- **The Mark-10's zero is not to be trusted across a session.** It read −6 to
+  +13 gF with the string slack at Rig 1 (0.07 N·cm per gF at 72.5 mm). Zero it
+  once, level, in the pulling orientation, just before "ready"; never during a
+  run (a re-zero puts the later levels on another zero); have the string go
+  slack at every "Hands off" so the slack window between holds records the
+  zero, and reduce with the zero tracked.
 - **Every wait in a board-driving loop keeps pinging.** The board's host
   watchdog is 100 ms; a 500 ms `sleep` without a ping faults it
   (`host_timeout`). Expect `ack` and an event (`ev;RELEASED` after `brake 0`)

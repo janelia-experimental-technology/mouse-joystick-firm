@@ -1,0 +1,5 @@
+=== /home/peter/Repositories/orb-weaver/mouse-joystick-firm/evidence/2026-10-16-1359-rig1-torque-cal/board6_right_run3.log ===
+level 0.0 (77 s) baseline -0.766 | pull slide n=264 gauge 0.327 sensor +0.037 | push slide n=225 gauge -0.142 sensor -0.043 | static n=7
+level 2.0 (77 s) baseline -0.769 | pull slide n=256 gauge 1.465 sensor +1.147 | push slide n=263 gauge -1.365 sensor -1.136 | static n=15
+    static fit: sensor = +0.736 x gauge -0.061, rms 0.162, gauge -1.37..2.00
+wrote /home/peter/Repositories/orb-weaver/mouse-joystick-firm/evidence/2026-10-16-1359-rig1-torque-cal/board6_right_run3.json

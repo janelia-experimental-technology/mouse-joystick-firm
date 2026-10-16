@@ -11,6 +11,13 @@ from the laptop". This file adds what that document, written for a person,
 leaves out for an agent: the state of every board, the laptop's environment,
 how to work with Peter at the lever, and what to record afterwards.
 
+**Done 2026-10-16, 13:59–14:45**, from the laptop at the rig: both boards on
+`v1.0.1` (read back over the RJ-45s), both stations calibrated, the Rig 1 rows
+of the station table filled, the bring-up log and the plans updated. Record:
+`evidence/2026-10-16-1359-rig1-torque-cal/` (`meta.txt` has the timeline, the
+numbers, and the two lessons: soft-reset the pyboard before a REPL-driven run,
+and control the gauge's zero). The brief below is kept as written.
+
 ## 0. The job, in one paragraph
 
 Rig 1's two joystick boards still run `v1.0.0-6-g4213e48`, which converts

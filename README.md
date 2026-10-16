@@ -24,12 +24,13 @@ is [`evidence/`](evidence/README.md). The delivered state is tagged
 `v1.0.0` (2026-10-13); `v1.0.1` (2026-10-16) changes one number, the torque
 conversion from the sensor's nominal 1.5 mV/V to the two certificates' mean
 of 1.5605 mV/V (`src/Conversions.hpp`; every reported torque is 0.961 of
-`v1.0.0`'s, the torque BNC is analog and unchanged). The desk rig's boards
-run `v1.0.1` since 2026-10-16 (`evidence/2026-10-16-1323-deskrig-reflash-v1.0.1/`);
-Rig 1's were reflashed on 2026-10-15 to `v1.0.0-6-g4213e48` (the code of
-`v1.0.0`) from a laptop with `pixi run upload` and checked through the rig's
-own pyboard and trial task, and take `v1.0.1` at the rig before their torque
-calibration (`docs/torque-calibration.md`).
+`v1.0.0`'s, the torque BNC is analog and unchanged). All four boards run
+`v1.0.1` since 2026-10-16: the desk rig's from the desk machine
+(`evidence/2026-10-16-1323-deskrig-reflash-v1.0.1/`), Rig 1's from a laptop at
+the rig with `pixi run upload` and the version read back over both RJ-45s
+through the rig's own pyboard, followed by each station's force-gauge torque
+calibration (`evidence/2026-10-16-1359-rig1-torque-cal/`,
+`docs/torque-calibration.md`).
 
 ## Read This First
 

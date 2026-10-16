@@ -39,7 +39,16 @@ indeterminate share of the applied torque, and both desk stations read 0.77 to
   full scale). Its USB port is a Silicon Labs serial device; it answers `?`
   at 9600 baud with a line such as `-12.4 gF`. A pull on the hook reads
   negative. Zero it with the hook or string attached, in the pulling
-  orientation.
+  orientation and held level, **once, just before the run, and never during
+  it**. At Rig 1 on 2026-10-16 the zero was found anywhere between −6 and
+  +13 gF with the string slack (0.07 N·cm per gF at 72.5 mm, the size of the
+  friction being measured), hook-down and hook-up differed by 2 gF, and the
+  gauge had been re-zeroed between levels, which put the levels of one run on
+  different zeros; whether the moving hook assembly's weight or warming in the
+  hand moves it was not settled. Let the string go slack at every "Hands off"
+  cue: the gauge's reading in the slack window between holds is the zero at
+  that moment, and `tools/torque_cal_reduce_zero.py` interpolates the zero
+  through those windows before reducing.
 - A loop of thread or line around the lever at a marked radius, with the
   gauge hooked to the loop and held 20 to 30 cm away. The string aligns
   itself to the pull; a hook straight on the lever, held by hand, read about
@@ -91,7 +100,12 @@ the record of the first runs.
 ## At Rig 1, from the laptop
 
 1. Close the researcher's pyControl GUI; nothing else may hold the pyboard's
-   port.
+   port. Then soft-reset the pyboard (`tools/pyb_soft_reset.py <pyboard tty>`,
+   Ctrl-D at the friendly REPL, what pyControl does on connect) and again
+   before each run: pyControl leaves its framework, the hardware definition
+   and the task loaded in the REPL namespace, half the heap, and on
+   2026-10-16 the run program died of `MemoryError` four minutes into Rig 1's
+   first run (the board then faulted `host_timeout` when the pings stopped).
 2. Reflash both boards to the current firmware first, as on 2026-10-15
    (`pixi run upload examples/PyControlLinkQp mouse_joystick_qp_rev2 <board
    port>`, one board at a time, then `tools/pyb_id_probe.py <pyboard tty>` to
@@ -110,7 +124,8 @@ the record of the first runs.
    --countdown 10`, then the same with `--board left` and `board7_left_run1`
    at the left lever. About six minutes each.
 7. Reduce each log with `tools/torque_cal_reduce.py --radius-mm <r> <log>
-   --json <log>.json` and fill the station's row of
+   --json <log>.json` (or `tools/torque_cal_reduce_zero.py`, the same with the
+   gauge zero tracked through the slack windows) and fill the station's row of
    `mouse-joystick-pcb/docs/station-torque-table.csv`: the friction for each
    direction from the brake-off level, the delivered torque from `gauge −
    friction` at each level, the sensor-over-brake ratio at full brake as the

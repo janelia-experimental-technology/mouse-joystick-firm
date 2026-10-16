@@ -1,0 +1,9 @@
+=== evidence/2026-10-16-1359-rig1-torque-cal/board6_right_run1.log ===
+friction between gauge and brake, from the level-0 cycles: {}
+level 3.5 pull  1 cycles: gauge plateau 0.434 (sd 0.000), sensor plateau 0.001 (sd 0.000), sensor rest -0.781
+level 1.0 pull 17 cycles: gauge plateau 1.066 (sd 0.185), sensor plateau 0.732 (sd 0.189), sensor rest -1.139
+=== evidence/2026-10-16-1359-rig1-torque-cal/board6_right_run2.log ===
+friction between gauge and brake, from the level-0 cycles: {}
+level 2.0 pull 10 cycles: gauge plateau 1.664 (sd 0.217), sensor plateau 1.180 (sd 0.061), sensor rest -0.732
+level 2.0 push 15 cycles: gauge plateau 1.351 (sd 0.229), sensor plateau 1.181 (sd 0.296), sensor rest -0.748
+level 0.5 pull  3 cycles: gauge plateau 0.775 (sd 0.305), sensor plateau 0.179 (sd 0.064), sensor rest -0.896

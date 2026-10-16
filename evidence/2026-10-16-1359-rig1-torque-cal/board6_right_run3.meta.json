@@ -1,0 +1,41 @@
+{
+ "board": "right",
+ "uart": 3,
+ "radius_mm": 72.5,
+ "levels": [
+  0.0,
+  2.0
+ ],
+ "hold_min_s": {
+  "0.0": 77.0,
+  "2.0": 77.0
+ },
+ "choreography": {
+  "0.0": [
+   [
+    "free_slide",
+    75,
+    "Brake off. Slide the free lever slowly a few degrees one way, then the other, back and forth until the countdown ends."
+   ]
+  ],
+  "2.0": [
+   [
+    "slip_cycles",
+    75,
+    "Brake at 2.0. Pull slowly until it slips and slide a little, then push slowly until it slips and slide back. Keep alternating until the countdown ends."
+   ]
+  ]
+ },
+ "mode": "cycles",
+ "park": true,
+ "present_deg": -5.0,
+ "hold_max_s": 150.0,
+ "quiet_s": 5.0,
+ "tq_tol_ncm": 0.15,
+ "ang_tol_deg": 0.2,
+ "gauge": "Mark-10 M3-05, serial 3706367, `?` at 9600 baud, gF; a pull on the hook reads negative",
+ "gauge_period_s": 0.1,
+ "started": "2026-10-16 14:28:44",
+ "note": "zero set level in the pulling orientation just before start, no re-zero during the run, string slack at hands-off, slower slides requested",
+ "log": "board6_right_run3.log"
+}

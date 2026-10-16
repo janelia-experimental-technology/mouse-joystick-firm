@@ -1,0 +1,133 @@
+Rig 1 reflash to v1.0.1 and torque calibration against a force gauge, 2026-10-16, 13:59-14:45 local,
+at the researcher's rig, from Peter's laptop (athena). Procedure: docs/torque-calibration.md, "At Rig 1,
+from the laptop"; brief: .agents/handoff-rig1-torque-calibration-2026-10-16.md.
+boards: board 6 E4654C159F274534 (v1.0 unit A, RIGHT joystick, Breakout port 4, UART(3));
+  board 7 E4654C159F404534 (v1.0 unit B, LEFT joystick, port 1, UART(4)). Both v1.0.0-6-g4213e48
+  before (the 2026-10-15 reflash), both v1.0.1 after. Rig 1's pyboard PYBv1.1 397734803233
+  (MicroPython 1.26.1, pyControl 2.1.1) on the laptop's USB with no pyControl runner attached.
+firmware: v1.0.1 (tag, checked out detached from a main at v1.0.1-2-g7c004c9 whose two extra commits
+  touch only .agents/, docs/ and evidence/), examples/PyControlLinkQp, mouse_joystick_qp_rev2,
+  `git describe --tags --dirty` = v1.0.1 at build time; firmware.uf2 sha256 in firmware_uf2.sha256.
+  v1.0.1 converts torque on the two sensor certificates' mean, 1.5605 mV/V (kTorqueSensitivityVPerV,
+  src/Conversions.hpp): every reported torque is 0.961 of what v1.0.0 gave; the torque BNC is unchanged.
+host: Peter's laptop athena (Debian 13, kernel 6.12.111, Guix profile; pixi 0.66.0 from ~/.pixi/bin with
+  CONDA_OVERRIDE_GLIBC=2.41; no system python3, the tools ran on .pixi/envs/pycontrol/bin/python 3.13,
+  standard library only). The checkout was fresh on this laptop: the first build fetched the RP2040
+  toolchain (251 s). USB (usb_snapshot.log): 1-1.1 board 7, 1-1.5 board 6, 1-1.6 the pyboard, 1-2 the
+  Mark-10. The rig's 36 V on throughout; the rig PC's pyControl GUI had nothing to hold (the pyboard was
+  on the laptop).
+reference: Mark-10 M3-05 force gauge (250 gF x 0.2 gF, +/-0.3 % FS), serial 3706367, polled with `?`
+  at 9600 baud every 100 ms by the run tool; a pull on the hook reads negative. Gauge on a STRING LOOP
+  around the lever, gear in, radius from the lever axis to the loop 72-73 mm (72.5 recorded), zeroed
+  with the hook on the string in the pulling direction before each station's run. Peter at the lever,
+  following the cue window (tools/cue_display.py in /usr/bin/xterm -fa Monospace -fs 26, launched
+  detached); spd-say not used (--no-speech).
+method: tools/torque_cal_run.py --mode cycles (the default) --countdown 10: clrfault, id, hv on, home,
+  arm, present at -5 deg, stream 50 Hz, then brake L -> RELEASED and a fixed-time hold per level
+  (90 s at 3.5, 75 s otherwise) while the window asks for slow pull-to-slip / push-to-slip alternation
+  (brake off: slide the free lever back and forth); hands-off, moveto -5, next level; park at 0,
+  disarm, hv off. Pings every 40 ms. No `tq zero`: the streamed torque is the raw reading about the
+  nominal zero. Reduction: tools/torque_cal_reduce.py (by lever velocity, gear in).
+  scripts/rig1_cal_session.sh wrapped every step (cue, gauge, run, reduce) with logging to session.log.
+timeline:
+  13:59:31 evidence directory created; usb_snapshot.log (both boards, pyboard, gauge on the laptop).
+  13:59:43 `git checkout v1.0.1`, describe = v1.0.1 clean; `pixi run build examples/PyControlLinkQp
+           mouse_joystick_qp_rev2` SUCCESS in 251.2 s incl. toolchain download (build_v1.0.1.log),
+           RAM 16.8 %, flash 131476 bytes.
+  14:04:11 board 6 E4654C159F274534 `pixi run upload ... /dev/serial/by-id/...274534-if00` with both
+           boards on USB: 1200 baud touch honoured, BOOTSEL, load, "Verifying Flash 100 %", OK,
+           rebooted, SUCCESS 7.89 s (8.2 s wall), re-enumerated (upload_board6_*.log).
+  14:04:33 board 7 E4654C159F404534, the same: touch honoured, load, verify OK, rebooted, SUCCESS
+           4.43 s (4.7 s wall) (upload_board7_*.log). No picotool error on either board this time.
+  14:04:47 `git checkout main` (back to v1.0.1-2-g7c004c9 for the session's documentation).
+  14:04:57 `id;1` over port 1 UART(4) and port 4 UART(3) from the pyboard's raw REPL
+           (tools/pyb_id_probe.py, uart_id_probe.log): board 7 fw=v1.0.1 on port 1 (left), board 6
+           fw=v1.0.1 on port 4 (right), hw=rev2, proto=2, caps unchanged, boot=reboot, crumb=0.
+  14:06:26 cue window up; gauge answers -0.2 gF at rest (session.log).
+runs:
+  board6_right_run1  14:07:47, right station, radius 72.5 mm, levels 3.5, 0, 1.0, 2.0, 0.5 (cycles mode).
+                     id fw=v1.0.1; hv on, HOMED, present -4.95; RELEASED at brake 3.5 with the raw rest
+                     torque -0.704 N.cm. Levels 3.5 (92 s), 0 (77 s) and 1.0 (77 s) completed. Three
+                     seconds into the 2.0 hold the pyboard program died with
+                     MemoryError('memory allocation failed, allocating 1024 bytes'); its pings stopped,
+                     the board faulted host_timeout (code=0) and the tool's shutdown sent stream off,
+                     stop, disarm, hv off (rc=0 on the host). 12658 stream samples, 2652 gauge readings.
+                     Kept: the first three levels are complete and clean (board6_right_run1.reduce.txt,
+                     .json). Cause (scripts/pyb_mem.py, 14:13:56): the pyboard's heap had 36.7 KB free of
+                     ~104 KB (50.2 KB after gc.collect) because the pyControl framework, the rig's
+                     hardware_definition, task_file and the devices.* modules were still loaded in the
+                     REPL namespace from the last pyControl session; the run program's 50 Hz stream
+                     handling fragmented what was left. The desk pyboard on 2026-10-16 had not been left
+                     in that state and its runs completed.
+  14:14:35           soft reset of the pyboard (Ctrl-D at the friendly REPL, what pyControl itself does
+                     on connect; scripts/pyb_soft_reset.py): banner MicroPython v1.26.1 PYBv1.1,
+                     mem_free 102048 / mem_alloc 1504, no modules loaded; flash holds boot.py, main.py,
+                     hardware_definition.py, task_file.py, devices/, pyControl/ (unchanged).
+  board6_right_run2  14:15:30, right station, radius 72.5 mm, --levels 2.0,0.5 (the two levels run1 lost),
+                     string loop unchanged, gauge zero unchanged. clrfault cleared run1's host_timeout;
+                     hv on, HOMED, present -4.95, RELEASED at 2.0 with the raw rest -0.765; both holds
+                     77 s, park TARGET -0.091, disarm, hv off, "sequence complete", rc=0, no nak, no
+                     fault. 7822 stream samples, 1681 gauge readings (board6_right_run2.reduce.txt, .json).
+  gauge zero         Between run2 and run3 the gauge's zero was found to move: -4 to -6 gF while the lever
+                     was still in run1's holds, +1.4 in run2's 2.0 hold, +9 to +13 with the string slack
+                     at 14:20-14:24 (board6_right_gauge_rest.txt, board6_right_gauge_slack.txt). Peter had
+                     re-zeroed the gauge several times during runs 1 and 2, so the levels of those runs sit
+                     on different zeros (the slack windows between holds read -1.0, +2.0, +4.0 gF through
+                     run1 and +4.6 then -3.2 through run2). Hook down / hook up with the string slack read
+                     13 / 11 (signs not noted; if opposite, the hook assembly's weight is the offset and
+                     the zero depends on how level the gauge is held; if alike, the zero drifts with time
+                     at ~2 gF/min). Either way, from run3 on: zero held level in the pulling orientation
+                     just before "ready", no re-zero during a run, string slack at every "Hands off" so
+                     the slack window between holds records the zero. scripts/reduce_zero_corrected.py
+                     re-reduces a log with the zero interpolated through those windows (zero 0 at start).
+                     1 gF is 0.071 N.cm at 72.5 mm.
+  board6_right_run3  14:28:40, right station, radius 72.5 mm, --levels 0,2.0, the controlled zero (above),
+                     slower and shorter slides asked for (the lever stayed between -6 and -22 deg; speeds
+                     still 4-13 deg/s). Peter pulled through the string loop and pushed with the hook
+                     pressing the lever, as in runs 1 and 2. hv on, HOMED, present -5.041, both holds
+                     77 s, park TARGET 0.0, hv off, sequence complete, rc=0, no nak, no fault. 7803 stream
+                     samples, 1679 gauge readings. Slack windows -0.6 / -0.6 gF: the zero held
+                     (board6_right_run3.reduce.txt, board6_right_run3_zero_corrected.txt).
+  14:32:28           pyboard soft reset again (mem_free 102048) before the long left run.
+  board7_left_run1   14:33:50, LEFT station, radius 72.5 mm (Peter: same as the right), all five levels
+                     3.5, 0, 1.0, 2.0, 0.5 (cycles mode), the controlled zero, no re-zero, string slack at
+                     hands-off; pull through the string loop, push with the hook. id fw=v1.0.1 serial
+                     E4654C159F404534; hv on, HOMED, present -5.133 then -5.041, RELEASED at 3.5 with the
+                     raw rest +1.782 N.cm (the left sensor reads a pull negative; its rest is +1.78 to
+                     +1.87 all run); holds 92/77/77/77/77 s, park TARGET +0.084, disarm, hv off, sequence
+                     complete, rc=0, no nak, no fault. 20373 stream samples, 4179 gauge readings. Slack
+                     windows +1.0, +1.6, +0.9, +2.2, +4.4 gF: the zero crept +4 gF over seven minutes
+                     without a re-zero (board7_left_run1.reduce.txt, board7_left_run1_zero_corrected.txt,
+                     board7_left_gauge_slack.txt, board7_left_quantiles.txt).
+results (slides by lever velocity; gauge torque = -gF x 9.80665e-3 x 7.25 cm with the zero tracked
+  through the slack windows; sensor = excursion of the raw stream torque from the hold's hands-off
+  baseline; on v1.0.1 the sensor is in true N.cm if it is on its certificate):
+  RIGHT (board 6, unit A):  level   sensor pull/push    gauge pull/push    run
+                            3.5     +3.03 / -2.93       3.81 / -2.59       run1
+                            2.0     +1.15 / -1.14       1.42 / -1.41       run3 (run2: +1.16/-1.09, 1.58/-1.19)
+                            1.0     +0.36 / -0.36       1.19 / (+0.19)     run1 (push not gauge-measured)
+                            0.5     +0.14 / -0.14       0.83 / (+0.25)     run2 (push not gauge-measured)
+                            0       +0.04 / -0.04       0.31 / -0.17       run3 (run1: +0.03/-0.05, 0.68/+0.36)
+    friction (level 0, gauge - sensor, run3): pull 0.27, push 0.12 N.cm; brake drag with the coil off
+    0.03-0.04 (the sensor at level 0). run1's level 0 gave 0.65 pull with the uncontrolled zero and the
+    slides run to the hard stop at -28 deg; run3's slides stayed between -6 and -22 deg.
+    sensor / (gauge - friction): 3.5 pull 0.85 with run3's friction, 0.96 with run1's own level 0;
+    2.0 pull 1.00, push 0.88 (run3). Static fit at 3.5 (run1, n=275): 0.90. Raw rest -0.70..-0.86.
+  LEFT (board 7, unit B):   3.5     -3.57 / +3.59       4.19 / -3.78
+                            2.0     -1.41 / +1.43       1.66 / -1.65
+                            1.0     -0.43 / +0.44       0.58 / -0.62
+                            0.5     -0.15 / +0.16       0.25 / -0.29
+                            0       -0.03 / +0.05       0.22 / -0.20
+    friction (level 0): pull 0.18, push 0.15 N.cm; brake drag coil off 0.03-0.05.
+    sensor / (gauge - friction): 3.5 pull 0.89, push 0.99; 2.0 pull 0.96, push 0.95; 1.0 pull 1.07,
+    push 0.94. Static fit at 3.5 (n=16): 0.91. Raw rest +1.78..+1.87.
+  Both stations: slides at 4-13 deg/s (median 7-9), three times the desk's 2.3; the lever ran to the
+  hard stop near -28 deg in most holds. The hand-held geometry (string loop for the pull, the hook
+  pressed on the lever for the push, radius taken as 72.5 for both) is good to about 10 % on the
+  gauge side, and the sensor-over-gauge ratios scatter 0.85-1.07 around the certificate's 1.00
+  accordingly; the desk's gear-out string test (1.004 of the certificate) remains the scale check of
+  record. The brake's delivered torque per level is taken from the sensor (true N.cm on v1.0.1).
+after: both boards on v1.0.1 (tags, not described builds); the pyboard soft-reset, its flash unchanged
+  (boot.py, main.py, hardware_definition.py, task_file.py, devices/, pyControl/); 36 V left as found
+  (on); the rail dropped by every run's ending; no fault latched after run3 and the left run. The
+  boards' and the pyboard's USB go back to the rig PC. Nothing committed by the agent.

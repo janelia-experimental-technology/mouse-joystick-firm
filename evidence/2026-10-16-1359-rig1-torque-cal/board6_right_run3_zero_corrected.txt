@@ -1,0 +1,5 @@
+=== board6_right_run3.log (gauge zero interpolated through the slack windows) ===
+  zero knots (s, gF): (0, +0.0), (78, -0.6), (157, -0.6)
+level 0.0 (77 s) baseline -0.766 zero -0.0..-0.6 gF | pull slide n=264 gauge 0.306 sensor +0.037 | push slide n=225 gauge -0.166 sensor -0.043
+level 2.0 (77 s) baseline -0.769 zero -0.6..-0.6 gF | pull slide n=256 gauge 1.422 sensor +1.147 | push slide n=263 gauge -1.408 sensor -1.136
+wrote evidence/2026-10-16-1359-rig1-torque-cal/board6_right_run3_zero_corrected.json

@@ -1,0 +1,10 @@
+== usb 13:59:31
+2e8a:f00a  1-1.1         busnum=1 devnum=4  E4654C159F404534  Janelia Research Campus mouse-joystick-pcb
+2e8a:f00a  1-1.5         busnum=1 devnum=6  E4654C159F274534  Janelia Research Campus mouse-joystick-pcb
+f055:9802  1-1.6         busnum=1 devnum=8  397734803233  MicroPython Pyboard Virtual Comm Port in FS Mode
+10c4:83aa  1-2           busnum=1 devnum=3  3706367  Silicon Labs  MARK-10 USB Device
+total 0
+lrwxrwxrwx 1 root root 13 Oct 16 13:53 usb-Janelia_Research_Campus_mouse-joystick-pcb_E4654C159F274534-if00 -> ../../ttyACM1
+lrwxrwxrwx 1 root root 13 Oct 16 13:53 usb-Janelia_Research_Campus_mouse-joystick-pcb_E4654C159F404534-if00 -> ../../ttyACM0
+lrwxrwxrwx 1 root root 13 Oct 16 13:53 usb-MicroPython_Pyboard_Virtual_Comm_Port_in_FS_Mode_397734803233-if00 -> ../../ttyACM2
+lrwxrwxrwx 1 root root 13 Oct 16 13:53 usb-Silicon_Labs_MARK-10_USB_Device_3706367-if00-port0 -> ../../ttyUSB0

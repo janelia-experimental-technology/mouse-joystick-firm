@@ -1,0 +1,10 @@
+=== board7_left_run1.log (gauge zero interpolated through the slack windows) ===
+  zero knots (s, gF): (0, +0.0), (93, +1.0), (171, +1.6), (250, +0.9), (328, +2.2), (408, +4.4)
+level 3.5 (92 s) baseline +1.837 zero +0.0..+1.0 gF | pull slide n=339 gauge 4.192 sensor -3.573 | push slide n=327 gauge -3.783 sensor +3.593
+level 0.0 (77 s) baseline +1.853 zero +1.0..+1.6 gF | pull slide n=287 gauge 0.215 sensor -0.034 | push slide n=250 gauge -0.199 sensor +0.047
+level 1.0 (77 s) baseline +1.844 zero +1.6..+0.9 gF | pull slide n=284 gauge 0.580 sensor -0.426 | push slide n=266 gauge -0.621 sensor +0.442
+level 2.0 (77 s) baseline +1.831 zero +0.9..+2.2 gF | pull slide n=292 gauge 1.657 sensor -1.414 | push slide n=288 gauge -1.645 sensor +1.430
+level 0.5 (77 s) baseline +1.839 zero +2.2..+4.4 gF | pull slide n=292 gauge 0.245 sensor -0.151 | push slide n=271 gauge -0.285 sensor +0.159
+  pull slides across levels: sensor = -0.879 x (gauge - 0.103), rms 0.039 -> |sensor/true| 0.879, friction 0.103 N.cm
+  friction from the brake-off slide alone: 0.176 N.cm; per-level |sensor/true| with it: ['3.5: 0.89', '1.0: 1.05', '2.0: 0.96', '0.5: 2.19']
+wrote evidence/2026-10-16-1359-rig1-torque-cal/board7_left_run1_zero_corrected.json

@@ -1,0 +1,45 @@
+14:04:11 flash E4654C159F274534 via /dev/serial/by-id/usb-Janelia_Research_Campus_mouse-joystick-pcb_E4654C159F274534-if00 fw v1.0.1
+14:04:20 flash E4654C159F274534: upload exit 0 in 8.2 s
+14:04:33 flash E4654C159F404534 via /dev/serial/by-id/usb-Janelia_Research_Campus_mouse-joystick-pcb_E4654C159F404534-if00 fw v1.0.1
+14:04:38 flash E4654C159F404534: upload exit 0 in 4.7 s
+14:04:57 id probe through /dev/serial/by-id/usb-MicroPython_Pyboard_Virtual_Comm_Port_in_FS_Mode_397734803233-if00
+14:06:26  cue window: 4851 /usr/bin/xterm -fa Monospace -fs 26 -e /home/peter/Repositories/orb-weaver/mouse-joystick-firm/.pixi/envs/pycontrol/bin/python tools/cue_display.py /tmp/joystick-cues.txt
+4853 /home/peter/Repositories/orb-weaver/mouse-joystick-firm/.pixi/envs/pycontrol/bin/python tools/cue_display.py /tmp/joystick-cues.txt
+14:06:26 -0.2 gF
+14:06:26 -0.2 gF
+14:06:27 -0.2 gF
+14:07:47  run board6_right_run1: board=right radius_mm=72.5 mode=cycles countdown=10 extra='' fw on boards: v1.0.1
+14:12:14  run board6_right_run1: exit 0
+14:12:26  reduce board6_right_run1 radius_mm=72.5
+14:13:56 pyboard heap check after the run1 MemoryError (scripts/pyb_mem.py)
+before 36688 66864
+after  50208 53344
+modules ['devices', 'devices.breakout_1_2', 'devices.frame_trigger', 'devices.mouse_joystick', 'devices.mouse_joystick_protocol', 'devices.opto_led', 'devices.uart_handler', 'hardware_definition', 'pyControl', 'pyControl.framework', 'pyControl.hardware', 'pyControl.state_machine', 'pyControl.timer', 'pyControl.utility', 'task_file']
+globals ['FAULT', 'L', 'LASTP', 'LEVELS', 'PENDING', 'PINGS', 'PRESENT', 'RX', 'SEQ', 'U', 'UART', '_djb2_file', '_receive_file', 'cmd', 'devices', 'ev', 'framework', 'fw', 'gc', 'hardware', 'hold', 'hw', 'is_ev', 'is_reply', 'kv', 'machine', 'min_ms', 'os', 'out', 'pause', 'pump', 'pyb', 'r', 'rel', 'rest', 'send', 'sm', 'state_machine', 'sys', 'task_file', 'tick', 'time', 'timer', 'u', 'ut', 'utility', 'wait_for']
+>
+14:14:35 pyboard soft reset to free the heap (scripts/pyb_soft_reset.py)
+after soft reset: ['MicroPython v1.26.1 on 2025-09-11; PYBv1.1 with STM32F405RG', 'Type "help()" for more information.', '>>>']
+mem_free 102048 mem_alloc 1504
+flash ['System Volume Information', 'boot.py', 'devices', 'hardware_definition.py', 'main.py', 'pyControl', 'task_file.py']
+modules []
+>
+14:15:46  run board6_right_run2: board=right radius_mm=72.5 mode=cycles countdown=10 extra='--levels 2.0,0.5' fw on boards: v1.0.1
+14:18:36  run board6_right_run2: exit 0
+14:18:48  reduce board6_right_run2 radius_mm=72.5
+14:19:44 torque_cal_cycles.py on run1 and run2 (per pull cycle check of level 2.0)
+14:20:41 -9.0 gF
+14:20:41 -9.0 gF
+14:20:41 -9.0 gF
+14:23:32 Peter: gauge reads about 9 gF with the string slack; he re-zeroed it several times during run1/run2 and the zero kept drifting. Gauge rest per hold (board6_right_gauge_rest.txt): -4..-6 gF in run1 levels 3.5/0/1.0 and run2 level 0.5, +1.4 gF in run2 level 2.0.
+14:24:50 Peter, string slack: 13 gF hook down, 11 gF hook up (zero drifting positive with time, ~2 gF/min, not orientation)
+14:27:44 Peter: on the right station he both pushed and pulled with the gauge's hook (string loop for the pull; the push by the hook pressing the lever). Peter also noted the 13/11 gF orientation readings may have had opposite signs (hook assembly weight), so the zero depends on how level the gauge is held. Protocol from here: zero held level in the pulling orientation, no re-zero during a run, string slack at every Hands off, slower slides (~3 s per slide).
+14:28:44  run board6_right_run3: board=right radius_mm=72.5 mode=cycles countdown=10 extra='--levels 0,2.0 --note zero set level in the pulling orientation just before start, no re-zero during the run, string slack at hands-off, slower slides requested' fw on boards: v1.0.1
+14:31:34  run board6_right_run3: exit 0
+14:31:47  reduce board6_right_run3 radius_mm=72.5
+14:32:28 pyboard soft reset before the left station's run (scripts/pyb_soft_reset.py)
+after soft reset: ['>>> ', 'MPY: sync filesystems', 'MPY: soft reboot']
+mem_free 102048 mem_alloc 1504
+14:34:30  run board7_left_run1: board=left radius_mm=72.5 mode=cycles countdown=10 extra='--note zero set level in the pulling orientation just before start, no re-zero during the run, string slack at hands-off; pyboard soft-reset before the run' fw on boards: v1.0.1
+14:41:30  run board7_left_run1: exit 0
+14:41:42  reduce board7_left_run1 radius_mm=72.5
+14:43:49 session end: both stations measured; record written

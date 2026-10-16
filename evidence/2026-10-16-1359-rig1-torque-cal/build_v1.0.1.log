@@ -1,0 +1,377 @@
+Pixi task (build in default): python tools/pio_task.py build --example examples/PyControlLinkQp --env mouse_joystick_qp_rev2: (Compile an example without uploading.)
+********************************************************************************
+If you like PlatformIO, please:
+- star it on GitHub > https://github.com/platformio/platformio-core
+- follow us on LinkedIn to stay up-to-date on the latest project news > https://www.linkedin.com/company/platformio/
+- try PlatformIO IDE for embedded development > https://platformio.org/platformio-ide
+********************************************************************************
+
+Processing mouse_joystick_qp_rev2 (platform: https://github.com/janelia-arduino/platform-raspberrypi.git; board: generic; framework: arduino)
+--------------------------------------------------------------------------------
+Platform Manager: Installing git+https://github.com/janelia-arduino/platform-raspberrypi.git
+git version 2.55.0
+Cloning into '/home/peter/Repositories/orb-weaver/mouse-joystick-firm/.platformio/.cache/tmp/pkg-installing-dthxo71y'...
+Submodule 'builder/frameworks/arduino/mbed-core' (https://github.com/platformio/builder-framework-arduino-core-mbed.git) registered for path 'builder/frameworks/arduino/mbed-core'
+Cloning into '/home/peter/Repositories/orb-weaver/mouse-joystick-firm/.platformio/.cache/tmp/pkg-installing-dthxo71y/builder/frameworks/arduino/mbed-core'...
+Submodule path 'builder/frameworks/arduino/mbed-core': checked out '66ff9c5ecf64e0ce6360cbf2d8769228bb1294b4'
+Platform Manager: raspberrypi@1.14.0+sha.5e4e06b has been installed!
+Tool Manager: Installing https://github.com/earlephilhower/pico-quick-toolchain/releases/download/4.0.1/x86_64-linux-gnu.arm-none-eabi-8ec9d6f.240929.tar.gz
+Downloading 0% 10% 20% 30% 40% 50% 60% 70% 80% 90% 100%
+Unpacking 0% 10% 20% 30% 40% 50% 60% 70% 80% 90% 100%
+Tool Manager: toolchain-rp2040-earlephilhower@5.140200.240929 has been installed!
+Tool Manager: Installing git+https://github.com/earlephilhower/arduino-pico.git#c4b6521849570c465e073255c983941dc6adf4fb
+git version 2.55.0
+Cloning into '/home/peter/Repositories/orb-weaver/mouse-joystick-firm/.platformio/.cache/tmp/pkg-installing-5dofuvvw'...
+Submodule 'ArduinoCore-API' (https://github.com/earlephilhower/ArduinoCore-API.git) registered for path 'ArduinoCore-API'
+Submodule 'FreeRTOS-Kernel' (https://github.com/earlephilhower/FreeRTOS-Kernel.git) registered for path 'FreeRTOS-Kernel'
+Submodule 'cores/rp2040/tlsf' (https://github.com/earlephilhower/tlsf.git) registered for path 'lib/tlsf'
+Submodule 'libraries/Adafruit_TinyUSB_Arduino' (https://github.com/adafruit/Adafruit_TinyUSB_Arduino.git) registered for path 'libraries/Adafruit_TinyUSB_Arduino'
+Submodule 'libraries/AsyncUDP' (https://github.com/earlephilhower/AsyncUDP.git) registered for path 'libraries/AsyncUDP'
+Submodule 'libraries/ESPHost' (https://github.com/Networking-for-Arduino/ESPHost.git) registered for path 'libraries/ESPHost'
+Submodule 'libraries/FatFS/lib/SPIFTL' (https://github.com/earlephilhower/SPIFTL.git) registered for path 'libraries/FatFS/lib/SPIFTL'
+Submodule 'libraries/Joystick' (https://github.com/earlephilhower/Joystick.git) registered for path 'libraries/HID_Joystick'
+Submodule 'libraries/Keyboard' (https://github.com/earlephilhower/Keyboard.git) registered for path 'libraries/HID_Keyboard'
+Submodule 'libraries/Mouse' (https://github.com/earlephilhower/Mouse.git) registered for path 'libraries/HID_Mouse'
+Submodule 'libraries/LittleFS/lib/littlefs' (https://github.com/littlefs-project/littlefs.git) registered for path 'libraries/LittleFS/lib/littlefs'
+Submodule 'libraries/MIDIUSB' (https://github.com/earlephilhower/MIDIUSB.git) registered for path 'libraries/MIDIUSB'
+Submodule 'libraries/PicoCamera' (https://github.com/umeiko/PicoCamera.git) registered for path 'libraries/PicoCamera'
+Submodule 'libraries/SdFat' (https://github.com/greiman/SdFat.git) registered for path 'libraries/SdFat'
+Submodule 'libraries/http_parser/lib/http-parser' (https://github.com/nodejs/http-parser.git) registered for path 'libraries/http-parser/lib/http-parser'
+Submodule 'libraries/iLabs_ESP-NOW' (https://github.com/PontusO/iLabs_ESP-NOW.git) registered for path 'libraries/iLabs_ESP-NOW'
+Submodule 'libraries/iLabs_Hearth' (https://github.com/PontusO/iLabs_Hearth.git) registered for path 'libraries/iLabs_Hearth'
+Submodule 'ota/uzlib' (https://github.com/pfalcon/uzlib.git) registered for path 'ota/uzlib'
+Submodule 'pico-sdk' (https://github.com/raspberrypi/pico-sdk.git) registered for path 'pico-sdk'
+Submodule 'tools/libbearssl/bearssl' (https://github.com/earlephilhower/bearssl-esp8266.git) registered for path 'tools/libbearssl/bearssl'
+Submodule 'system/pyserial' (https://github.com/pyserial/pyserial.git) registered for path 'tools/pyserial'
+Cloning into '/home/peter/Repositories/orb-weaver/mouse-joystick-firm/.platformio/.cache/tmp/pkg-installing-5dofuvvw/ArduinoCore-API'...
+Cloning into '/home/peter/Repositories/orb-weaver/mouse-joystick-firm/.platformio/.cache/tmp/pkg-installing-5dofuvvw/FreeRTOS-Kernel'...
+Cloning into '/home/peter/Repositories/orb-weaver/mouse-joystick-firm/.platformio/.cache/tmp/pkg-installing-5dofuvvw/lib/tlsf'...
+Cloning into '/home/peter/Repositories/orb-weaver/mouse-joystick-firm/.platformio/.cache/tmp/pkg-installing-5dofuvvw/libraries/Adafruit_TinyUSB_Arduino'...
+Cloning into '/home/peter/Repositories/orb-weaver/mouse-joystick-firm/.platformio/.cache/tmp/pkg-installing-5dofuvvw/libraries/AsyncUDP'...
+Cloning into '/home/peter/Repositories/orb-weaver/mouse-joystick-firm/.platformio/.cache/tmp/pkg-installing-5dofuvvw/libraries/ESPHost'...
+Cloning into '/home/peter/Repositories/orb-weaver/mouse-joystick-firm/.platformio/.cache/tmp/pkg-installing-5dofuvvw/libraries/FatFS/lib/SPIFTL'...
+Cloning into '/home/peter/Repositories/orb-weaver/mouse-joystick-firm/.platformio/.cache/tmp/pkg-installing-5dofuvvw/libraries/HID_Joystick'...
+Cloning into '/home/peter/Repositories/orb-weaver/mouse-joystick-firm/.platformio/.cache/tmp/pkg-installing-5dofuvvw/libraries/HID_Keyboard'...
+Cloning into '/home/peter/Repositories/orb-weaver/mouse-joystick-firm/.platformio/.cache/tmp/pkg-installing-5dofuvvw/libraries/HID_Mouse'...
+Cloning into '/home/peter/Repositories/orb-weaver/mouse-joystick-firm/.platformio/.cache/tmp/pkg-installing-5dofuvvw/libraries/LittleFS/lib/littlefs'...
+Cloning into '/home/peter/Repositories/orb-weaver/mouse-joystick-firm/.platformio/.cache/tmp/pkg-installing-5dofuvvw/libraries/MIDIUSB'...
+Cloning into '/home/peter/Repositories/orb-weaver/mouse-joystick-firm/.platformio/.cache/tmp/pkg-installing-5dofuvvw/libraries/PicoCamera'...
+Cloning into '/home/peter/Repositories/orb-weaver/mouse-joystick-firm/.platformio/.cache/tmp/pkg-installing-5dofuvvw/libraries/SdFat'...
+Cloning into '/home/peter/Repositories/orb-weaver/mouse-joystick-firm/.platformio/.cache/tmp/pkg-installing-5dofuvvw/libraries/http-parser/lib/http-parser'...
+Cloning into '/home/peter/Repositories/orb-weaver/mouse-joystick-firm/.platformio/.cache/tmp/pkg-installing-5dofuvvw/libraries/iLabs_ESP-NOW'...
+Cloning into '/home/peter/Repositories/orb-weaver/mouse-joystick-firm/.platformio/.cache/tmp/pkg-installing-5dofuvvw/libraries/iLabs_Hearth'...
+Cloning into '/home/peter/Repositories/orb-weaver/mouse-joystick-firm/.platformio/.cache/tmp/pkg-installing-5dofuvvw/ota/uzlib'...
+Cloning into '/home/peter/Repositories/orb-weaver/mouse-joystick-firm/.platformio/.cache/tmp/pkg-installing-5dofuvvw/pico-sdk'...
+Cloning into '/home/peter/Repositories/orb-weaver/mouse-joystick-firm/.platformio/.cache/tmp/pkg-installing-5dofuvvw/tools/libbearssl/bearssl'...
+Cloning into '/home/peter/Repositories/orb-weaver/mouse-joystick-firm/.platformio/.cache/tmp/pkg-installing-5dofuvvw/tools/pyserial'...
+Submodule path 'ArduinoCore-API': checked out '82928635c893189343cf8eb78569f0c4136fded0'
+Submodule path 'FreeRTOS-Kernel': checked out '2e588af95bad29aef577373512883370c9408c1c'
+Submodule 'ThirdParty/FreeRTOS-Kernel-Community-Supported-Ports' (https://github.com/FreeRTOS/FreeRTOS-Kernel-Community-Supported-Ports) registered for path 'FreeRTOS-Kernel/portable/ThirdParty/Community-Supported-Ports'
+Submodule 'ThirdParty/FreeRTOS-Kernel-Partner-Supported-Ports' (https://github.com/FreeRTOS/FreeRTOS-Kernel-Partner-Supported-Ports) registered for path 'FreeRTOS-Kernel/portable/ThirdParty/Partner-Supported-Ports'
+Cloning into '/home/peter/Repositories/orb-weaver/mouse-joystick-firm/.platformio/.cache/tmp/pkg-installing-5dofuvvw/FreeRTOS-Kernel/portable/ThirdParty/Community-Supported-Ports'...
+Cloning into '/home/peter/Repositories/orb-weaver/mouse-joystick-firm/.platformio/.cache/tmp/pkg-installing-5dofuvvw/FreeRTOS-Kernel/portable/ThirdParty/Partner-Supported-Ports'...
+Submodule path 'FreeRTOS-Kernel/portable/ThirdParty/Community-Supported-Ports': checked out '9c5bad7b2f42b4e8420f12290b9bc085d3309e8b'
+Submodule path 'FreeRTOS-Kernel/portable/ThirdParty/Partner-Supported-Ports': checked out 'dc3afc6e837426b4bda81bbb6cf45bfb6f34c7e9'
+Submodule path 'lib/tlsf': checked out '8653cec85de043454d0e9ddb0957711f6bd14fa1'
+Submodule path 'libraries/Adafruit_TinyUSB_Arduino': checked out '08c7dabed48b5ab92839289f58191b3f04f48fb0'
+Submodule path 'libraries/AsyncUDP': checked out '9a718fb3dccb36991d8e840b9722a2371c5bb92d'
+Submodule path 'libraries/ESPHost': checked out '80c0fa89b15724490f8bacfee5ac1d40c46e8683'
+Submodule path 'libraries/FatFS/lib/SPIFTL': checked out '89a198d968e27bad5065fca7c7ce3eec478bd449'
+Submodule 'nbdkit' (https://github.com/libguestfs/nbdkit.git) registered for path 'libraries/FatFS/lib/SPIFTL/nbdkit'
+Cloning into '/home/peter/Repositories/orb-weaver/mouse-joystick-firm/.platformio/.cache/tmp/pkg-installing-5dofuvvw/libraries/FatFS/lib/SPIFTL/nbdkit'...
+Submodule path 'libraries/FatFS/lib/SPIFTL/nbdkit': checked out '45b72f5bd8fc1b475fa130d06c86cd877bf595d5'
+Submodule path 'libraries/HID_Joystick': checked out 'cbfdd2c99796b7e07d4c2b8e53f529554f40832a'
+Submodule path 'libraries/HID_Keyboard': checked out '60479278c2a04e00d17dce78649875c09d96320a'
+Submodule path 'libraries/HID_Mouse': checked out '8595769b25e101428b259c2664906b8b8c03fb05'
+Submodule path 'libraries/LittleFS/lib/littlefs': checked out '8e251dd675da00342d45dac78b6f627f119aed03'
+Submodule path 'libraries/MIDIUSB': checked out '456d5dccf636ad4acc63d51acef0d1f3ad3cf5de'
+Submodule path 'libraries/PicoCamera': checked out '993938aaccb557ac70805fb476d61eac0111e8b3'
+Submodule path 'libraries/SdFat': checked out 'cda057318bec196183d4cc92b01bc1dd64bbfb02'
+Submodule path 'libraries/http-parser/lib/http-parser': checked out 'ec8b5ee63f0e51191ea43bb0c6eac7bfbff3141d'
+Submodule path 'libraries/iLabs_ESP-NOW': checked out 'd4087f463ab7b699289ab80c74f6fc703757f918'
+Submodule path 'libraries/iLabs_Hearth': checked out 'eb98f9a973a237e2f122008b38074e39bdf9a02f'
+Submodule path 'ota/uzlib': checked out '6d60d651a4499a64f2e5b21b4cc08d98cb84b5c1'
+Submodule path 'pico-sdk': checked out '079c6f39023649b154152db30f1d781e884879bc'
+Submodule 'lib/btstack' (https://github.com/bluekitchen/btstack.git) registered for path 'pico-sdk/lib/btstack'
+Submodule 'lib/cyw43-driver' (https://github.com/georgerobotics/cyw43-driver.git) registered for path 'pico-sdk/lib/cyw43-driver'
+Submodule 'lib/lwip' (https://github.com/lwip-tcpip/lwip.git) registered for path 'pico-sdk/lib/lwip'
+Submodule 'lib/mbedtls' (https://github.com/Mbed-TLS/mbedtls.git) registered for path 'pico-sdk/lib/mbedtls'
+Submodule 'tinyusb' (https://github.com/hathach/tinyusb.git) registered for path 'pico-sdk/lib/tinyusb'
+Cloning into '/home/peter/Repositories/orb-weaver/mouse-joystick-firm/.platformio/.cache/tmp/pkg-installing-5dofuvvw/pico-sdk/lib/btstack'...
+Cloning into '/home/peter/Repositories/orb-weaver/mouse-joystick-firm/.platformio/.cache/tmp/pkg-installing-5dofuvvw/pico-sdk/lib/cyw43-driver'...
+Cloning into '/home/peter/Repositories/orb-weaver/mouse-joystick-firm/.platformio/.cache/tmp/pkg-installing-5dofuvvw/pico-sdk/lib/lwip'...
+Cloning into '/home/peter/Repositories/orb-weaver/mouse-joystick-firm/.platformio/.cache/tmp/pkg-installing-5dofuvvw/pico-sdk/lib/mbedtls'...
+Cloning into '/home/peter/Repositories/orb-weaver/mouse-joystick-firm/.platformio/.cache/tmp/pkg-installing-5dofuvvw/pico-sdk/lib/tinyusb'...
+Submodule path 'pico-sdk/lib/btstack': checked out 'eb0bb8b5ea6d234ccb940313b47f7a5c3b4e20ec'
+Submodule path 'pico-sdk/lib/cyw43-driver': checked out '055d64274b014dd7b1c2fc94d26e8a18face7124'
+Submodule path 'pico-sdk/lib/lwip': checked out '77dcd25a72509eb83f72b033d219b1d40cd8eb95'
+Submodule path 'pico-sdk/lib/mbedtls': checked out '0bebf8b8c7f07abe3571ded48a11aa907a1ffb20'
+Submodule 'framework' (https://github.com/Mbed-TLS/mbedtls-framework) registered for path 'pico-sdk/lib/mbedtls/framework'
+Cloning into '/home/peter/Repositories/orb-weaver/mouse-joystick-firm/.platformio/.cache/tmp/pkg-installing-5dofuvvw/pico-sdk/lib/mbedtls/framework'...
+Submodule path 'pico-sdk/lib/mbedtls/framework': checked out 'dff9da04438d712f7647fd995bc90fadd0c0e2ce'
+Submodule path 'pico-sdk/lib/tinyusb': checked out '86ad6e56c1700e85f1c5678607a762cfe3aa2f47'
+Submodule path 'tools/libbearssl/bearssl': checked out 'aca13833b6f9ddffaea2041a01facc76829dc03b'
+Submodule path 'tools/pyserial': checked out '0e7634747568547b8a7f9fd0c48ed74f16af4b23'
+warning: unable to rmdir 'FreeRTOS-Kernel': Directory not empty
+warning: unable to rmdir 'libraries/MIDIUSB': Directory not empty
+warning: unable to rmdir 'libraries/PicoCamera': Directory not empty
+warning: unable to rmdir 'libraries/SdFat': Directory not empty
+warning: unable to rmdir 'libraries/iLabs_ESP-NOW': Directory not empty
+warning: unable to rmdir 'libraries/iLabs_Hearth': Directory not empty
+HEAD is now at c4b65218 Add wiznet_5100s_evb_pico2, wiznet_5500_evb_pico2 (#2575)
+Submodule 'libraries/FreeRTOS/lib/FreeRTOS-Kernel' (https://github.com/earlephilhower/FreeRTOS-Kernel.git) registered for path 'libraries/FreeRTOS/lib/FreeRTOS-Kernel'
+Cloning into '/home/peter/Repositories/orb-weaver/mouse-joystick-firm/.platformio/.cache/tmp/pkg-installing-5dofuvvw/libraries/FreeRTOS/lib/FreeRTOS-Kernel'...
+Submodule path 'ArduinoCore-API': checked out 'ece6e68f29c6f406a4434659bcbcfe558baaa3a9'
+Submodule path 'lib/tlsf': checked out '8653cec85de043454d0e9ddb0957711f6bd14fa1'
+Submodule path 'libraries/Adafruit_TinyUSB_Arduino': checked out 'a529a74e4f5018ad95b0524807b5e508871c7831'
+Submodule path 'libraries/AsyncUDP': checked out '9a718fb3dccb36991d8e840b9722a2371c5bb92d'
+From https://github.com/greiman/SdFat
+ * branch            9e1457101ca47b9ace198086dbd8854efc573ccf -> FETCH_HEAD
+Submodule path 'libraries/ESP8266SdFat': checked out '9e1457101ca47b9ace198086dbd8854efc573ccf'
+Submodule path 'libraries/ESPHost': checked out '80c0fa89b15724490f8bacfee5ac1d40c46e8683'
+Submodule path 'libraries/FatFS/lib/SPIFTL': checked out 'bf7742310b422977d245833815fd46275cefdebe'
+Submodule path 'libraries/FatFS/lib/SPIFTL/nbdkit': checked out '45b72f5bd8fc1b475fa130d06c86cd877bf595d5'
+Submodule path 'libraries/FreeRTOS/lib/FreeRTOS-Kernel': checked out '2e588af95bad29aef577373512883370c9408c1c'
+Submodule 'ThirdParty/FreeRTOS-Kernel-Community-Supported-Ports' (https://github.com/FreeRTOS/FreeRTOS-Kernel-Community-Supported-Ports) registered for path 'libraries/FreeRTOS/lib/FreeRTOS-Kernel/portable/ThirdParty/Community-Supported-Ports'
+Submodule 'ThirdParty/FreeRTOS-Kernel-Partner-Supported-Ports' (https://github.com/FreeRTOS/FreeRTOS-Kernel-Partner-Supported-Ports) registered for path 'libraries/FreeRTOS/lib/FreeRTOS-Kernel/portable/ThirdParty/Partner-Supported-Ports'
+Cloning into '/home/peter/Repositories/orb-weaver/mouse-joystick-firm/.platformio/.cache/tmp/pkg-installing-5dofuvvw/libraries/FreeRTOS/lib/FreeRTOS-Kernel/portable/ThirdParty/Community-Supported-Ports'...
+Cloning into '/home/peter/Repositories/orb-weaver/mouse-joystick-firm/.platformio/.cache/tmp/pkg-installing-5dofuvvw/libraries/FreeRTOS/lib/FreeRTOS-Kernel/portable/ThirdParty/Partner-Supported-Ports'...
+Submodule path 'libraries/FreeRTOS/lib/FreeRTOS-Kernel/portable/ThirdParty/Community-Supported-Ports': checked out '9c5bad7b2f42b4e8420f12290b9bc085d3309e8b'
+Submodule path 'libraries/FreeRTOS/lib/FreeRTOS-Kernel/portable/ThirdParty/Partner-Supported-Ports': checked out 'dc3afc6e837426b4bda81bbb6cf45bfb6f34c7e9'
+Submodule path 'libraries/HID_Joystick': checked out 'be266c0252662bc74d54cc0fea9487a63aaa1806'
+Submodule path 'libraries/HID_Keyboard': checked out 'c0f474695f83d63209fe4ad73ec5d90f27cd9e64'
+Submodule path 'libraries/HID_Mouse': checked out '8bd9d96bd9aa20df2923b9db69fda7744843a143'
+Submodule path 'libraries/LittleFS/lib/littlefs': checked out 'd01280e64934a09ba16cac60cf9d3a37e228bb66'
+Submodule path 'libraries/http-parser/lib/http-parser': checked out 'ec8b5ee63f0e51191ea43bb0c6eac7bfbff3141d'
+Submodule path 'ota/uzlib': checked out '6d60d651a4499a64f2e5b21b4cc08d98cb84b5c1'
+Submodule path 'pico-sdk': checked out 'efe2103f9b28458a1615ff096054479743ade236'
+Submodule path 'pico-sdk/lib/btstack': checked out '2b49e57bd1fae85ac32ac1f41cdb7c794de335f6'
+Submodule path 'pico-sdk/lib/cyw43-driver': checked out 'faf36381bad1f668a30172b6336c9a970966ef4c'
+Submodule path 'pico-sdk/lib/lwip': checked out '0a0452b2c39bdd91e252aef045c115f88f6ca773'
+warning: unable to rmdir 'framework': Directory not empty
+Submodule path 'pico-sdk/lib/mbedtls': checked out '5a764e5555c64337ed17444410269ff21cb617b1'
+Submodule path 'pico-sdk/lib/tinyusb': checked out '4232642899362fa5e9cf0dc59bad6f1f6d32c563'
+Submodule path 'tools/libbearssl/bearssl': checked out 'c2c9d9d08f1de656fd3f07ab950285e63d30073f'
+Submodule path 'tools/pyserial': checked out '0e7634747568547b8a7f9fd0c48ed74f16af4b23'
+Tool Manager: framework-arduinopico@1.40200.0+sha.c4b65218 has been installed!
+Tool Manager: Installing https://github.com/earlephilhower/pico-quick-toolchain/releases/download/4.0.1/x86_64-linux-gnu.picotool-8a9af99.240929.tar.gz
+Downloading 0% 10% 20% 30% 40% 50% 60% 70% 80%
+Unpacking 0% 10% 20% 30% 40% 50%
+Tool Manager: tool-picotool-rp2040-earlephilhower@5.140200.240929 has been installed!
+Tool Manager: Installing platformio/tool-scons @ ~4.40801.0
+Downloading 0% 10% 20% 30% 40%
+Unpacking 0% 10% 20% 30% 40% 50% 60% 70% 80% 90% 100%
+Tool Manager: tool-scons@4.40801.0 has been installed!
+Library Manager: Installing symlink://src/MouseJoystickBoard
+Library Manager: MouseJoystickBoard@0.1.0 has been installed!
+Library Manager: Resolving dependencies...
+Library Manager: Installing git+https://github.com/janelia-arduino/TMC51X0.git#4.1.0
+git version 2.55.0
+Cloning into '/home/peter/Repositories/orb-weaver/mouse-joystick-firm/.platformio/.cache/tmp/pkg-installing-x7e5j21a'...
+Note: switching to '4299296044bc746df628bb1f5641e47c1877179f'.
+
+You are in 'detached HEAD' state. You can look around, make experimental
+changes and commit them, and you can discard any commits you make in this
+state without impacting any branches by switching back to a branch.
+
+If you want to create a new branch to retain commits you create, you may
+do so (now or later) by using -c with the switch command. Example:
+
+  git switch -c <new-branch-name>
+
+Or undo this operation with:
+
+  git switch -
+
+Turn off this advice by setting config variable advice.detachedHead to false
+
+Library Manager: TMC51X0@4.1.0+sha.4299296 has been installed!
+Library Manager: Installing symlink://src/DAC80501
+Library Manager: DAC80501@0.1.0 has been installed!
+Library Manager: Installing symlink://src/ADS8689
+Library Manager: ADS8689@0.1.0 has been installed!
+Library Manager: Installing git+https://github.com/janelia-arduino/TMC51X0.git#4.2.0
+git version 2.55.0
+Cloning into '/home/peter/Repositories/orb-weaver/mouse-joystick-firm/.platformio/.cache/tmp/pkg-installing-jfxxpovz'...
+Note: switching to '9b58cb64b9dc9a8bb5b0c16edcafa9a28d797952'.
+
+You are in 'detached HEAD' state. You can look around, make experimental
+changes and commit them, and you can discard any commits you make in this
+state without impacting any branches by switching back to a branch.
+
+If you want to create a new branch to retain commits you create, you may
+do so (now or later) by using -c with the switch command. Example:
+
+  git switch -c <new-branch-name>
+
+Or undo this operation with:
+
+  git switch -
+
+Turn off this advice by setting config variable advice.detachedHead to false
+
+Library Manager: TMC51X0@4.2.0+sha.9b58cb6 has been installed!
+Library Manager: Installing git+https://github.com/QuantumLeaps/qp-arduino.git#v7.3.4
+git version 2.55.0
+Cloning into '/home/peter/Repositories/orb-weaver/mouse-joystick-firm/.platformio/.cache/tmp/pkg-installing-fi8_p_ni'...
+warning: refs/tags/v7.3.4 ef677c14f4e7029f77b308305f99b7e78779c95b is not a commit!
+Note: switching to 'cfd870b6a42873db1d7a7608507d18578a23b792'.
+
+You are in 'detached HEAD' state. You can look around, make experimental
+changes and commit them, and you can discard any commits you make in this
+state without impacting any branches by switching back to a branch.
+
+If you want to create a new branch to retain commits you create, you may
+do so (now or later) by using -c with the switch command. Example:
+
+  git switch -c <new-branch-name>
+
+Or undo this operation with:
+
+  git switch -
+
+Turn off this advice by setting config variable advice.detachedHead to false
+
+Library Manager: qp-arduino@7.3.4+sha.cfd870b has been installed!
+Verbose mode can be enabled via `-v, --verbose` option
+CONFIGURATION: https://docs.platformio.org/page/boards/raspberrypi/generic.html
+PLATFORM: Raspberry Pi RP2040 (1.14.0+sha.5e4e06b) > RP2040
+HARDWARE: RP2040 133MHz, 256KB RAM, 16MB Flash
+DEBUG: Current (blackmagic) External (blackmagic, cmsis-dap, jlink, picoprobe, raspberrypi-swd)
+PACKAGES: 
+ - framework-arduinopico @ 1.40200.0+sha.c4b65218 
+ - tool-picotool-rp2040-earlephilhower @ 5.140200.240929 (14.2.0) 
+ - toolchain-rp2040-earlephilhower @ 5.140200.240929 (14.2.0)
+Converting PyControlLinkQp.ino
+Flash size: 16.00MB
+Sketch size: 16.00MB
+Filesystem size: 0.00MB
+PSRAM size: 0.00MB
+Maximium Sketch size: 16773120 EEPROM start: 0x10fff000 Filesystem start: 0x10fff000 Filesystem end: 0x10fff000
+LDF: Library Dependency Finder -> https://bit.ly/configure-pio-ldf
+LDF Modes: Finder ~ off, Compatibility ~ soft
+Found 80 compatible libraries
+Scanning dependencies...
+Dependency Graph
+|-- SPI @ 1.0
+|-- Wire @ 1.0
+|-- MouseJoystickBoard @ 0.1.0
+|-- DAC80501 @ 0.1.0
+|-- ADS8689 @ 0.1.0
+|-- TMC51X0 @ 4.2.0+sha.9b58cb6
+|-- qp-arduino @ 7.3.4+sha.cfd870b
+Building in release mode
+Compiling .pio/build/examples/PyControlLinkQp/mouse_joystick_qp_rev2/FrameworkArduinoBootloader/boot2_w25q128jvxq_4_padded_checksum.S.o
+Compiling .pio/build/examples/PyControlLinkQp/mouse_joystick_qp_rev2/src/Bsp.cpp.o
+Compiling .pio/build/examples/PyControlLinkQp/mouse_joystick_qp_rev2/src/LinkAo.cpp.o
+Compiling .pio/build/examples/PyControlLinkQp/mouse_joystick_qp_rev2/src/PyControlLinkQp.ino.cpp.o
+Generating linkerscript /home/peter/Repositories/orb-weaver/mouse-joystick-firm/.pio/build/examples/PyControlLinkQp/mouse_joystick_qp_rev2/memmap_default.ld
+Compiling .pio/build/examples/PyControlLinkQp/mouse_joystick_qp_rev2/libed2/SPI/SPI.cpp.o
+Compiling .pio/build/examples/PyControlLinkQp/mouse_joystick_qp_rev2/lib1ae/Wire/Wire.cpp.o
+Compiling .pio/build/examples/PyControlLinkQp/mouse_joystick_qp_rev2/lib705/TMC51X0/TMC51X0/Controller.cpp.o
+Compiling .pio/build/examples/PyControlLinkQp/mouse_joystick_qp_rev2/lib705/TMC51X0/TMC51X0/Converter.cpp.o
+Compiling .pio/build/examples/PyControlLinkQp/mouse_joystick_qp_rev2/lib705/TMC51X0/TMC51X0/Driver.cpp.o
+Compiling .pio/build/examples/PyControlLinkQp/mouse_joystick_qp_rev2/lib705/TMC51X0/TMC51X0/Encoder.cpp.o
+Compiling .pio/build/examples/PyControlLinkQp/mouse_joystick_qp_rev2/lib705/TMC51X0/TMC51X0/Printer.cpp.o
+Compiling .pio/build/examples/PyControlLinkQp/mouse_joystick_qp_rev2/lib705/TMC51X0/TMC51X0/Registers.cpp.o
+Compiling .pio/build/examples/PyControlLinkQp/mouse_joystick_qp_rev2/lib705/TMC51X0/TMC51X0/SpiInterface.cpp.o
+Compiling .pio/build/examples/PyControlLinkQp/mouse_joystick_qp_rev2/lib705/TMC51X0/TMC51X0/TMC51X0.cpp.o
+Compiling .pio/build/examples/PyControlLinkQp/mouse_joystick_qp_rev2/lib705/TMC51X0/TMC51X0/UartInterface.cpp.o
+Compiling .pio/build/examples/PyControlLinkQp/mouse_joystick_qp_rev2/liba32/MouseJoystickBoard/MotionSetup.cpp.o
+Compiling .pio/build/examples/PyControlLinkQp/mouse_joystick_qp_rev2/liba32/MouseJoystickBoard/PowerSequence.cpp.o
+Compiling .pio/build/examples/PyControlLinkQp/mouse_joystick_qp_rev2/liba32/MouseJoystickBoard/SafeState.cpp.o
+Compiling .pio/build/examples/PyControlLinkQp/mouse_joystick_qp_rev2/liba32/MouseJoystickBoard/SelfTest.cpp.o
+Compiling .pio/build/examples/PyControlLinkQp/mouse_joystick_qp_rev2/liba32/MouseJoystickBoard/TmcSpi.cpp.o
+Archiving .pio/build/examples/PyControlLinkQp/mouse_joystick_qp_rev2/lib1ae/libWire.a
+Compiling .pio/build/examples/PyControlLinkQp/mouse_joystick_qp_rev2/libd80/DAC80501/DAC80501.cpp.o
+Compiling .pio/build/examples/PyControlLinkQp/mouse_joystick_qp_rev2/libf88/ADS8689/ADS8689.cpp.o
+Archiving .pio/build/examples/PyControlLinkQp/mouse_joystick_qp_rev2/libed2/libSPI.a
+Compiling .pio/build/examples/PyControlLinkQp/mouse_joystick_qp_rev2/lib86d/qp-arduino/qp-arduino/qep_hsm.cpp.o
+Compiling .pio/build/examples/PyControlLinkQp/mouse_joystick_qp_rev2/lib86d/qp-arduino/qp-arduino/qep_msm.cpp.o
+Compiling .pio/build/examples/PyControlLinkQp/mouse_joystick_qp_rev2/lib86d/qp-arduino/qp-arduino/qf_act.cpp.o
+Compiling .pio/build/examples/PyControlLinkQp/mouse_joystick_qp_rev2/lib86d/qp-arduino/qp-arduino/qf_actq.cpp.o
+Archiving .pio/build/examples/PyControlLinkQp/mouse_joystick_qp_rev2/lib705/libTMC51X0.a
+Compiling .pio/build/examples/PyControlLinkQp/mouse_joystick_qp_rev2/lib86d/qp-arduino/qp-arduino/qf_defer.cpp.o
+Compiling .pio/build/examples/PyControlLinkQp/mouse_joystick_qp_rev2/lib86d/qp-arduino/qp-arduino/qf_dyn.cpp.o
+Compiling .pio/build/examples/PyControlLinkQp/mouse_joystick_qp_rev2/lib86d/qp-arduino/qp-arduino/qf_mem.cpp.o
+Archiving .pio/build/examples/PyControlLinkQp/mouse_joystick_qp_rev2/libd80/libDAC80501.a
+Compiling .pio/build/examples/PyControlLinkQp/mouse_joystick_qp_rev2/lib86d/qp-arduino/qp-arduino/qf_ps.cpp.o
+Archiving .pio/build/examples/PyControlLinkQp/mouse_joystick_qp_rev2/libf88/libADS8689.a
+Compiling .pio/build/examples/PyControlLinkQp/mouse_joystick_qp_rev2/lib86d/qp-arduino/qp-arduino/qf_qact.cpp.o
+Compiling .pio/build/examples/PyControlLinkQp/mouse_joystick_qp_rev2/lib86d/qp-arduino/qp-arduino/qf_qeq.cpp.o
+Archiving .pio/build/examples/PyControlLinkQp/mouse_joystick_qp_rev2/liba32/libMouseJoystickBoard.a
+Compiling .pio/build/examples/PyControlLinkQp/mouse_joystick_qp_rev2/lib86d/qp-arduino/qp-arduino/qf_qmact.cpp.o
+Compiling .pio/build/examples/PyControlLinkQp/mouse_joystick_qp_rev2/lib86d/qp-arduino/qp-arduino/qf_time.cpp.o
+Compiling .pio/build/examples/PyControlLinkQp/mouse_joystick_qp_rev2/lib86d/qp-arduino/qp-arduino/qs.cpp.o
+Compiling .pio/build/examples/PyControlLinkQp/mouse_joystick_qp_rev2/lib86d/qp-arduino/qp-arduino/qs_64bit.cpp.o
+Compiling .pio/build/examples/PyControlLinkQp/mouse_joystick_qp_rev2/lib86d/qp-arduino/qp-arduino/qs_fp.cpp.o
+Compiling .pio/build/examples/PyControlLinkQp/mouse_joystick_qp_rev2/lib86d/qp-arduino/qp-arduino/qs_rx.cpp.o
+Compiling .pio/build/examples/PyControlLinkQp/mouse_joystick_qp_rev2/lib86d/qp-arduino/qp-arduino/qstamp.cpp.o
+Compiling .pio/build/examples/PyControlLinkQp/mouse_joystick_qp_rev2/lib86d/qp-arduino/qp-arduino/qv.cpp.o
+Compiling .pio/build/examples/PyControlLinkQp/mouse_joystick_qp_rev2/lib86d/qp-arduino/qp-arduino/qv_port.cpp.o
+Compiling .pio/build/examples/PyControlLinkQp/mouse_joystick_qp_rev2/FrameworkArduino/BluetoothDebug.cpp.o
+Compiling .pio/build/examples/PyControlLinkQp/mouse_joystick_qp_rev2/FrameworkArduino/Bootsel.cpp.o
+Compiling .pio/build/examples/PyControlLinkQp/mouse_joystick_qp_rev2/FrameworkArduino/CoreMutex.cpp.o
+Compiling .pio/build/examples/PyControlLinkQp/mouse_joystick_qp_rev2/FrameworkArduino/FS.cpp.o
+Compiling .pio/build/examples/PyControlLinkQp/mouse_joystick_qp_rev2/FrameworkArduino/PIOProgram.cpp.o
+Compiling .pio/build/examples/PyControlLinkQp/mouse_joystick_qp_rev2/FrameworkArduino/RP2040Support.cpp.o
+Compiling .pio/build/examples/PyControlLinkQp/mouse_joystick_qp_rev2/FrameworkArduino/RP2040USB.cpp.o
+Compiling .pio/build/examples/PyControlLinkQp/mouse_joystick_qp_rev2/FrameworkArduino/SerialPIO.cpp.o
+Compiling .pio/build/examples/PyControlLinkQp/mouse_joystick_qp_rev2/FrameworkArduino/SerialUART.cpp.o
+Compiling .pio/build/examples/PyControlLinkQp/mouse_joystick_qp_rev2/FrameworkArduino/SerialUSB.cpp.o
+Compiling .pio/build/examples/PyControlLinkQp/mouse_joystick_qp_rev2/FrameworkArduino/StackThunk.cpp.o
+Compiling .pio/build/examples/PyControlLinkQp/mouse_joystick_qp_rev2/FrameworkArduino/Tone.cpp.o
+Compiling .pio/build/examples/PyControlLinkQp/mouse_joystick_qp_rev2/FrameworkArduino/WMath.cpp.o
+Compiling .pio/build/examples/PyControlLinkQp/mouse_joystick_qp_rev2/FrameworkArduino/_freertos.cpp.o
+Archiving .pio/build/examples/PyControlLinkQp/mouse_joystick_qp_rev2/lib86d/libqp-arduino.a
+Compiling .pio/build/examples/PyControlLinkQp/mouse_joystick_qp_rev2/FrameworkArduino/api/Common.cpp.o
+Compiling .pio/build/examples/PyControlLinkQp/mouse_joystick_qp_rev2/FrameworkArduino/api/IPAddress.cpp.o
+Compiling .pio/build/examples/PyControlLinkQp/mouse_joystick_qp_rev2/FrameworkArduino/api/PluggableUSB.cpp.o
+Compiling .pio/build/examples/PyControlLinkQp/mouse_joystick_qp_rev2/FrameworkArduino/api/Print.cpp.o
+Compiling .pio/build/examples/PyControlLinkQp/mouse_joystick_qp_rev2/FrameworkArduino/api/Stream.cpp.o
+Compiling .pio/build/examples/PyControlLinkQp/mouse_joystick_qp_rev2/FrameworkArduino/api/String.cpp.o
+Compiling .pio/build/examples/PyControlLinkQp/mouse_joystick_qp_rev2/FrameworkArduino/cyw43_wrappers.cpp.o
+Compiling .pio/build/examples/PyControlLinkQp/mouse_joystick_qp_rev2/FrameworkArduino/delay.cpp.o
+Compiling .pio/build/examples/PyControlLinkQp/mouse_joystick_qp_rev2/FrameworkArduino/flash_wrapper.cpp.o
+Compiling .pio/build/examples/PyControlLinkQp/mouse_joystick_qp_rev2/FrameworkArduino/libb64/cdecode.cpp.o
+Compiling .pio/build/examples/PyControlLinkQp/mouse_joystick_qp_rev2/FrameworkArduino/libb64/cencode.cpp.o
+Compiling .pio/build/examples/PyControlLinkQp/mouse_joystick_qp_rev2/FrameworkArduino/lock.cpp.o
+Compiling .pio/build/examples/PyControlLinkQp/mouse_joystick_qp_rev2/FrameworkArduino/lwip_wrap.cpp.o
+Compiling .pio/build/examples/PyControlLinkQp/mouse_joystick_qp_rev2/FrameworkArduino/main.cpp.o
+Compiling .pio/build/examples/PyControlLinkQp/mouse_joystick_qp_rev2/FrameworkArduino/malloc-lock.cpp.o
+Compiling .pio/build/examples/PyControlLinkQp/mouse_joystick_qp_rev2/FrameworkArduino/posix.cpp.o
+Compiling .pio/build/examples/PyControlLinkQp/mouse_joystick_qp_rev2/FrameworkArduino/psram.cpp.o
+Compiling .pio/build/examples/PyControlLinkQp/mouse_joystick_qp_rev2/FrameworkArduino/rp2350-memcpy.S.o
+Compiling .pio/build/examples/PyControlLinkQp/mouse_joystick_qp_rev2/FrameworkArduino/sdkoverride/btstack_flash_bank.cpp.o
+Compiling .pio/build/examples/PyControlLinkQp/mouse_joystick_qp_rev2/FrameworkArduino/sdkoverride/inet_chksum.cpp.o
+Compiling .pio/build/examples/PyControlLinkQp/mouse_joystick_qp_rev2/FrameworkArduino/sdkoverride/newlib_interface.c.o
+Compiling .pio/build/examples/PyControlLinkQp/mouse_joystick_qp_rev2/FrameworkArduino/sdkoverride/pico_bootsel_via_double_reset.c.o
+Compiling .pio/build/examples/PyControlLinkQp/mouse_joystick_qp_rev2/FrameworkArduino/stdlib_noniso.cpp.o
+Compiling .pio/build/examples/PyControlLinkQp/mouse_joystick_qp_rev2/FrameworkArduino/wiring_analog.cpp.o
+Compiling .pio/build/examples/PyControlLinkQp/mouse_joystick_qp_rev2/FrameworkArduino/wiring_digital.cpp.o
+Compiling .pio/build/examples/PyControlLinkQp/mouse_joystick_qp_rev2/FrameworkArduino/wiring_private.cpp.o
+Compiling .pio/build/examples/PyControlLinkQp/mouse_joystick_qp_rev2/FrameworkArduino/wiring_pulse.cpp.o
+Compiling .pio/build/examples/PyControlLinkQp/mouse_joystick_qp_rev2/FrameworkArduino/wiring_shift.cpp.o
+Archiving .pio/build/examples/PyControlLinkQp/mouse_joystick_qp_rev2/libFrameworkArduino.a
+Linking .pio/build/examples/PyControlLinkQp/mouse_joystick_qp_rev2/firmware.elf
+Generating UF2 image
+picotool uf2 convert -t elf ".pio/build/examples/PyControlLinkQp/mouse_joystick_qp_rev2/firmware.elf" ".pio/build/examples/PyControlLinkQp/mouse_joystick_qp_rev2/firmware.uf2"
+Retrieving maximum program size .pio/build/examples/PyControlLinkQp/mouse_joystick_qp_rev2/firmware.elf
+Flash size: 16.00MB
+Sketch size: 16.00MB
+Filesystem size: 0.00MB
+PSRAM size: 0.00MB
+Maximium Sketch size: 16773120 EEPROM start: 0x10fff000 Filesystem start: 0x10fff000 Filesystem end: 0x10fff000
+Checking size .pio/build/examples/PyControlLinkQp/mouse_joystick_qp_rev2/firmware.elf
+Advanced Memory Usage is available via "PlatformIO Home > Project Inspect"
+RAM:   [==        ]  16.8% (used 43956 bytes from 262144 bytes)
+Flash: [          ]   0.8% (used 131476 bytes from 16773120 bytes)
+Building .pio/build/examples/PyControlLinkQp/mouse_joystick_qp_rev2/firmware.bin
+Building .pio/build/examples/PyControlLinkQp/mouse_joystick_qp_rev2/firmware.bin.signed
+======================== [SUCCESS] Took 250.25 seconds ========================
+
+Environment             Status    Duration
+----------------------  --------  ------------
+mouse_joystick_qp_rev2  SUCCESS   00:04:10.247
+========================= 1 succeeded in 00:04:10.247 =========================
++ pio run -e mouse_joystick_qp_rev2
