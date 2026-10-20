@@ -1,0 +1,228 @@
+# Firmware-owned composed profile. Frozen capture profiles remain in instrument-control.
+[profile]
+schema = 2
+default_phase = "runtime"
+name = "mouse-joystick-pcb-v1.0-digital50-pycontrol"
+description = "mouse-joystick-pcb v1.0 on the Digital-50 port, firmware examples/PyControlLinkQp"
+source = "mouse-joystick-firm/instrument/mouse-joystick-v1.0.toml; derived from instrument-control fixture dated 2026-10-07"
+
+[board]
+repository = "mouse-joystick-pcb"
+revision = "v1.0"
+port = "digital-50"
+# The DUT-side boundary of the port; the [channels] table is this table's
+# DIGn -> "Wired to" column, verbatim.
+port_map = "docs/interface-map.md#instrument_port_digital_50_dut_ffc_boundary_vertical"
+# Units seen on the bench so far (the identity beacon reports these). Metadata
+# only: the analyzer-to-board map comes from the beacon, never from this list.
+known_serials = ["E4654C159F274534", "E4654C159F404534"]
+
+[firmware]
+repository = "mouse-joystick-firm"
+build = "examples/PyControlLinkQp"
+environment = "mouse_joystick_qp_rev2"
+revision = "v1.0.1"
+trace_records = "examples/PyControlLinkQp/LinkAo.hpp (LinkRecords), Bsp.cpp (BspRecords)"
+link_codec = "pycontrol/devices/mouse_joystick_protocol.py"
+link_spec = "mouse-joystick-pcb/docs/uart-protocol.md (Protocol v1 Proposal, proto=2)"
+
+[adapter]
+repository = "la5032-instrument-port-adapter"
+revision = "v2.0"
+# CHn observes DIGn. Measured on both v2.0 adapters: unit A 2026-10-05, unit B
+# 2026-10-07 (docs/bringup-log.md, "Cable permutation"). A permuted adapter
+# would use mapping = "explicit" and an [adapter.map] of CHn = "DIGn".
+mapping = "straight"
+channel_count = 32
+
+[analyzer]
+backend = "sigrok"
+driver = "kingst-la2016"
+# The LA5032 has no USB serial; `conn=` changes on every firmware upload. Ask
+# the board (docs/identity-beacon.md). The pyControl delivery build beacons
+# only at boot, so a declared map is the fallback at the rig.
+select = "beacon"
+# 2 MSa/s x 4 channels held for the 40 s Gate E captures (2026-10-06/07); the
+# 12-channel motion capture ran at 1 MSa/s. Untested for an hour.
+default_sample_rate_hz = 2000000
+
+# DIGn -> signal, from the board's port map. DIG4-7 are grounded buffer inputs, not dedicated connector grounds.
+[channels]
+DIG0 = "FW_TRIG0"
+DIG1 = "FW_TRIG1"
+DIG2 = "PYC_UART_TX"
+DIG3 = "PYC_UART_RX"
+DIG4 = "GND"
+DIG5 = "GND"
+DIG6 = "GND"
+DIG7 = "GND"
+DIG8 = "TMC_SPI_SCK"
+DIG9 = "~{TMC_CS}"
+DIG10 = "TMC_SPI_COPI"
+DIG11 = "TMC_SPI_CIPO"
+DIG12 = "TMC_DIAG0"
+DIG13 = "TMC_DIAG1"
+DIG14 = "~{TMC_DRV_EN}"
+DIG15 = "LIMIT_SW"
+DIG16 = "TQ_SPI_SCK"
+DIG17 = "TQ_CONVST_CS"
+DIG18 = "TQ_SPI_COPI"
+DIG19 = "TQ_SPI_CIPO"
+DIG20 = "TQ_CAL_EN"
+DIG21 = "~{BRAKE_FAULT}"
+DIG22 = "DAQ_SDA"
+DIG23 = "DAQ_SCL"
+DIG24 = "HV_EN"
+DIG25 = "HV_DIAG_EN"
+DIG26 = "~{HV_FAULT}"
+DIG27 = "~{BUS_SW_EN}"
+DIG28 = "ENCA"
+DIG29 = "ENCB"
+DIG30 = "PG_5V"
+DIG31 = "PG_12V"
+
+# Roles -> signals. The pipeline names roles; `lai profile show` resolves them.
+[roles]
+marker0 = "FW_TRIG0"      # high for the whole of every operation (OP_START/OP_DONE)
+trace = "FW_TRIG1"
+link_tx = "PYC_UART_TX"   # board -> host: ack / nak / ev lines
+link_rx = "PYC_UART_RX"   # host -> board: commands
+beacon_clock = "FW_TRIG0" # la2_beacon.sr: 192 rising edges (3 x 64 bits)
+beacon_data = "FW_TRIG1"
+enc_a = "ENCA"
+enc_b = "ENCB"
+limit = "LIMIT_SW"
+hv_en = "HV_EN"
+tmc_sck = "TMC_SPI_SCK"
+tmc_cs = "~{TMC_CS}"
+tmc_copi = "TMC_SPI_COPI"
+tmc_cipo = "TMC_SPI_CIPO"
+tmc_drv_en = "~{TMC_DRV_EN}"
+bus_sw_en = "~{BUS_SW_EN}"
+
+# The QS trace on FW_TRIG1: Bsp.cpp MJ_QS_BAUD 115200 8N1, dictionaries every
+# MJ_QS_DICT_PERIOD_MS, TRACE_STAT/SAMPLE_STAT/LINK_STAT every
+# MJ_QS_STAT_PERIOD_MS. qspy is the reference decoder; the record ids are
+# QS_USER (100 in QP 7, confirmed by the fixture's Usr-Dict lines) + offset.
+[trace]
+decoder = "qspy"
+baud = 115200
+format = "8N1"
+qs_user = 100
+dictionary_period_ms = 10000
+stat_period_ms = 1000
+
+[trace.records]
+LINK_RX = 100       # line dispatched to the AO: seq, verb, length
+LINK_TX = 101       # reply/event queued for the port
+LINK_STATE = 102    # ProtocolBoard state changed
+OP_START = 103      # FW_TRIG0 high
+OP_DONE = 104       # FW_TRIG0 low
+LINK_WORK = 105     # per line: clock-advance, feed, output cost in us
+ENABLE_SETTLE = 106
+BRAKE_STATE = 107
+TRACE_STAT = 108    # per second
+TICK_LOST = 109
+LINK_STAT = 110     # per second
+SAMPLE_STAT = 111   # per second
+DAC_STATE = 112
+BOOT_INFO = 113     # once after boot, repeated with the dictionaries
+POLL_STAT = 114     # per second
+MOVE_SETTLE = 115   # a move settled on the encoder (uart-protocol V1.13)
+
+# The pyControl link, uart-protocol.md "Framing":
+#   command:  VERB;seq[;arg...]\n          (host -> board, link_rx)
+#   reply:    ack;seq[;data...]\n          (board -> host, link_tx)
+#             nak;seq;reason\n
+#   event:    ev;EVENT;t_us[;key=value...]\n
+# Verbs are lowercase on the wire (`id;1`, `hv;2;ON` in gate_e_left.sr).
+[link]
+baud = 115200
+format = "8N1"
+grammar = "ascii-lines"
+delimiter = ";"
+terminator = "\n"
+verb_field = 0
+seq_field = 1
+reply_verbs = ["ack", "nak"]
+event_verb = "ev"
+codec = "mouse_joystick_protocol:JoystickProtocol"
+max_line = 200
+
+# How to judge the link. uart-protocol.md V1.1 says the heartbeat is STATUS at
+# 10-25 Hz from the device class, but the delivered device class
+# (mouse-joystick-firm pycontrol/devices/mouse_joystick.py, `ping()`: "the
+# safety heartbeat") sends PING, and gate_e_left.sr carries 699 `ping` lines at
+# 24 Hz against one `status`. The profile follows the wire; the spec and the
+# device class should agree (any well-formed command resets the watchdog, so
+# either verb keeps the board alive). The rig task used heartbeat_interval 40 ms.
+[health]
+heartbeat_verb = "ping"
+heartbeat_rate_hz = [10, 25]
+fault_event = "FAULT"
+trial_event = "TRIAL"
+nak_verb = "nak"
+outcome_events = ["PULL", "PUSH", "NOMOVE", "ABORT"]
+state_events = ["READY", "HOMED", "TARGET", "RELEASED", "TOUCH", "LIMIT", "RSYNC"]
+
+# Cumulative counters the firmware prints once a second in LINK_STAT
+# (Bsp.cpp: l_linesRx, l_linesDroppedPool, l_linesDroppedQueue,
+# l_repliesDropped, l_linesOverlong, queueMin, poolMin, l_ringHighWater).
+# The first says how many host lines the board has received since boot, so a
+# jump between two capture windows measures what the analyzer did not see;
+# the drop counters must never grow.
+[[health.counters]]
+name = "lines_rx"
+record = "LINK_STAT"
+field = 0
+kind = "count"
+counts = "link_rx"
+
+[[health.counters]]
+name = "lines_dropped_pool"
+record = "LINK_STAT"
+field = 1
+kind = "error"
+
+[[health.counters]]
+name = "lines_dropped_queue"
+record = "LINK_STAT"
+field = 2
+kind = "error"
+
+[[health.counters]]
+name = "replies_dropped"
+record = "LINK_STAT"
+field = 3
+kind = "error"
+
+[[health.counters]]
+name = "lines_overlong"
+record = "LINK_STAT"
+field = 4
+kind = "error"
+
+# Evidence directories follow qp-arduino-example/evidence/<date>-<time>-<name>/
+# with meta.txt, captures/, uart/ (link/), qspy/ (trace/), pilot/.
+[evidence]
+layout = "qp-arduino-example"
+name = "{date}-{time}-{name}"
+
+[phases.boot]
+roles = ["beacon_clock", "beacon_data"]
+
+[phases.runtime]
+roles = ["marker0", "trace", "link_tx", "link_rx", "enc_a", "enc_b", "limit", "hv_en", "tmc_sck", "tmc_cs", "tmc_copi", "tmc_cipo", "tmc_drv_en", "bus_sw_en"]
+
+# The native link consumes one full-duplex UART, counted once via link_tx.
+# QS consumes one PIO serial transmitter, never an independent runtime marker.
+[[resources]]
+name = "native_uart"
+capacity = 1
+[resources.uses]
+link_tx = 1
+[[resources]]
+name = "qs_pio_tx"
+capacity = 1
+[resources.uses]
+trace = 1

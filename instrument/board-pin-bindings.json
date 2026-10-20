@@ -1,0 +1,40 @@
+{
+  "schema": 1,
+  "board": "mouse-joystick-pcb",
+  "board_revision": "v1.0",
+  "firmware_board_rev": 2,
+  "signals": {
+    "kPycUartTx": "/PYC_UART_TX",
+    "kPycUartRx": "/PYC_UART_RX",
+    "kTmcCsN": "/~{TMC_CS}",
+    "kTmcDrvEnN": "/~{TMC_DRV_EN}",
+    "kTmcSpiCipo": "/TMC_SPI_CIPO",
+    "kTmcDiag0": "/TMC_DIAG0",
+    "kTmcSpiSck": "/TMC_SPI_SCK",
+    "kTmcSpiCopi": "/TMC_SPI_COPI",
+    "kTmcDiag1": "/TMC_DIAG1",
+    "kBusSwEnN": "/mcu/rp2040_with_gpio_isolation_sn74cb3q3245/~{BUS_SW_EN}",
+    "kTqSpiSck": "/TQ_SPI_SCK",
+    "kTqSpiCopi": "/TQ_SPI_COPI",
+    "kTqSpiCipo": "/TQ_SPI_CIPO",
+    "kBrakeFaultN": "/~{BRAKE_FAULT}",
+    "kHvDiagEn": "/HV_DIAG_EN",
+    "kTqConvstCsN": "/TQ_CONVST_CS",
+    "kDacSda": "/DAC_SDA",
+    "kDacScl": "/DAC_SCL",
+    "kTqCalEn": "/TQ_CAL_EN",
+    "kHvEn": "/HV_EN",
+    "kFwTrig1": "/FW_TRIG1",
+    "kHvFaultN": "/~{HV_FAULT}",
+    "kHvLatch": "/HV_LATCH",
+    "kFwTrig0": "/FW_TRIG0",
+    "kSwRailSenseDiv2": "/mcu/SW_RAIL_SENSE_DIV_2",
+    "kBrakeIsense": "/BRAKE_ISENSE",
+    "kHvSns": "/HV_SNS",
+    "kAngleOutMon": "/ANGLE_OUT_MON"
+  },
+  "active_low": [
+    "/~{TMC_CS}", "/~{TMC_DRV_EN}", "/~{BRAKE_FAULT}", "/~{HV_FAULT}",
+    "/mcu/rp2040_with_gpio_isolation_sn74cb3q3245/~{BUS_SW_EN}"
+  ]
+}

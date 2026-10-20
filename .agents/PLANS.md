@@ -1,5 +1,25 @@
 # Plans
 
+## 2026-10-20: explicit revision and observation-profile checks
+
+- [x] Remove silent MJ_BOARD_REV=0 fallback; native environment now explicitly
+  sets 0. Existing target environments still select their revisions.
+- [x] Firmware-owned schema-2 profile in `instrument/`; boot beacon/runtime
+  trace ownership separated without changing runtime firmware.
+- [x] `tools/check_board_pins.py` compiles constants/spares against an explicit
+  PCB-owned export; bindings contain signal names, not GPIO copies. Rejects
+  revision/polarity/coverage mistakes. No sibling dependency in normal builds.
+- [ ] PCB owner still owes manufactured-revision equivalence and full tap/
+  domain/mux coverage; current export labels its limitation.
+
+Checks: 156 native Unity tests; RP2040SelfTest default, safeflash, rev1 and
+rev2 compile, plus PyControlLinkQp delivery rev2. Three tool test methods
+exercise valid revisions and deliberate missing/invalid revision, GPIO, spare
+and polarity mistakes. All 28 production constants and two spares agree with
+the selected current PCB export. Both profile phases load under
+instrument-control. No flashing or bench action; nothing committed.
+See `docs/instrument-profile.md`; cross-repository queue is kicad-libs/PLANS.
+
 ## Current Goal
 
 Delivered: protocol v1 on four pcb v1.0 boards across two rigs (Rig 1

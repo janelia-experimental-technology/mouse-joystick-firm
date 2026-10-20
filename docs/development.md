@@ -82,5 +82,10 @@ rev 0/1 board through the adapter v1.0 the bus is `CH2`–`CH5` (`SCK`, `COPI`,
 
 ## Agent Guidance
 
+[Instrument profile and pin check](instrument-profile.md) documents the
+firmware-owned composed profile, explicit board revision selection and the
+optional check against a PCB-owned hardware export. It is development tooling;
+building the firmware still needs no sibling checkout.
+
 `AGENTS.md` and `.agents/` carry the agent-facing guidance, plans and handoffs
 for this repository. They assume the sibling checkouts above.

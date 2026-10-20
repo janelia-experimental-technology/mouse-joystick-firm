@@ -55,10 +55,9 @@
 //      instrument buffers' enable gone (InstrumentPort-Digital-50 is always
 //      on), two more ADC channels in use. Pins move; read the v1.0 section.
 //
-// The default below is 0, so an env that forgets to define this silently
-// targets rev 0 -- which is wrong for every board fabricated since v0.2.
+// Every build must select its manufactured revision explicitly.
 #ifndef MJ_BOARD_REV
-#define MJ_BOARD_REV 0
+#error "Define MJ_BOARD_REV explicitly: 0 (v0.1/v0.2), 1 (v0.3), or 2 (v1.0)"
 #endif
 
 #if (MJ_BOARD_REV < 0) || (MJ_BOARD_REV > 2)
