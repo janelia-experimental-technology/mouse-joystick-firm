@@ -1,0 +1,151 @@
+{
+  "schema": 1,
+  "board": "mouse-joystick-pcb",
+  "board_revision": "v1.0",
+  "firmware_board_rev": 2,
+  "mcu": "RP2040",
+  "firmware_environment": "mouse_joystick_qp_rev2",
+  "phases": [
+    "boot",
+    "runtime"
+  ],
+  "full_coverage_phases": [
+    "runtime"
+  ],
+  "allocations": [
+    {
+      "name": "native_control",
+      "phases": [
+        "runtime"
+      ],
+      "functions": {
+        "kPycUartTx": "UART0_TX",
+        "kPycUartRx": "UART0_RX"
+      }
+    },
+    {
+      "name": "motor_spi",
+      "phases": [
+        "runtime"
+      ],
+      "functions": {
+        "kTmcSpiSck": "SPI0_SCK",
+        "kTmcSpiCopi": "SPI0_TX",
+        "kTmcSpiCipo": "SPI0_RX"
+      }
+    },
+    {
+      "name": "torque_spi",
+      "phases": [
+        "runtime"
+      ],
+      "functions": {
+        "kTqSpiSck": "SPI1_SCK",
+        "kTqSpiCopi": "SPI1_TX",
+        "kTqSpiCipo": "SPI1_RX"
+      }
+    },
+    {
+      "name": "shared_dacs",
+      "phases": [
+        "runtime"
+      ],
+      "functions": {
+        "kDacSda": "I2C0_SDA",
+        "kDacScl": "I2C0_SCL"
+      }
+    },
+    {
+      "name": "analog_monitors",
+      "phases": [
+        "runtime"
+      ],
+      "functions": {
+        "kSwRailSenseDiv2": "ADC0",
+        "kBrakeIsense": "ADC1",
+        "kHvSns": "ADC2",
+        "kAngleOutMon": "ADC3"
+      }
+    },
+    {
+      "name": "qs_tx",
+      "phases": [
+        "runtime"
+      ],
+      "functions": {
+        "kFwTrig1": "PIO"
+      },
+      "pio": {
+        "state_machines": 1,
+        "instructions": 6,
+        "placement": "dynamic"
+      }
+    },
+    {
+      "name": "gpio_control_status_marker",
+      "phases": [
+        "runtime"
+      ],
+      "functions": {
+        "kTmcCsN": "SIO",
+        "kTmcDrvEnN": "SIO",
+        "kTmcDiag0": "SIO",
+        "kTmcDiag1": "SIO",
+        "kBusSwEnN": "SIO",
+        "kBrakeFaultN": "SIO",
+        "kHvDiagEn": "SIO",
+        "kTqConvstCsN": "SIO",
+        "kTqCalEn": "SIO",
+        "kHvEn": "SIO",
+        "kHvFaultN": "SIO",
+        "kHvLatch": "SIO",
+        "kFwTrig0": "SIO"
+      }
+    },
+    {
+      "name": "boot_beacon",
+      "phases": [
+        "boot"
+      ],
+      "functions": {
+        "kFwTrig0": "SIO",
+        "kFwTrig1": "SIO"
+      }
+    }
+  ],
+  "source_sha256": {
+    "platformio.ini": "e97edbbc810dd3b0deaf9d7bedc5fb05d0d5231d36dfae1a37612e9c26e1738c",
+    "src/BoardPins.hpp": "458113ffc83e1eaf8eba2518d686e73cb3d2a5186c0e8d226c830d7e439f41f4",
+    "examples/PyControlLinkQp/Bsp.cpp": "46b9d752f13213044528915a406ce2a023ee913296dd667ef80cf94b7d88376e",
+    "src/MouseJoystickBoard/MotionSetup.cpp": "dd78f066f05208a66edeb0698039189c43e92eee7e0c66ffd24f5413d38138db",
+    "src/BrakeTorqueHw.hpp": "6f84ab80d949781fa5c4dbda7dda1588de13a2cea14780da151e29ffdd40ea2e",
+    "src/MouseJoystickBoard/PowerSequence.cpp": "5bc4bd652ccc5a5af6d9c491074c5de7cc235bfac216513a2573a5e5bcc0dacc",
+    "src/MouseJoystickBoard/SafeState.cpp": "7689109e163dbef3b496e90629d8e63fddb0d0795b00a3d906d01e3fe303a170",
+    "src/MouseJoystickBoard/SelfTest.cpp": "ef2d2ab944fca3552e9b2cd8441209d6aeea22ea28ba79b304cf9b57929681a7"
+  },
+  "source_review": {
+    "native_control": "Bsp.cpp startLinkTransport: Serial1.setTX/setRX; UART0 in the installed Arduino core.",
+    "motor_spi": "MotionSetup.cpp configureBus: SPI.setSCK/setTX/setRX, TMC chip select remains SIO.",
+    "torque_spi": "BrakeTorqueHw.hpp beginAdc: SPI1 supplied by Bsp.cpp, CONVST/CS remains SIO.",
+    "shared_dacs": "Bsp.cpp: Wire.setSDA/setSCL, I2C0 shared by both DAC addresses.",
+    "qs_tx": "Bsp.cpp constructs SerialPIO(kFwTrig1, NOPIN). Installed core TX program uses six instructions and one SM; RX-only IRQ path is not active. No PIO block is fixed.",
+    "scope": "Reviewed production revision 2 configuration, not preprocessor inference or an inventory of every SDK/USB/alarm/IRQ/DMA resource.",
+    "analog_monitors": "ADC0/ADC2 in PowerSequence, ADC1 in BrakeTorqueHw; ADC3 is reserved angle readback used by SelfTest. This is the pin budget, not a claim that every monitor runs in the delivery loop."
+  },
+  "implementation": {
+    "package": "framework-arduinopico",
+    "version": "1.40200.0",
+    "url": "https://github.com/earlephilhower/arduino-pico",
+    "files_sha256": {
+      "cores/rp2040/SerialPIO.cpp": "75eb6adeb0b088eeac93043dfa331a376ee05ff7a056bacfe3dd0af0b9406507",
+      "cores/rp2040/pio_uart.pio.h": "21c7ac634af9f3abe10aff8218208b3b8683d482a0c8b748353eae1791a6441c",
+      "package.json": "cb32c23a6bc818e727d51e5f5aabe8f010db28a0ce121b8ab6301716c68cdb74",
+      "cores/rp2040/SerialUART.cpp": "1b03b61844bc23359e7b7c68eb6372927b55b1ff008f66fb5ab9a8c678c06e07",
+      "libraries/SPI/src/SPI.cpp": "8d57e6f775a7fa887c8a36d5205726bb521a2de2356bb87afa1a4175f7f1a004",
+      "libraries/Wire/src/Wire.cpp": "95960e15d606c791194183287d3ca64a0ee034b50bcee5e17b42dc22199adcd4",
+      "variants/generic/pins_arduino.h": "2ef842b6fb308596af2e2d8e89f807545c5e7d7e606dcdfeeaf89b9bb2fb5b10",
+      "variants/generic/common.h": "ee11e4831995126f42ef51ba14f4c9b7a00727757ee47753f7b16ffd67822a26"
+    },
+    "review_required_after_framework_change": true
+  }
+}

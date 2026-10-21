@@ -1,0 +1,338 @@
+{
+  "schema": 1,
+  "board": "mouse-joystick-pcb",
+  "board_revision": "v1.0",
+  "hardware_source_revision": "3edd5d0913f2028529597f80ccd57609dc61e66b",
+  "mcu": "RP2040",
+  "firmware_environment": "mouse_joystick_qp_rev2",
+  "full_coverage_phases": [
+    "runtime"
+  ],
+  "allocations": [
+    {
+      "name": "native_control",
+      "phases": [
+        "runtime"
+      ],
+      "pins": [
+        {
+          "constant": "kPycUartTx",
+          "signal": "/PYC_UART_TX",
+          "gpio": 0,
+          "function": "UART0_TX"
+        },
+        {
+          "constant": "kPycUartRx",
+          "signal": "/PYC_UART_RX",
+          "gpio": 1,
+          "function": "UART0_RX"
+        }
+      ],
+      "engine": "UART0",
+      "pio": null
+    },
+    {
+      "name": "motor_spi",
+      "phases": [
+        "runtime"
+      ],
+      "pins": [
+        {
+          "constant": "kTmcSpiSck",
+          "signal": "/TMC_SPI_SCK",
+          "gpio": 6,
+          "function": "SPI0_SCK"
+        },
+        {
+          "constant": "kTmcSpiCopi",
+          "signal": "/TMC_SPI_COPI",
+          "gpio": 7,
+          "function": "SPI0_TX"
+        },
+        {
+          "constant": "kTmcSpiCipo",
+          "signal": "/TMC_SPI_CIPO",
+          "gpio": 4,
+          "function": "SPI0_RX"
+        }
+      ],
+      "engine": "SPI0",
+      "pio": null
+    },
+    {
+      "name": "torque_spi",
+      "phases": [
+        "runtime"
+      ],
+      "pins": [
+        {
+          "constant": "kTqSpiSck",
+          "signal": "/TQ_SPI_SCK",
+          "gpio": 10,
+          "function": "SPI1_SCK"
+        },
+        {
+          "constant": "kTqSpiCopi",
+          "signal": "/TQ_SPI_COPI",
+          "gpio": 11,
+          "function": "SPI1_TX"
+        },
+        {
+          "constant": "kTqSpiCipo",
+          "signal": "/TQ_SPI_CIPO",
+          "gpio": 12,
+          "function": "SPI1_RX"
+        }
+      ],
+      "engine": "SPI1",
+      "pio": null
+    },
+    {
+      "name": "shared_dacs",
+      "phases": [
+        "runtime"
+      ],
+      "pins": [
+        {
+          "constant": "kDacSda",
+          "signal": "/DAC_SDA",
+          "gpio": 16,
+          "function": "I2C0_SDA"
+        },
+        {
+          "constant": "kDacScl",
+          "signal": "/DAC_SCL",
+          "gpio": 17,
+          "function": "I2C0_SCL"
+        }
+      ],
+      "engine": "I2C0",
+      "pio": null
+    },
+    {
+      "name": "analog_monitors",
+      "phases": [
+        "runtime"
+      ],
+      "pins": [
+        {
+          "constant": "kSwRailSenseDiv2",
+          "signal": "/mcu/SW_RAIL_SENSE_DIV_2",
+          "gpio": 26,
+          "function": "ADC0"
+        },
+        {
+          "constant": "kBrakeIsense",
+          "signal": "/BRAKE_ISENSE",
+          "gpio": 27,
+          "function": "ADC1"
+        },
+        {
+          "constant": "kHvSns",
+          "signal": "/HV_SNS",
+          "gpio": 28,
+          "function": "ADC2"
+        },
+        {
+          "constant": "kAngleOutMon",
+          "signal": "/ANGLE_OUT_MON",
+          "gpio": 29,
+          "function": "ADC3"
+        }
+      ],
+      "engine": "ADC",
+      "pio": null
+    },
+    {
+      "name": "qs_tx",
+      "phases": [
+        "runtime"
+      ],
+      "pins": [
+        {
+          "constant": "kFwTrig1",
+          "signal": "/FW_TRIG1",
+          "gpio": 21,
+          "function": "PIO"
+        }
+      ],
+      "engine": null,
+      "pio": {
+        "state_machines": 1,
+        "instructions": 6,
+        "placement": "dynamic"
+      }
+    },
+    {
+      "name": "gpio_control_status_marker",
+      "phases": [
+        "runtime"
+      ],
+      "pins": [
+        {
+          "constant": "kTmcCsN",
+          "signal": "/~{TMC_CS}",
+          "gpio": 2,
+          "function": "SIO"
+        },
+        {
+          "constant": "kTmcDrvEnN",
+          "signal": "/~{TMC_DRV_EN}",
+          "gpio": 3,
+          "function": "SIO"
+        },
+        {
+          "constant": "kTmcDiag0",
+          "signal": "/TMC_DIAG0",
+          "gpio": 5,
+          "function": "SIO"
+        },
+        {
+          "constant": "kTmcDiag1",
+          "signal": "/TMC_DIAG1",
+          "gpio": 8,
+          "function": "SIO"
+        },
+        {
+          "constant": "kBusSwEnN",
+          "signal": "/mcu/rp2040_with_gpio_isolation_sn74cb3q3245/~{BUS_SW_EN}",
+          "gpio": 9,
+          "function": "SIO"
+        },
+        {
+          "constant": "kBrakeFaultN",
+          "signal": "/~{BRAKE_FAULT}",
+          "gpio": 13,
+          "function": "SIO"
+        },
+        {
+          "constant": "kHvDiagEn",
+          "signal": "/HV_DIAG_EN",
+          "gpio": 14,
+          "function": "SIO"
+        },
+        {
+          "constant": "kTqConvstCsN",
+          "signal": "/TQ_CONVST_CS",
+          "gpio": 15,
+          "function": "SIO"
+        },
+        {
+          "constant": "kTqCalEn",
+          "signal": "/TQ_CAL_EN",
+          "gpio": 18,
+          "function": "SIO"
+        },
+        {
+          "constant": "kHvEn",
+          "signal": "/HV_EN",
+          "gpio": 19,
+          "function": "SIO"
+        },
+        {
+          "constant": "kHvFaultN",
+          "signal": "/~{HV_FAULT}",
+          "gpio": 23,
+          "function": "SIO"
+        },
+        {
+          "constant": "kHvLatch",
+          "signal": "/HV_LATCH",
+          "gpio": 24,
+          "function": "SIO"
+        },
+        {
+          "constant": "kFwTrig0",
+          "signal": "/FW_TRIG0",
+          "gpio": 25,
+          "function": "SIO"
+        }
+      ],
+      "engine": null,
+      "pio": null
+    },
+    {
+      "name": "boot_beacon",
+      "phases": [
+        "boot"
+      ],
+      "pins": [
+        {
+          "constant": "kFwTrig0",
+          "signal": "/FW_TRIG0",
+          "gpio": 25,
+          "function": "SIO"
+        },
+        {
+          "constant": "kFwTrig1",
+          "signal": "/FW_TRIG1",
+          "gpio": 21,
+          "function": "SIO"
+        }
+      ],
+      "engine": null,
+      "pio": null
+    }
+  ],
+  "phases": {
+    "boot": {
+      "pins": 2,
+      "engines": {},
+      "pio_capacity_witness": {}
+    },
+    "runtime": {
+      "pins": 28,
+      "engines": {
+        "UART0": "native_control",
+        "SPI0": "motor_spi",
+        "SPI1": "torque_spi",
+        "I2C0": "shared_dacs",
+        "ADC": "analog_monitors"
+      },
+      "pio_capacity_witness": {
+        "qs_tx": 0
+      }
+    }
+  },
+  "limits": [
+    "Subset for SIO, SPI, UART, I2C, external ADC and PIO; no PWM/clock/USB alternate-function model.",
+    "Static allocation only; clocks, IRQ/DMA ownership, runtime initialization and electrical behavior are separate checks.",
+    "Firmware functions are reviewed declarations; source hashes detect drift, not semantic correctness.",
+    "Compile BoardPins against the same hardware export separately; this checker does not parse C++.",
+    "PIO placement is a static capacity witness, not proof of runtime availability or program timing.",
+    "Only full_coverage_phases require every bound pin; SDK/IRQ/DMA/timer consumers are not inventoried.",
+    "No reset/off-state electrical, firmware deployment or timing qualification is implied."
+  ],
+  "inputs_sha256": {
+    "facts": "7eadc3b6ebff4e404e59a50deeae37b23a52738e43084885eed2308ea89909e6",
+    "bindings": "e0f9f4e6258ecb23addfb2bacb79ed001d834785b4069d2aeeb9101842565a85",
+    "allocation": "2de4724bee3ce0c1ca27f917eee968f88a0e1a4d51c521df3aa36d564babb75d",
+    "model": "54a4691886619a9f0835c06805c69f67334f1720144e69b34d1783f6ac87dda6"
+  },
+  "reviewed_source_sha256": {
+    "platformio.ini": "e97edbbc810dd3b0deaf9d7bedc5fb05d0d5231d36dfae1a37612e9c26e1738c",
+    "src/BoardPins.hpp": "458113ffc83e1eaf8eba2518d686e73cb3d2a5186c0e8d226c830d7e439f41f4",
+    "examples/PyControlLinkQp/Bsp.cpp": "46b9d752f13213044528915a406ce2a023ee913296dd667ef80cf94b7d88376e",
+    "src/MouseJoystickBoard/MotionSetup.cpp": "dd78f066f05208a66edeb0698039189c43e92eee7e0c66ffd24f5413d38138db",
+    "src/BrakeTorqueHw.hpp": "6f84ab80d949781fa5c4dbda7dda1588de13a2cea14780da151e29ffdd40ea2e",
+    "src/MouseJoystickBoard/PowerSequence.cpp": "5bc4bd652ccc5a5af6d9c491074c5de7cc235bfac216513a2573a5e5bcc0dacc",
+    "src/MouseJoystickBoard/SafeState.cpp": "7689109e163dbef3b496e90629d8e63fddb0d0795b00a3d906d01e3fe303a170",
+    "src/MouseJoystickBoard/SelfTest.cpp": "ef2d2ab944fca3552e9b2cd8441209d6aeea22ea28ba79b304cf9b57929681a7"
+  },
+  "checked_implementation": {
+    "package": "framework-arduinopico",
+    "version": "1.40200.0",
+    "url": "https://github.com/earlephilhower/arduino-pico",
+    "files_sha256": {
+      "cores/rp2040/SerialPIO.cpp": "75eb6adeb0b088eeac93043dfa331a376ee05ff7a056bacfe3dd0af0b9406507",
+      "cores/rp2040/pio_uart.pio.h": "21c7ac634af9f3abe10aff8218208b3b8683d482a0c8b748353eae1791a6441c",
+      "package.json": "cb32c23a6bc818e727d51e5f5aabe8f010db28a0ce121b8ab6301716c68cdb74",
+      "cores/rp2040/SerialUART.cpp": "1b03b61844bc23359e7b7c68eb6372927b55b1ff008f66fb5ab9a8c678c06e07",
+      "libraries/SPI/src/SPI.cpp": "8d57e6f775a7fa887c8a36d5205726bb521a2de2356bb87afa1a4175f7f1a004",
+      "libraries/Wire/src/Wire.cpp": "95960e15d606c791194183287d3ca64a0ee034b50bcee5e17b42dc22199adcd4",
+      "variants/generic/pins_arduino.h": "2ef842b6fb308596af2e2d8e89f807545c5e7d7e606dcdfeeaf89b9bb2fb5b10",
+      "variants/generic/common.h": "ee11e4831995126f42ef51ba14f4c9b7a00727757ee47753f7b16ffd67822a26"
+    },
+    "review_required_after_framework_change": true
+  }
+}

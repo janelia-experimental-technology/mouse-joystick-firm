@@ -9,8 +9,15 @@
 - [x] `tools/check_board_pins.py` compiles constants/spares against an explicit
   PCB-owned export; bindings contain signal names, not GPIO copies. Rejects
   revision/polarity/coverage mistakes. No sibling dependency in normal builds.
-- [ ] PCB owner still owes manufactured-revision equivalence and full tap/
-  domain/mux coverage; current export labels its limitation.
+- [x] PCB owner added manufactured logical pad comparison and full observation
+  paths/domain/bias facts in batches two/three; original GPIO export scope is
+  retained and supplemented, not relabelled as electrical qualification.
+- [x] Batch four (2026-10-21): firmware-owned peripheral allocation and generated
+  report, checked by kicad-libs against RP2040 capabilities. Every assigned pin,
+  five fixed engines and QS PIO capacity checked. Firmware/framework hashes
+  guard the reviewed declarations; no GPIO number copy or runtime change.
+- [ ] Automatic C++/build-option resource derivation, full SDK/IRQ/DMA/timer
+  inventory and measured reset/off-state qualification remain separate.
 
 Checks: 156 native Unity tests; RP2040SelfTest default, safeflash, rev1 and
 rev2 compile, plus PyControlLinkQp delivery rev2. Three tool test methods
@@ -19,6 +26,10 @@ and polarity mistakes. All 28 production constants and two spares agree with
 the selected current PCB export. Both profile phases load under
 instrument-control. No flashing or bench action; nothing committed.
 See `docs/instrument-profile.md`; cross-repository queue is kicad-libs/PLANS.
+Fourth-batch checks: all three pin-tool tests and actual 28-pin/two-spare
+compile pass; shared allocation tests (10) pass; report replays identically.
+Declaring GP21 as UART1 TX fails before report output. Only records/docs
+changed here; no target build, flash or new deployment qualification.
 
 ## Current Goal
 
