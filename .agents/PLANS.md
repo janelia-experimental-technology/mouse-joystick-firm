@@ -16,6 +16,10 @@
   report, checked by kicad-libs against RP2040 capabilities. Every assigned pin,
   five fixed engines and QS PIO capacity checked. Firmware/framework hashes
   guard the reviewed declarations; no GPIO number copy or runtime change.
+- [x] Batch five: path-only `instrument/readiness-replay.json` joins the
+  library GPIO/port/peripheral checks, compiled BoardPins and both monitor
+  profiles. Explicit MCP XML/framework inputs, new output directory, logs and
+  hashes; no normal-build dependency or new hardware qualification.
 - [ ] Automatic C++/build-option resource derivation, full SDK/IRQ/DMA/timer
   inventory and measured reset/off-state qualification remain separate.
 
@@ -30,6 +34,12 @@ Fourth-batch checks: all three pin-tool tests and actual 28-pin/two-spare
 compile pass; shared allocation tests (10) pass; report replays identically.
 Declaring GP21 as UART1 TX fails before report output. Only records/docs
 changed here; no target build, flash or new deployment qualification.
+
+Fifth-batch checks: six-check joined replay passes with fresh MCP XML; a
+throwaway J1301.2-to-GND XML mutation fails port/aggregate and independent checks
+still run. Only recipe/docs changed here. Shared library suite 47 tests;
+instrument suite 260/no skips with newly packaged QSPY. User committed batch
+four (a414710); current recipe/docs changes remain uncommitted.
 
 ## Current Goal
 

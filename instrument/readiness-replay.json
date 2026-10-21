@@ -1,0 +1,20 @@
+{
+  "schema": 1,
+  "inputs": {
+    "board": "pcb:kicad/board.yaml",
+    "pads": "pcb:kicad/observation/mcu-pads.json",
+    "gpio_contract": "pcb:kicad/observation/contract.json",
+    "subsystem": "pcb:kicad/subsystems/instrument_port.subsystem.yaml",
+    "port_contract": "pcb:kicad/observation/port-contract.json",
+    "pcb_baseline": "pcb:kicad/observation/fabrication-connectivity.json",
+    "port_profile": "interfaces:profiles/instrument-port-digital-50-v0.1.json",
+    "bindings": "firmware:instrument/board-pin-bindings.json",
+    "allocation": "firmware:instrument/peripheral-allocation.json",
+    "model": "library:kicad/mcu-capabilities/rp2040.json",
+    "pin_checker": "firmware:tools/check_board_pins.py"
+  },
+  "monitor_profiles": [
+    "firmware:instrument/mouse-joystick-v1.0.toml",
+    "instrument:fixtures/mouse-joystick-pcb-v1.0/profile.toml"
+  ]
+}

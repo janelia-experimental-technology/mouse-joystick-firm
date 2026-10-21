@@ -48,6 +48,14 @@ Ordinary firmware builds/tests remain independent of sibling checkouts.
 
 ## Peripheral allocation
 
+The path-only [`readiness-replay.json`](../instrument/readiness-replay.json)
+recipe joins the pin compile, GPIO/port export checks, peripheral allocation
+and both monitor profiles through `kicad-libs/scripts/readiness_replay.py`.
+Follow `kicad-libs/docs/readiness-replay.md` for the single command and explicit
+KiCad export/framework inputs. It writes a new report directory and fails if
+any check cannot run; it adds no dependency to ordinary firmware builds and
+does not upgrade the selected exports to electrical or deployment evidence.
+
 [`peripheral-allocation.json`](../instrument/peripheral-allocation.json) owns
 the reviewed rev2 pin-function budget; the generated
 [`peripheral-check.json`](../instrument/peripheral-check.json) checks all 28
