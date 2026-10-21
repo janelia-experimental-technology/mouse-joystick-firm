@@ -1,5 +1,27 @@
 # Plans
 
+## 2026-10-21: selected SDK/resource ownership completed
+
+Batch ten updates instrument/peripheral-allocation.json, its tool-generated
+report and docs/instrument-profile.md. Shared checker/model in kicad-libs.
+Explicit selected core-0 IRQ/DMA/hardware-alarm/SysTick/watchdog ownership,
+SDK startup through boot/runtime, hash guards for framework startup/SDK and
+installed libpico.a. Alarm 3 reserved by SDK; QP tick claims another alarm.
+USB reserves controller + user IRQ; core reserves SysTick/FIFO IRQ; UART0 RX
+and app watchdog declared. No DMA in reviewed synchronous paths. Generic
+variant LED/UART defaults are not initialized by this selected startup.
+
+Checks: 63 library readiness tests (26 allocation tests), three pin-tool tests,
+actual 28-pin/two-spare compile and six-check joined replay pass. Direct report
+regeneration is byte-identical. Alarm conflict, DMA exhaustion, SDK default pin
+collision and startup-source drift reject; joined alarm-conflict case fails
+peripherals/aggregate and leaves independent checks running. Logs/results under
+/tmp/readiness10-*. No target build, runtime edit, flashing or hardware access.
+Uncommitted for Peter; baseline dc43547. Full derivation, build overrides/new
+source review, software timer-slot budgets, latency, multicore and deployment
+qualification remain separate. Next cross-repository step: new-project entry
+points/templates; see kicad-libs/.agents/PLANS.md.
+
 ## 2026-10-20: explicit revision and observation-profile checks
 
 - [x] Remove silent MJ_BOARD_REV=0 fallback; native environment now explicitly

@@ -6,6 +6,7 @@
   "mcu": "RP2040",
   "firmware_environment": "mouse_joystick_qp_rev2",
   "phases": [
+    "sdk_startup",
     "boot",
     "runtime"
   ],
@@ -21,7 +22,13 @@
       "functions": {
         "kPycUartTx": "UART0_TX",
         "kPycUartRx": "UART0_RX"
-      }
+      },
+      "resources": [
+        {
+          "kind": "irq",
+          "id": "UART0_IRQ"
+        }
+      ]
     },
     {
       "name": "motor_spi",
@@ -32,7 +39,8 @@
         "kTmcSpiSck": "SPI0_SCK",
         "kTmcSpiCopi": "SPI0_TX",
         "kTmcSpiCipo": "SPI0_RX"
-      }
+      },
+      "resources": []
     },
     {
       "name": "torque_spi",
@@ -43,7 +51,8 @@
         "kTqSpiSck": "SPI1_SCK",
         "kTqSpiCopi": "SPI1_TX",
         "kTqSpiCipo": "SPI1_RX"
-      }
+      },
+      "resources": []
     },
     {
       "name": "shared_dacs",
@@ -53,7 +62,8 @@
       "functions": {
         "kDacSda": "I2C0_SDA",
         "kDacScl": "I2C0_SCL"
-      }
+      },
+      "resources": []
     },
     {
       "name": "analog_monitors",
@@ -65,7 +75,8 @@
         "kBrakeIsense": "ADC1",
         "kHvSns": "ADC2",
         "kAngleOutMon": "ADC3"
-      }
+      },
+      "resources": []
     },
     {
       "name": "qs_tx",
@@ -79,7 +90,8 @@
         "state_machines": 1,
         "instructions": 6,
         "placement": "dynamic"
-      }
+      },
+      "resources": []
     },
     {
       "name": "gpio_control_status_marker",
@@ -100,7 +112,8 @@
         "kHvFaultN": "SIO",
         "kHvLatch": "SIO",
         "kFwTrig0": "SIO"
-      }
+      },
+      "resources": []
     },
     {
       "name": "boot_beacon",
@@ -110,7 +123,113 @@
       "functions": {
         "kFwTrig0": "SIO",
         "kFwTrig1": "SIO"
-      }
+      },
+      "resources": []
+    },
+    {
+      "name": "sdk_default_alarm_pool",
+      "phases": [
+        "sdk_startup",
+        "boot",
+        "runtime"
+      ],
+      "functions": {},
+      "resources": [
+        {
+          "kind": "timer_alarm",
+          "id": 3
+        }
+      ]
+    },
+    {
+      "name": "arduino_usb",
+      "phases": [
+        "sdk_startup",
+        "boot",
+        "runtime"
+      ],
+      "functions": {},
+      "resources": [
+        {
+          "kind": "irq",
+          "id": "USBCTRL_IRQ"
+        },
+        {
+          "kind": "irq",
+          "count": 1,
+          "choices": [
+            "USER_IRQ_26",
+            "USER_IRQ_27",
+            "USER_IRQ_28",
+            "USER_IRQ_29",
+            "USER_IRQ_30",
+            "USER_IRQ_31"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "arduino_cycle_counter",
+      "phases": [
+        "sdk_startup",
+        "boot",
+        "runtime"
+      ],
+      "functions": {},
+      "resources": [
+        {
+          "kind": "exception",
+          "id": "SYSTICK"
+        }
+      ]
+    },
+    {
+      "name": "arduino_fifo",
+      "phases": [
+        "sdk_startup",
+        "boot",
+        "runtime"
+      ],
+      "functions": {},
+      "resources": [
+        {
+          "kind": "irq",
+          "id": "SIO_IRQ_PROC0"
+        }
+      ]
+    },
+    {
+      "name": "application_watchdog",
+      "phases": [
+        "boot",
+        "runtime"
+      ],
+      "functions": {},
+      "resources": [
+        {
+          "kind": "watchdog",
+          "id": "WATCHDOG"
+        }
+      ]
+    },
+    {
+      "name": "qp_tick",
+      "phases": [
+        "runtime"
+      ],
+      "functions": {},
+      "resources": [
+        {
+          "kind": "timer_alarm",
+          "count": 1,
+          "choices": [
+            0,
+            1,
+            2,
+            3
+          ]
+        }
+      ]
     }
   ],
   "source_sha256": {
@@ -121,16 +240,30 @@
     "src/BrakeTorqueHw.hpp": "6f84ab80d949781fa5c4dbda7dda1588de13a2cea14780da151e29ffdd40ea2e",
     "src/MouseJoystickBoard/PowerSequence.cpp": "5bc4bd652ccc5a5af6d9c491074c5de7cc235bfac216513a2573a5e5bcc0dacc",
     "src/MouseJoystickBoard/SafeState.cpp": "7689109e163dbef3b496e90629d8e63fddb0d0795b00a3d906d01e3fe303a170",
-    "src/MouseJoystickBoard/SelfTest.cpp": "ef2d2ab944fca3552e9b2cd8441209d6aeea22ea28ba79b304cf9b57929681a7"
+    "src/MouseJoystickBoard/SelfTest.cpp": "ef2d2ab944fca3552e9b2cd8441209d6aeea22ea28ba79b304cf9b57929681a7",
+    "examples/PyControlLinkQp/PyControlLinkQp.ino": "ceb76ff256d0346e65529cc0d620909b3513ab485bdc67bb501e8705fb46a424",
+    "examples/PyControlLinkQp/Bsp.hpp": "4ce8425ec5b926c198a911696d3f9a744652a409fbdad63d113184f9915b65c4",
+    "examples/PyControlLinkQp/LinkAo.cpp": "1ba806e631e3f0a5a3e0f22712541de83284bed9ec49bbc5cfe4df6fda218cd1",
+    "src/ADS8689/ADS8689.cpp": "bf0f584b941b14d9abf94868e0931781bde2363f2ab4bcaff2a2d7f5a2170414",
+    "src/DAC80501/DAC80501.cpp": "a1ac107784e3442ab07ce358c4bac2d8cef5696d1c9d5d10194c0d73d8333e0d",
+    "tools/pio_task.py": "cbd159b93f29a036a86e3714438bd50bb4aee57e4a6b6a226b4c2d274f8de67a",
+    "tools/git_version.py": "298cbe624182870c6eaf8799be0af42ce6b4c624e3e5595a18151053ab817160"
   },
   "source_review": {
-    "native_control": "Bsp.cpp startLinkTransport: Serial1.setTX/setRX; UART0 in the installed Arduino core.",
+    "native_control": "Bsp.cpp startLinkTransport uses Serial1 UART0. SerialUART.cpp begin installs the exclusive UART0_IRQ RX handler; polling is not enabled.",
     "motor_spi": "MotionSetup.cpp configureBus: SPI.setSCK/setTX/setRX, TMC chip select remains SIO.",
     "torque_spi": "BrakeTorqueHw.hpp beginAdc: SPI1 supplied by Bsp.cpp, CONVST/CS remains SIO.",
     "shared_dacs": "Bsp.cpp: Wire.setSDA/setSCL, I2C0 shared by both DAC addresses.",
     "qs_tx": "Bsp.cpp constructs SerialPIO(kFwTrig1, NOPIN). Installed core TX program uses six instructions and one SM; RX-only IRQ path is not active. No PIO block is fixed.",
-    "scope": "Reviewed production revision 2 configuration, not preprocessor inference or an inventory of every SDK/USB/alarm/IRQ/DMA resource.",
-    "analog_monitors": "ADC0/ADC2 in PowerSequence, ADC1 in BrakeTorqueHw; ADC3 is reserved angle readback used by SelfTest. This is the pin budget, not a claim that every monitor runs in the delivery loop."
+    "scope": "Reviewed selected production rev2 pin and core-0 resource budget; resource_review records assumptions and exclusions. No whole-program inference.",
+    "analog_monitors": "ADC0/ADC2 in PowerSequence, ADC1 in BrakeTorqueHw; ADC3 is reserved angle readback used by SelfTest. This is the pin budget, not a claim that every monitor runs in the delivery loop.",
+    "sdk_default_alarm_pool": "SDK pico_time/time.c runtime_init_default_alarm_pool reserves hardware alarm 3 and its TIMER_IRQ_3 through pico_time_adapter. USB and sleep/delay use software slots in that shared owner, not separate hardware alarms.",
+    "arduino_usb": "main.cpp __USBStart before setup; RP2040USB.cpp claims one software user IRQ and schedules a default-pool callback. TinyUSB dcd_rp2040.c owns USBCTRL_IRQ via its shared-handler API; modeled as one exclusive aggregate owner, no independent extra clients.",
+    "arduino_cycle_counter": "main.cpp rp2040.begin -> RP2040Support.h begin installs SysTick for non-FreeRTOS ARM. No PIO cycle-counter program in this selected path.",
+    "arduino_fifo": "main.cpp fifo.begin(1), then registerCore() installs SIO_IRQ_PROC0 even without setup1/loop1; single-core begin does not bypass registerCore.",
+    "application_watchdog": "Bsp.cpp enables the watchdog before emitting the boot signature/beacon and keeps it through runtime.",
+    "qp_tick": "QF::onStartup -> startTick claims one unused hardware alarm and callback/associated IRQ. It must coexist with SDK alarm 3; its exact number is not fixed by this record.",
+    "dma": "Reviewed synchronous SPI transfers, Wire master begin/endTransmission/requestFrom, ADC polling, SerialUART and TX-only SerialPIO. SPI/Wire transferAsync and RP2040 memcpyDMA would introduce DMA demand and need a new review."
   },
   "implementation": {
     "package": "framework-arduinopico",
@@ -144,8 +277,44 @@
       "libraries/SPI/src/SPI.cpp": "8d57e6f775a7fa887c8a36d5205726bb521a2de2356bb87afa1a4175f7f1a004",
       "libraries/Wire/src/Wire.cpp": "95960e15d606c791194183287d3ca64a0ee034b50bcee5e17b42dc22199adcd4",
       "variants/generic/pins_arduino.h": "2ef842b6fb308596af2e2d8e89f807545c5e7d7e606dcdfeeaf89b9bb2fb5b10",
-      "variants/generic/common.h": "ee11e4831995126f42ef51ba14f4c9b7a00727757ee47753f7b16ffd67822a26"
+      "variants/generic/common.h": "ee11e4831995126f42ef51ba14f4c9b7a00727757ee47753f7b16ffd67822a26",
+      "cores/rp2040/main.cpp": "9b3136809698aad28157ea3355186b7db9a8667f57b26edbdf5110a1ee76907c",
+      "cores/rp2040/RP2040Support.h": "996e3111f3bbd989dc18754740d8f2452fa33fd1bcd445e347fed314468e4cd9",
+      "cores/rp2040/RP2040USB.cpp": "b734523724882cfaae10606f014a738e1ce07d50cfa553af6f38bd43fa3d27ce",
+      "cores/rp2040/SerialUART.h": "5953e113bb4a46179f0198809c49a297c17510a63f0601608d6690499ba0482f",
+      "cores/rp2040/wiring_analog.cpp": "6e1f18321587f2205163e8def6643dddfe6fcab074701f32bdf4900a6d3f61a7",
+      "pico-sdk/src/common/pico_time/time.c": "f01d27d4eed143b5abf322c015cbae535a5baddecd3b7dabfc75ac39e4ef9f80",
+      "pico-sdk/src/common/pico_time/include/pico/time.h": "ebbe94ea28fcff6f4bae70d338f58004d98296346a974d9ab88bc3ae0477838a",
+      "pico-sdk/src/rp2_common/pico_time_adapter/include/pico/time_adapter.h": "7330c0ba28ebc61784baafc1569a361ab87d37fa1d661f7782983f3819caa8b9",
+      "pico-sdk/src/rp2_common/hardware_timer/timer.c": "99d4afe36098a979fd4d42196dd4addaebacb034e1f01e503e260e0957139957",
+      "pico-sdk/src/rp2_common/hardware_irq/irq.c": "e16c9932a219e5e521e30baae7d366cc15f8685daa81e55b1bc8f63abc437fa1",
+      "pico-sdk/src/rp2040/hardware_regs/include/hardware/regs/intctrl.h": "1eb596748c1ac4aa76e1c97465250d6315f8fc0bbc18a7f68be62f0a2e925e8d",
+      "pico-sdk/src/rp2040/hardware_regs/include/hardware/platform_defs.h": "9e512b3a69b945a628056a42f234ea71da4a281c6a46f7a780db7bf8e3080717",
+      "pico-sdk/src/rp2_common/pico_runtime/runtime.c": "39c0a6cf9e75a689e5ac7eb9ab04dec1e115aa6e81d03adbf902c46e0c6fb2d9",
+      "pico-sdk/src/rp2_common/pico_runtime_init/include/pico/runtime_init.h": "521dee4afdbd526324bf5f83ea398126a5c54ae4509ebf3c145eb4808721cb8c",
+      "pico-sdk/lib/tinyusb/src/portable/raspberrypi/rp2040/dcd_rp2040.c": "c0c056ec661e32c6f72f5f97c2abe0fc2c9524c23cf96f891ac306a7ddc99e49",
+      "tools/libpico/CMakeLists.txt": "f60f97a3218fcc54215fbda4ca2e08df525d04d370fe6edc6084a5bc0b183091",
+      "lib/rp2040/libpico.a": "0fc050d558c1b0f90bb75818957c3c5cef0c0a365544ae198700fa876ff34339",
+      "lib/rp2040/platform_def.txt": "2b4f9ba9282516cc63f8681a7cafc0eb71e63df18f19a4e1b966ca4d615d1bef",
+      "tools/platformio-build.py": "d0a1f434ee7d1b16a7ba3dc629913b08a3c9df5cb73cfeba692a7c5442b24171"
     },
     "review_required_after_framework_change": true
+  },
+  "resource_review": {
+    "core": 0,
+    "assumptions": [
+      "Selected example examples/PyControlLinkQp, PlatformIO environment mouse_joystick_qp_rev2, generic RP2040, framework-arduinopico 1.40200.0; no extra command-line/environment build overrides.",
+      "QS_ON enabled, MJ_BOARD_REV=2; MJ_LINK_USB=0, MJ_SIM_MOTION=0 and MJ_TICK_PROBE=0 defaults from Bsp.cpp. QV on core 0; no setup1/loop1 or FreeRTOS.",
+      "Arduino bundled USB path: NO_USB, USE_TINYUSB, DISABLE_USB_SERIAL and DEBUG_RP2040_PORT are not defined. Serial is USB CDC; Serial1 UART0 is configured by the application.",
+      "SDK default hardware alarm 3 is enabled. Reviewed installed RP2040 libpico.a disassembly of runtime_init_default_alarm_pool confirms alarm 3 and 16 software timer slots; archive is hashed below.",
+      "sdk_startup is the conservative union of SDK/Arduino startup reservations, retained through boot and runtime. Boot pin coverage remains limited to the beacon, not all initialization writes.",
+      "No DMA channel claims in the selected synchronous SPI/I2C/ADC, SerialUART RX or transmit-only SerialPIO paths. An empty resources array means none in this reviewed subset, not unused silicon.",
+      "Generic variant defines default LED/UART pins, but main/initVariant do not initialize a GPIO LED or default hardware UART in this configuration. USB CDC startup does not claim UART0 GP0/GP1."
+    ],
+    "excluded": [
+      "Not whole-program C++/preprocessor/linker inference. New source files, dependencies, build overrides and alternate environments require a fresh review even when the recorded hashes match.",
+      "Software timer-slot occupancy (USB plus delay/sleep callers), spinlocks, DMA DREQ/pacing, RAM, clocks, flash/boot ROM, interrupt priorities/latency and multicore vector-table behavior are not budgeted.",
+      "No runtime allocator assignment, deployed-image identity, loss/throughput, reset/off-state, electrical or physical debug qualification."
+    ]
   }
 }

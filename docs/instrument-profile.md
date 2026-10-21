@@ -71,6 +71,12 @@ assigned pins against the PCB export and the RP2040 capability model.
 | Runtime QS | One PIO SM and six instructions in the reviewed Arduino core |
 | Control/status/operation marker | SIO |
 | Boot beacon | SIO on the two marker pins before runtime QS ownership |
+| SDK default alarm pool | Hardware alarm 3 and TIMER_IRQ_3; retained from startup |
+| Arduino USB | USBCTRL_IRQ, one software IRQ (26–31); uses SDK pool software callbacks |
+| Arduino core | SysTick cycle counter and SIO_IRQ_PROC0 FIFO handler |
+| QP tick | One dynamically claimed hardware alarm and its IRQ, separate from SDK pool |
+| Application watchdog | Enabled before the beacon and retained in runtime |
+| Native-control receive | UART0_IRQ |
 
 This is a declared allocation, not a claim that every interface is active
 during startup or every analog monitor is sampled by the delivery loop.
@@ -83,6 +89,26 @@ Run the pin compile above, then follow
 `kicad-libs/docs/peripheral-allocation.md` for the shared checker. Supply the
 framework directory explicitly with `--implementation-root`. Do not hand-edit
 the generated report. The checker permits phase sharing, rejects simultaneous
-pin/engine conflicts, and checks per-block PIO capacity. Its suggested PIO bank
-is not the runtime allocator's assignment. IRQ/DMA/timer and other SDK users,
-throughput and deployment qualification remain separate checks.
+pin/engine conflicts, and checks per-block PIO capacity. The selected core-0
+resource review adds exclusive IRQ/DMA/hardware-alarm checks, including each
+alarm's associated IRQ. SDK reservations span `sdk_startup`, `boot` and
+`runtime`; dynamic claims keep a consistent assignment across their phases.
+Suggested PIO banks, alarm numbers and software IRQs are feasible assignments,
+not observations of the runtime allocator.
+
+No DMA channels are declared for the reviewed synchronous buses/ADC, UART RX
+or transmit-only QS paths. `resources: []` is explicit reviewed absence in
+this subset. New asynchronous transfers, RX trace, core-1 work or a different
+USB stack require a fresh review. USB and delay/sleep share software slots in
+the SDK alarm pool; this check does not count those slots or establish interrupt
+latency. The generic variant's LED and UART defaults are not initialized by
+the reviewed startup path. The probe firmware's startup allocations belong to
+that separate build and must not be copied into this DUT budget.
+
+`resource_review` records the exact selected example/environment, assumed
+defines and exclusions. Framework startup/SDK source files and the installed
+RP2040 `libpico.a` are now hash-guarded; disassembly confirmed the default
+alarm-3 reservation. Source hashes do not evaluate C++ or prove effective
+compiler flags: new sources, dependencies and build overrides still need
+review. Throughput, reset/off-state behavior and deployment qualification
+remain separate evidence.
